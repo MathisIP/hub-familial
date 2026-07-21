@@ -774,6 +774,10 @@ a { color: var(--link-tx); }
 .import-drive { display: inline-flex; flex-direction: column; gap: .3rem; }
 .import-aide { font-size: .8rem; color: var(--muted); max-width: 22rem; margin: 0; }
 .import-aide code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
+.bouton-drive { display: inline-flex; align-items: center; gap: .5rem; }
+.import-msg { margin: .3rem 0 0; max-width: 24rem; }
+.import-reco { color: var(--link-tx); text-decoration: underline; white-space: nowrap; }
+.import-ouvrir { font-size: .78rem; color: var(--muted); text-decoration: underline; }
 
 /* --- Modale (ajout d'opération) --- */
 .modale-fond {

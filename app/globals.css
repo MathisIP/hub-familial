@@ -699,6 +699,7 @@ a { color: var(--link-tx); }
 
 /* ========================== CONNEXION / COMPTE ========================== */
 .entete-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.comptes-indispo { margin: 1rem 0; }
 .bouton-deconnexion { font-size: .82rem; }
 
 .connexion {

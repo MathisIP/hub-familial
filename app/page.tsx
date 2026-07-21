@@ -52,10 +52,17 @@ export default async function Accueil() {
         </div>
       </header>
 
-      {accueil && <ResumeComptes soldes={accueil.soldesHorsEpargne} />}
+      {accueil ? (
+        <ResumeComptes soldes={accueil.soldesHorsEpargne} />
+      ) : (
+        <p className="message erreur comptes-indispo">
+          Comptes momentanément indisponibles (données Budget non chargées).
+        </p>
+      )}
 
       <div className="actions-rapides">
-        {accueil && <SaisieTransaction params={accueil.parametres} />}
+        {/* Toujours affiché : si les listes ne sont pas prêtes, la modale les charge à l'ouverture. */}
+        <SaisieTransaction params={accueil?.parametres} />
         <ImportDrive url={process.env.DRIVE_A_CLASSER_URL} />
       </div>
 

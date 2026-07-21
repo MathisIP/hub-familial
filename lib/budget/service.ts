@@ -165,6 +165,12 @@ export type AccueilBudget = {
   parametres: ParametresSaisie;
 };
 
+/** Listes de la saisie seules (lecture légère, plus résiliente que tout le dashboard). */
+export async function chargerParametresSaisie(): Promise<ParametresSaisie> {
+  const [par] = await lireBatch(CL, [pl('PARAMETRES', 'A4:I20')]);
+  return extraireParametres(par);
+}
+
 export async function chargerAccueilBudget(): Promise<AccueilBudget> {
   const [tb, par] = await lireBatch(CL, [
     pl('TABLEAU_BORD', 'A1:D42'),

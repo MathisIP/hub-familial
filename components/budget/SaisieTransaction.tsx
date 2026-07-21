@@ -15,12 +15,18 @@ import {
  * relance le rendu serveur : soldes/KPIs recalculés par le tableur. Reproduit la
  * logique du formulaire Google (catégorie ↔ virement).
  */
-export default function SaisieTransaction({ params }: { params: ParametresSaisie }) {
+const PARAMS_VIDE: ParametresSaisie = { comptes: [], types: [], categoriesDepense: [], categoriesRevenu: [] };
+
+export default function SaisieTransaction({ params: paramsInitiaux }: { params?: ParametresSaisie }) {
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  // Les listes déroulantes : reçues du serveur si dispo, sinon chargées à l'ouverture.
+  const [params, setParams] = useState<ParametresSaisie>(paramsInitiaux ?? PARAMS_VIDE);
+  const [chargeParams, setChargeParams] = useState(false);
 
   const typesDispo = params.types.length ? params.types : [TYPE_DEPENSE, TYPE_REVENU, TYPE_VIREMENT];
   const [type, setType] = useState(typesDispo[0] ?? TYPE_DEPENSE);
@@ -41,6 +47,16 @@ export default function SaisieTransaction({ params }: { params: ParametresSaisie
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [ouvert]);
+
+  // Si les listes n'ont pas été fournies par le serveur, les charger à l'ouverture.
+  useEffect(() => {
+    if (!ouvert || params.comptes.length > 0 || chargeParams) return;
+    setChargeParams(true);
+    fetch('/api/budget/parametres', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Chargement des comptes impossible.'))))
+      .then((p: ParametresSaisie) => setParams(p))
+      .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
+  }, [ouvert, params.comptes.length, chargeParams]);
 
   function reset() {
     setMontant('');

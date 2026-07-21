@@ -15,3 +15,4 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
+credentials.b64.txt

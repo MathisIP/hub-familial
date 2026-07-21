@@ -1,0 +1,822 @@
+/*
+ * Socle de styles. Aucune couleur en dur ici : uniquement des `var(--role)`
+ * définies par le thème actif (cf. lib/themes.ts). Changer de thème ne
+ * recolore donc rien à la main — les variables suffisent.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  /* Repli avant l'hydratation : évite le flash blanc si le thème mémorisé
+     est 🌙 Nuit. Le script inline du layout écrase data-theme immédiatement. */
+  background: var(--page, #f7f3ed);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .18s ease, color .18s ease;
+}
+
+a { color: var(--link-tx); }
+
+.enveloppe {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* --- En-tête --- */
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.entete h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+}
+
+.entete p {
+  margin: .25rem 0 0;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* --- Sélecteur de thème --- */
+.selecteur {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.selecteur label {
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+.selecteur select {
+  font: inherit;
+  font-size: .9rem;
+  padding: .45rem .6rem;
+  color: var(--ink);
+  background: var(--field-bg);
+  border: 1px solid var(--line2);
+  border-radius: .5rem;
+  cursor: pointer;
+}
+
+.selecteur select:focus-visible {
+  outline: 2px solid var(--link-tx);
+  outline-offset: 1px;
+}
+
+/* --- Grille de modules --- */
+.modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.module {
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .875rem;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-height: 6.5rem;
+}
+
+.module-lien {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+.module:has(.module-lien):hover { border-color: var(--link-tx); }
+
+.module .titre {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.module .note {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.module .bientot {
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--ink2);
+}
+
+/* --- Bandeau d'état de connexion --- */
+.etat {
+  margin-top: 2rem;
+  border: 1px solid var(--line);
+  border-radius: .875rem;
+  background: var(--cell);
+  overflow: hidden;
+}
+
+.etat > h2 {
+  margin: 0;
+  padding: .7rem 1.1rem;
+  font-size: .95rem;
+  font-weight: 600;
+  background: var(--head);
+  color: var(--ink);
+}
+
+.etat ul { list-style: none; margin: 0; padding: 0; }
+
+.etat li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .6rem;
+  padding: .6rem 1.1rem;
+  border-top: 1px solid var(--line);
+  font-size: .9rem;
+}
+
+.etat .nom { font-weight: 600; min-width: 8rem; }
+.etat .onglets { color: var(--muted); font-size: .82rem; }
+
+.pastille {
+  font-size: .75rem;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pastille.ok { background: var(--ok-bg); color: var(--ok-tx); }
+.pastille.echec { background: var(--over-bg); color: var(--over-tx); }
+.pastille.attente { background: var(--soft); color: var(--ink2); }
+
+/* --- Éléments réutilisables : liens de nav, boutons, champs --- */
+.lien-retour {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+  color: var(--link-tx);
+  text-decoration: none;
+}
+.lien-retour:hover { text-decoration: underline; }
+
+.bouton {
+  font: inherit;
+  font-size: .9rem;
+  padding: .5rem .9rem;
+  border-radius: .5rem;
+  border: 1px solid var(--line2);
+  background: var(--link-bg);
+  color: var(--link-tx);
+  cursor: pointer;
+}
+.bouton:hover { border-color: var(--link-tx); }
+.bouton:disabled { opacity: .55; cursor: default; }
+.bouton.discret {
+  background: transparent;
+  color: var(--muted);
+}
+
+.champ {
+  font: inherit;
+  font-size: .9rem;
+  padding: .5rem .6rem;
+  color: var(--ink);
+  background: var(--field-bg, var(--cell));
+  border: 1px solid var(--line2);
+  border-radius: .5rem;
+}
+.champ:focus-visible { outline: 2px solid var(--link-tx); outline-offset: 1px; }
+
+/* --- Onglets Tâches / Courses --- */
+.tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.tab {
+  font: inherit;
+  font-size: .95rem;
+  font-weight: 600;
+  padding: .6rem 1rem;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab[aria-selected='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--link-tx);
+}
+
+/* --- Formulaire d'ajout --- */
+.ajout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.ajout .champ { flex: 1 1 12rem; min-width: 0; }
+
+/* --- Liste de tâches --- */
+.liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+
+.tache {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.tache.faite .titre-tache { text-decoration: line-through; color: var(--done-tx); }
+.tache.retard { border-color: var(--over-tx); }
+
+.tache .titre-tache { font-weight: 600; flex: 1 1 12rem; }
+.tache .meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+
+.puce {
+  font-size: .74rem;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.puce.prio-haute { background: var(--prio-haute-bg); }
+.puce.prio-moyenne { background: var(--prio-moy-bg); color: var(--prio-moy-tx); }
+.puce.prio-basse { background: var(--prio-bas-bg); }
+.puce.assigne { background: var(--assign-both); }
+.puce.echeance { background: var(--soft); color: var(--ink2); }
+.puce.echeance.retard { background: var(--over-bg); color: var(--over-tx); }
+.puce.categorie { background: var(--block, var(--soft)); color: var(--ink2); }
+
+.tache select.statut {
+  font: inherit;
+  font-size: .82rem;
+  padding: .3rem .45rem;
+  border-radius: .4rem;
+  border: 1px solid var(--line2);
+  background: var(--field-bg, var(--cell));
+  color: var(--ink);
+}
+
+/* --- Liste de courses --- */
+.course {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .55rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.course input[type='checkbox'] { width: 1.15rem; height: 1.15rem; accent-color: var(--link-tx); cursor: pointer; }
+.course.faite .article { text-decoration: line-through; color: var(--done-tx); }
+.course .article { flex: 1 1 auto; font-weight: 500; }
+.course .rayon { font-size: .78rem; color: var(--muted); }
+
+.rayon-groupe { margin-bottom: 1.1rem; }
+.rayon-titre {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+  margin: 0 0 .4rem .2rem;
+}
+
+.barre-outils {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.vide {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 1rem;
+}
+
+.message {
+  margin: .5rem 0 1rem;
+  padding: .6rem .9rem;
+  border-radius: .5rem;
+  font-size: .88rem;
+}
+.message.erreur { background: var(--over-bg); color: var(--over-tx); }
+.message.info { background: var(--ok-bg); color: var(--ok-tx); }
+
+/* ======================= MODULE BUDGET (dashboard) ======================= */
+
+/* --- Sélecteur de mois --- */
+.mois-selecteur {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.mois-fleche {
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  width: 2rem;
+  height: 2rem;
+  border-radius: .5rem;
+  border: 1px solid var(--line2);
+  background: var(--cell);
+  color: var(--ink);
+  cursor: pointer;
+}
+.mois-fleche:hover:not(:disabled) { border-color: var(--link-tx); }
+.mois-fleche:disabled { opacity: .4; cursor: default; }
+.mois-etat { color: var(--muted); font-size: .9rem; }
+
+/* --- Saisie d'une transaction --- */
+.saisie-barre { display: flex; align-items: center; gap: .8rem; margin-bottom: .5rem; }
+.saisie-panel {
+  border: 1px solid var(--line);
+  background: var(--cell);
+  border-radius: .875rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: .5rem;
+}
+.type-choix { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .9rem; }
+.type-btn {
+  font: inherit;
+  font-size: .85rem;
+  padding: .4rem .8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.type-btn.actif {
+  background: var(--head);
+  color: var(--ink);
+  border-color: transparent;
+  font-weight: 600;
+}
+.saisie-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .7rem;
+  align-items: end;
+}
+.saisie-champ { display: flex; flex-direction: column; gap: .25rem; }
+.saisie-champ > span { font-size: .78rem; color: var(--muted); }
+.saisie-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
+
+.bloc-titre {
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+  margin: 2rem 0 .75rem;
+}
+
+/* --- KPIs (stat tiles) --- */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: .8rem;
+}
+.kpi {
+  padding: 1rem 1.1rem;
+  border-radius: .875rem;
+  border: 1px solid var(--line);
+  background: var(--cell);
+}
+.kpi .k-label {
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.kpi .k-valeur {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: .2rem;
+  font-variant-numeric: tabular-nums;
+}
+.kpi .k-note { font-size: .76rem; color: var(--muted); margin-top: .15rem; }
+.kpi.k-reste .k-valeur.negatif { color: var(--over-tx); }
+.kpi.k-reste .k-valeur.positif { color: var(--ok-tx); }
+
+/* --- Tuiles de comptes --- */
+.comptes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .7rem;
+}
+.compte {
+  padding: .8rem .9rem;
+  border-radius: .75rem;
+  background: var(--block);
+  color: var(--ink);
+}
+.compte .c-nom { font-size: .82rem; color: var(--ink2); }
+.compte .c-solde { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.compte .c-solde.negatif { color: var(--over-tx); }
+
+/* --- Jauges Réel / Budget par catégorie --- */
+.jauges { display: flex; flex-direction: column; gap: .7rem; }
+.jauge { display: grid; grid-template-columns: 1fr auto; gap: .15rem .8rem; align-items: baseline; }
+.jauge .j-cat { font-weight: 600; font-size: .92rem; }
+.jauge .j-chiffres { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.jauge .j-chiffres .depasse { color: var(--over-tx); font-weight: 600; }
+.jauge .j-piste {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line2);
+  overflow: hidden;
+  display: flex;
+}
+/* Remplissage « dépensé dans le budget » : teinte calme, pas une couleur de statut. */
+.jauge .j-remplissage {
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--link-tx) 55%, var(--cell));
+  min-width: 3px;
+}
+/* Portion au-delà du budget : couleur de statut réservée (dépassement). */
+.jauge .j-depassement {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--over-tx);
+  margin-left: 2px; /* séparateur de 2px entre segments (spec dataviz) */
+}
+
+/* --- Transactions récentes --- */
+.tx-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.tx {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: .2rem .8rem;
+  align-items: center;
+  padding: .55rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.tx .tx-date { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; grid-row: 1 / 3; }
+.tx .tx-lib { font-weight: 600; font-size: .92rem; }
+.tx .tx-meta { font-size: .78rem; color: var(--muted); }
+.tx .tx-montant { font-weight: 700; font-variant-numeric: tabular-nums; grid-row: 1 / 3; text-align: right; white-space: nowrap; }
+.tx .tx-montant.depense { color: var(--over-tx); }
+.tx .tx-montant.revenu { color: var(--ok-tx); }
+.tx .tx-montant.virement { color: var(--ink2); }
+
+/* --- Échéances --- */
+.ech-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.ech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: baseline;
+  padding: .55rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.ech .e-lib { font-weight: 600; flex: 1 1 10rem; }
+.ech .e-date { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ech .e-quand { font-size: .74rem; padding: .1rem .5rem; border-radius: 999px; background: var(--soft); color: var(--ink2); white-space: nowrap; }
+.ech .e-quand.proche { background: var(--over-bg); color: var(--over-tx); }
+
+/* ========================== MODULE REPAS ========================== */
+
+/* Ingrédient : article + quantité + rayon en ligne */
+.i-art { font-weight: 500; }
+.i-qte {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink2);
+  background: var(--soft);
+  padding: .05rem .4rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  margin-left: .4rem;
+}
+.i-rayon { font-size: .78rem; color: var(--muted); margin-left: .4rem; }
+
+/* --- Jour de la semaine --- */
+.jour-repas {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .8rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.jr-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.jr-jour { font-weight: 700; color: var(--ink); width: 5.5rem; }
+.jr-diner { flex: 1 1 12rem; min-width: 0; }
+.jr-pers { display: flex; align-items: center; gap: .3rem; }
+.jr-pers input { width: 4.2rem; }
+.jr-pers span { font-size: .82rem; color: var(--muted); }
+.jr-ingredients { padding-left: 6rem; }
+.jr-ingredients ul, .rc-ingredients ul { margin: 0; }
+.jr-ingredients ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .9rem; }
+.jr-ingredients li { font-size: .85rem; }
+.jr-echelle {
+  display: inline-block;
+  font-size: .74rem;
+  color: var(--over-tx);
+  background: var(--over-bg);
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  margin-bottom: .35rem;
+}
+.jr-vide { font-size: .82rem; color: var(--muted); padding-left: 6rem; margin: 0; }
+
+/* --- Aperçu des courses --- */
+.apercu-courses {
+  margin-top: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: .875rem;
+  background: var(--cell);
+  padding: 1rem 1.1rem;
+}
+.apercu-note { font-size: .82rem; color: var(--muted); margin: 0 0 .8rem; }
+.courses-apercu { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1rem; }
+.courses-apercu li { font-size: .88rem; }
+
+/* --- Éditeur de recettes --- */
+.recettes-liste { gap: .6rem; }
+.recette-carte {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  padding: .8rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.rc-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.rc-nom { font-weight: 700; font-size: 1.02rem; flex: 1 1 10rem; }
+.rc-meta { display: flex; flex-wrap: wrap; gap: .3rem; }
+.rc-ingredients { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem .9rem; }
+.rc-ingredients li { font-size: .85rem; }
+
+/* --- Formulaire recette --- */
+.recette-form {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  padding: 1rem;
+  background: var(--cell);
+  border: 1px solid var(--link-tx);
+  border-radius: .7rem;
+}
+.rf-ligne1 { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.rf-nom { flex: 1 1 14rem; min-width: 0; font-weight: 600; }
+.rf-ingredients { display: flex; flex-direction: column; gap: .4rem; }
+.rf-ing-entete, .rf-ing-ligne {
+  display: grid;
+  grid-template-columns: 1.6fr .8fr 1fr 1.2fr auto;
+  gap: .4rem;
+  align-items: center;
+}
+.rf-ing-entete { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.rf-suppr { padding: .3rem .5rem; }
+.rf-actions { display: flex; align-items: center; gap: .5rem; }
+.rf-espace { flex: 1; }
+.rf-danger { color: var(--over-tx); }
+
+@media (max-width: 640px) {
+  .rf-ing-entete { display: none; }
+  .rf-ing-ligne { grid-template-columns: 1fr 1fr; }
+  .jr-ingredients, .jr-vide { padding-left: 0; }
+}
+
+/* ========================== MODULE CADEAUX ========================== */
+.occasion-groupe { margin-bottom: 1.5rem; }
+.occ-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .6rem;
+  margin: 1.2rem 0 .6rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--line);
+}
+.occ-nom { margin: 0; font-size: 1.05rem; }
+.occ-date { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.occ-budget { font-size: .82rem; color: var(--muted); margin-left: auto; }
+.occ-budget b { color: var(--ink); }
+.occ-budget .depasse { color: var(--over-tx); font-weight: 600; }
+
+.cadeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem .9rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.cadeau.offert { opacity: .6; }
+.cad-principal { display: flex; flex-direction: column; gap: .2rem; flex: 1 1 14rem; min-width: 0; }
+.cad-idee { font-weight: 600; }
+.cad-meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.cad-budget { font-size: .84rem; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.cad-prevu { color: var(--muted); }
+.cad-note { font-size: .8rem; color: var(--muted); }
+.cad-actions { display: flex; gap: .5rem; align-items: center; }
+.cadeau select.statut {
+  font: inherit; font-size: .82rem; padding: .3rem .45rem; border-radius: .4rem;
+  border: 1px solid var(--line2); background: var(--field-bg, var(--cell)); color: var(--ink);
+}
+
+/* ========================== MODULE ÉVÉNEMENTS ========================== */
+.ev-liste { gap: .7rem; }
+.ev-carte {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .9rem 1rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+}
+.ev-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.ev-nom { font-weight: 700; font-size: 1.05rem; flex: 1 1 10rem; }
+.ev-tete select.statut {
+  font: inherit; font-size: .82rem; padding: .3rem .45rem; border-radius: .4rem;
+  border: 1px solid var(--line2); background: var(--field-bg, var(--cell)); color: var(--ink);
+}
+.ev-infos { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .86rem; color: var(--ink2); }
+.ev-recaps { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .84rem; color: var(--ink2); }
+.ev-recap { display: inline-flex; align-items: center; gap: .35rem; }
+.ev-jauge {
+  display: inline-block; width: 4rem; height: 6px; border-radius: 999px;
+  background: var(--line2); overflow: hidden; vertical-align: middle;
+}
+.ev-jauge-fill { display: block; height: 100%; background: var(--ok-tx); border-radius: 999px; }
+.ev-note { margin: 0; font-size: .82rem; color: var(--muted); }
+
+/* ========================== CONNEXION / COMPTE ========================== */
+.entete-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.bouton-deconnexion { font-size: .82rem; }
+
+.connexion {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.connexion-carte {
+  text-align: center;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  max-width: 24rem;
+  width: 100%;
+}
+.connexion-logo { font-size: 3rem; line-height: 1; }
+.connexion-carte h1 { margin: .5rem 0 .3rem; font-size: 1.4rem; }
+.connexion-carte p { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
+.connexion-bouton { width: 100%; justify-content: center; font-size: 1rem; padding: .7rem 1rem; }
+
+/* ========================== MODULE AGENDA ========================== */
+.agenda-jour { margin-bottom: 1.2rem; }
+.ag-jour-titre {
+  display: flex; align-items: baseline; gap: .5rem;
+  font-size: .95rem; margin: 1rem 0 .5rem; text-transform: capitalize;
+  padding-bottom: .3rem; border-bottom: 1px solid var(--line);
+}
+.ag-relatif {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--head); color: var(--ink); padding: .1rem .5rem; border-radius: 999px;
+}
+.ag-legende { display: flex; flex-wrap: wrap; gap: .8rem; margin: .3rem 0 1rem; }
+.ag-legende-item { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; color: var(--ink2); }
+.ag-pastille { width: .7rem; height: .7rem; border-radius: 999px; flex: none; display: inline-block; }
+.ag-pastille-event { margin-top: .35rem; }
+.ag-event {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .6rem .9rem; background: var(--cell);
+  border: 1px solid var(--line); border-radius: .7rem;
+}
+.ag-heure {
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: .84rem;
+  color: var(--link-tx); min-width: 5.5rem; white-space: nowrap;
+}
+.ag-corps { display: flex; flex-direction: column; gap: .15rem; flex: 1 1 auto; min-width: 0; }
+.ag-titre { font-weight: 600; }
+.ag-meta { font-size: .8rem; color: var(--muted); }
+.ag-suppr { padding: .2rem .5rem; }
+.ag-checkbox { display: inline-flex; align-items: center; gap: .4rem; font-size: .9rem; }
+.ag-checkbox input { width: 1.1rem; height: 1.1rem; accent-color: var(--link-tx); }
+.ag-erreur-detail { font-size: .78rem; opacity: .8; margin-top: .4rem; }
+
+/* ===================== ACCUEIL : RÉSUMÉ COMPTES & ACTIONS ===================== */
+.resume-comptes { margin-top: .5rem; }
+.rc-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.rc-entete .bloc-titre { margin: 1rem 0 .5rem; }
+.rc-lien { font-size: .85rem; color: var(--link-tx); text-decoration: none; white-space: nowrap; }
+.rc-lien:hover { text-decoration: underline; }
+.compte-lien { text-decoration: none; display: flex; flex-direction: column; gap: .1rem; }
+.compte-lien:hover { outline: 2px solid var(--link-tx); outline-offset: 1px; }
+
+.actions-rapides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1.25rem 0 .5rem;
+}
+.bouton-action { font-size: .95rem; padding: .6rem 1rem; text-decoration: none; display: inline-flex; align-items: center; }
+.import-drive { display: inline-flex; flex-direction: column; gap: .3rem; }
+.import-aide { font-size: .8rem; color: var(--muted); max-width: 22rem; margin: 0; }
+.import-aide code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
+
+/* --- Modale (ajout d'opération) --- */
+.modale-fond {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 1rem;
+  z-index: 50;
+  overflow-y: auto;
+}
+.modale {
+  background: var(--page);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.2rem 1.3rem;
+  width: 100%;
+  max-width: 34rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+.modale-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: .8rem; }
+.modale-tete h2 { margin: 0; font-size: 1.15rem; }
+.modale-fermer {
+  font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer;
+  border: none; background: transparent; color: var(--muted); padding: .3rem;
+}
+.modale-fermer:hover { color: var(--ink); }
+
+/* ===================== ACCUEIL : COURSES DE LA SEMAINE ===================== */
+.courses-semaine {
+  margin-top: 2rem;
+  border: 1px solid var(--line);
+  border-radius: .875rem;
+  background: var(--cell);
+  padding: 1rem 1.1rem;
+}
+.cs-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
+.cs-tete h2 { margin: 0; font-size: 1.05rem; }
+.cs-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .9rem 0; }
+.cs-vide { color: var(--muted); font-size: .88rem; margin: .8rem 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

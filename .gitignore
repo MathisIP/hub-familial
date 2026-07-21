@@ -1,0 +1,17 @@
+# Secrets — ne JAMAIS versionner
+.env
+.env.local
+credentials.json
+*.iam.gserviceaccount.com.json
+
+# Dépendances et build
+node_modules/
+.next/
+out/
+build/
+
+# Divers
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

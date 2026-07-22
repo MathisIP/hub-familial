@@ -49,11 +49,11 @@ export default async function Accueil() {
         <SaisieTransaction params={accueil?.parametres} />
       </div>
 
-      <DriveExplorer />
-
       <SemaineAgenda />
 
       <CoursesSemaine />
+
+      <DriveExplorer />
     </>
   );
 }

@@ -76,14 +76,14 @@ export async function chargerRepas(): Promise<DonneesRepas> {
  * dîner correspond à une recette, met les ingrédients à l'échelle (personnes du
  * jour) et fusionne le tout. Utilisée par le bouton d'accueil (aperçu + envoi).
  */
-export async function listeCoursesSemaine(): Promise<ArticleCourse[]> {
+export async function listeCoursesSemaine(): Promise<{ articles: ArticleCourse[]; diners: number }> {
   const { recettes, semaine } = await chargerRepas();
   const parNom = new Map(recettes.map((r) => [r.nom.trim().toLowerCase(), r]));
   const plats = semaine
     .map((j) => ({ j, r: parNom.get(j.diner.trim().toLowerCase()) }))
     .filter((x): x is { j: JourRepas; r: Recette } => !!x.r)
     .map((x) => ({ ingredients: x.r.ingredients, base: x.r.personnes, personnes: x.j.personnes }));
-  return agregerCourses(plats);
+  return { articles: agregerCourses(plats), diners: plats.length };
 }
 
 /* ------------------------------ EN-TÊTES ------------------------------ */

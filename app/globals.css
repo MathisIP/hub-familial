@@ -924,8 +924,31 @@ a { color: var(--link-tx); }
 }
 .cs-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
 .cs-tete h2 { margin: 0; font-size: 1.05rem; }
-.cs-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .9rem 0; }
+.cs-compteur { font-size: .82rem; color: var(--ink2); white-space: nowrap; }
 .cs-vide { color: var(--muted); font-size: .88rem; margin: .8rem 0 0; }
+.cs-reessayer { padding: .1rem .5rem; margin-left: .3rem; }
+
+/* Articles groupés par rayon (design maquette) */
+.cs-rayon-groupe { margin-top: .2rem; }
+.cs-rayon {
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin: 1rem 0 .45rem;
+}
+.cs-arts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem .9rem; }
+.cs-arts li { font-size: .9rem; }
+.cs-q {
+  font-variant-numeric: tabular-nums; color: var(--ink2);
+  background: color-mix(in srgb, var(--head) 32%, var(--cell));
+  padding: .05rem .45rem; border-radius: 999px; font-size: .8rem; margin-left: .3rem;
+}
+.cs-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.1rem; }
+
+/* Bouton d'action principal (CTA plein), lisible sur les 9 thèmes */
+.bouton-primaire {
+  background: var(--link-tx); color: var(--cell);
+  border-color: transparent; font-weight: 600;
+}
+.bouton-primaire:hover { border-color: transparent; filter: brightness(1.06); }
 
 /* ===================== ACCUEIL : EXPLORATEUR DRIVE ===================== */
 .drive-explorer {

@@ -239,6 +239,9 @@ a { color: var(--link-tx); }
   border-bottom-color: var(--link-tx);
 }
 
+/* --- Filtre par personne (To-Do) --- */
+.filtre-personnes { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+
 /* --- Formulaire d'ajout --- */
 .ajout {
   display: flex;

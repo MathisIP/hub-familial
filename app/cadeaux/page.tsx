@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueCadeaux from '@/components/cadeaux/VueCadeaux';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerCadeaux } from '@/lib/cadeaux/service';
@@ -24,7 +24,7 @@ export default async function PageCadeaux() {
 
   return (
     <>
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_CADEAUX')}</h1>

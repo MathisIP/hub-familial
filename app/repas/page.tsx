@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueRepas from '@/components/repas/VueRepas';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerRepas } from '@/lib/repas/service';
@@ -24,7 +24,7 @@ export default async function PageRepas() {
 
   return (
     <>
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_REPAS')}</h1>

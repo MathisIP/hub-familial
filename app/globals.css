@@ -179,13 +179,16 @@ a { color: var(--link-tx); }
 
 /* --- Éléments réutilisables : liens de nav, boutons, champs --- */
 .lien-retour {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
   margin-bottom: 1rem;
   font-size: .9rem;
   color: var(--link-tx);
   text-decoration: none;
 }
-.lien-retour:hover { text-decoration: underline; }
+.lien-retour:hover span:last-child { text-decoration: underline; }
+.lien-retour-logo { border-radius: .35rem; flex: none; }
 
 .bouton {
   font: inherit;

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueAgenda from '@/components/agenda/VueAgenda';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerAgenda } from '@/lib/agenda/service';
@@ -34,7 +34,7 @@ export default async function PageAgenda() {
 
   return (
     <>
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_AGENDA')}</h1>

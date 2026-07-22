@@ -107,7 +107,7 @@ Helpers monétaires/dates partagés par les nouveaux modules : [lib/argent.ts](l
 - **Identifiants Google portables** : `lib/google/auth.ts` (`googleAuth(scopes)`) — lit `GOOGLE_CREDENTIALS_JSON` (env, pour Vercel) sinon le fichier `credentials.json` (local). Sheets et Agenda passent par ce helper.
 - **Env** : voir `.env.example` (ajouts : `GOOGLE_CREDENTIALS_JSON`, `AUTH_SECRET`, `AUTH_GOOGLE_ID/SECRET`, `EMAILS_AUTORISES`). Guide pas-à-pas : `DEPLOIEMENT.md` (GitHub/Vercel, création du client OAuth, variables d'env). Git n'est pas installé sur la machine de dev.
 
-Restent des extensions possibles : service worker (offline + invite d'install auto), téléversement Drive via OAuth ([[oauth-drive-upload]]), sélecteur de mois hors Budget, édition des sous-onglets Événements depuis l'app, sync Agenda ↔ module Événements, EN/ES i18n.
+Restent des extensions possibles : service worker (offline + invite d'install auto), sélecteur de mois hors Budget, édition des sous-onglets Événements depuis l'app, EN/ES i18n. **Changement de logo à venir** ([[changement-logo-app]]) : quand l'utilisateur fournira le nouveau visuel, relancer `node scripts/generer-icones.mjs` (l'accueil et `LienAccueil` suivent automatiquement via `/icon-192.png`) et remplacer l'emoji `🏡` de `app/connexion/page.tsx` par l'icône réelle.
 
 ## ⚠ Piège de test (encodage)
 

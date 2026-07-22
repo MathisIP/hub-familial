@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
 import SelecteurTheme from '@/components/SelecteurTheme';
@@ -32,7 +32,7 @@ export default async function PageBudget() {
 
   return (
     <>
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_BUDGET')}</h1>

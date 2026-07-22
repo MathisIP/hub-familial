@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueTodo from '@/components/todo/VueTodo';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerTodo } from '@/lib/todo/service';
@@ -33,7 +33,7 @@ export default async function PageTodo() {
           sélecteurs [data-theme] que le socle. */}
       <style dangerouslySetInnerHTML={{ __html: cssTodoThemes() }} />
 
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
 
       <header className="entete">
         <div>

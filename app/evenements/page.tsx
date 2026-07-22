@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import LienAccueil from '@/components/LienAccueil';
 import VueEvenements from '@/components/evenements/VueEvenements';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerEvenements } from '@/lib/evenements/service';
@@ -24,7 +24,7 @@ export default async function PageEvenements() {
 
   return (
     <>
-      <Link className="lien-retour" href="/">← {t('APP_TITRE')}</Link>
+      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_EVENEMENTS')}</h1>

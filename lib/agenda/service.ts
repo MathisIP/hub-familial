@@ -86,6 +86,45 @@ export async function listerAgendas(): Promise<Agenda[]> {
   );
 }
 
+/** Événements de la semaine EN COURS (lundi → dimanche), tous agendas fusionnés. */
+export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAgenda[]; agendas: Agenda[]; lundiISO: string }> {
+  const ids = configFoyer().agendaIds;
+  const now = new Date();
+  const decalLundi = (now.getDay() + 6) % 7; // 0 = lundi
+  const lundi = new Date(now.getFullYear(), now.getMonth(), now.getDate() - decalLundi);
+  const lundiSuivant = new Date(lundi.getFullYear(), lundi.getMonth(), lundi.getDate() + 7);
+  const lundiISO = `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
+  if (ids.length === 0) return { evenements: [], agendas: [], lundiISO };
+
+  const cal = clientCalendar();
+  const parAgenda = await Promise.all(
+    ids.map(async (id, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
+      const couleur = COULEURS_AGENDA[i % COULEURS_AGENDA.length];
+      const [nom, rep] = await Promise.all([
+        nomAgenda(cal, id),
+        cal.events.list({
+          calendarId: id,
+          timeMin: lundi.toISOString(),
+          timeMax: lundiSuivant.toISOString(),
+          singleEvents: true,
+          orderBy: 'startTime',
+          maxResults: 100,
+        }),
+      ]);
+      const evenements = (rep.data.items ?? [])
+        .map((e) => versEvenement(e, id, couleur))
+        .filter((e) => e.dateISO !== '');
+      return { agenda: { id, nom, couleur }, evenements };
+    }),
+  );
+
+  const agendas = parAgenda.map((p) => p.agenda);
+  const evenements = parAgenda
+    .flatMap((p) => p.evenements)
+    .sort((a, b) => `${a.dateISO} ${a.heureDebut || '00:00'}`.localeCompare(`${b.dateISO} ${b.heureDebut || '00:00'}`));
+  return { evenements, agendas, lundiISO };
+}
+
 /** Événements à venir sur `jours` jours, fusionnés depuis tous les agendas. */
 export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
   const cal = clientCalendar();

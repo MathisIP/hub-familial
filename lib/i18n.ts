@@ -74,7 +74,7 @@ export const LANGUES = {
       THEME: '🎨 Thème',
       LANGUE: '🌍 Langue',
       MOD_BUDGET: '🌸 Budget',
-      MOD_TODO: '✅ To-Do & Courses',
+      MOD_TODO: '✅ To-Do',
       MOD_REPAS: '🍽️ Repas',
       MOD_EVENEMENTS: '🎉 Événements',
       MOD_CADEAUX: '🎁 Cadeaux',

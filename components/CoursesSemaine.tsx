@@ -1,42 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatQuantite, type ArticleCourse } from '@/lib/repas/schema';
 
 /**
- * Bouton d'accueil : prépare la liste de courses de la semaine (dîners planifiés,
- * quantités mises à l'échelle et agrégées côté serveur), puis permet de :
- *   · l'envoyer par MESSAGE (partage natif du téléphone → SMS/WhatsApp/… , ou
- *     repli sur un lien sms:) — c'est l'ancien « bouton SMS courses » du Site QG ;
- *   · l'ajouter à la liste de courses partagée (onglet Courses de ToDo).
+ * Section d'accueil « Courses de la semaine » : agrège les dîners planifiés
+ * (quantités mises à l'échelle et fusionnées côté serveur), chargée automatiquement
+ * comme les autres sections de l'accueil. Design repris de la maquette validée :
+ * en-tête avec compteur de dîners, articles groupés par rayon avec pastilles de
+ * quantité, actions primaire/secondaire.
+ *
+ * Deux actions :
+ *   · Envoyer par MESSAGE (partage natif du téléphone → SMS/WhatsApp/… , ou repli
+ *     sur un lien sms:) — l'ancien « bouton SMS courses » du Site QG ;
+ *   · Ajouter à la liste de courses partagée (onglet Courses de ToDo).
  */
 export default function CoursesSemaine() {
   const [articles, setArticles] = useState<ArticleCourse[] | null>(null);
+  const [diners, setDiners] = useState(0);
+  const [etat, setEtat] = useState<'charge' | 'ok' | 'erreur'>('charge');
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  async function preparer() {
-    setOccupe(true);
+  async function charger() {
+    setEtat('charge');
     setErreur(null);
-    setMessage(null);
     try {
       const r = await fetch('/api/courses/semaine', { cache: 'no-store' });
-      if (!r.ok) throw new Error((await r.json()).erreur ?? 'Erreur de chargement.');
-      setArticles((await r.json()).articles);
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.erreur ?? 'Erreur de chargement.');
+      setArticles(data.articles);
+      setDiners(data.diners ?? 0);
+      setEtat('ok');
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
-    } finally {
-      setOccupe(false);
+      setEtat('erreur');
     }
   }
+
+  useEffect(() => {
+    void charger();
+  }, []);
 
   const texte = articles ? construireTexte(articles) : '';
 
   async function envoyerMessage() {
     setMessage(null);
     setErreur(null);
-    // 1) Partage natif (mobile) : l'utilisateur choisit SMS / WhatsApp / …
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title: 'Courses de la semaine', text: texte });
@@ -45,7 +56,6 @@ export default function CoursesSemaine() {
         // partage annulé ou indisponible → on tente le lien SMS
       }
     }
-    // 2) Repli : ouvre l'app Messages pré-remplie.
     window.location.href = `sms:?body=${encodeURIComponent(texte)}`;
   }
 
@@ -78,48 +88,58 @@ export default function CoursesSemaine() {
   }
 
   const parRayon = articles ? grouper(articles) : [];
+  const vide = etat === 'ok' && articles && articles.length === 0;
 
   return (
-    <section className="courses-semaine">
+    <section className="courses-semaine" aria-label="Courses de la semaine">
       <div className="cs-tete">
         <h2>🛒 Courses de la semaine</h2>
-        <button className="bouton" onClick={preparer} disabled={occupe}>
-          {occupe && !articles ? 'Préparation…' : articles ? 'Actualiser' : 'Préparer la liste'}
-        </button>
+        {etat === 'ok' && !vide && (
+          <span className="cs-compteur">{diners} dîner{diners > 1 ? 's' : ''} planifié{diners > 1 ? 's' : ''}</span>
+        )}
       </div>
 
-      {erreur && <p className="message erreur">{erreur}</p>}
-      {message && <p className="message info">{message}</p>}
+      {etat === 'charge' && <p className="cs-vide">Préparation de la liste…</p>}
 
-      {articles && (
-        articles.length === 0 ? (
-          <p className="cs-vide">
-            Aucun ingrédient : planifie des dîners (avec des recettes qui ont des quantités) dans le module Repas.
-          </p>
-        ) : (
-          <>
-            <div className="cs-actions">
-              <button className="bouton" onClick={envoyerMessage} disabled={occupe}>💬 Envoyer par message</button>
-              <button className="bouton discret" onClick={ajouterAuxCourses} disabled={occupe}>📋 Ajouter à ma liste de courses</button>
-              <button className="bouton discret" onClick={copier} disabled={occupe}>Copier</button>
+      {etat === 'erreur' && (
+        <p className="message erreur">
+          {erreur} <button className="bouton discret cs-reessayer" onClick={charger}>Réessayer</button>
+        </p>
+      )}
+
+      {vide && (
+        <p className="cs-vide">
+          Aucun ingrédient : planifie des dîners (avec des recettes qui ont des quantités) dans le module Repas.
+        </p>
+      )}
+
+      {etat === 'ok' && articles && articles.length > 0 && (
+        <>
+          {message && <p className="message info">{message}</p>}
+          {erreur && <p className="message erreur">{erreur}</p>}
+
+          {parRayon.map(({ rayon, items }) => (
+            <div className="cs-rayon-groupe" key={rayon}>
+              <p className="cs-rayon">{rayon}</p>
+              <ul className="cs-arts">
+                {items.map((a, k) => (
+                  <li key={k}>
+                    {a.article}
+                    {a.quantite != null && (
+                      <span className="cs-q">{formatQuantite(a.quantite)} {a.unite}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            {parRayon.map(({ rayon, items }) => (
-              <div className="rayon-groupe" key={rayon}>
-                <p className="rayon-titre">{rayon}</p>
-                <ul className="courses-apercu">
-                  {items.map((a, k) => (
-                    <li key={k}>
-                      <span className="i-art">{a.article}</span>
-                      {a.quantite != null && (
-                        <span className="i-qte">{formatQuantite(a.quantite)} {a.unite}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </>
-        )
+          ))}
+
+          <div className="cs-actions">
+            <button className="bouton bouton-primaire" onClick={envoyerMessage} disabled={occupe}>💬 Envoyer par message</button>
+            <button className="bouton" onClick={ajouterAuxCourses} disabled={occupe}>📋 Ajouter à ma liste</button>
+            <button className="bouton discret" onClick={copier} disabled={occupe}>Copier</button>
+          </div>
+        </>
       )}
     </section>
   );

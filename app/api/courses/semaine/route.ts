@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 /** GET /api/courses/semaine — liste de courses agrégée de la semaine planifiée. */
 export async function GET() {
   try {
-    return NextResponse.json({ articles: await listeCoursesSemaine() });
+    return NextResponse.json(await listeCoursesSemaine());
   } catch (e) {
     return reponseErreur(e);
   }
@@ -22,7 +22,7 @@ export async function GET() {
  */
 export async function POST() {
   try {
-    const articles = await listeCoursesSemaine();
+    const { articles } = await listeCoursesSemaine();
     const items = articles.map((a) => ({
       article:
         a.quantite != null

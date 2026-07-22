@@ -9,7 +9,7 @@ import { t } from '@/lib/i18n';
  * Le choix est mémorisé dans localStorage et relu par le script inline du
  * layout au chargement suivant.
  */
-export default function SelecteurTheme() {
+export default function SelecteurTheme({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<IdTheme>(THEME_DEFAUT);
 
   // Le serveur ignore le thème mémorisé : on se resynchronise après montage.
@@ -30,7 +30,7 @@ export default function SelecteurTheme() {
 
   return (
     <div className="selecteur">
-      <label htmlFor="theme">{t('THEME')}</label>
+      {!compact && <label htmlFor="theme">{t('THEME')}</label>}
       <select
         id="theme"
         value={theme}

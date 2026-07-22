@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { formatEuro } from '@/lib/argent';
-import type { DonneesEvenements, Evenement } from '@/lib/evenements/schema';
+import { estDansAgenda, parseAgendaLien, type DonneesEvenements, type Evenement } from '@/lib/evenements/schema';
+import type { Agenda } from '@/lib/agenda/schema';
 
 /**
  * Écran Événements (client) : cartes d'événements avec récap (invités confirmés,
@@ -142,6 +143,10 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                   )}
                 </div>
                 {ev.note && <p className="ev-note">{ev.note}</p>}
+
+                {ev.ligne != null && ev.dateISO && d.agendas.length > 0 && (
+                  <SyncAgenda ev={ev} agendas={d.agendas} occupe={occupe} action={action} />
+                )}
               </li>
             ),
           )}
@@ -157,6 +162,77 @@ function envoi(methode: string, corps: unknown): Promise<Response> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(corps),
   });
+}
+
+function envoiAgenda(methode: string, corps: unknown): Promise<Response> {
+  return fetch('/api/evenements/agenda', {
+    method: methode,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(corps),
+  });
+}
+
+/** Contrôle « Ajouter à l'agenda » / badge « dans l'agenda » pour un événement daté. */
+function SyncAgenda({
+  ev,
+  agendas,
+  occupe,
+  action,
+}: {
+  ev: Evenement;
+  agendas: Agenda[];
+  occupe: boolean;
+  action: (fn: () => Promise<Response>) => Promise<void>;
+}) {
+  const [choix, setChoix] = useState(false);
+
+  if (estDansAgenda(ev)) {
+    const cal = agendas.find((a) => a.id === parseAgendaLien(ev.agendaLien)?.calendarId);
+    return (
+      <div className="ev-agenda">
+        <span className="ev-agenda-ok">
+          📅 dans l’agenda{cal ? ` · ${cal.nom}` : ''}
+        </span>
+        <button
+          className="bouton discret"
+          onClick={() => action(() => envoiAgenda('DELETE', { ligne: ev.ligne }))}
+          disabled={occupe}
+        >
+          retirer
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ev-agenda">
+      {!choix ? (
+        <button className="bouton discret" onClick={() => setChoix(true)} disabled={occupe}>
+          📅 Ajouter à l’agenda
+        </button>
+      ) : (
+        <>
+          <select
+            className="champ"
+            defaultValue=""
+            disabled={occupe}
+            aria-label="Agenda cible"
+            onChange={(e) => {
+              if (e.target.value) {
+                action(() => envoiAgenda('POST', { ligne: ev.ligne, calendarId: e.target.value })).then(() => setChoix(false));
+              }
+            }}
+          >
+            <option value="">Choisir l’agenda…</option>
+            {agendas.map((a) => (
+              <option key={a.id} value={a.id}>{a.nom}</option>
+            ))}
+          </select>
+          <button className="bouton discret" onClick={() => setChoix(false)} disabled={occupe}>annuler</button>
+        </>
+      )}
+    </div>
+  );
 }
 
 function libelleJours(j: number): string {

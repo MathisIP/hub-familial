@@ -63,7 +63,7 @@ export default async function Accueil() {
       <div className="actions-rapides">
         {/* Toujours affiché : si les listes ne sont pas prêtes, la modale les charge à l'ouverture. */}
         <SaisieTransaction params={accueil?.parametres} />
-        <ImportDrive url={process.env.DRIVE_A_CLASSER_URL} />
+        <ImportDrive />
       </div>
 
       <h2 className="bloc-titre">Les modules</h2>

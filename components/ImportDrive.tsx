@@ -17,24 +17,22 @@ function LogoDrive() {
   );
 }
 
+type Resultat = { nom: string; ok: boolean; erreur?: string };
+
 /**
  * Bouton « Importer » : téléverse des documents dans le dossier Drive « À classer »
- * AU NOM de l'utilisateur (jeton OAuth Drive obtenu à la connexion). Le compte de
- * service ne pouvant pas déposer dans un Drive personnel, l'upload passe par le
- * jeton de l'utilisateur (POST /api/drive/import).
- *
- * `url` (facultatif) : lien secondaire pour ouvrir le dossier dans Drive.
+ * AU NOM de l'utilisateur (jeton OAuth Drive obtenu à la connexion).
  */
-export default function ImportDrive({ url }: { url?: string }) {
+export default function ImportDrive() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [occupe, setOccupe] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [succes, setSucces] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [reconnexion, setReconnexion] = useState(false);
 
   async function envoyer(fichiers: FileList) {
     setOccupe(true);
-    setMessage(null);
+    setSucces(null);
     setErreur(null);
     setReconnexion(false);
     try {
@@ -42,15 +40,26 @@ export default function ImportDrive({ url }: { url?: string }) {
       Array.from(fichiers).forEach((f) => form.append('fichiers', f));
       const r = await fetch('/api/drive/import', { method: 'POST', body: form });
       const data = await r.json();
+
       if (!r.ok) {
         if (data.reconnexion) setReconnexion(true);
         throw new Error(data.erreur ?? 'Import refusé.');
       }
-      const echecs = data.total - data.reussis;
-      setMessage(
-        `${data.reussis} document(s) importé(s) dans « À classer »` +
-          (echecs > 0 ? `, ${echecs} en échec.` : '.'),
-      );
+
+      const reussis: number = data.reussis ?? 0;
+      const total: number = data.total ?? 0;
+      if (reussis === total) {
+        setSucces(`${reussis} document(s) importé(s) dans « À classer ».`);
+      } else {
+        // Au moins un échec → on montre la vraie raison du premier échec.
+        const echecs = (data.resultats as Resultat[] | undefined)?.filter((x) => !x.ok) ?? [];
+        const raison = echecs[0]?.erreur ?? 'raison inconnue';
+        throw new Error(
+          reussis > 0
+            ? `${reussis}/${total} importé(s). Échec des autres : ${friendly(raison)}`
+            : `Échec de l'import : ${friendly(raison)}`,
+        );
+      }
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
     } finally {
@@ -77,7 +86,7 @@ export default function ImportDrive({ url }: { url?: string }) {
         {occupe ? 'Import en cours…' : 'Importer'}
       </button>
 
-      {message && <p className="message info import-msg">{message}</p>}
+      {succes && <p className="message info import-msg">{succes}</p>}
       {erreur && (
         <p className="message erreur import-msg">
           {erreur}
@@ -86,11 +95,20 @@ export default function ImportDrive({ url }: { url?: string }) {
           )}
         </p>
       )}
-      {url && (
-        <a className="import-ouvrir" href={url} target="_blank" rel="noopener noreferrer">
-          ouvrir le dossier « À classer »
-        </a>
-      )}
     </div>
   );
+}
+
+/** Rend certains messages techniques plus parlants. */
+function friendly(msg: string): string {
+  if (/has not been used|is disabled|accessNotConfigured/i.test(msg)) {
+    return "l'API Google Drive n'est pas activée (ou pas encore propagée — patiente quelques minutes).";
+  }
+  if (/File not found/i.test(msg)) {
+    return "dossier « À classer » introuvable (vérifie DRIVE_A_CLASSER_URL sur Vercel).";
+  }
+  if (/insufficient|permission|forbidden|403/i.test(msg)) {
+    return "autorisation Drive insuffisante — reconnecte-toi pour accorder l'accès à Google Drive.";
+  }
+  return msg;
 }

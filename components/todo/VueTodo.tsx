@@ -110,6 +110,16 @@ function OngletTaches({
   const [titre, setTitre] = useState('');
   const [assigne, setAssigne] = useState('');
   const [priorite, setPriorite] = useState('');
+  const [filtrePersonne, setFiltrePersonne] = useState('');
+
+  // La valeur « commune » (Les deux / Nous deux) et les personnes individuelles.
+  const commun = params.personnes.find((p) => /deux/i.test(p)) ?? '';
+  const individus = params.personnes.filter((p) => p !== commun);
+
+  // Filtre : une personne voit SES tâches + les tâches communes (« Les deux »).
+  const tachesAffichees = filtrePersonne
+    ? taches.filter((t) => t.assigne === filtrePersonne || (commun !== '' && t.assigne === commun))
+    : taches;
 
   function ajouter(e: React.FormEvent) {
     e.preventDefault();
@@ -152,11 +162,39 @@ function OngletTaches({
         </button>
       </form>
 
-      {taches.length === 0 ? (
-        <p className="vide">Aucune tâche. Ajoute la première ci-dessus.</p>
+      {individus.length > 1 && (
+        <div className="filtre-personnes" role="tablist" aria-label="Filtrer par personne">
+          <button
+            className={`type-btn${!filtrePersonne ? ' actif' : ''}`}
+            role="tab"
+            aria-selected={!filtrePersonne}
+            onClick={() => setFiltrePersonne('')}
+          >
+            Tous
+          </button>
+          {individus.map((p) => (
+            <button
+              key={p}
+              className={`type-btn${filtrePersonne === p ? ' actif' : ''}`}
+              role="tab"
+              aria-selected={filtrePersonne === p}
+              onClick={() => setFiltrePersonne(p)}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tachesAffichees.length === 0 ? (
+        <p className="vide">
+          {taches.length === 0
+            ? 'Aucune tâche. Ajoute la première ci-dessus.'
+            : `Aucune tâche pour ${filtrePersonne}.`}
+        </p>
       ) : (
         <ul className="liste">
-          {taches.map((t) => (
+          {tachesAffichees.map((t) => (
             <li
               key={t.ligne}
               className={`tache${t.statut === STATUT_FAIT ? ' faite' : ''}${t.enRetard ? ' retard' : ''}`}

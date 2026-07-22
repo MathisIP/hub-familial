@@ -22,8 +22,9 @@ type Resultat = { nom: string; ok: boolean; erreur?: string };
 /**
  * Bouton « Importer » : téléverse des documents dans le dossier Drive « À classer »
  * AU NOM de l'utilisateur (jeton OAuth Drive obtenu à la connexion).
+ * `onImporte` est appelé après un import réussi (ex. rafraîchir l'explorateur).
  */
-export default function ImportDrive() {
+export default function ImportDrive({ onImporte }: { onImporte?: () => void } = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [occupe, setOccupe] = useState(false);
   const [succes, setSucces] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export default function ImportDrive() {
       const total: number = data.total ?? 0;
       if (reussis === total) {
         setSucces(`${reussis} document(s) importé(s) dans « À classer ».`);
+        onImporte?.();
       } else {
         // Au moins un échec → on montre la vraie raison du premier échec.
         const echecs = (data.resultats as Resultat[] | undefined)?.filter((x) => !x.ok) ?? [];

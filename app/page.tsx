@@ -1,7 +1,7 @@
 import MenuPrincipal from '@/components/MenuPrincipal';
 import ResumeComptes from '@/components/ResumeComptes';
 import SaisieTransaction from '@/components/budget/SaisieTransaction';
-import ImportDrive from '@/components/ImportDrive';
+import DriveExplorer from '@/components/DriveExplorer';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
@@ -47,8 +47,9 @@ export default async function Accueil() {
 
       <div className="actions-rapides">
         <SaisieTransaction params={accueil?.parametres} />
-        <ImportDrive />
       </div>
+
+      <DriveExplorer />
 
       <SemaineAgenda />
 

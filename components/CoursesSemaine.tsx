@@ -107,33 +107,35 @@ export default function CoursesSemaine() {
         </p>
       )}
 
-      {vide && (
-        <p className="cs-vide">
-          Aucun ingrédient : planifie des dîners (avec des recettes qui ont des quantités) dans le module Repas.
-        </p>
-      )}
-
-      {etat === 'ok' && articles && articles.length > 0 && (
+      {etat === 'ok' && articles && (
         <>
           {message && <p className="message info">{message}</p>}
           {erreur && <p className="message erreur">{erreur}</p>}
 
-          {parRayon.map(({ rayon, items }) => (
-            <div className="cs-rayon-groupe" key={rayon}>
-              <p className="cs-rayon">{rayon}</p>
-              <ul className="cs-arts">
-                {items.map((a, k) => (
-                  <li key={k}>
-                    {a.article}
-                    {a.quantite != null && (
-                      <span className="cs-q">{formatQuantite(a.quantite)} {a.unite}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {vide ? (
+            <p className="cs-vide">
+              Aucun ingrédient : planifie des dîners (avec des recettes qui ont des quantités) dans le module Repas.
+            </p>
+          ) : (
+            parRayon.map(({ rayon, items }) => (
+              <div className="cs-rayon-groupe" key={rayon}>
+                <p className="cs-rayon">{rayon}</p>
+                <ul className="cs-arts">
+                  {items.map((a, k) => (
+                    <li key={k}>
+                      {a.article}
+                      {a.quantite != null && (
+                        <span className="cs-q">{formatQuantite(a.quantite)} {a.unite}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
 
+          {/* Actions toujours disponibles dès que la liste est chargée (seul un envoi
+              en cours les désactive). */}
           <div className="cs-actions">
             <button className="bouton bouton-primaire" onClick={envoyerMessage} disabled={occupe}>💬 Envoyer par message</button>
             <button className="bouton" onClick={ajouterAuxCourses} disabled={occupe}>📋 Ajouter à ma liste</button>

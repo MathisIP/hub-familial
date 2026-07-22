@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { cssDesThemes, THEME_DEFAUT, THEMES } from '@/lib/themes';
+import EnregistrerSW from '@/components/EnregistrerSW';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <div className="enveloppe">{children}</div>
+        <EnregistrerSW />
       </body>
     </html>
   );

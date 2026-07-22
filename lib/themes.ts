@@ -1,10 +1,12 @@
 /**
  * REGISTRE DES 9 THÈMES — transposition fidèle de la Phase G des Apps Script.
  * ==========================================================================
- * Valeurs hex reprises telles quelles de `Contexte/Budget/00_Constantes.gs`
- * (le Budget porte le socle le plus complet). Ne pas « améliorer » ces
- * couleurs : elles sont la charte de référence, partagée avec les 5 classeurs.
- * Toute divergence ferait dériver l'app par rapport aux tableurs.
+ * Valeurs hex reprises de `Contexte/Budget/00_Constantes.gs` (le Budget porte le
+ * socle le plus complet), avec UNE divergence assumée côté app : le fond `PAGE`
+ * des thèmes CLAIRS est plus franchement teinté que dans les Sheets, pour que les
+ * coloris se distinguent nettement à l'écran (les tableurs restent, eux, très
+ * clairs). Le reste des rôles (accents, cartes, statuts) suit la charte. Ne pas
+ * « améliorer » les autres couleurs sans raison : elles cadrent avec les classeurs.
  *
  * Les rôles (INK, HEAD, PAGE…) sont volontairement identiques d'un thème à
  * l'autre : seules les valeurs changent. Un composant ne référence donc
@@ -30,7 +32,7 @@ export const THEMES = {
   rose: {
     NOM: '🌸 Rose / Bleu',
     INK: '#3f3b36', INK2: '#6b655c', MUTED: '#8f887e', GHOST: '#cfc8bd',
-    PAGE: '#f7f3ed', CELL: '#ffffff',
+    PAGE: '#fbe9f0', CELL: '#ffffff',
     HEAD: '#edc6d3', BLOCK: '#cbe8d5', SOFT: '#f7ecc4', PARAM: '#f9edc8',
     LINK_BG: '#eef1f6', LINK_TX: '#2e4a7a',
     LINE: '#e7ded3', LINE2: '#d9cdbf', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -40,7 +42,7 @@ export const THEMES = {
   ocean: {
     NOM: '🌊 Bleu / Océan',
     INK: '#223a44', INK2: '#4a6470', MUTED: '#647d8a', GHOST: '#b6ccd4',
-    PAGE: '#eef4f7', CELL: '#ffffff',
+    PAGE: '#e3f0f6', CELL: '#ffffff',
     HEAD: '#bfe0e6', BLOCK: '#cdeae1', SOFT: '#d9edf3', PARAM: '#dcefef',
     LINK_BG: '#e6f1f6', LINK_TX: '#1f6f8b',
     LINE: '#d7e7eb', LINE2: '#c4d9de', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -50,7 +52,7 @@ export const THEMES = {
   sauge: {
     NOM: '🌿 Vert / Sauge',
     INK: '#37413a', INK2: '#5b675b', MUTED: '#757e73', GHOST: '#c6cec2',
-    PAGE: '#f4f6ee', CELL: '#ffffff',
+    PAGE: '#e9f3df', CELL: '#ffffff',
     HEAD: '#cfe0c2', BLOCK: '#dbead0', SOFT: '#eef0d6', PARAM: '#ecefda',
     LINK_BG: '#edf2ea', LINK_TX: '#4c6f3a',
     LINE: '#e2e6d5', LINE2: '#d2d8c3', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -60,7 +62,7 @@ export const THEMES = {
   terracotta: {
     NOM: '🍂 Terracotta / Ambre',
     INK: '#43352c', INK2: '#6b574a', MUTED: '#9a8574', GHOST: '#d8c6b6',
-    PAGE: '#faf1e8', CELL: '#ffffff',
+    PAGE: '#fbe6d2', CELL: '#ffffff',
     HEAD: '#f0c9a8', BLOCK: '#f3d9b0', SOFT: '#f6e3bf', PARAM: '#f7e6c4',
     LINK_BG: '#f6ece0', LINK_TX: '#a65a3a',
     LINE: '#ecdcc9', LINE2: '#ddc9b2', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -70,7 +72,7 @@ export const THEMES = {
   lila: {
     NOM: '🪻 Lila / Rose',
     INK: '#3b3340', INK2: '#64596b', MUTED: '#7d7086', GHOST: '#cfc6d6',
-    PAGE: '#f6f2f8', CELL: '#ffffff',
+    PAGE: '#efe4f8', CELL: '#ffffff',
     HEAD: '#e0c6ea', BLOCK: '#ddd0ee', SOFT: '#efe1f2', PARAM: '#ece0f2',
     LINK_BG: '#efe9f6', LINK_TX: '#6a4a8a',
     LINE: '#e6dcec', LINE2: '#d6c9de', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -80,7 +82,7 @@ export const THEMES = {
   rouge: {
     NOM: '🌹 Rouge / Grenade',
     INK: '#43302f', INK2: '#6e514e', MUTED: '#946f6b', GHOST: '#dcc4c0',
-    PAGE: '#faf0ee', CELL: '#ffffff',
+    PAGE: '#fbe2e0', CELL: '#ffffff',
     HEAD: '#f0b4bf', BLOCK: '#f6cdd4', SOFT: '#f7d5db', PARAM: '#f7d9de',
     LINK_BG: '#f6e6e2', LINK_TX: '#a5384f',
     LINE: '#eccfc9', LINE2: '#ddbcb4', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -90,7 +92,7 @@ export const THEMES = {
   marron: {
     NOM: '🤎 Marron / Beige',
     INK: '#3f342a', INK2: '#6b5a48', MUTED: '#8c7860', GHOST: '#d8cab4',
-    PAGE: '#f6f0e6', CELL: '#ffffff',
+    PAGE: '#f0e4cd', CELL: '#ffffff',
     HEAD: '#ddc4a0', BLOCK: '#e6d6bc', SOFT: '#ece0c6', PARAM: '#ede2c8',
     LINK_BG: '#efe8dc', LINK_TX: '#7a5a3a',
     LINE: '#e6dcc9', LINE2: '#d6c6ac', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',
@@ -100,7 +102,7 @@ export const THEMES = {
   gris: {
     NOM: '🩶 Nuance de gris',
     INK: '#2f3236', INK2: '#565b60', MUTED: '#7a7f84', GHOST: '#c4c8cc',
-    PAGE: '#f2f3f4', CELL: '#ffffff',
+    PAGE: '#e6e9ee', CELL: '#ffffff',
     HEAD: '#d3d7db', BLOCK: '#dde0e3', SOFT: '#e4e6e8', PARAM: '#e6e8ea',
     LINK_BG: '#e8eaec', LINK_TX: '#4a5560',
     LINE: '#e2e4e6', LINE2: '#d0d3d6', CARD_BD: '#ffffff', FIELD_BG: '#ffffff',

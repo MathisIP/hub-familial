@@ -9,7 +9,7 @@
 html {
   /* Repli avant l'hydratation : évite le flash blanc si le thème mémorisé
      est 🌙 Nuit. Le script inline du layout écrase data-theme immédiatement. */
-  background: var(--page, #f7f3ed);
+  background: var(--page, #fbe9f0);
 }
 
 body {
@@ -851,9 +851,16 @@ a { color: var(--link-tx); }
 }
 
 /* ===================== ACCUEIL : RÉSUMÉ COMPTES & ACTIONS ===================== */
-.resume-comptes { margin-top: .5rem; }
+/* Comptes encadrés comme les sections Drive / Agenda / Courses (cohérence). */
+.resume-comptes {
+  margin-top: 1.5rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.2rem 1.35rem;
+}
 .rc-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
-.rc-entete .bloc-titre { margin: 1rem 0 .5rem; }
+.rc-entete .bloc-titre { margin: 0 0 .75rem; }
 .rc-lien { font-size: .85rem; color: var(--link-tx); text-decoration: none; white-space: nowrap; }
 .rc-lien:hover { text-decoration: underline; }
 .compte-lien { text-decoration: none; display: flex; flex-direction: column; gap: .1rem; }
@@ -908,14 +915,59 @@ a { color: var(--link-tx); }
 .courses-semaine {
   margin-top: 2rem;
   border: 1px solid var(--line);
-  border-radius: .875rem;
+  border-radius: 1rem;
   background: var(--cell);
-  padding: 1rem 1.1rem;
+  padding: 1.2rem 1.35rem;
 }
 .cs-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
 .cs-tete h2 { margin: 0; font-size: 1.05rem; }
 .cs-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .9rem 0; }
 .cs-vide { color: var(--muted); font-size: .88rem; margin: .8rem 0 0; }
+
+/* ===================== ACCUEIL : EXPLORATEUR DRIVE ===================== */
+.drive-explorer {
+  margin-top: 2rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.2rem 1.35rem;
+}
+.de-tete {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: .6rem;
+}
+.de-tete h2 { margin: 0; font-size: 1.05rem; }
+
+/* Fil d'Ariane */
+.de-fil { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem; margin: .9rem 0 .2rem; }
+.de-sep { color: var(--muted); margin: 0 .1rem; }
+.de-crumb {
+  font: inherit; font-size: .85rem; color: var(--link-tx);
+  background: none; border: none; cursor: pointer;
+  padding: .15rem .35rem; border-radius: .4rem; max-width: 12rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.de-crumb:hover:not(:disabled) { background: var(--link-bg); }
+.de-crumb:disabled { color: var(--ink); font-weight: 600; cursor: default; }
+
+.de-info { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
+.de-info code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
+.de-msg { margin: .8rem 0 0; }
+
+/* Liste des éléments (dossiers puis fichiers) */
+.de-liste { list-style: none; margin: .9rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.de-item {
+  display: flex; align-items: center; gap: .7rem; width: 100%; text-align: left;
+  font: inherit; font-size: .92rem; color: var(--ink);
+  padding: .55rem .8rem; border-radius: .6rem;
+  background: var(--page); border: 1px solid var(--line); cursor: pointer;
+}
+.de-item:hover:not(:disabled) { border-color: var(--link-tx); }
+.de-item:disabled { opacity: .55; cursor: default; }
+.de-item.dossier .de-nom { font-weight: 600; }
+.de-ic { flex: none; font-size: 1.05rem; line-height: 1; }
+.de-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.de-fleche { flex: none; color: var(--muted); font-size: .95rem; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

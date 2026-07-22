@@ -696,6 +696,12 @@ a { color: var(--link-tx); }
 }
 .ev-jauge-fill { display: block; height: 100%; background: var(--ok-tx); border-radius: 999px; }
 .ev-note { margin: 0; font-size: .82rem; color: var(--muted); }
+.ev-agenda { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.ev-agenda-ok {
+  font-size: .8rem; color: var(--ok-tx); background: var(--ok-bg);
+  padding: .12rem .55rem; border-radius: 999px;
+}
+.ev-agenda .champ { font-size: .84rem; padding: .3rem .45rem; }
 
 /* ========================== CONNEXION / COMPTE ========================== */
 .entete-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }

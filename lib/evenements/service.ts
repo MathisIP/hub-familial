@@ -2,7 +2,9 @@ import 'server-only';
 import { lireBatch, ecrirePlage } from '@/lib/google/sheets';
 import { ErreurValidation } from '@/lib/erreurs';
 import { nomOnglet, plage } from '@/lib/i18n';
-import { parseEuro } from '@/lib/argent';
+import { parseEuro, versISO } from '@/lib/argent';
+import { ajouterEvenement as creerEventAgenda, supprimerEvenement as supprimerEventAgenda, listerAgendas } from '@/lib/agenda/service';
+import type { Agenda } from '@/lib/agenda/schema';
 import {
   COL_EV,
   LIGNE_DONNEES_EV,
@@ -11,6 +13,7 @@ import {
   estCoche,
   evenementStub,
   ligneVersEvenement,
+  parseAgendaLien,
   rollupVide,
   type DonneesEvenements,
   type Evenement,
@@ -106,7 +109,16 @@ export async function chargerEvenements(): Promise<DonneesEvenements> {
 
   const types = colonne(par, 0);
   const statuts = colonne(par, 1);
-  return { evenements, types, statuts: statuts.length ? statuts : STATUTS_DEFAUT };
+
+  // Agendas où pousser un événement (défensif : vide si Agenda indispo/non configuré).
+  let agendas: Agenda[] = [];
+  try {
+    agendas = await listerAgendas();
+  } catch {
+    agendas = [];
+  }
+
+  return { evenements, types, statuts: statuts.length ? statuts : STATUTS_DEFAUT, agendas };
 }
 
 /* ------------------------------ MUTATIONS ------------------------------ */
@@ -159,4 +171,67 @@ export async function modifierEvenement(ligne: number, c: ChampsEvenement): Prom
 export async function changerStatutEvenement(ligne: number, statut: string): Promise<void> {
   if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
   await ecrirePlage(CL, pl('EVENEMENTS', `I${ligne}`), [[statut]]);
+}
+
+/* --------------------------- LIEN AVEC L'AGENDA --------------------------- */
+
+/** « 19:00 » / « 19h00 » / « 19h » / « 9:5 » → « HH:MM », sinon null (journée entière). */
+function parseHeure(v: string): string | null {
+  const s = v.trim().toLowerCase().replace('h', ':');
+  const m = s.match(/^(\d{1,2}):?(\d{0,2})$/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const mn = m[2] ? Number(m[2]) : 0;
+  if (h > 23 || mn > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+}
+
+/**
+ * Crée l'événement dans l'agenda choisi à partir de la ligne maître (nom, date,
+ * heure, lieu, note) et mémorise « calendarId|eventId » en colonne K (dédoublonnage).
+ */
+export async function lierAgenda(ligne: number, calendarId: string): Promise<void> {
+  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
+  if (!calendarId.trim()) throw new ErreurValidation('Agenda cible requis.');
+
+  const [brut] = await lireBatch(CL, [pl('EVENEMENTS', `A${ligne}:K${ligne}`)]);
+  const l = brut[0] ?? [];
+  const nom = S(l[COL_EV.NOM - 1]);
+  if (!nom) throw new ErreurValidation(`Aucun événement à la ligne ${ligne}.`);
+  if (S(l[COL_EV.AGENDA - 1])) throw new ErreurValidation('Événement déjà dans l’agenda.');
+
+  const dateISO = versISO(S(l[COL_EV.DATE - 1]));
+  if (!dateISO) throw new ErreurValidation("L'événement doit avoir une date pour aller dans l'agenda.");
+
+  const heure = parseHeure(S(l[COL_EV.HEURE - 1]));
+  const lieu = S(l[COL_EV.LIEU - 1]);
+  const type = S(l[COL_EV.TYPE - 1]);
+  const note = S(l[COL_EV.NOTE - 1]);
+
+  const eventId = await creerEventAgenda({
+    calendarId,
+    titre: nom,
+    date: dateISO,
+    journeeEntiere: heure === null,
+    heureDebut: heure ?? undefined,
+    lieu,
+    description: [type, note].filter(Boolean).join(' — '),
+  });
+
+  await ecrirePlage(CL, pl('EVENEMENTS', `K${ligne}`), [[`${calendarId}|${eventId}`]]);
+}
+
+/** Supprime l'événement d'agenda lié et vide la colonne K. */
+export async function delierAgenda(ligne: number): Promise<void> {
+  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
+  const [brut] = await lireBatch(CL, [pl('EVENEMENTS', `K${ligne}:K${ligne}`)]);
+  const lien = parseAgendaLien(S(brut[0]?.[0]));
+  if (lien) {
+    try {
+      await supprimerEventAgenda(lien.calendarId, lien.eventId);
+    } catch {
+      // événement d'agenda déjà supprimé côté Google : on nettoie quand même la colonne K
+    }
+  }
+  await ecrirePlage(CL, pl('EVENEMENTS', `K${ligne}`), [['']]);
 }

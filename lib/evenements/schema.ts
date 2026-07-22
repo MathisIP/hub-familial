@@ -14,6 +14,7 @@
  * dans le maître (colonnes A→J ; K AgendaID est préservée).
  */
 import { parseEuro, versISO, joursJusqua } from '@/lib/argent';
+import type { Agenda } from '@/lib/agenda/schema';
 
 export const COL_EV = {
   NOM: 1, TYPE: 2, DATE: 3, HEURE: 4, LIEU: 5, NB_INVITES: 6,
@@ -39,6 +40,7 @@ export type Evenement = {
   statut: string;
   note: string;
   joursRestants: number | null;
+  agendaLien: string; // colonne K : « calendarId|eventId » si lié à l'agenda, sinon ''
   // Récapitulatifs calculés depuis les sous-onglets :
   invitesOui: number;
   invitesTotal: number;
@@ -54,7 +56,22 @@ export type DonneesEvenements = {
   evenements: Evenement[];
   types: string[];
   statuts: string[];
+  agendas: Agenda[]; // agendas où l'on peut pousser un événement (vide si indispo)
 };
+
+/** Décompose le lien agenda « calendarId|eventId » (col K). */
+export function parseAgendaLien(lien: string): { calendarId: string; eventId: string } | null {
+  const i = lien.indexOf('|');
+  if (i === -1) return null;
+  const calendarId = lien.slice(0, i).trim();
+  const eventId = lien.slice(i + 1).trim();
+  return calendarId && eventId ? { calendarId, eventId } : null;
+}
+
+/** Vrai si l'événement est lié à l'agenda (col K exploitable). */
+export function estDansAgenda(ev: Evenement): boolean {
+  return parseAgendaLien(ev.agendaLien) !== null;
+}
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
 export const estCoche = (v: unknown): boolean => v === true || v === 'TRUE' || v === 'VRAI';
@@ -93,6 +110,7 @@ export function ligneVersEvenement(l: unknown[], ligne: number, r: Rollup): Even
     statut: S(l[COL_EV.STATUT - 1]),
     note: S(l[COL_EV.NOTE - 1]),
     joursRestants: dateISO ? joursJusqua(dateISO) : null,
+    agendaLien: S(l[COL_EV.AGENDA - 1]),
     ...r,
   };
 }
@@ -102,6 +120,6 @@ export function evenementStub(nom: string, r: Rollup): Evenement {
   return {
     ligne: null, nom, type: '', date: '', dateISO: null, heure: '', lieu: '',
     budgetPrevu: '', depense: '', budgetNum: 0, depenseNum: 0, statut: '', note: '',
-    joursRestants: null, ...r,
+    joursRestants: null, agendaLien: '', ...r,
   };
 }

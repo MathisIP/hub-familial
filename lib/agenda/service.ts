@@ -72,6 +72,20 @@ async function nomAgenda(cal: calendar_v3.Calendar, id: string): Promise<string>
   }
 }
 
+/** Liste des agendas configurés (id + nom + couleur), sans charger les événements. */
+export async function listerAgendas(): Promise<Agenda[]> {
+  const ids = configFoyer().agendaIds;
+  if (ids.length === 0) return [];
+  const cal = clientCalendar();
+  return Promise.all(
+    ids.map(async (id, i): Promise<Agenda> => ({
+      id,
+      nom: await nomAgenda(cal, id),
+      couleur: COULEURS_AGENDA[i % COULEURS_AGENDA.length],
+    })),
+  );
+}
+
 /** Événements à venir sur `jours` jours, fusionnés depuis tous les agendas. */
 export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
   const cal = clientCalendar();

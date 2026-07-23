@@ -1,11 +1,20 @@
 import type { Metadata, Viewport } from 'next';
 import { cssDesThemes, THEME_DEFAUT, THEMES } from '@/lib/themes';
 import EnregistrerSW from '@/components/EnregistrerSW';
+import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Hub familial',
   description: "L'organisation du foyer, en un seul endroit.",
+  // iOS n'a pas d'invite d'installation : ces balises font qu'une fois ajoutée à
+  // l'écran d'accueil, l'app se lance en plein écran (sans la barre Safari), avec
+  // son nom et son icône (apple-touch-icon = app/apple-icon.png, servi par Next).
+  appleWebApp: {
+    capable: true,
+    title: 'Hub',
+    statusBarStyle: 'default',
+  },
 };
 
 export const viewport: Viewport = {
@@ -40,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="enveloppe">{children}</div>
         <EnregistrerSW />
+        <AstuceInstallIOS />
       </body>
     </html>
   );

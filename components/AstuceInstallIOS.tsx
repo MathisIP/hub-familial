@@ -16,7 +16,13 @@ export default function AstuceInstallIOS() {
   useEffect(() => {
     try {
       const ua = navigator.userAgent || '';
-      const iOS = /iphone|ipad|ipod/i.test(ua);
+      // iPhone/iPod : détectés par l'UA. iPad (iPadOS 13+) : se fait passer pour un
+      // Mac dans l'UA → on le repère par un UA « Mac » AVEC écran tactile (un vrai
+      // Mac a maxTouchPoints = 0).
+      const iPhone = /iphone|ipod/i.test(ua);
+      const iPadClassique = /ipad/i.test(ua);
+      const iPadMasque = /macintosh|mac os x/i.test(ua) && navigator.maxTouchPoints > 0;
+      const iOS = iPhone || iPadClassique || iPadMasque;
       const installe = 'standalone' in navigator && (navigator as unknown as { standalone?: boolean }).standalone === true;
       const rejete = localStorage.getItem('hub-install-ios') === 'non';
       if (iOS && !installe && !rejete) setVisible(true);
@@ -40,7 +46,7 @@ export default function AstuceInstallIOS() {
     <div className="install-ios" role="dialog" aria-label="Installer l'application">
       <img className="install-ios-logo" src="/icon-192.png" alt="" width={34} height={34} />
       <p className="install-ios-txt">
-        Installe le Hub sur ton iPhone : appuie sur{' '}
+        Installe le Hub : appuie sur{' '}
         <span className="install-ios-ic" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="15" height="15" focusable="false">
             <path d="M12 3l3.5 3.5-1.4 1.4L13 6.83V15h-2V6.83L9.9 7.9 8.5 6.5 12 3z" fill="currentColor" />

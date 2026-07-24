@@ -44,7 +44,7 @@ export type Ingredient = {
 };
 
 export type Recette = {
-  ligne: number; // n° de ligne réel dans le Sheet (adresse d'écriture)
+  id: string;
   nom: string;
   ingredients: Ingredient[];
   type: string;
@@ -54,8 +54,7 @@ export type Recette = {
 };
 
 export type JourRepas = {
-  ligne: number;
-  jour: string;
+  jour: string; // Lundi … Dimanche — identifiant du jour
   diner: string; // nom de recette (ou texte libre)
   note: string;
   personnes: number; // pour ce dîner-là

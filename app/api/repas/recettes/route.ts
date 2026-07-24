@@ -13,35 +13,35 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const c = (await req.json()) as ChampsRecette;
-    const ligne = await ajouterRecette(c);
-    return NextResponse.json({ ok: true, ligne });
+    const id = await ajouterRecette(c);
+    return NextResponse.json({ ok: true, id });
   } catch (e) {
     return reponseErreur(e);
   }
 }
 
-/** PATCH /api/repas/recettes — modifie une recette { ligne, ...champs }. */
+/** PATCH /api/repas/recettes — modifie une recette { id, ...champs }. */
 export async function PATCH(req: NextRequest) {
   try {
-    const { ligne, ...champs } = (await req.json()) as ChampsRecette & { ligne: number };
-    if (typeof ligne !== 'number') {
-      return NextResponse.json({ erreur: 'ligne requise.' }, { status: 400 });
+    const { id, ...champs } = (await req.json()) as ChampsRecette & { id: string };
+    if (typeof id !== 'string' || id === '') {
+      return NextResponse.json({ erreur: 'id requis.' }, { status: 400 });
     }
-    await modifierRecette(ligne, champs);
+    await modifierRecette(id, champs);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);
   }
 }
 
-/** DELETE /api/repas/recettes — supprime une recette { ligne }. */
+/** DELETE /api/repas/recettes — supprime une recette { id }. */
 export async function DELETE(req: NextRequest) {
   try {
-    const { ligne } = (await req.json()) as { ligne?: number };
-    if (typeof ligne !== 'number') {
-      return NextResponse.json({ erreur: 'ligne requise.' }, { status: 400 });
+    const { id } = (await req.json()) as { id?: string };
+    if (typeof id !== 'string' || id === '') {
+      return NextResponse.json({ erreur: 'id requis.' }, { status: 400 });
     }
-    await supprimerRecette(ligne);
+    await supprimerRecette(id);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

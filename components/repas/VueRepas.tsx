@@ -96,7 +96,7 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
     <>
       <ul className="liste">
         {d.semaine.map((j) => (
-          <JourLigne key={j.ligne} jour={j} recettes={d.recettes} occupe={occupe} action={action} />
+          <JourLigne key={j.jour} jour={j} recettes={d.recettes} occupe={occupe} action={action} />
         ))}
       </ul>
 
@@ -129,10 +129,10 @@ function JourLigne({
   function enregistrer() {
     if (diner === jour.diner && String(nbPers) === String(jour.personnes)) return;
     // La note du jour est conservée telle quelle (pas d'édition sur cette ligne).
-    action(() => patch('/api/repas/semaine', { ligne: jour.ligne, diner, personnes: nbPers, note: jour.note }));
+    action(() => patch('/api/repas/semaine', { jour: jour.jour, diner, personnes: nbPers, note: jour.note }));
   }
 
-  const listeId = `recettes-${jour.ligne}`;
+  const listeId = `recettes-${jour.jour}`;
   return (
     <li className="jour-repas">
       <div className="jr-tete">
@@ -149,7 +149,7 @@ function JourLigne({
         />
         <datalist id={listeId}>
           {recettes.map((r) => (
-            <option key={r.ligne} value={r.nom} />
+            <option key={r.id} value={r.nom} />
           ))}
         </datalist>
         <label className="jr-pers">
@@ -233,7 +233,7 @@ function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses>
 /* =============================== RECETTES =============================== */
 
 function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boolean; action: ActionFn }) {
-  const [edite, setEdite] = useState<number | 'nouvelle' | null>(null);
+  const [edite, setEdite] = useState<string | 'nouvelle' | null>(null);
 
   return (
     <>
@@ -264,29 +264,29 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
 
       <ul className="liste recettes-liste">
         {d.recettes.map((r) =>
-          edite === r.ligne ? (
-            <li key={r.ligne}>
+          edite === r.id ? (
+            <li key={r.id}>
               <RecetteForm
                 d={d}
                 recette={r}
                 occupe={occupe}
                 onAnnulerAction={() => setEdite(null)}
                 onEnregistrerAction={(corps) =>
-                  action(() => patch('/api/repas/recettes', { ligne: r.ligne, ...corps })).then(() => setEdite(null))
+                  action(() => patch('/api/repas/recettes', { id: r.id, ...corps })).then(() => setEdite(null))
                 }
                 onSupprimerAction={() =>
                   action(() =>
                     fetch('/api/repas/recettes', {
                       method: 'DELETE',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ligne: r.ligne }),
+                      body: JSON.stringify({ id: r.id }),
                     }),
                   ).then(() => setEdite(null))
                 }
               />
             </li>
           ) : (
-            <li key={r.ligne} className="recette-carte">
+            <li key={r.id} className="recette-carte">
               <div className="rc-tete">
                 <span className="rc-nom">{r.nom}</span>
                 <span className="rc-meta">
@@ -294,7 +294,7 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
                   {r.chaudFroid && <span className="puce categorie">{r.chaudFroid}</span>}
                   <span className="puce assigne">{r.personnes} pers.</span>
                 </span>
-                <button className="bouton discret" onClick={() => setEdite(r.ligne)} disabled={occupe}>
+                <button className="bouton discret" onClick={() => setEdite(r.id)} disabled={occupe}>
                   Modifier
                 </button>
               </div>

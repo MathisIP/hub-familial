@@ -4,6 +4,8 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
+  jsonb,
   unique,
   index,
 } from 'drizzle-orm/pg-core';
@@ -191,3 +193,52 @@ export const courses = pgTable(
 
 export type LigneTache = typeof taches.$inferSelect;
 export type LigneCourse = typeof courses.$inferSelect;
+
+/* =========================== MODULE REPAS =========================== */
+/**
+ * Recettes (ingrédients en JSONB : une recette = sa liste d'ingrédients, lue et
+ * réécrite d'un bloc par l'éditeur) et planning de la semaine (une ligne par jour
+ * et par foyer). Remplace les onglets Recettes/Semaine.
+ */
+
+type IngredientJSON = { article: string; quantite: number | null; unite: string; rayon: string };
+
+export const recettes = pgTable(
+  'recettes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    ingredients: jsonb('ingredients').$type<IngredientJSON[]>().notNull(),
+    type: text('type').notNull().default(''),
+    chaudFroid: text('chaud_froid').notNull().default(''),
+    note: text('note').notNull().default(''),
+    personnes: integer('personnes').notNull().default(2),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('recettes_foyer_idx').on(t.foyerId)],
+);
+
+export const semaine = pgTable(
+  'semaine',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    jour: text('jour').notNull(), // Lundi … Dimanche
+    diner: text('diner').notNull().default(''),
+    note: text('note').notNull().default(''),
+    personnes: integer('personnes').notNull().default(2),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('semaine_foyer_jour').on(t.foyerId, t.jour),
+    index('semaine_foyer_idx').on(t.foyerId),
+  ],
+);
+
+export type LigneRecette = typeof recettes.$inferSelect;
+export type LigneSemaine = typeof semaine.$inferSelect;

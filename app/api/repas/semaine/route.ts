@@ -4,14 +4,14 @@ import { reponseErreur } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-/** PATCH /api/repas/semaine — définit un jour { ligne, diner, personnes, note }. */
+/** PATCH /api/repas/semaine — définit un jour { jour, diner, personnes, note }. */
 export async function PATCH(req: NextRequest) {
   try {
-    const { ligne, ...champs } = (await req.json()) as ChampsJour & { ligne: number };
-    if (typeof ligne !== 'number') {
-      return NextResponse.json({ erreur: 'ligne requise.' }, { status: 400 });
+    const { jour, ...champs } = (await req.json()) as ChampsJour & { jour: string };
+    if (typeof jour !== 'string' || jour === '') {
+      return NextResponse.json({ erreur: 'jour requis.' }, { status: 400 });
     }
-    await definirJour(ligne, champs);
+    await definirJour(jour, champs);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

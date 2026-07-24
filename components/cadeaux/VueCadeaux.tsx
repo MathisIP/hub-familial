@@ -19,7 +19,7 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [ajout, setAjout] = useState(false);
-  const [edite, setEdite] = useState<number | null>(null);
+  const [edite, setEdite] = useState<string | null>(null);
 
   const rafraichir = useCallback(async () => {
     const r = await fetch('/api/cadeaux', { cache: 'no-store' });
@@ -82,23 +82,23 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
 
           <ul className="liste">
             {cadeaux.map((c) =>
-              edite === c.ligne ? (
-                <li key={c.ligne}>
+              edite === c.id ? (
+                <li key={c.id}>
                   <CadeauForm
                     d={d}
                     cadeau={c}
                     occupe={occupe}
                     onAnnulerAction={() => setEdite(null)}
                     onEnregistrerAction={(corps) =>
-                      action(() => envoi('PATCH', { ligne: c.ligne, ...corps })).then(() => setEdite(null))
+                      action(() => envoi('PATCH', { id: c.id, ...corps })).then(() => setEdite(null))
                     }
                     onSupprimerAction={() =>
-                      action(() => envoi('DELETE', { ligne: c.ligne })).then(() => setEdite(null))
+                      action(() => envoi('DELETE', { id: c.id })).then(() => setEdite(null))
                     }
                   />
                 </li>
               ) : (
-                <li key={c.ligne} className={`cadeau${c.statut === STATUT_OFFERT ? ' offert' : ''}`}>
+                <li key={c.id} className={`cadeau${c.statut === STATUT_OFFERT ? ' offert' : ''}`}>
                   <div className="cad-principal">
                     <span className="cad-idee">{c.idee}</span>
                     <span className="cad-meta">
@@ -122,14 +122,14 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                       className="statut"
                       value={c.statut}
                       disabled={occupe}
-                      onChange={(e) => action(() => envoi('PATCH', { ligne: c.ligne, statut: e.target.value }))}
+                      onChange={(e) => action(() => envoi('PATCH', { id: c.id, statut: e.target.value }))}
                       aria-label={`Statut de ${c.idee}`}
                     >
                       {d.statuts.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
-                    <button className="bouton discret" onClick={() => setEdite(c.ligne)} disabled={occupe}>
+                    <button className="bouton discret" onClick={() => setEdite(c.id)} disabled={occupe}>
                       Modifier
                     </button>
                   </div>
@@ -226,10 +226,10 @@ function CadeauForm({
         <datalist id="cad-personnes">
           {d.offertPar.map((p) => <option key={p} value={p} />)}
         </datalist>
-        <select className="champ" value={occasion} onChange={(e) => setOccasion(e.target.value)} disabled={occupe} aria-label="Occasion">
-          <option value="">Occasion…</option>
-          {d.occasions.map((o) => <option key={o.occasion} value={o.occasion}>{o.occasion}</option>)}
-        </select>
+        <input className="champ" placeholder="Occasion" value={occasion} onChange={(e) => setOccasion(e.target.value)} disabled={occupe} list="cad-occasions" aria-label="Occasion" />
+        <datalist id="cad-occasions">
+          {d.occasions.map((o) => <option key={o.occasion} value={o.occasion} />)}
+        </datalist>
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>

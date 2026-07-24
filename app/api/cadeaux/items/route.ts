@@ -14,25 +14,25 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const c = (await req.json()) as ChampsCadeau;
-    const ligne = await ajouterCadeau(c);
-    return NextResponse.json({ ok: true, ligne });
+    const id = await ajouterCadeau(c);
+    return NextResponse.json({ ok: true, id });
   } catch (e) {
     return reponseErreur(e);
   }
 }
 
-/** PATCH — modifie un cadeau { ligne, ...champs } ; si seul { ligne, statut } → change le statut. */
+/** PATCH — modifie un cadeau { id, ...champs } ; si seul { id, statut } → change le statut. */
 export async function PATCH(req: NextRequest) {
   try {
-    const corps = (await req.json()) as ChampsCadeau & { ligne: number; statut?: string };
-    if (typeof corps.ligne !== 'number') {
-      return NextResponse.json({ erreur: 'ligne requise.' }, { status: 400 });
+    const corps = (await req.json()) as ChampsCadeau & { id: string; statut?: string };
+    if (typeof corps.id !== 'string' || corps.id === '') {
+      return NextResponse.json({ erreur: 'id requis.' }, { status: 400 });
     }
-    const { ligne, ...champs } = corps;
+    const { id, ...champs } = corps;
     if (champs.idee === undefined && typeof champs.statut === 'string') {
-      await changerStatutCadeau(ligne, champs.statut);
+      await changerStatutCadeau(id, champs.statut);
     } else {
-      await modifierCadeau(ligne, champs);
+      await modifierCadeau(id, champs);
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
@@ -40,14 +40,14 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-/** DELETE — supprime un cadeau { ligne }. */
+/** DELETE — supprime un cadeau { id }. */
 export async function DELETE(req: NextRequest) {
   try {
-    const { ligne } = (await req.json()) as { ligne?: number };
-    if (typeof ligne !== 'number') {
-      return NextResponse.json({ erreur: 'ligne requise.' }, { status: 400 });
+    const { id } = (await req.json()) as { id?: string };
+    if (typeof id !== 'string' || id === '') {
+      return NextResponse.json({ erreur: 'id requis.' }, { status: 400 });
     }
-    await supprimerCadeau(ligne);
+    await supprimerCadeau(id);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

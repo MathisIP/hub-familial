@@ -92,3 +92,56 @@ export type Foyer = typeof foyers.$inferSelect;
 export type Utilisateur = typeof utilisateurs.$inferSelect;
 export type Membre = typeof membres.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
+
+/* =========================== MODULE CADEAUX =========================== */
+/**
+ * Données du module Cadeaux, en base (remplace les onglets Sheets Cadeaux/
+ * Occasions). TOUT porte `foyer_id` : chaque requête du service est scopée au
+ * foyer courant. Les montants restent en texte (saisie libre « 20 € »), les
+ * nombres sont recalculés à la lecture (parseEuro), comme en version Sheets.
+ */
+
+/** Occasions d'un foyer (Noël, anniversaires…). Nom unique par foyer. */
+export const occasions = pgTable(
+  'occasions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    date: text('date'), // saisie libre ; ISO calculé à la lecture
+    budget: text('budget'),
+    note: text('note'),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('occasions_foyer_nom').on(t.foyerId, t.nom),
+    index('occasions_foyer_idx').on(t.foyerId),
+  ],
+);
+
+/** Idées / cadeaux d'un foyer, rattachés à une occasion par son nom (texte). */
+export const cadeaux = pgTable(
+  'cadeaux',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    pourQui: text('pour_qui').notNull().default(''),
+    occasion: text('occasion').notNull().default(''),
+    idee: text('idee').notNull(),
+    statut: text('statut').notNull().default('Idée'),
+    budgetPrevu: text('budget_prevu').notNull().default(''),
+    prixPaye: text('prix_paye').notNull().default(''),
+    offertPar: text('offert_par').notNull().default(''),
+    ou: text('ou').notNull().default(''),
+    note: text('note').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('cadeaux_foyer_idx').on(t.foyerId)],
+);
+
+export type LigneOccasion = typeof occasions.$inferSelect;
+export type LigneCadeau = typeof cadeaux.$inferSelect;

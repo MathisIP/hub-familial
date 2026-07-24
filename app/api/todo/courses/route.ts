@@ -18,14 +18,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** PATCH /api/todo/courses — coche/décoche un article { ligne, fait }. */
+/** PATCH /api/todo/courses — coche/décoche un article { id, fait }. */
 export async function PATCH(req: NextRequest) {
   try {
-    const { ligne, fait } = (await req.json()) as { ligne?: number; fait?: boolean };
-    if (typeof ligne !== 'number' || typeof fait !== 'boolean') {
-      return NextResponse.json({ erreur: 'Paramètres { ligne, fait } requis.' }, { status: 400 });
+    const { id, fait } = (await req.json()) as { id?: string; fait?: boolean };
+    if (typeof id !== 'string' || id === '' || typeof fait !== 'boolean') {
+      return NextResponse.json({ erreur: 'Paramètres { id, fait } requis.' }, { status: 400 });
     }
-    await cocherCourse(ligne, fait);
+    await cocherCourse(id, fait);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

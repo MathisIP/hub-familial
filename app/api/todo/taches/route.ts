@@ -18,14 +18,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** PATCH /api/todo/taches — change le statut d'une tâche { ligne, statut }. */
+/** PATCH /api/todo/taches — change le statut d'une tâche { id, statut }. */
 export async function PATCH(req: NextRequest) {
   try {
-    const { ligne, statut } = (await req.json()) as { ligne?: number; statut?: string };
-    if (typeof ligne !== 'number' || !statut?.trim()) {
-      return NextResponse.json({ erreur: 'Paramètres { ligne, statut } requis.' }, { status: 400 });
+    const { id, statut } = (await req.json()) as { id?: string; statut?: string };
+    if (typeof id !== 'string' || id === '' || !statut?.trim()) {
+      return NextResponse.json({ erreur: 'Paramètres { id, statut } requis.' }, { status: 400 });
     }
-    await changerStatutTache(ligne, statut);
+    await changerStatutTache(id, statut);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

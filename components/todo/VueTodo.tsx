@@ -129,9 +129,9 @@ function OngletTaches({
     action(() => fetch('/api/todo/taches', json(corps)));
   }
 
-  function changerStatut(ligne: number, statut: string) {
+  function changerStatut(id: string, statut: string) {
     action(() =>
-      fetch('/api/todo/taches', { ...json({ ligne, statut }), method: 'PATCH' }),
+      fetch('/api/todo/taches', { ...json({ id, statut }), method: 'PATCH' }),
     );
   }
 
@@ -145,12 +145,10 @@ function OngletTaches({
           onChange={(e) => setTitre(e.target.value)}
           aria-label="Titre de la tâche"
         />
-        <select className="champ" value={assigne} onChange={(e) => setAssigne(e.target.value)} aria-label="Assigné à">
-          <option value="">Qui ?</option>
-          {params.personnes.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
+        <input className="champ" value={assigne} onChange={(e) => setAssigne(e.target.value)} placeholder="Qui ?" list="todo-personnes" aria-label="Assigné à" />
+        <datalist id="todo-personnes">
+          {params.personnes.map((p) => <option key={p} value={p} />)}
+        </datalist>
         <select className="champ" value={priorite} onChange={(e) => setPriorite(e.target.value)} aria-label="Priorité">
           <option value="">Priorité</option>
           {params.priorites.map((p) => (
@@ -196,7 +194,7 @@ function OngletTaches({
         <ul className="liste">
           {tachesAffichees.map((t) => (
             <li
-              key={t.ligne}
+              key={t.id}
               className={`tache${t.statut === STATUT_FAIT ? ' faite' : ''}${t.enRetard ? ' retard' : ''}`}
             >
               <span className="titre-tache">{t.tache}</span>
@@ -219,7 +217,7 @@ function OngletTaches({
                 className="statut"
                 value={t.statut}
                 disabled={occupe}
-                onChange={(e) => changerStatut(t.ligne, e.target.value)}
+                onChange={(e) => changerStatut(t.id, e.target.value)}
                 aria-label={`Statut de « ${t.tache} »`}
               >
                 {params.statuts.map((s) => (
@@ -268,9 +266,9 @@ function OngletCourses({
     action(() => fetch('/api/todo/courses', json(corps)));
   }
 
-  function cocher(ligne: number, fait: boolean) {
+  function cocher(id: string, fait: boolean) {
     action(() =>
-      fetch('/api/todo/courses', { ...json({ ligne, fait }), method: 'PATCH' }),
+      fetch('/api/todo/courses', { ...json({ id, fait }), method: 'PATCH' }),
     );
   }
 
@@ -291,12 +289,10 @@ function OngletCourses({
           onChange={(e) => setArticle(e.target.value)}
           aria-label="Article"
         />
-        <select className="champ" value={rayon} onChange={(e) => setRayon(e.target.value)} aria-label="Rayon">
-          <option value="">Rayon</option>
-          {params.rayons.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
+        <input className="champ" value={rayon} onChange={(e) => setRayon(e.target.value)} placeholder="Rayon" list="todo-rayons" aria-label="Rayon" />
+        <datalist id="todo-rayons">
+          {params.rayons.map((r) => <option key={r} value={r} />)}
+        </datalist>
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
           Ajouter
         </button>
@@ -311,12 +307,12 @@ function OngletCourses({
               {nomRayon && <p className="rayon-titre">{nomRayon}</p>}
               <ul className="liste">
                 {articles.map((c) => (
-                  <li key={c.ligne} className={`course${c.fait ? ' faite' : ''}`}>
+                  <li key={c.id} className={`course${c.fait ? ' faite' : ''}`}>
                     <input
                       type="checkbox"
                       checked={c.fait}
                       disabled={occupe}
-                      onChange={(e) => cocher(c.ligne, e.target.checked)}
+                      onChange={(e) => cocher(c.id, e.target.checked)}
                       aria-label={c.article}
                     />
                     <span className="article">{c.article}</span>

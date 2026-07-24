@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   timestamp,
+  boolean,
   unique,
   index,
 } from 'drizzle-orm/pg-core';
@@ -145,3 +146,48 @@ export const cadeaux = pgTable(
 
 export type LigneOccasion = typeof occasions.$inferSelect;
 export type LigneCadeau = typeof cadeaux.$inferSelect;
+
+/* ======================== MODULE TO-DO & COURSES ======================== */
+/**
+ * Tâches du foyer (avec récurrence) et liste de courses partagée (cases à cocher).
+ * Remplace les onglets Tâches/Courses. L'échéance est stockée en texte
+ * « jj/mm/aaaa » (comme la saisie), l'ISO est recalculé à la lecture.
+ */
+
+export const taches = pgTable(
+  'taches',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    statut: text('statut').notNull().default('À faire'),
+    tache: text('tache').notNull(),
+    assigne: text('assigne').notNull().default(''),
+    categorie: text('categorie').notNull().default(''),
+    priorite: text('priorite').notNull().default(''),
+    echeance: text('echeance').notNull().default(''), // label jj/mm/aaaa (ou vide)
+    recurrence: text('recurrence').notNull().default('Aucune'),
+    note: text('note').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('taches_foyer_idx').on(t.foyerId)],
+);
+
+export const courses = pgTable(
+  'courses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    fait: boolean('fait').notNull().default(false),
+    article: text('article').notNull(),
+    rayon: text('rayon').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('courses_foyer_idx').on(t.foyerId)],
+);
+
+export type LigneTache = typeof taches.$inferSelect;
+export type LigneCourse = typeof courses.$inferSelect;

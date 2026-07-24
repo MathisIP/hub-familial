@@ -15,6 +15,13 @@
       "when": 1784904667489,
       "tag": "0001_secret_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784905963389,
+      "tag": "0002_sad_trauma",
+      "breakpoints": true
     }
   ]
 }

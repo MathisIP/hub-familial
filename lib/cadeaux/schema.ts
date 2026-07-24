@@ -1,31 +1,19 @@
 /**
- * MODULE CADEAUX — SCHÉMA & HELPERS PURS.
- * =======================================
- * Onglet Cadeaux — en-têtes ligne 1, données ligne 2+ :
- *   A Pour qui · B Occasion · C Idée/cadeau · D Statut · E Budget prévu (€)
- *   F Prix payé (€) · G Offert par · H Où/lien · I Note
- * Onglet Occasions — en-têtes ligne 1, données ligne 2+ :
- *   A Occasion · B Date · C Budget occasion (€) · D Note
- * Onglet Paramètres — en-têtes ligne 3, listes ligne 4+ :
- *   A Statuts · B Offert par
+ * MODULE CADEAUX — TYPES & HELPERS PURS (partagés client + serveur).
+ * =================================================================
+ * Version base (multi-foyer) : les cadeaux/occasions viennent de Postgres
+ * (cf. lib/db/schema.ts), plus des onglets Sheets. L'identifiant d'un cadeau est
+ * son `id` (UUID). Les montants restent en texte (saisie libre) ; les nombres
+ * sont recalculés ici via parseEuro. Aucun import serveur : ce fichier est
+ * importé par le composant client.
  */
 import { parseEuro, versISO, joursJusqua } from '@/lib/argent';
-
-export const COL_CADEAU = {
-  POUR_QUI: 1, OCCASION: 2, IDEE: 3, STATUT: 4, BUDGET: 5, PAYE: 6, OFFERT_PAR: 7, OU: 8, NOTE: 9,
-} as const;
-export const LIGNE_DONNEES_CADEAUX = 2;
-
-export const COL_OCC = { OCCASION: 1, DATE: 2, BUDGET: 3, NOTE: 4 } as const;
-export const LIGNE_DONNEES_OCCASIONS = 2;
-
-export const LIGNE_DONNEES_PARAMS = 4;
 
 export const STATUTS_DEFAUT = ['Idée', 'À acheter', 'Commandé', 'Reçu', 'Emballé', 'Offert'];
 export const STATUT_OFFERT = 'Offert';
 
 export type Cadeau = {
-  ligne: number;
+  id: string;
   pourQui: string;
   occasion: string;
   idee: string;
@@ -56,35 +44,66 @@ export type DonneesCadeaux = {
   offertPar: string[];
 };
 
+/** Champs éditables d'un cadeau (payload d'ajout/modification). */
+export type ChampsCadeau = {
+  pourQui?: string;
+  occasion?: string;
+  idee: string;
+  statut?: string;
+  budgetPrevu?: string;
+  prixPaye?: string;
+  offertPar?: string;
+  ou?: string;
+  note?: string;
+};
+
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
 
-export function ligneVersCadeau(l: unknown[], ligne: number): Cadeau {
+/** Construit un Cadeau (avec montants numériques) depuis une ligne de base. */
+export function construireCadeau(r: {
+  id: string;
+  pourQui: string;
+  occasion: string;
+  idee: string;
+  statut: string;
+  budgetPrevu: string;
+  prixPaye: string;
+  offertPar: string;
+  ou: string;
+  note: string;
+}): Cadeau {
   return {
-    ligne,
-    pourQui: S(l[COL_CADEAU.POUR_QUI - 1]),
-    occasion: S(l[COL_CADEAU.OCCASION - 1]),
-    idee: S(l[COL_CADEAU.IDEE - 1]),
-    statut: S(l[COL_CADEAU.STATUT - 1]),
-    budgetPrevu: S(l[COL_CADEAU.BUDGET - 1]),
-    prixPaye: S(l[COL_CADEAU.PAYE - 1]),
-    budgetNum: parseEuro(l[COL_CADEAU.BUDGET - 1]),
-    payeNum: parseEuro(l[COL_CADEAU.PAYE - 1]),
-    offertPar: S(l[COL_CADEAU.OFFERT_PAR - 1]),
-    ou: S(l[COL_CADEAU.OU - 1]),
-    note: S(l[COL_CADEAU.NOTE - 1]),
+    id: r.id,
+    pourQui: r.pourQui,
+    occasion: r.occasion,
+    idee: r.idee,
+    statut: r.statut,
+    budgetPrevu: r.budgetPrevu,
+    prixPaye: r.prixPaye,
+    budgetNum: parseEuro(r.budgetPrevu),
+    payeNum: parseEuro(r.prixPaye),
+    offertPar: r.offertPar,
+    ou: r.ou,
+    note: r.note,
   };
 }
 
-export function ligneVersOccasion(l: unknown[]): Occasion {
-  const date = S(l[COL_OCC.DATE - 1]);
+/** Construit une Occasion (avec date ISO / jours restants) depuis une ligne de base. */
+export function construireOccasion(o: {
+  nom: string;
+  date?: string | null;
+  budget?: string | null;
+  note?: string | null;
+}): Occasion {
+  const date = S(o.date);
   const dateISO = versISO(date);
   return {
-    occasion: S(l[COL_OCC.OCCASION - 1]),
+    occasion: o.nom,
     date,
     dateISO,
-    budget: S(l[COL_OCC.BUDGET - 1]),
-    budgetNum: parseEuro(l[COL_OCC.BUDGET - 1]),
-    note: S(l[COL_OCC.NOTE - 1]),
+    budget: S(o.budget),
+    budgetNum: parseEuro(o.budget),
+    note: S(o.note),
     joursRestants: dateISO ? joursJusqua(dateISO) : null,
   };
 }

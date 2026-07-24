@@ -1,114 +1,108 @@
 import 'server-only';
-import { lireBatch, ecrirePlage, viderPlage } from '@/lib/google/sheets';
+import { and, desc, eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { cadeaux as tCadeaux, occasions as tOccasions } from '@/lib/db/schema';
+import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
-import { nomOnglet, plage } from '@/lib/i18n';
 import {
-  COL_CADEAU,
-  LIGNE_DONNEES_CADEAUX,
-  LIGNE_DONNEES_PARAMS,
   STATUTS_DEFAUT,
-  ligneVersCadeau,
-  ligneVersOccasion,
-  type Cadeau,
+  construireCadeau,
+  construireOccasion,
+  type ChampsCadeau,
   type DonneesCadeaux,
-  type Occasion,
 } from '@/lib/cadeaux/schema';
 
-/** SERVICE CADEAUX (serveur uniquement). */
-const CL = 'CADEAUX' as const;
+/**
+ * SERVICE CADEAUX (serveur uniquement) — Postgres, scopé au FOYER courant.
+ * =======================================================================
+ * Chaque lecture/écriture filtre sur `foyer_id` (via idFoyerCourant()) : un
+ * foyer ne voit jamais les données d'un autre. Remplace la version Google Sheets.
+ */
 
-function pl(onglet: 'CADEAUX' | 'OCCASIONS' | 'PARAMETRES', a1: string): string {
-  return plage(nomOnglet(CL, onglet), a1);
-}
-const S = (v: unknown): string => (v == null ? '' : String(v).trim());
-const colonne = (m: unknown[][], i: number) => m.map((l) => S(l[i])).filter((v) => v !== '');
+export type { ChampsCadeau };
 
 export async function chargerCadeaux(): Promise<DonneesCadeaux> {
-  const [brutCad, brutOcc, brutPar] = await lireBatch(CL, [
-    pl('CADEAUX', 'A2:I'),
-    pl('OCCASIONS', 'A2:D'),
-    pl('PARAMETRES', `A${LIGNE_DONNEES_PARAMS}:B`),
+  const foyerId = await idFoyerCourant();
+  const d = db();
+
+  const [lignesCad, lignesOcc] = await Promise.all([
+    d.select().from(tCadeaux).where(eq(tCadeaux.foyerId, foyerId)).orderBy(desc(tCadeaux.creeLe)),
+    d.select().from(tOccasions).where(eq(tOccasions.foyerId, foyerId)),
   ]);
 
-  const cadeaux: Cadeau[] = brutCad
-    .map((l, i) => ligneVersCadeau(l, LIGNE_DONNEES_CADEAUX + i))
-    .filter((c) => c.idee !== '');
-
-  const occasions: Occasion[] = brutOcc
-    .map(ligneVersOccasion)
-    .filter((o) => o.occasion !== '')
+  const cadeaux = lignesCad.map(construireCadeau);
+  const occasions = lignesOcc
+    .map((o) => construireOccasion({ nom: o.nom, date: o.date, budget: o.budget, note: o.note }))
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
 
-  const statuts = colonne(brutPar, 0);
-  const offertPar = colonne(brutPar, 1);
+  // Liste « offert par » dérivée des cadeaux existants (alimente le datalist).
+  const offertPar = [...new Set(lignesCad.map((r) => r.offertPar.trim()).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b),
+  );
 
+  return { cadeaux, occasions, statuts: STATUTS_DEFAUT, offertPar };
+}
+
+/** Crée l'occasion (nom seul) si elle n'existe pas encore pour ce foyer. */
+async function assurerOccasion(foyerId: string, nom: string): Promise<void> {
+  const n = nom.trim();
+  if (!n) return;
+  await db()
+    .insert(tOccasions)
+    .values({ foyerId, nom: n })
+    .onConflictDoNothing({ target: [tOccasions.foyerId, tOccasions.nom] });
+}
+
+/** Valeurs d'une ligne cadeau à partir des champs éditables (défauts inclus). */
+function valeurs(c: ChampsCadeau) {
   return {
-    cadeaux,
-    occasions,
-    statuts: statuts.length ? statuts : STATUTS_DEFAUT,
-    offertPar,
+    pourQui: c.pourQui ?? '',
+    occasion: (c.occasion ?? '').trim(),
+    idee: c.idee.trim(),
+    statut: c.statut ?? 'Idée',
+    budgetPrevu: c.budgetPrevu ?? '',
+    prixPaye: c.prixPaye ?? '',
+    offertPar: c.offertPar ?? '',
+    ou: c.ou ?? '',
+    note: c.note ?? '',
   };
 }
 
-export type ChampsCadeau = {
-  pourQui?: string;
-  occasion?: string;
-  idee: string;
-  statut?: string;
-  budgetPrevu?: string;
-  prixPaye?: string;
-  offertPar?: string;
-  ou?: string;
-  note?: string;
-};
-
-function ligneCadeau(c: ChampsCadeau): unknown[][] {
-  return [[
-    c.pourQui ?? '', c.occasion ?? '', c.idee.trim(), c.statut ?? 'Idée',
-    c.budgetPrevu ?? '', c.prixPaye ?? '', c.offertPar ?? '', c.ou ?? '', c.note ?? '',
-  ]];
-}
-
-async function prochaineLigne(): Promise<number> {
-  const [col] = await lireBatch(CL, [pl('CADEAUX', `C${LIGNE_DONNEES_CADEAUX}:C`)]); // C = idée
-  let derniere = LIGNE_DONNEES_CADEAUX - 1;
-  col.forEach((l, i) => {
-    if (S(l[0]) !== '') derniere = LIGNE_DONNEES_CADEAUX + i;
-  });
-  return derniere + 1;
-}
-
-export async function ajouterCadeau(c: ChampsCadeau): Promise<number> {
+export async function ajouterCadeau(c: ChampsCadeau): Promise<string> {
   if (!c.idee?.trim()) throw new ErreurValidation("L'idée de cadeau est requise.");
-  const ligne = await prochaineLigne();
-  await ecrirePlage(CL, pl('CADEAUX', `A${ligne}:I${ligne}`), ligneCadeau(c));
-  return ligne;
+  const foyerId = await idFoyerCourant();
+  await assurerOccasion(foyerId, c.occasion ?? '');
+  const [row] = await db()
+    .insert(tCadeaux)
+    .values({ foyerId, ...valeurs(c) })
+    .returning({ id: tCadeaux.id });
+  return row.id;
 }
 
-export async function modifierCadeau(ligne: number, c: ChampsCadeau): Promise<void> {
-  if (ligne < LIGNE_DONNEES_CADEAUX) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
+export async function modifierCadeau(id: string, c: ChampsCadeau): Promise<void> {
   if (!c.idee?.trim()) throw new ErreurValidation("L'idée de cadeau est requise.");
-  await ecrirePlage(CL, pl('CADEAUX', `A${ligne}:I${ligne}`), ligneCadeau(c));
+  const foyerId = await idFoyerCourant();
+  await assurerOccasion(foyerId, c.occasion ?? '');
+  const res = await db()
+    .update(tCadeaux)
+    .set(valeurs(c))
+    .where(and(eq(tCadeaux.id, id), eq(tCadeaux.foyerId, foyerId)))
+    .returning({ id: tCadeaux.id });
+  if (res.length === 0) throw new ErreurValidation('Cadeau introuvable.');
 }
 
-/** Change uniquement le statut (colonne D). */
-export async function changerStatutCadeau(ligne: number, statut: string): Promise<void> {
-  if (ligne < LIGNE_DONNEES_CADEAUX) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
-  await ecrirePlage(CL, pl('CADEAUX', `D${ligne}`), [[statut]]);
+/** Change uniquement le statut. */
+export async function changerStatutCadeau(id: string, statut: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .update(tCadeaux)
+    .set({ statut })
+    .where(and(eq(tCadeaux.id, id), eq(tCadeaux.foyerId, foyerId)))
+    .returning({ id: tCadeaux.id });
+  if (res.length === 0) throw new ErreurValidation('Cadeau introuvable.');
 }
 
-/** Supprime un cadeau : relit, retire la ligne, réécrit compacté. */
-export async function supprimerCadeau(ligne: number): Promise<void> {
-  if (ligne < LIGNE_DONNEES_CADEAUX) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
-  const [brut] = await lireBatch(CL, [pl('CADEAUX', 'A2:I')]);
-  const gardees = brut.filter((_, i) => LIGNE_DONNEES_CADEAUX + i !== ligne && S(brut[i][COL_CADEAU.IDEE - 1]) !== '');
-  await viderPlage(CL, pl('CADEAUX', 'A2:I'));
-  if (gardees.length) {
-    const norm = gardees.map((l) => {
-      const r = l.slice(0, 9);
-      while (r.length < 9) r.push('');
-      return r;
-    });
-    await ecrirePlage(CL, pl('CADEAUX', 'A2'), norm);
-  }
+export async function supprimerCadeau(id: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  await db().delete(tCadeaux).where(and(eq(tCadeaux.id, id), eq(tCadeaux.foyerId, foyerId)));
 }

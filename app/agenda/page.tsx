@@ -4,12 +4,14 @@ import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerAgenda } from '@/lib/agenda/service';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
+import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Agenda — Hub familial' };
 
 export default async function PageAgenda() {
+  await exigerAcces();
   let contenu;
   try {
     const initial = await chargerAgenda();

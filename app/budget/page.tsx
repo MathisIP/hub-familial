@@ -3,6 +3,7 @@ import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerBudget } from '@/lib/budget/service';
+import { exigerAcces } from '@/lib/abonnement';
 import { ConfigManquante } from '@/lib/config';
 import { t } from '@/lib/i18n';
 
@@ -16,6 +17,7 @@ export default async function PageBudget({
 }: {
   searchParams: Promise<{ annee?: string; mois?: string }>;
 }) {
+  await exigerAcces();
   const sp = await searchParams;
   const annee = Number(sp.annee);
   const mois = Number(sp.mois);

@@ -8,5 +8,5 @@ export { auth as middleware } from '@/auth';
  * manifest). Tout le reste exige une session : sinon Auth.js redirige vers /connexion.
  */
 export const config = {
-  matcher: ['/((?!api/auth|connexion|confidentialite|hors-ligne|sw.js|_next/static|_next/image|.*\\.(?:png|ico|webmanifest)).*)'],
+  matcher: ['/((?!api/auth|api/stripe|connexion|confidentialite|hors-ligne|sw.js|_next/static|_next/image|.*\\.(?:png|ico|webmanifest)).*)'],
 };

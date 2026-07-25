@@ -3,12 +3,14 @@ import VueEvenements from '@/components/evenements/VueEvenements';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerEvenements } from '@/lib/evenements/service';
 import { ConfigManquante } from '@/lib/config';
+import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Événements — Hub familial' };
 
 export default async function PageEvenements() {
+  await exigerAcces();
   let contenu;
   try {
     const initial = await chargerEvenements();

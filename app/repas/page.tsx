@@ -3,12 +3,14 @@ import VueRepas from '@/components/repas/VueRepas';
 import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerRepas } from '@/lib/repas/service';
 import { ConfigManquante } from '@/lib/config';
+import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Repas — Hub familial' };
 
 export default async function PageRepas() {
+  await exigerAcces();
   let contenu;
   try {
     const initial = await chargerRepas();

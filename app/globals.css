@@ -1044,6 +1044,12 @@ a { color: var(--link-tx); }
 .suppr-check { display: flex; gap: .5rem; align-items: flex-start; font-size: .9rem; color: var(--ink2); max-width: 44rem; }
 .suppr-check input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--over-tx); flex: none; }
 
+/* ===================== ABONNEMENT ===================== */
+.abo-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.abo-statut { font-size: 1.05rem; font-weight: 600; margin: 0; }
+.abo-statut.abo-actif { color: var(--ok-tx); }
+.abo-statut.abo-impaye, .abo-statut.abo-annule { color: var(--over-tx); }
+
 /* ===================== DOCUMENT LÉGAL (confidentialité) ===================== */
 .doc-legal { max-width: 46rem; }
 .doc-legal h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin: .5rem 0 .25rem; }

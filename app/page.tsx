@@ -5,6 +5,7 @@ import DriveExplorer from '@/components/DriveExplorer';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
+import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 
 /**
@@ -16,6 +17,7 @@ import { t } from '@/lib/i18n';
 export const dynamic = 'force-dynamic';
 
 export default async function Accueil() {
+  await exigerAcces();
   let accueil: AccueilBudget | null = null;
   try {
     accueil = await chargerAccueilBudget();

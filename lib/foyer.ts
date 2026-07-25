@@ -62,11 +62,12 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
     if (f) return f;
   }
 
-  // 3) Sinon : provisionner un foyer et rattacher l'utilisateur en propriétaire.
+  // 3) Sinon : provisionner un foyer (essai de 14 jours) et rattacher l'utilisateur.
+  const finEssai = new Date(Date.now() + 14 * 86400000);
   return d.transaction(async (tx) => {
     const [f] = await tx
       .insert(foyers)
-      .values({ nom: nomFoyerParDefaut(u.nom) })
+      .values({ nom: nomFoyerParDefaut(u.nom), statutAbonnement: 'essai', abonnementFin: finEssai })
       .returning();
     await tx.insert(membres).values({ foyerId: f.id, utilisateurId: u.id, role: 'proprietaire' });
     return f;

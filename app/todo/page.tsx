@@ -4,6 +4,7 @@ import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerTodo } from '@/lib/todo/service';
 import { cssTodoThemes } from '@/lib/todo/theme';
 import { ConfigManquante } from '@/lib/config';
+import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 
 /** Rendu à chaque requête : les données Sheets ne doivent pas être figées. */
@@ -12,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'To-Do & Courses — Hub familial' };
 
 export default async function PageTodo() {
+  await exigerAcces();
   let contenu;
   try {
     const initial = await chargerTodo();

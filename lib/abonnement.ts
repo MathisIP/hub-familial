@@ -1,0 +1,153 @@
+import 'server-only';
+import { redirect } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import type Stripe from 'stripe';
+import { db } from '@/lib/db';
+import { foyers } from '@/lib/db/schema';
+import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
+import { stripe, stripeDisponible } from '@/lib/stripe';
+import { ErreurValidation } from '@/lib/erreurs';
+
+/**
+ * ABONNEMENT (serveur) — chaque foyer paie un abonnement Stripe pour utiliser le
+ * produit. L'accès est conditionné à `foyers.statut_abonnement` / `abonnement_fin`.
+ *
+ * ⚠ SÉCURITÉ : si Stripe n'est pas configuré (STRIPE_SECRET_KEY absent), l'accès
+ * est OUVERT — l'app fonctionne comme avant tant que la facturation n'est pas
+ * branchée. Le verrou ne s'active qu'une fois les clés Stripe présentes.
+ *
+ * Essai : un foyer en `essai` avec `abonnement_fin` future (ou nulle = essai non
+ * démarré) a accès ; sinon il faut un abonnement `actif`.
+ */
+
+export type EtatAbonnement = {
+  autorise: boolean;
+  statut: string; // 'libre' si Stripe non configuré, sinon le statut du foyer
+  finEssai: string | null; // ISO, ou null
+  gereParStripe: boolean;
+  aDejaPaye: boolean; // possède un client Stripe (peut ouvrir le portail)
+};
+
+export async function etatAbonnement(): Promise<EtatAbonnement> {
+  if (!stripeDisponible()) {
+    return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false };
+  }
+  const foyer = await foyerCourant();
+  const fin = foyer.abonnementFin ? new Date(foyer.abonnementFin) : null;
+  const essaiValide = foyer.statutAbonnement === 'essai' && (fin === null || fin.getTime() > Date.now());
+  const autorise = foyer.statutAbonnement === 'actif' || essaiValide;
+  return {
+    autorise,
+    statut: foyer.statutAbonnement,
+    finEssai: fin ? fin.toISOString() : null,
+    gereParStripe: true,
+    aDejaPaye: !!foyer.stripeCustomerId,
+  };
+}
+
+/** À appeler en tête des pages protégées : redirige vers /abonnement si non autorisé. */
+export async function exigerAcces(): Promise<void> {
+  const e = await etatAbonnement();
+  if (!e.autorise) redirect('/abonnement');
+}
+
+/** Crée (ou réutilise) le client Stripe du foyer et renvoie l'URL de paiement. */
+export async function creerCheckout(origin: string): Promise<string> {
+  const priceId = process.env.STRIPE_PRICE_ID;
+  if (!priceId) throw new ErreurValidation('STRIPE_PRICE_ID non configuré.');
+
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  const s = stripe();
+
+  let customerId = foyer.stripeCustomerId;
+  if (!customerId) {
+    const c = await s.customers.create({
+      email: user.email,
+      name: foyer.nom,
+      metadata: { foyerId: foyer.id },
+    });
+    customerId = c.id;
+    await db().update(foyers).set({ stripeCustomerId: customerId }).where(eq(foyers.id, foyer.id));
+  }
+
+  const session = await s.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${origin}/abonnement?ok=1`,
+    cancel_url: `${origin}/abonnement`,
+    metadata: { foyerId: foyer.id },
+    subscription_data: { metadata: { foyerId: foyer.id } },
+  });
+  if (!session.url) throw new ErreurValidation('Session de paiement invalide.');
+  return session.url;
+}
+
+/** Ouvre le portail de facturation Stripe (gérer / annuler l'abonnement). */
+export async function creerPortail(origin: string): Promise<string> {
+  const foyer = await foyerCourant();
+  if (!foyer.stripeCustomerId) throw new ErreurValidation('Aucun abonnement à gérer.');
+  const session = await stripe().billingPortal.sessions.create({
+    customer: foyer.stripeCustomerId,
+    return_url: `${origin}/abonnement`,
+  });
+  return session.url;
+}
+
+/* ------------------------------- WEBHOOK ------------------------------- */
+
+/** Statut Stripe → statut interne (`foyers.statut_abonnement`). */
+function mapStatut(s: Stripe.Subscription.Status): string {
+  if (s === 'active' || s === 'trialing') return 'actif';
+  if (s === 'past_due' || s === 'unpaid') return 'impaye';
+  if (s === 'canceled' || s === 'incomplete_expired') return 'annule';
+  return 'impaye';
+}
+
+/** Fin de la période courante (au niveau de l'item depuis l'API Stripe 2025). */
+function finPeriode(sub: Stripe.Subscription): Date | null {
+  const item = sub.items?.data?.[0] as unknown as { current_period_end?: number } | undefined;
+  const ts = item?.current_period_end;
+  return ts ? new Date(ts * 1000) : null;
+}
+
+/** Applique l'état d'un abonnement Stripe au foyer correspondant. */
+async function appliquerAbonnement(sub: Stripe.Subscription): Promise<void> {
+  const foyerId = sub.metadata?.foyerId;
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+  const fin = finPeriode(sub);
+  const set = {
+    statutAbonnement: mapStatut(sub.status),
+    abonnementFin: fin,
+    stripeCustomerId: customerId,
+  };
+  const d = db();
+  if (foyerId) await d.update(foyers).set(set).where(eq(foyers.id, foyerId));
+  else await d.update(foyers).set(set).where(eq(foyers.stripeCustomerId, customerId));
+}
+
+/** Traite un événement Stripe déjà vérifié (signature). */
+export async function traiterWebhook(event: Stripe.Event): Promise<void> {
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const sess = event.data.object as Stripe.Checkout.Session;
+      if (sess.subscription) {
+        const sub = await stripe().subscriptions.retrieve(String(sess.subscription));
+        // reporte le foyerId de la session sur l'abonnement si absent
+        if (!sub.metadata?.foyerId && sess.metadata?.foyerId) {
+          sub.metadata = { ...sub.metadata, foyerId: sess.metadata.foyerId };
+        }
+        await appliquerAbonnement(sub);
+      }
+      break;
+    }
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      await appliquerAbonnement(event.data.object as Stripe.Subscription);
+      break;
+    }
+    default:
+      break;
+  }
+}

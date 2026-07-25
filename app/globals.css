@@ -1044,6 +1044,22 @@ a { color: var(--link-tx); }
 .suppr-check { display: flex; gap: .5rem; align-items: flex-start; font-size: .9rem; color: var(--ink2); max-width: 44rem; }
 .suppr-check input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--over-tx); flex: none; }
 
+/* ===================== MON FOYER (membres) ===================== */
+.foyer-inline { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.foyer-inline .champ { flex: 1 1 16rem; min-width: 0; }
+.foyer-liste { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.foyer-membre {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
+  padding: .6rem .8rem; background: var(--page);
+  border: 1px solid var(--line); border-radius: .6rem;
+}
+.fm-ident { display: flex; flex-direction: column; flex: 1 1 12rem; min-width: 0; }
+.fm-nom { font-weight: 600; }
+.fm-email { font-size: .8rem; color: var(--muted); }
+.foyer-sous-titre { font-size: .9rem; margin: 1.2rem 0 .3rem; color: var(--ink2); }
+.foyer-aide { margin-top: 1.5rem; }
+.foyer-aide code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
+
 /* ===================== ABONNEMENT ===================== */
 .abo-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
 .abo-statut { font-size: 1.05rem; font-weight: 600; margin: 0; }

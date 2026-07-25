@@ -68,6 +68,9 @@ export default function MenuPrincipal() {
           </div>
 
           <div className="menu-sep" />
+          <Link href="/foyer" className="menu-item" role="menuitem" onClick={() => setOuvert(false)}>
+            Mon foyer
+          </Link>
           <Link href="/abonnement" className="menu-item" role="menuitem" onClick={() => setOuvert(false)}>
             Abonnement
           </Link>

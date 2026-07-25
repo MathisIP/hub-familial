@@ -1,20 +1,29 @@
 import 'server-only';
-import { lireBatch, lireBrut, ecrirePlage } from '@/lib/google/sheets';
-import { ErreurValidation } from '@/lib/erreurs';
-import { nomOnglet, plage } from '@/lib/i18n';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
 import {
-  COL_TX,
+  comptes as tComptes,
+  budgetCategories as tCats,
+  transactions as tTx,
+  echeances as tEch,
+  type LigneCompte,
+  type LigneBudgetCategorie,
+  type LigneTransaction,
+} from '@/lib/db/schema';
+import { idFoyerCourant } from '@/lib/foyer';
+import { ErreurValidation } from '@/lib/erreurs';
+import {
   MOIS_FR,
-  SOURCE_APP,
+  TYPE_DEPENSE,
+  TYPE_REVENU,
   TYPE_VIREMENT,
   aujourdhuiISO,
   aujourdhuiLabel,
+  formatEuro,
   joursJusqua,
-  parseEuro,
   versISO,
   type DonneesBudget,
   type Echeance,
-  type Kpis,
   type LigneCategorie,
   type NouvelleTransaction,
   type ParametresSaisie,
@@ -24,273 +33,241 @@ import {
 } from '@/lib/budget/schema';
 
 /**
- * SERVICE BUDGET (serveur uniquement) — lecture seule.
- * Lit le moteur « Tableau de bord » (déjà calculé), les Transactions et les
- * Échéances en un seul aller-retour, et repère les blocs par leur libellé.
+ * SERVICE BUDGET (serveur uniquement) — Postgres, scopé au FOYER courant.
+ * ======================================================================
+ * ⚠ Différence majeure avec les autres modules : le tableur ne calcule plus rien.
+ * Le dashboard (soldes des comptes, KPIs du mois, réel vs budget par catégorie)
+ * est RECALCULÉ ici à partir des tables source (comptes + solde initial,
+ * catégories + budget mensuel, transactions, échéances).
+ *
+ * Modèle (relevé du classeur) :
+ *   · solde d'un compte = solde_initial + Σ(revenus) − Σ(dépenses) − Σ(virements
+ *     sortants) + Σ(virements entrants), TOUTES transactions confondues ;
+ *   · patrimoine (TOTAL FOYER) = somme des soldes ;
+ *   · KPIs du mois = Σ revenus / Σ dépenses du mois sélectionné, reste = diff. ;
+ *   · réel d'une catégorie = Σ dépenses de cette catégorie sur le mois.
+ * Le mois sélectionné est un simple filtre d'affichage (plus d'état partagé).
  */
 
-const CL = 'BUDGET' as const;
 const NB_TX_RECENTES = 12;
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
-function pl(
-  onglet: 'TABLEAU_BORD' | 'TRANSACTIONS' | 'ECHEANCES' | 'VUE_ENSEMBLE' | 'PARAMETRES',
-  a1: string,
-): string {
-  return plage(nomOnglet(CL, onglet), a1);
+function moisCourant(): SelectionMois {
+  const d = new Date();
+  return { annee: d.getFullYear(), mois: d.getMonth() + 1 };
 }
 
-const S = (v: unknown): string => (v == null ? '' : String(v).trim());
-
-/** Valeur (col B) de la 1re ligne dont la col A commence par un des préfixes. */
-function valeurParLibelle(matrice: unknown[][], ...prefixes: string[]): string {
-  for (const ligne of matrice) {
-    const a = S(ligne[0]).toLowerCase();
-    if (prefixes.some((p) => a.startsWith(p.toLowerCase()))) return S(ligne[1]);
+function normaliserSelection(sel?: SelectionMois): SelectionMois {
+  if (sel && Number.isInteger(sel.mois) && sel.mois >= 1 && sel.mois <= 12 && sel.annee > 1900) {
+    return { annee: sel.annee, mois: sel.mois };
   }
-  return '';
+  return moisCourant();
 }
 
-/** Index de la 1re ligne dont la col A contient `texte` (insensible casse). */
-function indexLigne(matrice: unknown[][], texte: string): number {
-  const t = texte.toLowerCase();
-  return matrice.findIndex((l) => S(l[0]).toLowerCase().includes(t));
+function anneesDisponibles(sel: number, txAnnees: number[]): number[] {
+  const nowY = new Date().getFullYear();
+  const bornes = [2025, sel, nowY, nowY + 1, ...txAnnees];
+  const debut = Math.min(...bornes);
+  const fin = Math.max(...bornes);
+  const liste: number[] = [];
+  for (let a = debut; a <= fin; a++) liste.push(a);
+  return liste;
 }
 
-function extraireKpis(tb: unknown[][]): Kpis {
+/** Deltas de solde par nom de compte, à partir de toutes les transactions. */
+function calculerDeltas(txRows: LigneTransaction[]): Map<string, number> {
+  const deltas = new Map<string, number>();
+  const add = (nom: string, v: number) => nom && deltas.set(nom, (deltas.get(nom) ?? 0) + v);
+  for (const t of txRows) {
+    if (t.type === TYPE_REVENU) add(t.compte, t.montant);
+    else if (t.type === TYPE_DEPENSE) add(t.compte, -t.montant);
+    else if (t.type === TYPE_VIREMENT) {
+      add(t.compte, -t.montant);
+      add(t.dest, t.montant);
+    }
+  }
+  return deltas;
+}
+
+function soldesComptes(
+  comptesRows: LigneCompte[],
+  deltas: Map<string, number>,
+): { soldes: Solde[]; patrimoineNum: number } {
+  let patrimoine = 0;
+  const soldes = comptesRows.map((c) => {
+    const n = r2(c.soldeInitial + (deltas.get(c.nom) ?? 0));
+    patrimoine += n;
+    return { compte: c.nom, solde: formatEuro(n) };
+  });
+  return { soldes, patrimoineNum: r2(patrimoine) };
+}
+
+function construireParametres(
+  comptesRows: LigneCompte[],
+  catsRows: LigneBudgetCategorie[],
+): ParametresSaisie {
   return {
-    revenus: valeurParLibelle(tb, 'Revenus du mois') || '—',
-    depenses: valeurParLibelle(tb, 'Dépenses du mois') || '—',
-    reste: valeurParLibelle(tb, 'Reste du mois') || '—',
-    patrimoine: valeurParLibelle(tb, 'TOTAL FOYER') || '—',
+    comptes: comptesRows.map((c) => c.nom),
+    types: [TYPE_DEPENSE, TYPE_REVENU, TYPE_VIREMENT],
+    categoriesDepense: catsRows.filter((c) => c.type === 'depense').map((c) => c.nom),
+    categoriesRevenu: catsRows.filter((c) => c.type === 'revenu').map((c) => c.nom),
   };
 }
 
-/** Bloc « Dépenses par catégorie » : de l'en-tête (Catégorie|Réel|Budget|Écart) à TOTAL. */
-function extraireCategories(tb: unknown[][]): LigneCategorie[] {
-  const debut = tb.findIndex(
-    (l) => S(l[0]).toLowerCase() === 'catégorie' && S(l[1]).toLowerCase() === 'réel',
-  );
-  if (debut === -1) return [];
-  const cats: LigneCategorie[] = [];
-  for (let i = debut + 1; i < tb.length; i++) {
-    const l = tb[i];
-    const cat = S(l[0]);
-    if (!cat || cat.toUpperCase().startsWith('TOTAL')) break;
-    const reelNum = parseEuro(l[1]);
-    const budgetNum = parseEuro(l[2]);
-    cats.push({
-      categorie: cat,
-      reel: S(l[1]),
-      budget: S(l[2]),
-      ecart: S(l[3]),
-      reelNum,
-      budgetNum,
-      depasse: budgetNum > 0 && reelNum > budgetNum,
-    });
+/** Toutes les tables du budget pour le foyer, triées comme à l'affichage. */
+async function chargerTables(foyerId: string) {
+  const d = db();
+  const [comptesRows, catsRows, txRows, echRows] = await Promise.all([
+    d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
+    d.select().from(tCats).where(eq(tCats.foyerId, foyerId)),
+    d.select().from(tTx).where(eq(tTx.foyerId, foyerId)),
+    d.select().from(tEch).where(eq(tEch.foyerId, foyerId)),
+  ]);
+  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  return { comptesRows, catsRows, txRows, echRows };
+}
+
+export async function chargerBudget(selection?: SelectionMois): Promise<DonneesBudget> {
+  const foyerId = await idFoyerCourant();
+  const { comptesRows, catsRows, txRows, echRows } = await chargerTables(foyerId);
+  const sel = normaliserSelection(selection);
+  const cle = `${sel.annee}-${String(sel.mois).padStart(2, '0')}`; // aaaa-mm
+
+  // Soldes (toutes transactions) + patrimoine.
+  const { soldes, patrimoineNum } = soldesComptes(comptesRows, calculerDeltas(txRows));
+
+  // KPIs du mois + réel par catégorie (dépenses du mois).
+  let revenus = 0;
+  let depenses = 0;
+  const reelParCat = new Map<string, number>();
+  for (const t of txRows) {
+    if (t.dateIso?.slice(0, 7) !== cle) continue;
+    if (t.type === TYPE_REVENU) revenus += t.montant;
+    else if (t.type === TYPE_DEPENSE) {
+      depenses += t.montant;
+      reelParCat.set(t.categorie, (reelParCat.get(t.categorie) ?? 0) + t.montant);
+    }
   }
-  return cats;
-}
 
-/** Bloc « Soldes des comptes » : de l'en-tête (Compte|Solde) à TOTAL FOYER. */
-function extraireSoldes(tb: unknown[][]): Solde[] {
-  const entete = indexLigne(tb, 'soldes des comptes');
-  const debut = entete === -1 ? -1 : tb.findIndex((l, i) => i > entete && S(l[0]).toLowerCase() === 'compte');
-  if (debut === -1) return [];
-  const soldes: Solde[] = [];
-  for (let i = debut + 1; i < tb.length; i++) {
-    const compte = S(tb[i][0]);
-    if (!compte || compte.toUpperCase().startsWith('TOTAL')) break;
-    soldes.push({ compte, solde: S(tb[i][1]) });
-  }
-  return soldes;
-}
-
-function extraireTransactions(tx: unknown[][]): Transaction[] {
-  const lignes = tx
-    .filter((l) => S(l[COL_TX.DATE - 1]) !== '' || S(l[COL_TX.LIBELLE - 1]) !== '')
-    .map((l) => ({
-      date: S(l[COL_TX.DATE - 1]),
-      type: S(l[COL_TX.TYPE - 1]),
-      compte: S(l[COL_TX.COMPTE - 1]),
-      dest: S(l[COL_TX.DEST - 1]),
-      categorie: S(l[COL_TX.CATEGORIE - 1]),
-      libelle: S(l[COL_TX.LIBELLE - 1]),
-      montant: S(l[COL_TX.MONTANT - 1]),
-    }));
-  return lignes.slice(-NB_TX_RECENTES).reverse();
-}
-
-function extraireEcheances(ec: unknown[][]): Echeance[] {
-  const auj = aujourdhuiISO();
-  return ec
-    .filter((l) => S(l[0]) !== '')
-    .map((l): Echeance => {
-      const dateISO = versISO(S(l[1]));
+  const categories: LigneCategorie[] = catsRows
+    .filter((c) => c.type === 'depense')
+    .map((c) => {
+      const reelNum = r2(reelParCat.get(c.nom) ?? 0);
+      const budgetNum = r2(c.budgetMensuel);
       return {
-        libelle: S(l[0]),
-        date: S(l[1]),
-        dateISO,
-        recurrence: S(l[2]) || 'Aucune',
-        note: S(l[3]),
-        joursRestants: dateISO ? joursJusqua(dateISO) : null,
+        categorie: c.nom,
+        reel: formatEuro(reelNum),
+        budget: formatEuro(budgetNum),
+        ecart: formatEuro(r2(budgetNum - reelNum)),
+        reelNum,
+        budgetNum,
+        depasse: budgetNum > 0 && reelNum > budgetNum,
       };
-    })
-    .filter((e) => e.dateISO === null || e.dateISO >= auj) // à venir (ou sans date)
-    .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
-}
+    });
 
-/**
- * Listes déroulantes de la saisie, lues dans l'onglet Paramètres :
- *   A = Comptes · D = Types · F = Catégories de dépenses · I = Catégories de revenus.
- */
-function extraireParametres(par: unknown[][]): ParametresSaisie {
-  const colonne = (i: number) =>
-    par.map((l) => S(l[i])).filter((v) => v !== '');
+  // Transactions récentes (plus récente d'abord).
+  const txTriees = [...txRows].sort((a, b) => {
+    const k = (b.dateIso ?? '').localeCompare(a.dateIso ?? '');
+    return k !== 0 ? k : b.creeLe.getTime() - a.creeLe.getTime();
+  });
+  const transactions: Transaction[] = txTriees.slice(0, NB_TX_RECENTES).map((t) => ({
+    date: t.date,
+    type: t.type,
+    compte: t.compte,
+    dest: t.dest,
+    categorie: t.categorie,
+    libelle: t.libelle,
+    montant: formatEuro(r2(t.montant)),
+  }));
+
+  // Échéances à venir (ou sans date), plus proche d'abord.
+  const auj = aujourdhuiISO();
+  const echeances: Echeance[] = echRows
+    .map((e): Echeance => ({
+      libelle: e.libelle,
+      date: e.date,
+      dateISO: e.dateIso,
+      recurrence: e.recurrence || 'Aucune',
+      note: e.note,
+      joursRestants: e.dateIso ? joursJusqua(e.dateIso) : null,
+    }))
+    .filter((e) => e.dateISO === null || e.dateISO >= auj)
+    .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
+
+  const txAnnees = txRows
+    .map((t) => (t.dateIso ? Number(t.dateIso.slice(0, 4)) : NaN))
+    .filter((n) => Number.isFinite(n));
+
   return {
-    comptes: colonne(0), // A
-    types: colonne(3), // D
-    categoriesDepense: colonne(5), // F
-    categoriesRevenu: colonne(8), // I
+    periode: `${MOIS_FR[sel.mois - 1]} ${sel.annee}`,
+    selection: sel,
+    anneesDisponibles: anneesDisponibles(sel.annee, txAnnees),
+    kpis: {
+      revenus: formatEuro(r2(revenus)),
+      depenses: formatEuro(r2(depenses)),
+      reste: formatEuro(r2(revenus - depenses)),
+      patrimoine: formatEuro(patrimoineNum),
+    },
+    categories,
+    soldes,
+    transactions,
+    echeances,
+    parametres: construireParametres(comptesRows, catsRows),
   };
 }
 
-/**
- * Chargement léger pour l'accueil : soldes des comptes + listes de la saisie,
- * en un seul aller-retour (pas tout le dashboard). `soldesHorsEpargne` exclut
- * le(s) compte(s) d'épargne (nom contenant « épargne »).
- */
+/* ----------------------------- ACCUEIL / SAISIE ----------------------------- */
+
 export type AccueilBudget = {
   soldes: Solde[];
   soldesHorsEpargne: Solde[];
   parametres: ParametresSaisie;
 };
 
-/** Listes de la saisie seules (lecture légère, plus résiliente que tout le dashboard). */
-export async function chargerParametresSaisie(): Promise<ParametresSaisie> {
-  const [par] = await lireBatch(CL, [pl('PARAMETRES', 'A4:I20')]);
-  return extraireParametres(par);
-}
+const estEpargne = (nom: string) => /épargne|epargne/i.test(nom);
 
+/** Chargement léger pour l'accueil : soldes (toutes transactions) + listes de saisie. */
 export async function chargerAccueilBudget(): Promise<AccueilBudget> {
-  const [tb, par] = await lireBatch(CL, [
-    pl('TABLEAU_BORD', 'A1:D42'),
-    pl('PARAMETRES', 'A4:I20'),
-  ]);
-  const soldes = extraireSoldes(tb);
-  const estEpargne = (nom: string) => nom.toLowerCase().includes('épargne') || nom.toLowerCase().includes('epargne');
+  const foyerId = await idFoyerCourant();
+  const { comptesRows, catsRows, txRows } = await chargerTables(foyerId);
+  const { soldes } = soldesComptes(comptesRows, calculerDeltas(txRows));
   return {
     soldes,
     soldesHorsEpargne: soldes.filter((s) => !estEpargne(s.compte)),
-    parametres: extraireParametres(par),
+    parametres: construireParametres(comptesRows, catsRows),
   };
 }
 
-/** Année/mois sélectionnés dans le moteur (B3/B4, cellules au format masqué). */
-async function lireSelection(): Promise<SelectionMois> {
-  const brut = await lireBrut(CL, pl('TABLEAU_BORD', 'B3:B4'));
-  const annee = Number(brut[0]?.[0]) || new Date().getFullYear();
-  const mois = Number(brut[1]?.[0]) || new Date().getMonth() + 1;
-  return { annee, mois: Math.min(Math.max(mois, 1), 12) };
-}
-
-/** Années proposées au sélecteur : de 2025 à l'an prochain, sélection incluse. */
-function anneesDisponibles(selection: number): number[] {
-  const fin = Math.max(new Date().getFullYear() + 1, selection);
-  const debut = Math.min(2025, selection);
-  const liste: number[] = [];
-  for (let a = debut; a <= fin; a++) liste.push(a);
-  return liste;
-}
-
-export async function chargerBudget(): Promise<DonneesBudget> {
-  // Deux lectures : le gros du dashboard en FORMATTED (affichage fidèle au Sheet),
-  // et la sélection moteur en UNFORMATTED (B3/B4 sont au format masqué).
-  const [[tb, tx, ec, vue, par], selection] = await Promise.all([
-    lireBatch(CL, [
-      pl('TABLEAU_BORD', 'A1:D42'),
-      pl('TRANSACTIONS', 'A2:H'),
-      pl('ECHEANCES', 'A2:D'),
-      pl('VUE_ENSEMBLE', 'B2:B3'),
-      pl('PARAMETRES', 'A4:I20'),
-    ]),
-    lireSelection(),
+/** Listes déroulantes de la saisie seules. */
+export async function chargerParametresSaisie(): Promise<ParametresSaisie> {
+  const foyerId = await idFoyerCourant();
+  const d = db();
+  const [comptesRows, catsRows] = await Promise.all([
+    d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
+    d.select().from(tCats).where(eq(tCats.foyerId, foyerId)),
   ]);
-
-  // Période affichée : sous-titre de la vitrine (« Juillet 2026 · foyer … »), en B3.
-  const sousTitre = S(vue[1]?.[0]) || S(vue[0]?.[0]);
-  const periode = sousTitre.split('·')[0].trim() || `${MOIS_FR[selection.mois - 1]} ${selection.annee}`;
-
-  return {
-    periode,
-    selection,
-    anneesDisponibles: anneesDisponibles(selection.annee),
-    kpis: extraireKpis(tb),
-    categories: extraireCategories(tb),
-    soldes: extraireSoldes(tb),
-    transactions: extraireTransactions(tx),
-    echeances: extraireEcheances(ec),
-    parametres: extraireParametres(par),
-  };
+  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  return construireParametres(comptesRows, catsRows);
 }
 
 /**
- * Change le mois affiché en écrivant les cellules moteur B3 (année) / B4 (mois) —
- * ce qui déclenche le recalcul des formules du tableur. Réplique aussi ce que
- * ferait le déclencheur onEdit `majSousTitre_` (qui ne s'exécute PAS sur écriture
- * API) : met à jour le sous-titre de la vitrine, en préservant le suffixe.
- *
- * ⚠ Le mois sélectionné est un état PARTAGÉ du classeur : le changer depuis l'app
- * le change pour tout le monde (comme le ferait le sélecteur natif du Sheet).
+ * Ajoute une transaction (dépense / revenu / virement). Réplique la logique du
+ * formulaire Google : virement → catégorie vidée + destination requise ; sinon
+ * destination vidée. Renvoie l'id créé.
  */
-export async function changerMois(annee: number, mois: number): Promise<SelectionMois> {
-  if (!Number.isInteger(mois) || mois < 1 || mois > 12) {
-    throw new ErreurValidation('Mois invalide (attendu 1–12).');
-  }
-  if (!Number.isInteger(annee) || annee < 2000 || annee > 2100) {
-    throw new ErreurValidation('Année invalide.');
-  }
-
-  // Cellules moteur (nombres) → recalcul automatique des formules dépendantes.
-  await ecrirePlage(CL, pl('TABLEAU_BORD', 'B3:B4'), [[annee], [mois]]);
-
-  // Sous-titre de la vitrine : « Mois Année » + suffixe existant (« · foyer … »).
-  const [cur] = await lireBatch(CL, [pl('VUE_ENSEMBLE', 'B3')]);
-  const actuel = S(cur[0]?.[0]);
-  const i = actuel.indexOf('·');
-  const suffixe = i === -1 ? '' : ` ${actuel.slice(i)}`;
-  await ecrirePlage(CL, pl('VUE_ENSEMBLE', 'B3'), [[`${MOIS_FR[mois - 1]} ${annee}${suffixe}`]]);
-
-  return { annee, mois };
-}
-
-/** Prochaine ligne libre de Transactions, repérée par la colonne Type (toujours remplie). */
-async function prochaineLigneTx(): Promise<number> {
-  const [col] = await lireBatch(CL, [pl('TRANSACTIONS', 'B2:B')]);
-  let derniere = 1; // en-tête = ligne 1
-  col.forEach((l, i) => {
-    if (S(l[0]) !== '') derniere = 2 + i;
-  });
-  return derniere + 1;
-}
-
-/**
- * Ajoute une transaction, en répliquant la logique du formulaire Google
- * (06_Formulaire.gs) : pour un virement interne, la catégorie est vidée et la
- * destination conservée ; sinon l'inverse. Écrit à la ligne libre calculée
- * (pas d'`append`, cf. règle d'architecture) : Date · Type · Compte · Dest ·
- * Catégorie · Libellé · Montant · Source. Renvoie le n° de ligne écrit.
- */
-export async function ajouterTransaction(input: NouvelleTransaction): Promise<number> {
-  const type = S(input.type);
+export async function ajouterTransaction(input: NouvelleTransaction): Promise<string> {
+  const type = (input.type ?? '').trim();
   if (!type) throw new ErreurValidation('Le type est requis.');
   if (!Number.isFinite(input.montant) || input.montant <= 0) {
     throw new ErreurValidation('Le montant doit être un nombre positif.');
   }
-  const compte = S(input.compte);
+  const compte = (input.compte ?? '').trim();
   if (!compte) throw new ErreurValidation('Le compte est requis.');
 
-  let dest = S(input.dest);
-  let categorie = S(input.categorie);
+  let dest = (input.dest ?? '').trim();
+  let categorie = (input.categorie ?? '').trim();
   if (type === TYPE_VIREMENT) {
     categorie = '';
     if (!dest) throw new ErreurValidation('Un virement interne exige un compte de destination.');
@@ -298,17 +275,22 @@ export async function ajouterTransaction(input: NouvelleTransaction): Promise<nu
     dest = '';
   }
 
-  const dateLabel = S(input.dateLabel) || aujourdhuiLabel();
-  const ligne = await prochaineLigneTx();
-  await ecrirePlage(CL, pl('TRANSACTIONS', `A${ligne}:H${ligne}`), [[
-    dateLabel,
-    type,
-    compte,
-    dest,
-    categorie,
-    S(input.libelle),
-    input.montant,
-    SOURCE_APP,
-  ]]);
-  return ligne;
+  const dateLabel = (input.dateLabel ?? '').trim() || aujourdhuiLabel();
+  const foyerId = await idFoyerCourant();
+  const [row] = await db()
+    .insert(tTx)
+    .values({
+      foyerId,
+      date: dateLabel,
+      dateIso: versISO(dateLabel),
+      type,
+      compte,
+      dest,
+      categorie,
+      libelle: (input.libelle ?? '').trim(),
+      montant: r2(input.montant),
+      note: '',
+    })
+    .returning({ id: tTx.id });
+  return row.id;
 }

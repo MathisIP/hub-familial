@@ -1,14 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { chargerBudget, ajouterTransaction, changerMois } from '@/lib/budget/service';
-import type { NouvelleTransaction } from '@/lib/budget/schema';
+import { chargerBudget, ajouterTransaction } from '@/lib/budget/service';
+import type { NouvelleTransaction, SelectionMois } from '@/lib/budget/schema';
 import { reponseErreur } from '@/lib/api';
 
-/** GET /api/budget — tableau de bord (lecture seule), en un aller-retour. */
+/** GET /api/budget — dashboard recalculé. Mois via ?annee=&mois= (défaut = mois courant). */
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+function selectionDepuis(req: NextRequest): SelectionMois | undefined {
+  const a = Number(req.nextUrl.searchParams.get('annee'));
+  const m = Number(req.nextUrl.searchParams.get('mois'));
+  if (Number.isFinite(a) && Number.isFinite(m) && m >= 1 && m <= 12) return { annee: a, mois: m };
+  return undefined;
+}
+
+export async function GET(req: NextRequest) {
   try {
-    return NextResponse.json(await chargerBudget());
+    return NextResponse.json(await chargerBudget(selectionDepuis(req)));
   } catch (e) {
     return reponseErreur(e);
   }
@@ -18,22 +25,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const corps = (await req.json()) as NouvelleTransaction;
-    const ligne = await ajouterTransaction(corps);
-    return NextResponse.json({ ok: true, ligne });
-  } catch (e) {
-    return reponseErreur(e);
-  }
-}
-
-/** PATCH /api/budget — change le mois affiché { annee, mois }. */
-export async function PATCH(req: NextRequest) {
-  try {
-    const { annee, mois } = (await req.json()) as { annee?: number; mois?: number };
-    if (typeof annee !== 'number' || typeof mois !== 'number') {
-      return NextResponse.json({ erreur: 'Paramètres { annee, mois } requis.' }, { status: 400 });
-    }
-    const selection = await changerMois(annee, mois);
-    return NextResponse.json({ ok: true, selection });
+    const id = await ajouterTransaction(corps);
+    return NextResponse.json({ ok: true, id });
   } catch (e) {
     return reponseErreur(e);
   }

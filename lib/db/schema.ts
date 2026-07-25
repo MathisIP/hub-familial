@@ -5,6 +5,7 @@ import {
   timestamp,
   boolean,
   integer,
+  doublePrecision,
   jsonb,
   unique,
   index,
@@ -273,3 +274,86 @@ export const evenements = pgTable(
 );
 
 export type LigneEvenement = typeof evenements.$inferSelect;
+
+/* ============================ MODULE BUDGET ============================ */
+/**
+ * Budget « source de vérité » en base : comptes (avec solde initial), catégories
+ * (dépense avec budget mensuel / revenu), transactions et échéances. Le dashboard
+ * (soldes, KPIs du mois, réel vs budget) est RECALCULÉ côté serveur à partir de
+ * ces tables (le tableur ne calcule plus rien). Montants en `double precision`
+ * (comme le tableur), arrondis à l'affichage.
+ */
+
+export const comptes = pgTable(
+  'comptes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    soldeInitial: doublePrecision('solde_initial').notNull().default(0),
+    ordre: integer('ordre').notNull().default(0),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('comptes_foyer_idx').on(t.foyerId)],
+);
+
+export const budgetCategories = pgTable(
+  'budget_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    type: text('type').notNull(), // 'depense' | 'revenu'
+    budgetMensuel: doublePrecision('budget_mensuel').notNull().default(0),
+    ordre: integer('ordre').notNull().default(0),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('budget_categories_foyer_idx').on(t.foyerId)],
+);
+
+export const transactions = pgTable(
+  'transactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    date: text('date').notNull().default(''), // label jj/mm/aaaa
+    dateIso: text('date_iso'), // aaaa-mm-jj (filtre par mois / tri), null si sans date
+    type: text('type').notNull(), // Dépense / Revenu / Virement interne
+    compte: text('compte').notNull().default(''),
+    dest: text('dest').notNull().default(''),
+    categorie: text('categorie').notNull().default(''),
+    libelle: text('libelle').notNull().default(''),
+    montant: doublePrecision('montant').notNull().default(0),
+    note: text('note').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('transactions_foyer_idx').on(t.foyerId)],
+);
+
+export const echeances = pgTable(
+  'echeances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    libelle: text('libelle').notNull(),
+    date: text('date').notNull().default(''),
+    dateIso: text('date_iso'),
+    recurrence: text('recurrence').notNull().default('Aucune'),
+    note: text('note').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('echeances_foyer_idx').on(t.foyerId)],
+);
+
+export type LigneCompte = typeof comptes.$inferSelect;
+export type LigneBudgetCategorie = typeof budgetCategories.$inferSelect;
+export type LigneTransaction = typeof transactions.$inferSelect;
+export type LigneEcheance = typeof echeances.$inferSelect;

@@ -77,3 +77,16 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
 export async function idFoyerCourant(): Promise<string> {
   return (await foyerCourant()).id;
 }
+
+/** Utilisateur connecté (ligne `utilisateurs`). Nécessite une session + la base. */
+export const utilisateurCourant = cache(async () => {
+  if (!baseDisponible()) {
+    throw new FoyerIndisponible('Base multi-foyer non configurée (DATABASE_URL absent).');
+  }
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase();
+  if (!email) throw new FoyerIndisponible('Aucun utilisateur connecté.');
+  const [u] = await db().select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
+  if (!u) throw new FoyerIndisponible('Utilisateur introuvable.');
+  return u;
+});

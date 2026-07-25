@@ -1022,6 +1022,41 @@ a { color: var(--link-tx); }
 }
 .install-ios-x:hover { color: var(--ink); }
 
+/* ===================== MON COMPTE (RGPD) ===================== */
+.compte-bloc {
+  background: var(--cell);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.2rem 1.35rem;
+  margin-top: 1.25rem;
+}
+.compte-bloc .bloc-titre { margin: 0 0 .5rem; }
+.compte-note { color: var(--ink2); font-size: .9rem; margin: 0 0 1rem; max-width: 44rem; }
+.compte-danger { border-color: var(--over-tx); }
+.compte-lien-conf { margin-top: 1.5rem; font-size: .9rem; }
+
+.bouton-danger {
+  background: var(--over-bg); color: var(--over-tx); border-color: transparent; font-weight: 600;
+}
+.bouton-danger:hover:not(:disabled) { border-color: var(--over-tx); }
+
+.suppr-form { display: flex; flex-direction: column; gap: .8rem; align-items: flex-start; }
+.suppr-check { display: flex; gap: .5rem; align-items: flex-start; font-size: .9rem; color: var(--ink2); max-width: 44rem; }
+.suppr-check input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--over-tx); flex: none; }
+
+/* ===================== DOCUMENT LÉGAL (confidentialité) ===================== */
+.doc-legal { max-width: 46rem; }
+.doc-legal h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin: .5rem 0 .25rem; }
+.doc-legal h2 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+.doc-legal p, .doc-legal li { color: var(--ink2); line-height: 1.6; }
+.doc-legal ul { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .3rem; }
+.doc-maj { font-size: .82rem; color: var(--muted); }
+.doc-avertissement {
+  background: var(--soft); color: var(--ink2);
+  border: 1px solid var(--line2); border-radius: .6rem;
+  padding: .7rem .9rem; font-size: .88rem; margin: 1rem 0 1.5rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

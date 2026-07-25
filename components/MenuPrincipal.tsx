@@ -68,6 +68,14 @@ export default function MenuPrincipal() {
           </div>
 
           <div className="menu-sep" />
+          <Link href="/compte" className="menu-item" role="menuitem" onClick={() => setOuvert(false)}>
+            Mon compte
+          </Link>
+          <Link href="/confidentialite" className="menu-item" role="menuitem" onClick={() => setOuvert(false)}>
+            Confidentialité
+          </Link>
+
+          <div className="menu-sep" />
           <form action={deconnexion}>
             <button type="submit" className="menu-item menu-deco">Se déconnecter</button>
           </form>

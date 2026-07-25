@@ -16,7 +16,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [ajout, setAjout] = useState(false);
-  const [edite, setEdite] = useState<string | null>(null); // clé = nom
+  const [edite, setEdite] = useState<string | null>(null); // clé = id
 
   const rafraichir = useCallback(async () => {
     const r = await fetch('/api/evenements', { cache: 'no-store' });
@@ -42,8 +42,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
   );
 
   function statutChange(ev: Evenement, statut: string) {
-    // Stub (pas encore dans le maître) : on crée la ligne avec ce statut.
-    action(() => (ev.ligne ? envoi('PATCH', { ligne: ev.ligne, statut }) : envoi('POST', { nom: ev.nom, statut })));
+    action(() => envoi('PATCH', { id: ev.id, statut }));
   }
 
   return (
@@ -71,20 +70,20 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
       ) : (
         <ul className="liste ev-liste">
           {d.evenements.map((ev) =>
-            edite === ev.nom ? (
-              <li key={ev.nom}>
+            edite === ev.id ? (
+              <li key={ev.id}>
                 <EvenementForm
                   d={d}
                   evenement={ev}
                   occupe={occupe}
                   onAnnulerAction={() => setEdite(null)}
                   onEnregistrerAction={(corps) =>
-                    action(() => (ev.ligne ? envoi('PATCH', { ligne: ev.ligne, ...corps }) : envoi('POST', corps))).then(() => setEdite(null))
+                    action(() => envoi('PATCH', { id: ev.id, ...corps })).then(() => setEdite(null))
                   }
                 />
               </li>
             ) : (
-              <li key={ev.nom} className="ev-carte">
+              <li key={ev.id} className="ev-carte">
                 <div className="ev-tete">
                   <span className="ev-nom">{ev.nom}</span>
                   {ev.type && <span className="puce categorie">{ev.type}</span>}
@@ -105,7 +104,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-                  <button className="bouton discret" onClick={() => setEdite(ev.nom)} disabled={occupe}>
+                  <button className="bouton discret" onClick={() => setEdite(ev.id)} disabled={occupe}>
                     Modifier
                   </button>
                 </div>
@@ -144,7 +143,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                 </div>
                 {ev.note && <p className="ev-note">{ev.note}</p>}
 
-                {ev.ligne != null && ev.dateISO && d.agendas.length > 0 && (
+                {ev.dateISO && d.agendas.length > 0 && (
                   <SyncAgenda ev={ev} agendas={d.agendas} occupe={occupe} action={action} />
                 )}
               </li>
@@ -195,7 +194,7 @@ function SyncAgenda({
         </span>
         <button
           className="bouton discret"
-          onClick={() => action(() => envoiAgenda('DELETE', { ligne: ev.ligne }))}
+          onClick={() => action(() => envoiAgenda('DELETE', { id: ev.id }))}
           disabled={occupe}
         >
           retirer
@@ -219,7 +218,7 @@ function SyncAgenda({
             aria-label="Agenda cible"
             onChange={(e) => {
               if (e.target.value) {
-                action(() => envoiAgenda('POST', { ligne: ev.ligne, calendarId: e.target.value })).then(() => setChoix(false));
+                action(() => envoiAgenda('POST', { id: ev.id, calendarId: e.target.value })).then(() => setChoix(false));
               }
             }}
           >
@@ -278,10 +277,10 @@ function EvenementForm({
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder="Nom de l'événement" value={nom} onChange={(e) => setNom(e.target.value)} disabled={occupe} autoFocus />
-        <select className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} aria-label="Type">
-          <option value="">Type…</option>
-          {d.types.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
+        <input className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} placeholder="Type" list="ev-types" aria-label="Type" />
+        <datalist id="ev-types">
+          {d.types.map((x) => <option key={x} value={x} />)}
+        </datalist>
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
           <option value="">Statut…</option>
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}

@@ -1,114 +1,47 @@
 import 'server-only';
-import { lireBatch, ecrirePlage } from '@/lib/google/sheets';
+import { and, eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { evenements as tEvenements } from '@/lib/db/schema';
+import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
-import { nomOnglet, plage } from '@/lib/i18n';
-import { parseEuro, versISO } from '@/lib/argent';
-import { ajouterEvenement as creerEventAgenda, supprimerEvenement as supprimerEventAgenda, listerAgendas } from '@/lib/agenda/service';
+import { versISO } from '@/lib/argent';
+import {
+  ajouterEvenement as creerEventAgenda,
+  supprimerEvenement as supprimerEventAgenda,
+  listerAgendas,
+} from '@/lib/agenda/service';
 import type { Agenda } from '@/lib/agenda/schema';
 import {
-  COL_EV,
-  LIGNE_DONNEES_EV,
-  LIGNE_DONNEES_PARAMS,
   STATUTS_DEFAUT,
-  estCoche,
-  evenementStub,
-  ligneVersEvenement,
+  construireEvenement,
   parseAgendaLien,
-  rollupVide,
   type DonneesEvenements,
   type Evenement,
-  type Rollup,
 } from '@/lib/evenements/schema';
 
-/** SERVICE ÉVÉNEMENTS (serveur uniquement). */
-const CL = 'EVENEMENTS' as const;
-
-function pl(
-  onglet: 'EVENEMENTS' | 'INVITES' | 'CHECKLIST' | 'MENU_COURSES' | 'PARAMETRES',
-  a1: string,
-): string {
-  return plage(nomOnglet(CL, onglet), a1);
-}
-const S = (v: unknown): string => (v == null ? '' : String(v).trim());
-const colonne = (m: unknown[][], i: number) => m.map((l) => S(l[i])).filter((v) => v !== '');
-
-/** Accumule les récaps par nom d'événement (clé insensible à la casse). */
-function rollupParEvenement(
-  invites: unknown[][],
-  checklist: unknown[][],
-  menu: unknown[][],
-): Map<string, { nomAffiche: string; r: Rollup }> {
-  const map = new Map<string, { nomAffiche: string; r: Rollup }>();
-  const acc = (nom: string) => {
-    const cle = nom.toLowerCase();
-    if (!map.has(cle)) map.set(cle, { nomAffiche: nom, r: rollupVide() });
-    return map.get(cle)!.r;
-  };
-
-  for (const l of invites) {
-    const nom = S(l[0]);
-    if (!nom) continue;
-    const r = acc(nom);
-    r.invitesTotal += 1;
-    if (S(l[3]).toLowerCase() === 'oui') {
-      r.invitesOui += 1;
-      r.personnesOui += Number(S(l[4]).replace(',', '.')) || 1; // Nb pers. (défaut 1)
-    }
-  }
-  for (const l of checklist) {
-    const nom = S(l[0]);
-    if (!nom || !S(l[1])) continue;
-    const r = acc(nom);
-    r.checklistTotal += 1;
-    if (estCoche(l[5])) r.checklistFait += 1;
-  }
-  for (const l of menu) {
-    const nom = S(l[0]);
-    if (!nom || !S(l[1])) continue;
-    const r = acc(nom);
-    r.menuItems += 1;
-    r.menuCoutNum += parseEuro(l[4]);
-    if (estCoche(l[5])) r.menuAchetes += 1;
-  }
-  return map;
-}
+/**
+ * SERVICE ÉVÉNEMENTS (serveur uniquement) — Postgres, scopé au FOYER courant.
+ * Le maître est en base ; la synchro Google Agenda (lier/délier) est conservée
+ * telle quelle (elle passe par lib/agenda/service), seul le stockage du lien
+ * (« calendarId|eventId ») migre de la colonne K vers `agenda_lien`.
+ */
 
 export async function chargerEvenements(): Promise<DonneesEvenements> {
-  const [maitre, invites, checklist, menu, par] = await lireBatch(CL, [
-    pl('EVENEMENTS', 'A2:K'),
-    pl('INVITES', 'A2:G'),
-    pl('CHECKLIST', 'A2:F'),
-    pl('MENU_COURSES', 'A2:F'),
-    pl('PARAMETRES', `A${LIGNE_DONNEES_PARAMS}:B`),
-  ]);
+  const foyerId = await idFoyerCourant();
+  const lignes = await db().select().from(tEvenements).where(eq(tEvenements.foyerId, foyerId));
 
-  const rollups = rollupParEvenement(invites, checklist, menu);
-  const vusDansMaitre = new Set<string>();
+  const evenements: Evenement[] = lignes
+    .map(construireEvenement)
+    .sort((a, b) => {
+      const da = a.dateISO ?? '9999-99-99';
+      const db_ = b.dateISO ?? '9999-99-99';
+      return da !== db_ ? da.localeCompare(db_) : a.nom.localeCompare(b.nom);
+    });
 
-  // 1) Événements du maître (avec leurs détails).
-  const evenements: Evenement[] = [];
-  maitre.forEach((l, i) => {
-    const nom = S(l[COL_EV.NOM - 1]);
-    if (!nom) return;
-    vusDansMaitre.add(nom.toLowerCase());
-    const entree = rollups.get(nom.toLowerCase());
-    evenements.push(ligneVersEvenement(l, LIGNE_DONNEES_EV + i, entree?.r ?? rollupVide()));
-  });
-
-  // 2) Événements présents uniquement dans les sous-onglets (stubs).
-  for (const [cle, { nomAffiche, r }] of rollups) {
-    if (!vusDansMaitre.has(cle)) evenements.push(evenementStub(nomAffiche, r));
-  }
-
-  // Tri : par date croissante (sans date à la fin), puis par nom.
-  evenements.sort((a, b) => {
-    const da = a.dateISO ?? '9999-99-99';
-    const db = b.dateISO ?? '9999-99-99';
-    return da !== db ? da.localeCompare(db) : a.nom.localeCompare(b.nom);
-  });
-
-  const types = colonne(par, 0);
-  const statuts = colonne(par, 1);
+  // Types dérivés des événements existants (datalist) ; statuts = liste fixe.
+  const types = [...new Set(lignes.map((l) => l.type.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b),
+  );
 
   // Agendas où pousser un événement (défensif : vide si Agenda indispo/non configuré).
   let agendas: Agenda[] = [];
@@ -118,7 +51,7 @@ export async function chargerEvenements(): Promise<DonneesEvenements> {
     agendas = [];
   }
 
-  return { evenements, types, statuts: statuts.length ? statuts : STATUTS_DEFAUT, agendas };
+  return { evenements, types, statuts: STATUTS_DEFAUT, agendas };
 }
 
 /* ------------------------------ MUTATIONS ------------------------------ */
@@ -135,42 +68,51 @@ export type ChampsEvenement = {
   note?: string;
 };
 
-/** Ligne A→J (K AgendaID volontairement NON écrite pour la préserver). */
-function ligneEvenement(c: ChampsEvenement): unknown[][] {
-  return [[
-    c.nom.trim(), c.type ?? '', c.date ?? '', c.heure ?? '', c.lieu ?? '',
-    '', // F Nb invités : dérivé des invités, non saisi ici
-    c.budgetPrevu ?? '', c.depense ?? '', c.statut ?? '', c.note ?? '',
-  ]];
+/** Valeurs A→J (agendaLien NON touché ici, préservé). */
+function valeurs(c: ChampsEvenement) {
+  return {
+    nom: c.nom.trim(),
+    type: c.type ?? '',
+    date: c.date ?? '',
+    heure: c.heure ?? '',
+    lieu: c.lieu ?? '',
+    budgetPrevu: c.budgetPrevu ?? '',
+    depense: c.depense ?? '',
+    statut: c.statut ?? '',
+    note: c.note ?? '',
+  };
 }
 
-async function prochaineLigne(): Promise<number> {
-  const [col] = await lireBatch(CL, [pl('EVENEMENTS', `A${LIGNE_DONNEES_EV}:A`)]);
-  let derniere = LIGNE_DONNEES_EV - 1;
-  col.forEach((l, i) => {
-    if (S(l[0]) !== '') derniere = LIGNE_DONNEES_EV + i;
-  });
-  return derniere + 1;
-}
-
-/** Ajoute un événement au maître (crée aussi une ligne pour un ancien stub). */
-export async function ajouterEvenement(c: ChampsEvenement): Promise<number> {
+export async function ajouterEvenement(c: ChampsEvenement): Promise<string> {
   if (!c.nom?.trim()) throw new ErreurValidation("Le nom de l'événement est requis.");
-  const ligne = await prochaineLigne();
-  await ecrirePlage(CL, pl('EVENEMENTS', `A${ligne}:J${ligne}`), ligneEvenement(c));
-  return ligne;
+  const foyerId = await idFoyerCourant();
+  const [row] = await db()
+    .insert(tEvenements)
+    .values({ foyerId, ...valeurs(c) })
+    .returning({ id: tEvenements.id });
+  return row.id;
 }
 
-export async function modifierEvenement(ligne: number, c: ChampsEvenement): Promise<void> {
-  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
+export async function modifierEvenement(id: string, c: ChampsEvenement): Promise<void> {
   if (!c.nom?.trim()) throw new ErreurValidation("Le nom de l'événement est requis.");
-  await ecrirePlage(CL, pl('EVENEMENTS', `A${ligne}:J${ligne}`), ligneEvenement(c));
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .update(tEvenements)
+    .set(valeurs(c))
+    .where(and(eq(tEvenements.id, id), eq(tEvenements.foyerId, foyerId)))
+    .returning({ id: tEvenements.id });
+  if (res.length === 0) throw new ErreurValidation('Événement introuvable.');
 }
 
-/** Change uniquement le statut (colonne I). */
-export async function changerStatutEvenement(ligne: number, statut: string): Promise<void> {
-  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
-  await ecrirePlage(CL, pl('EVENEMENTS', `I${ligne}`), [[statut]]);
+/** Change uniquement le statut. */
+export async function changerStatutEvenement(id: string, statut: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .update(tEvenements)
+    .set({ statut })
+    .where(and(eq(tEvenements.id, id), eq(tEvenements.foyerId, foyerId)))
+    .returning({ id: tEvenements.id });
+  if (res.length === 0) throw new ErreurValidation('Événement introuvable.');
 }
 
 /* --------------------------- LIEN AVEC L'AGENDA --------------------------- */
@@ -186,52 +128,61 @@ function parseHeure(v: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
 }
 
+/** Lit un événement du foyer (par id) ou lève une erreur claire. */
+async function lireEvenement(foyerId: string, id: string) {
+  const [ev] = await db()
+    .select()
+    .from(tEvenements)
+    .where(and(eq(tEvenements.id, id), eq(tEvenements.foyerId, foyerId)))
+    .limit(1);
+  if (!ev) throw new ErreurValidation('Événement introuvable.');
+  return ev;
+}
+
 /**
- * Crée l'événement dans l'agenda choisi à partir de la ligne maître (nom, date,
- * heure, lieu, note) et mémorise « calendarId|eventId » en colonne K (dédoublonnage).
+ * Crée l'événement dans l'agenda choisi (nom, date, heure, lieu, note) et mémorise
+ * « calendarId|eventId » dans `agenda_lien` (dédoublonnage).
  */
-export async function lierAgenda(ligne: number, calendarId: string): Promise<void> {
-  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
+export async function lierAgenda(id: string, calendarId: string): Promise<void> {
   if (!calendarId.trim()) throw new ErreurValidation('Agenda cible requis.');
+  const foyerId = await idFoyerCourant();
+  const ev = await lireEvenement(foyerId, id);
+  if (ev.agendaLien.trim()) throw new ErreurValidation('Événement déjà dans l’agenda.');
 
-  const [brut] = await lireBatch(CL, [pl('EVENEMENTS', `A${ligne}:K${ligne}`)]);
-  const l = brut[0] ?? [];
-  const nom = S(l[COL_EV.NOM - 1]);
-  if (!nom) throw new ErreurValidation(`Aucun événement à la ligne ${ligne}.`);
-  if (S(l[COL_EV.AGENDA - 1])) throw new ErreurValidation('Événement déjà dans l’agenda.');
-
-  const dateISO = versISO(S(l[COL_EV.DATE - 1]));
+  const dateISO = versISO(ev.date);
   if (!dateISO) throw new ErreurValidation("L'événement doit avoir une date pour aller dans l'agenda.");
 
-  const heure = parseHeure(S(l[COL_EV.HEURE - 1]));
-  const lieu = S(l[COL_EV.LIEU - 1]);
-  const type = S(l[COL_EV.TYPE - 1]);
-  const note = S(l[COL_EV.NOTE - 1]);
-
+  const heure = parseHeure(ev.heure);
   const eventId = await creerEventAgenda({
     calendarId,
-    titre: nom,
+    titre: ev.nom,
     date: dateISO,
     journeeEntiere: heure === null,
     heureDebut: heure ?? undefined,
-    lieu,
-    description: [type, note].filter(Boolean).join(' — '),
+    lieu: ev.lieu,
+    description: [ev.type, ev.note].filter(Boolean).join(' — '),
   });
 
-  await ecrirePlage(CL, pl('EVENEMENTS', `K${ligne}`), [[`${calendarId}|${eventId}`]]);
+  await db()
+    .update(tEvenements)
+    .set({ agendaLien: `${calendarId}|${eventId}` })
+    .where(and(eq(tEvenements.id, id), eq(tEvenements.foyerId, foyerId)));
 }
 
-/** Supprime l'événement d'agenda lié et vide la colonne K. */
-export async function delierAgenda(ligne: number): Promise<void> {
-  if (ligne < LIGNE_DONNEES_EV) throw new ErreurValidation(`Ligne invalide : ${ligne}.`);
-  const [brut] = await lireBatch(CL, [pl('EVENEMENTS', `K${ligne}:K${ligne}`)]);
-  const lien = parseAgendaLien(S(brut[0]?.[0]));
+/** Supprime l'événement d'agenda lié et vide `agenda_lien`. */
+export async function delierAgenda(id: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const ev = await lireEvenement(foyerId, id);
+  const lien = parseAgendaLien(ev.agendaLien);
   if (lien) {
     try {
       await supprimerEventAgenda(lien.calendarId, lien.eventId);
     } catch {
-      // événement d'agenda déjà supprimé côté Google : on nettoie quand même la colonne K
+      // événement d'agenda déjà supprimé côté Google : on nettoie quand même le lien
     }
   }
-  await ecrirePlage(CL, pl('EVENEMENTS', `K${ligne}`), [['']]);
+  await db()
+    .update(tEvenements)
+    .set({ agendaLien: '' })
+    .where(and(eq(tEvenements.id, id), eq(tEvenements.foyerId, foyerId)));
 }

@@ -242,3 +242,34 @@ export const semaine = pgTable(
 
 export type LigneRecette = typeof recettes.$inferSelect;
 export type LigneSemaine = typeof semaine.$inferSelect;
+
+/* ========================= MODULE ÉVÉNEMENTS ========================= */
+/**
+ * Événements (table maître). Les sous-listes (invités / checklist / menu) sont
+ * une extension future : pour l'instant seul le maître est en base (comme l'app
+ * n'éditait que lui). `agenda_lien` = « calendarId|eventId » (ex-colonne K),
+ * rempli quand l'événement est poussé dans Google Agenda.
+ */
+export const evenements = pgTable(
+  'evenements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    type: text('type').notNull().default(''),
+    date: text('date').notNull().default(''), // label jj/mm/aaaa
+    heure: text('heure').notNull().default(''),
+    lieu: text('lieu').notNull().default(''),
+    budgetPrevu: text('budget_prevu').notNull().default(''),
+    depense: text('depense').notNull().default(''),
+    statut: text('statut').notNull().default(''),
+    note: text('note').notNull().default(''),
+    agendaLien: text('agenda_lien').notNull().default(''), // calendarId|eventId
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('evenements_foyer_idx').on(t.foyerId)],
+);
+
+export type LigneEvenement = typeof evenements.$inferSelect;

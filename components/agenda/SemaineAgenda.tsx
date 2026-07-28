@@ -9,12 +9,15 @@ type Donnees = { evenements: EvenementAgenda[]; agendas: Agenda[]; lundiISO: str
 const JOURS_COURTS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 /**
- * Vue de l'agenda familial sur la semaine en cours (lundi → dimanche), tous les
- * agendas fusionnés et colorés. Chargée côté client pour ne pas ralentir l'accueil.
+ * Agenda de la semaine (lundi → dimanche), tous agendas fusionnés. Bandeau de
+ * jours cliquables ; sous le bandeau, les événements du jour sélectionné (par
+ * défaut aujourd'hui). Chargé côté client pour ne pas ralentir l'accueil.
  */
 export default function SemaineAgenda() {
   const [d, setD] = useState<Donnees | null>(null);
   const [etat, setEtat] = useState<'charge' | 'ok' | 'erreur'>('charge');
+  const aujourd = aujourdhuiISO();
+  const [selection, setSelection] = useState(aujourd);
 
   useEffect(() => {
     let vivant = true;
@@ -27,9 +30,6 @@ export default function SemaineAgenda() {
     };
   }, []);
 
-  const aujourd = aujourdhuiISO();
-
-  // 7 jours de la semaine + événements bucketés par jour.
   const jours = useMemo(() => {
     if (!d) return [];
     const [a, m, j] = d.lundiISO.split('-').map(Number);
@@ -45,10 +45,12 @@ export default function SemaineAgenda() {
     });
   }, [d]);
 
+  const jourSel = jours.find((x) => x.iso === selection) ?? jours.find((x) => x.iso === aujourd);
+
   return (
     <section className="semaine" aria-label="Agenda de la semaine">
       <div className="semaine-tete">
-        <h2>🗓️ Cette semaine</h2>
+        <h2>Cette semaine</h2>
         <Link href="/agenda" className="semaine-lien">Agenda complet →</Link>
       </div>
 
@@ -57,6 +59,46 @@ export default function SemaineAgenda() {
 
       {etat === 'ok' && d && (
         <>
+          <div className="sem-strip" role="tablist" aria-label="Jours de la semaine">
+            {jours.map((jour) => {
+              const classe = [
+                'sem-jour',
+                jour.iso === selection ? 'on' : '',
+                jour.iso === aujourd ? 'today' : '',
+                jour.evenements.length ? 'has' : '',
+              ].join(' ').trim();
+              return (
+                <button
+                  key={jour.iso}
+                  className={classe}
+                  role="tab"
+                  aria-selected={jour.iso === selection}
+                  onClick={() => setSelection(jour.iso)}
+                >
+                  <span className="sem-jn">{jour.label}</span>
+                  <span className="sem-nn">{jour.numero}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="sem-liste">
+            {!jourSel || jourSel.evenements.length === 0 ? (
+              <p className="sem-vide">Rien de prévu ce jour.</p>
+            ) : (
+              jourSel.evenements.map((e) => (
+                <div className="sem-ev" key={`${e.calendarId}:${e.id}`}>
+                  <span className="sem-h">{e.journeeEntiere ? 'journée' : e.heureDebut}</span>
+                  <span className="sem-bar" style={{ background: e.couleur }} />
+                  <span className="sem-corps">
+                    <span className="sem-titre">{e.titre}</span>
+                    {e.lieu && <span className="sem-lieu">{e.lieu}</span>}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
           {d.agendas.length > 1 && (
             <div className="semaine-legende">
               {d.agendas.map((ag) => (
@@ -67,30 +109,6 @@ export default function SemaineAgenda() {
               ))}
             </div>
           )}
-
-          <div className="semaine-grille">
-            {jours.map((jour) => (
-              <div className={`jour-col${jour.iso === aujourd ? ' aujourdhui' : ''}${jour.evenements.length === 0 ? ' vide' : ''}`} key={jour.iso}>
-                <div className="jour-entete">
-                  <span className="jour-nom">{jour.label}</span>
-                  <span className="jour-num">{jour.numero}</span>
-                </div>
-                <div className="jour-events">
-                  {jour.evenements.length === 0 ? (
-                    <span className="jour-rien">—</span>
-                  ) : (
-                    jour.evenements.map((e) => (
-                      <div className="mini-event" key={`${e.calendarId}:${e.id}`} title={`${e.titre}${e.lieu ? ' · ' + e.lieu : ''}`}>
-                        <span className="mini-dot" style={{ background: e.couleur }} />
-                        <span className="mini-heure">{e.journeeEntiere ? '' : e.heureDebut}</span>
-                        <span className="mini-titre">{e.titre}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </>
       )}
     </section>

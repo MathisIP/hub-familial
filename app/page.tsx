@@ -6,7 +6,19 @@ import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
+import { auth } from '@/auth';
 import { t } from '@/lib/i18n';
+
+/** Salutation selon l'heure (Europe/Paris) + date du jour + prénom. */
+function contexteAccueil(nomComplet: string) {
+  const paris = (opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...opts }).format(new Date());
+  const heure = Number(paris({ hour: 'numeric', hour12: false }));
+  const salut = heure >= 18 || heure < 5 ? 'Bonsoir' : 'Bonjour';
+  const prenom = nomComplet.trim().split(/\s+/)[0] || 'à la maison';
+  const date = paris({ weekday: 'long', day: 'numeric', month: 'long' });
+  return { salut, prenom, date };
+}
 
 /**
  * Accueil = tableau de bord du foyer : résumé des comptes, actions rapides,
@@ -18,38 +30,32 @@ export const dynamic = 'force-dynamic';
 
 export default async function Accueil() {
   await exigerAcces();
-  let accueil: AccueilBudget | null = null;
-  try {
-    accueil = await chargerAccueilBudget();
-  } catch {
-    accueil = null; // budget indisponible : l'accueil reste utilisable
-  }
+  const [session, accueil] = await Promise.all([
+    auth(),
+    chargerAccueilBudget().catch(() => null as AccueilBudget | null),
+  ]);
+  const { salut, prenom, date } = contexteAccueil(session?.user?.name ?? '');
 
   return (
     <>
       <header className="entete">
         <div className="brand">
           {/* Logo de l'app (icône « maison familiale »), pour la cohérence visuelle */}
-          <img className="brand-logo" src="/icon-192.png" alt="" width={40} height={40} />
-          <div>
-            <h1 className="brand-titre">{t('APP_TITRE').replace(/^🏡\s*/, '')}</h1>
-            <p>{t('APP_SOUS_TITRE')}</p>
-          </div>
+          <img className="brand-logo" src="/icon-192.png" alt="" width={36} height={36} />
+          <span className="brand-nom">{t('APP_TITRE').replace(/^🏡\s*/, '')}</span>
         </div>
         <MenuPrincipal />
       </header>
 
-      {accueil ? (
-        <ResumeComptes soldes={accueil.soldesHorsEpargne} />
-      ) : (
-        <p className="message erreur comptes-indispo">
-          Comptes momentanément indisponibles (données Budget non chargées).
-        </p>
-      )}
+      <section className="hero-accueil" aria-label="Bienvenue">
+        <p className="hero-date">{date}</p>
+        <h1 className="hero-h1">{salut},<br /><em>{prenom}</em></h1>
+        <p className="hero-sub">Votre foyer en un coup d’œil.</p>
+      </section>
 
-      <div className="actions-rapides">
+      <ResumeComptes soldes={accueil?.soldesHorsEpargne ?? []}>
         <SaisieTransaction params={accueil?.parametres} />
-      </div>
+      </ResumeComptes>
 
       <SemaineAgenda />
 

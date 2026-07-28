@@ -103,7 +103,7 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
 
   return (
     <>
-      <button className="bouton bouton-action" onClick={() => { setOuvert(true); setInfo(null); setErreur(null); }}>
+      <button className="bouton bouton-primaire saisie-cta" onClick={() => { setOuvert(true); setInfo(null); setErreur(null); }}>
         ＋ Ajouter une opération
       </button>
 

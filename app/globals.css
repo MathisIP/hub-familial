@@ -1113,6 +1113,72 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .type-btn.actif { box-shadow: 0 0 12px -4px var(--glow); }
 .jour-col.aujourdhui { box-shadow: inset 0 0 0 1px var(--acc), 0 0 14px -6px var(--glow); }
 
+/* ===================== ACCUEIL REFONDU (Corail) ===================== */
+.brand-nom { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
+
+.hero-accueil { margin: .2rem 0 1.4rem; }
+.hero-date {
+  font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--acc-deep);
+}
+.hero-h1 {
+  font-size: clamp(2.2rem, 8vw, 2.7rem); line-height: 1.03; margin: .4rem 0 .3rem;
+  font-weight: 600; letter-spacing: -.01em; text-wrap: balance;
+}
+.hero-h1 em { font-style: italic; color: var(--acc); text-shadow: 0 0 6px var(--glow), 0 0 15px var(--glow2); }
+.hero-sub { margin: 0; color: var(--ink2); font-size: .98rem; font-weight: 500; }
+
+/* Carte « Mes comptes » */
+.money-card {
+  background: radial-gradient(130% 120% at 100% 0%, var(--head) 0%, var(--cell) 62%);
+  border: 1px solid var(--line2); border-radius: 1.4rem; padding: 1.15rem 1.2rem;
+  box-shadow: var(--shadow-soft, 0 8px 20px rgba(120,40,60,.07)), 0 0 26px -16px var(--glow);
+  margin-bottom: 1.1rem;
+}
+.mc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
+.mc-titre { margin: 0; font-size: 1.15rem; }
+.mc-total { font-size: .82rem; color: var(--ink2); font-weight: 600; }
+.mc-total b { color: var(--ink); }
+.mc-comptes { display: flex; flex-direction: column; }
+.mc-compte {
+  display: flex; align-items: center; gap: .7rem; padding: .62rem .1rem;
+  border-bottom: 1px dashed var(--line2); text-decoration: none; color: inherit;
+}
+.mc-compte:last-child { border-bottom: 0; }
+.mc-compte:hover .mc-nom { color: var(--ink); }
+.mc-dot { width: .72rem; height: .72rem; border-radius: 50%; flex: none; }
+.mc-nom { flex: 1; font-size: .92rem; color: var(--ink2); font-weight: 500; }
+.mc-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.mc-val.neg { color: var(--over-tx); }
+.mc-actions { margin-top: .9rem; }
+.saisie-cta { width: 100%; justify-content: center; }
+
+/* Bandeau de la semaine (jours cliquables) + liste du jour */
+.sem-strip { display: flex; gap: .35rem; margin: .9rem 0; }
+.sem-jour {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  padding: .5rem .1rem; border-radius: .9rem; border: 1px solid transparent;
+  background: transparent; color: var(--ink); font: inherit; cursor: pointer;
+}
+.sem-jour:hover { background: var(--link-bg); }
+.sem-jn { font-size: .64rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+.sem-nn { font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sem-jour.on { background: linear-gradient(155deg, var(--acc), var(--acc-deep)); box-shadow: 0 0 14px -3px var(--glow); }
+.sem-jour.on .sem-jn, .sem-jour.on .sem-nn { color: var(--on-acc); }
+.sem-jour.today:not(.on) .sem-nn { color: var(--acc-deep); }
+.sem-jour.has .sem-nn::after { content: ""; display: block; width: .28rem; height: .28rem; border-radius: 50%; background: var(--acc); margin: .12rem auto 0; }
+.sem-jour.on.has .sem-nn::after { background: var(--on-acc); }
+
+.sem-liste { display: flex; flex-direction: column; }
+.sem-vide { color: var(--muted); font-size: .88rem; margin: .3rem 0; }
+.sem-ev { display: flex; align-items: center; gap: .7rem; padding: .5rem 0; border-top: 1px solid var(--line); }
+.sem-ev:first-child { border-top: 0; }
+.sem-h { font-variant-numeric: tabular-nums; font-size: .8rem; color: var(--muted); width: 3.1rem; flex: none; font-weight: 600; }
+.sem-bar { width: .28rem; align-self: stretch; min-height: 1.7rem; border-radius: 2px; flex: none; }
+.sem-corps { display: flex; flex-direction: column; }
+.sem-titre { font-weight: 600; font-size: .92rem; }
+.sem-lieu { font-size: .78rem; color: var(--muted); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

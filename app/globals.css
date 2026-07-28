@@ -1179,6 +1179,55 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .sem-titre { font-weight: 600; font-size: .92rem; }
 .sem-lieu { font-size: .78rem; color: var(--muted); }
 
+/* ===================== BUDGET REFONDU (Corail) ===================== */
+.bg-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-bottom: 1.1rem; }
+.bg-kpi {
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1.1rem;
+  padding: .85rem .95rem; box-shadow: var(--shadow-soft, 0 6px 16px rgba(120,40,60,.06));
+}
+.bg-kpi.hero {
+  grid-column: 1 / -1;
+  background: radial-gradient(130% 120% at 100% 0%, var(--head) 0%, var(--cell) 62%);
+  border-color: var(--line2); box-shadow: 0 0 24px -14px var(--glow);
+}
+.k-l { font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.k-v { font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: .2rem; letter-spacing: -.01em; }
+.bg-kpi.hero .k-v { font-size: 1.7rem; }
+.k-v.pos { color: var(--ok-tx); }
+.k-v.neg { color: var(--over-tx); }
+.k-n { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+
+.card-bloc {
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1.4rem;
+  padding: 1.1rem 1.15rem; box-shadow: var(--shadow-soft, 0 8px 20px rgba(120,40,60,.07)); margin-bottom: 1.1rem;
+}
+.section-titre {
+  font-family: var(--police-titre), Georgia, serif; font-size: 1.12rem; font-weight: 600;
+  letter-spacing: -.01em; margin: 0 0 .85rem;
+}
+.bg-comptes { display: flex; flex-direction: column; }
+.bg-compte { display: flex; align-items: center; gap: .7rem; padding: .55rem .1rem; border-bottom: 1px solid var(--line); }
+.bg-compte:last-child { border-bottom: 0; }
+.bg-dot { width: .7rem; height: .7rem; border-radius: 50%; flex: none; }
+.bg-nom { flex: 1; font-size: .9rem; color: var(--ink2); font-weight: 500; }
+.bg-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.bg-val.neg { color: var(--over-tx); }
+
+/* Jauges : remplissage corail vif + dépassement rouge (déjà géré par --over-tx). */
+.j-piste { height: .55rem; }
+.j-remplissage { background: linear-gradient(90deg, var(--acc), var(--acc-deep)); box-shadow: 0 0 8px -1px var(--glow); }
+
+/* Transactions / échéances : lignes simples DANS la carte (pas de carte-dans-carte). */
+.card-bloc .tx-liste, .card-bloc .ech-liste { gap: 0; }
+.card-bloc .tx, .card-bloc .ech {
+  background: transparent; border: 0; border-top: 1px solid var(--line);
+  border-radius: 0; padding: .55rem 0;
+}
+.card-bloc .tx:first-child, .card-bloc .ech:first-child { border-top: 0; }
+
+/* Sélecteur de mois centré, mois en serif. */
+.mois-selecteur { justify-content: center; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

@@ -6,36 +6,38 @@ import {
   type LigneCategorie,
 } from '@/lib/budget/schema';
 
+/** Couleurs de pastille des comptes (corail + secondaires chaudes), cyclées. */
+const DOTS = ['#FF5C7A', '#FF9E6B', '#6FBEEA', '#E7B740', '#9A8CE6', '#5FBE9E'];
+
 /**
- * Dashboard Budget (composant serveur, lecture seule). Affiche les valeurs
- * telles que le tableur les calcule : KPIs, comptes, jauges Réel/Budget,
- * transactions récentes, échéances à venir.
+ * Dashboard Budget (composant serveur, lecture seule) — direction Corail.
+ * KPIs (Reste en tuile héro), soldes des comptes en liste à pastilles, jauges
+ * Réel/Budget (dépassement en rouge), transactions et échéances en cartes.
  */
 export default function VueBudget({ d }: { d: DonneesBudget }) {
   const resteNum = parseEuro(d.kpis.reste);
   return (
     <>
-      <section aria-label="Chiffres du mois">
-        <div className="kpis">
-          <Kpi label="Revenus" valeur={d.kpis.revenus} note="salaires du foyer" />
-          <Kpi label="Dépenses" valeur={d.kpis.depenses} note="toutes catégories" />
-          <div className="kpi k-reste">
-            <div className="k-label">Reste ce mois</div>
-            <div className={`k-valeur ${resteNum < 0 ? 'negatif' : 'positif'}`}>{d.kpis.reste}</div>
-            <div className="k-note">revenus − dépenses</div>
-          </div>
-          <Kpi label="Patrimoine" valeur={d.kpis.patrimoine} note="comptes cumulés" />
+      <div className="bg-kpis" aria-label="Chiffres du mois">
+        <div className="bg-kpi hero">
+          <div className="k-l">Reste ce mois</div>
+          <div className={`k-v ${resteNum < 0 ? 'neg' : 'pos'}`}>{d.kpis.reste}</div>
+          <div className="k-n">revenus − dépenses</div>
         </div>
-      </section>
+        <Kpi l="Revenus" v={d.kpis.revenus} n="salaires du foyer" />
+        <Kpi l="Dépenses" v={d.kpis.depenses} n="toutes catégories" />
+        <Kpi l="Patrimoine" v={d.kpis.patrimoine} n="comptes cumulés" />
+      </div>
 
       {d.soldes.length > 0 && (
-        <section aria-label="Soldes des comptes">
-          <h2 className="bloc-titre">Soldes des comptes</h2>
-          <div className="comptes">
-            {d.soldes.map((s) => (
-              <div className="compte" key={s.compte}>
-                <div className="c-nom">{s.compte}</div>
-                <div className={`c-solde ${parseEuro(s.solde) < 0 ? 'negatif' : ''}`}>{s.solde}</div>
+        <section className="card-bloc" aria-label="Soldes des comptes">
+          <h2 className="section-titre">Soldes des comptes</h2>
+          <div className="bg-comptes">
+            {d.soldes.map((s, i) => (
+              <div className="bg-compte" key={s.compte}>
+                <span className="bg-dot" style={{ background: DOTS[i % DOTS.length] }} />
+                <span className="bg-nom">{s.compte}</span>
+                <span className={`bg-val ${parseEuro(s.solde) < 0 ? 'neg' : ''}`}>{s.solde}</span>
               </div>
             ))}
           </div>
@@ -43,8 +45,8 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.categories.length > 0 && (
-        <section aria-label="Dépenses par catégorie">
-          <h2 className="bloc-titre">Dépenses par catégorie — {d.periode || 'mois en cours'}</h2>
+        <section className="card-bloc" aria-label="Dépenses par catégorie">
+          <h2 className="section-titre">Dépenses par catégorie — {d.periode || 'mois en cours'}</h2>
           <div className="jauges">
             {d.categories.map((c) => (
               <Jauge key={c.categorie} c={c} />
@@ -54,8 +56,8 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.transactions.length > 0 && (
-        <section aria-label="Transactions récentes">
-          <h2 className="bloc-titre">Dernières transactions</h2>
+        <section className="card-bloc" aria-label="Transactions récentes">
+          <h2 className="section-titre">Dernières transactions</h2>
           <ul className="tx-liste">
             {d.transactions.map((t, i) => {
               const classe =
@@ -82,8 +84,8 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.echeances.length > 0 && (
-        <section aria-label="Échéances à venir">
-          <h2 className="bloc-titre">Échéances à venir</h2>
+        <section className="card-bloc" aria-label="Échéances à venir">
+          <h2 className="section-titre">Échéances à venir</h2>
           <ul className="ech-liste">
             {d.echeances.map((e, i) => (
               <li className="ech" key={`${e.libelle}-${i}`}>
@@ -104,12 +106,12 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
   );
 }
 
-function Kpi({ label, valeur, note }: { label: string; valeur: string; note: string }) {
+function Kpi({ l, v, n }: { l: string; v: string; n: string }) {
   return (
-    <div className="kpi">
-      <div className="k-label">{label}</div>
-      <div className="k-valeur">{valeur}</div>
-      <div className="k-note">{note}</div>
+    <div className="bg-kpi">
+      <div className="k-l">{l}</div>
+      <div className="k-v">{v}</div>
+      <div className="k-n">{n}</div>
     </div>
   );
 }
@@ -124,10 +126,14 @@ function Jauge({ c }: { c: LigneCategorie }) {
     <div className="jauge">
       <span className="j-cat">{c.categorie}</span>
       <span className="j-chiffres">
+        {c.depasse && <span className="depasse">⚠ </span>}
         {c.reel} / {c.budget}
-        {c.depasse && <span className="depasse"> ⚠ {c.ecart}</span>}
       </span>
-      <span className="j-piste" role="img" aria-label={`${c.categorie} : ${c.reel} dépensés sur ${c.budget}${c.depasse ? ', budget dépassé' : ''}`}>
+      <span
+        className="j-piste"
+        role="img"
+        aria-label={`${c.categorie} : ${c.reel} dépensés sur ${c.budget}${c.depasse ? ', budget dépassé' : ''}`}
+      >
         {pctRempli > 0 && <span className="j-remplissage" style={{ width: `${pctRempli}%` }} />}
         {pctDepasse > 0 && <span className="j-depassement" style={{ width: `${pctDepasse}%` }} />}
       </span>

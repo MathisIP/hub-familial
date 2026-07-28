@@ -9,12 +9,12 @@
 html {
   /* Repli avant l'hydratation : évite le flash blanc si le thème mémorisé
      est 🌙 Nuit. Le script inline du layout écrase data-theme immédiatement. */
-  background: var(--page, #fbe9f0);
+  background: var(--page, #FFF5F3);
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--police-corps), system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
   background: var(--page);
   color: var(--ink);
   line-height: 1.55;
@@ -192,9 +192,10 @@ a { color: var(--link-tx); }
 
 .bouton {
   font: inherit;
+  font-weight: 600;
   font-size: .9rem;
-  padding: .5rem .9rem;
-  border-radius: .5rem;
+  padding: .55rem .95rem;
+  border-radius: .9rem;
   border: 1px solid var(--line2);
   background: var(--link-bg);
   color: var(--link-tx);
@@ -771,7 +772,7 @@ a { color: var(--link-tx); }
 .brand { display: flex; align-items: center; gap: .8rem; }
 .brand-logo { border-radius: .6rem; flex: none; }
 .brand-titre {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--police-titre), Georgia, "Times New Roman", serif;
   font-weight: 600; letter-spacing: -.01em;
 }
 
@@ -943,12 +944,14 @@ a { color: var(--link-tx); }
 }
 .cs-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.1rem; }
 
-/* Bouton d'action principal (CTA plein), lisible sur les 9 thèmes */
+/* Bouton d'action principal (CTA plein corail + halo doux) */
 .bouton-primaire {
-  background: var(--link-tx); color: var(--cell);
-  border-color: transparent; font-weight: 600;
+  background: linear-gradient(155deg, var(--acc), var(--acc-deep));
+  color: var(--on-acc);
+  border-color: transparent; font-weight: 700;
+  box-shadow: 0 8px 20px -8px var(--acc-deep), 0 0 12px -3px var(--glow);
 }
-.bouton-primaire:hover { border-color: transparent; filter: brightness(1.06); }
+.bouton-primaire:hover { border-color: transparent; filter: brightness(1.04); }
 
 /* ===================== ACCUEIL : EXPLORATEUR DRIVE ===================== */
 .drive-explorer {
@@ -1078,6 +1081,37 @@ a { color: var(--link-tx); }
   border: 1px solid var(--line2); border-radius: .6rem;
   padding: .7rem .9rem; font-size: .88rem; margin: 1rem 0 1.5rem;
 }
+
+/* ============================================================================
+ * REFONTE CORAIL (socle) — titres Fraunces, arrondis généreux, halos doux.
+ * Recolore via les jetons (thème Corail clair/sombre). Les écrans seront affinés
+ * un à un ensuite (accueil, budget, modules).
+ * ========================================================================== */
+h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
+  font-family: var(--police-titre), Georgia, "Times New Roman", serif;
+  letter-spacing: -.01em;
+}
+/* Les intertitres « étiquette » restent en sans (petites capitales espacées). */
+.bloc-titre, .eyebrow, .rayon-titre, .cs-rayon, .kpi .k-label, .k-label {
+  font-family: var(--police-corps), system-ui, sans-serif;
+}
+
+/* Arrondis plus doux, cohérents avec la maquette. */
+.semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc,
+.apercu-courses, .saisie-panel, .connexion-carte, .modale, .menu-panel,
+.recette-form, .etat {
+  border-radius: 1.4rem;
+}
+.module, .kpi, .tache, .course, .tx, .ech, .recette-carte, .cadeau, .ev-carte,
+.jour-repas, .compte, .de-item, .jour-col, .foyer-membre, .install-ios {
+  border-radius: 1.1rem;
+}
+.champ, .tache select.statut, .cadeau select.statut, .ev-tete select.statut,
+.mois-fleche, .type-btn, .menu-btn { border-radius: .8rem; }
+
+/* Accent corail : liens et pastilles actives profitent du halo. */
+.type-btn.actif { box-shadow: 0 0 12px -4px var(--glow); }
+.jour-col.aujourdhui { box-shadow: inset 0 0 0 1px var(--acc), 0 0 14px -6px var(--glow); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

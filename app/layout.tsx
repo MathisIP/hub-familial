@@ -1,8 +1,24 @@
 import type { Metadata, Viewport } from 'next';
+import { Fraunces, Quicksand } from 'next/font/google';
 import { cssDesThemes, THEME_DEFAUT, THEMES } from '@/lib/themes';
 import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import './globals.css';
+
+/** Titres = Fraunces (serif douce, italique dispo) ; corps = Quicksand. */
+const policeTitre = Fraunces({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--police-titre',
+  display: 'swap',
+});
+const policeCorps = Quicksand({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--police-corps',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Hub familial',
@@ -41,7 +57,12 @@ const SCRIPT_THEME = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" data-theme={THEME_DEFAUT} suppressHydrationWarning>
+    <html
+      lang="fr"
+      data-theme={THEME_DEFAUT}
+      className={`${policeTitre.variable} ${policeCorps.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <style dangerouslySetInnerHTML={{ __html: cssDesThemes() }} />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />

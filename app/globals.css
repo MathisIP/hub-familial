@@ -1253,6 +1253,22 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   letter-spacing: -.01em; font-size: 1.12rem; color: var(--ink);
 }
 
+/* Menu déroulant maison (Combobox) — thémé, bien positionné, saisie libre. */
+.combo { position: relative; flex: 1 1 12rem; min-width: 0; }
+.combo-input { width: 100%; }
+.combo-liste {
+  position: absolute; top: calc(100% + .25rem); left: 0; right: 0; z-index: 40;
+  margin: 0; padding: .3rem; list-style: none;
+  background: var(--cell); border: 1px solid var(--line); border-radius: .9rem;
+  box-shadow: 0 14px 34px rgba(80, 30, 45, .20); max-height: 14rem; overflow-y: auto;
+}
+.combo-item {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: .9rem;
+  padding: .5rem .6rem; border: 0; background: none; color: var(--ink);
+  border-radius: .55rem; cursor: pointer;
+}
+.combo-item:hover { background: var(--link-bg); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

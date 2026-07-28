@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Combobox from '@/components/Combobox';
 import { formatEuro } from '@/lib/argent';
 import { estDansAgenda, parseAgendaLien, type DonneesEvenements, type Evenement } from '@/lib/evenements/schema';
 import type { Agenda } from '@/lib/agenda/schema';
@@ -277,10 +278,7 @@ function EvenementForm({
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder="Nom de l'événement" value={nom} onChange={(e) => setNom(e.target.value)} disabled={occupe} autoFocus />
-        <input className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} placeholder="Type" list="ev-types" aria-label="Type" />
-        <datalist id="ev-types">
-          {d.types.map((x) => <option key={x} value={x} />)}
-        </datalist>
+        <Combobox value={type} onChange={setType} options={d.types} placeholder="Type" disabled={occupe} ariaLabel="Type" />
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
           <option value="">Statut…</option>
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}

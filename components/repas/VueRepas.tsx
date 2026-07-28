@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Combobox from '@/components/Combobox';
 import {
   agregerCourses,
   formatQuantite,
@@ -126,32 +127,26 @@ function JourLigne({
       ? mettreALechelle(recette.ingredients, recette.personnes, nbPers)
       : [];
 
-  function enregistrer() {
-    if (diner === jour.diner && String(nbPers) === String(jour.personnes)) return;
+  function enregistrer(dinerVal = diner) {
+    if (dinerVal === jour.diner && String(nbPers) === String(jour.personnes)) return;
     // La note du jour est conservée telle quelle (pas d'édition sur cette ligne).
-    action(() => patch('/api/repas/semaine', { jour: jour.jour, diner, personnes: nbPers, note: jour.note }));
+    action(() => patch('/api/repas/semaine', { jour: jour.jour, diner: dinerVal, personnes: nbPers, note: jour.note }));
   }
 
-  const listeId = `recettes-${jour.jour}`;
   return (
     <li className="jour-repas">
       <div className="jr-tete">
         <span className="jr-jour">{jour.jour}</span>
-        <input
-          className="champ jr-diner"
-          list={listeId}
-          placeholder="Dîner…"
+        <Combobox
+          className="jr-diner"
           value={diner}
+          onChange={setDiner}
+          onCommit={enregistrer}
+          options={recettes.map((r) => r.nom)}
+          placeholder="Dîner…"
           disabled={occupe}
-          onChange={(e) => setDiner(e.target.value)}
-          onBlur={enregistrer}
-          aria-label={`Dîner de ${jour.jour}`}
+          ariaLabel={`Dîner de ${jour.jour}`}
         />
-        <datalist id={listeId}>
-          {recettes.map((r) => (
-            <option key={r.id} value={r.nom} />
-          ))}
-        </datalist>
         <label className="jr-pers">
           <input
             className="champ"
@@ -160,7 +155,7 @@ function JourLigne({
             value={personnes}
             disabled={occupe}
             onChange={(e) => setPersonnes(e.target.value)}
-            onBlur={enregistrer}
+            onBlur={() => enregistrer()}
             aria-label={`Nombre de personnes ${jour.jour}`}
           />
           <span>pers.</span>

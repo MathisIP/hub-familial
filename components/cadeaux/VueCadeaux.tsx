@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Combobox from '@/components/Combobox';
 import { formatEuro } from '@/lib/argent';
 import {
   estProche,
@@ -222,14 +223,8 @@ function CadeauForm({
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder="Idée / cadeau" value={idee} onChange={(e) => setIdee(e.target.value)} disabled={occupe} autoFocus />
-        <input className="champ" placeholder="Pour qui" value={pourQui} onChange={(e) => setPourQui(e.target.value)} disabled={occupe} list="cad-personnes" />
-        <datalist id="cad-personnes">
-          {d.offertPar.map((p) => <option key={p} value={p} />)}
-        </datalist>
-        <input className="champ" placeholder="Occasion" value={occasion} onChange={(e) => setOccasion(e.target.value)} disabled={occupe} list="cad-occasions" aria-label="Occasion" />
-        <datalist id="cad-occasions">
-          {d.occasions.map((o) => <option key={o.occasion} value={o.occasion} />)}
-        </datalist>
+        <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder="Pour qui" disabled={occupe} ariaLabel="Pour qui" />
+        <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder="Occasion" disabled={occupe} ariaLabel="Occasion" />
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -237,10 +232,7 @@ function CadeauForm({
       <div className="rf-ligne1">
         <input className="champ" inputMode="decimal" placeholder="Budget prévu (€)" value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
         <input className="champ" inputMode="decimal" placeholder="Prix payé (€)" value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
-        <select className="champ" value={offertPar} onChange={(e) => setOffertPar(e.target.value)} disabled={occupe} aria-label="Offert par">
-          <option value="">Offert par…</option>
-          {d.offertPar.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder="Offert par" disabled={occupe} ariaLabel="Offert par" />
         <input className="champ" placeholder="Où / lien" value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />
       </div>
       <input className="champ" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />

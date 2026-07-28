@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Combobox from '@/components/Combobox';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
 import { STATUT_FAIT } from '@/lib/todo/schema';
 
@@ -145,10 +146,7 @@ function OngletTaches({
           onChange={(e) => setTitre(e.target.value)}
           aria-label="Titre de la tâche"
         />
-        <input className="champ" value={assigne} onChange={(e) => setAssigne(e.target.value)} placeholder="Qui ?" list="todo-personnes" aria-label="Assigné à" />
-        <datalist id="todo-personnes">
-          {params.personnes.map((p) => <option key={p} value={p} />)}
-        </datalist>
+        <Combobox value={assigne} onChange={setAssigne} options={params.personnes} placeholder="Qui ?" ariaLabel="Assigné à" />
         <select className="champ" value={priorite} onChange={(e) => setPriorite(e.target.value)} aria-label="Priorité">
           <option value="">Priorité</option>
           {params.priorites.map((p) => (
@@ -289,10 +287,7 @@ function OngletCourses({
           onChange={(e) => setArticle(e.target.value)}
           aria-label="Article"
         />
-        <input className="champ" value={rayon} onChange={(e) => setRayon(e.target.value)} placeholder="Rayon" list="todo-rayons" aria-label="Rayon" />
-        <datalist id="todo-rayons">
-          {params.rayons.map((r) => <option key={r} value={r} />)}
-        </datalist>
+        <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder="Rayon" ariaLabel="Rayon" />
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
           Ajouter
         </button>

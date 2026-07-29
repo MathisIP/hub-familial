@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ImportDrive from '@/components/ImportDrive';
 import { useT } from '@/components/I18nProvider';
+import { useSignalPret } from '@/components/accueil/SplashAccueil';
 import type { ContenuDossier, ElementDrive } from '@/lib/google/driveBrowse';
 
 /**
@@ -38,6 +39,10 @@ export default function DriveExplorer() {
   const [contenu, setContenu] = useState<ContenuDossier | null>(null);
   // Fil d'Ariane : racine en [0]. `undefined` id = racine (DRIVE_HUB_URL).
   const [chemin, setChemin] = useState<Crumb[]>([]);
+
+  // Écran de chargement de l'accueil : signale « prêt » dès la fin du 1er chargement
+  // (une fois marqué, il le reste — les navigations suivantes ne rouvrent pas le splash).
+  useSignalPret('drive', etat !== 'charge');
 
   const charger = useCallback(async (dossierId?: string) => {
     setEtat('charge');

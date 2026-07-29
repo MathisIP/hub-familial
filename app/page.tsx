@@ -3,6 +3,7 @@ import SaisieTransaction from '@/components/budget/SaisieTransaction';
 import DriveExplorer from '@/components/DriveExplorer';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
+import SplashAccueil from '@/components/accueil/SplashAccueil';
 import NomAffiche from '@/components/NomAffiche';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
@@ -42,7 +43,7 @@ export default async function Accueil() {
   const { salut, prenom, date } = contexteAccueil(session?.user?.name ?? '', langue);
 
   return (
-    <>
+    <SplashAccueil>
       <section className="hero-accueil" aria-label="Bienvenue">
         <p className="hero-date">{date}</p>
         <h1 className="hero-h1">{salut},<br /><NomAffiche defaut={prenom} /></h1>
@@ -60,6 +61,6 @@ export default async function Accueil() {
 
         <DriveExplorer />
       </div>
-    </>
+    </SplashAccueil>
   );
 }

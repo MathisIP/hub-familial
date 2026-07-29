@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { aujourdhuiISO, type Agenda, type EvenementAgenda } from '@/lib/agenda/schema';
 import { useT, useLangue } from '@/components/I18nProvider';
+import { useSignalPret } from '@/components/accueil/SplashAccueil';
 import { locale } from '@/lib/i18n';
 
 type Donnees = { evenements: EvenementAgenda[]; agendas: Agenda[]; lundiISO: string };
@@ -20,6 +21,9 @@ export default function SemaineAgenda() {
   const [etat, setEtat] = useState<'charge' | 'ok' | 'erreur'>('charge');
   const aujourd = aujourdhuiISO();
   const [selection, setSelection] = useState(aujourd);
+
+  // Écran de chargement de l'accueil : signale « prêt » dès que le chargement est fini.
+  useSignalPret('agenda', etat !== 'charge');
 
   useEffect(() => {
     let vivant = true;

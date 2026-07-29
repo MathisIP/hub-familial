@@ -52,6 +52,43 @@ a { color: var(--link-tx); }
 [data-neon="off"] .bouton-primaire { box-shadow: var(--shadow-soft); }
 [data-neon="off"] .tab[aria-selected='true'] { box-shadow: none; }
 [data-neon="off"] .bm-central { box-shadow: 0 6px 16px -8px rgba(20, 15, 25, .35), 0 0 0 5px var(--page); }
+
+/* Écran de chargement de l'accueil (logo centré) — visible tant que l'agenda et
+   le Drive ne sont pas chargés, puis fondu de sortie. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: var(--page);
+  transition: opacity .45s ease;
+}
+.splash-parti { opacity: 0; pointer-events: none; }
+.splash-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 1.5rem;
+  box-shadow: 0 16px 40px -12px var(--glow), 0 4px 14px -6px rgba(0, 0, 0, .18);
+  animation: splash-pulse 1.5s ease-in-out infinite;
+}
+.splash-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--acc) 24%, transparent);
+  border-top-color: var(--acc);
+  animation: splash-spin .8s linear infinite;
+}
+@keyframes splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes splash-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo { animation: none; }
+  .splash-spinner { animation-duration: 1.4s; }
+}
 .semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }

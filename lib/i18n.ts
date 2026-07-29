@@ -122,7 +122,7 @@ const UI = {
   // Sous-titres des pages de module
   SUB_BUDGET: { fr: 'Comptes, dépenses et objectifs du foyer', en: 'Household accounts, spending and goals' },
   SUB_TODO: { fr: 'Tâches du foyer et liste de courses partagée', en: 'Household tasks and shared shopping list' },
-  SUB_REPAS: { fr: 'Planning des dîners, recettes et quantités par personne', en: 'Dinner planning, recipes and quantities per person' },
+  SUB_REPAS: { fr: 'Planning des dîners et recettes', en: 'Dinner planning and recipes' },
   SUB_EVENEMENTS: { fr: 'Réceptions, invités, checklist et menu', en: 'Gatherings, guests, checklist and menu' },
   SUB_CADEAUX: { fr: 'Idées, budget et suivi des cadeaux par occasion', en: 'Ideas, budget and gift tracking by occasion' },
   SUB_AGENDA: { fr: 'Agenda familial partagé', en: 'Shared family calendar' },

@@ -118,10 +118,6 @@ export default function SideBar() {
     <>
       {/* ---------- RAIL (grand écran) ---------- */}
       <aside className="sb-rail" aria-label={tr('NAV_ACCUEIL')}>
-        <Link href="/" className="sb-rail-marque" aria-label={tr('NAV_ACCUEIL')}>
-          <img src="/icon-192.png" alt="" width={24} height={24} />
-          <b className="sb-lbl">{tr('APP_TITRE').replace(/^🏡\s*/, '')}</b>
-        </Link>
         <nav className="sb-rail-nav">{NAV.map(lienRail)}</nav>
         <div className="sb-rail-bas">
           <Link

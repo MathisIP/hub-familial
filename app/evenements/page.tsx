@@ -3,12 +3,14 @@ import { chargerEvenements } from '@/lib/evenements/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Événements — Hub familial' };
 
 export default async function PageEvenements() {
   await exigerAcces();
+  const langue = await langueCourante();
   let contenu;
   try {
     const initial = await chargerEvenements();
@@ -26,8 +28,8 @@ export default async function PageEvenements() {
     <>
       <header className="entete">
         <div>
-          <h1>{t('MOD_EVENEMENTS')}</h1>
-          <p>Réceptions, invités, checklist et menu</p>
+          <h1>{t('MOD_EVENEMENTS', langue)}</h1>
+          <p>{t('SUB_EVENEMENTS', langue)}</p>
         </div>
       </header>
       {contenu}

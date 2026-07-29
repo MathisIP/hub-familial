@@ -4,12 +4,14 @@ import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Agenda — Hub familial' };
 
 export default async function PageAgenda() {
   await exigerAcces();
+  const langue = await langueCourante();
   let contenu;
   try {
     const initial = await chargerAgenda();
@@ -36,8 +38,8 @@ export default async function PageAgenda() {
     <>
       <header className="entete">
         <div>
-          <h1>{t('MOD_AGENDA')}</h1>
-          <p>Agenda familial partagé</p>
+          <h1>{t('MOD_AGENDA', langue)}</h1>
+          <p>{t('SUB_AGENDA', langue)}</p>
         </div>
       </header>
       {contenu}

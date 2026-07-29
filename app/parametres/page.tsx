@@ -2,74 +2,71 @@ import Link from 'next/link';
 import ReglagesForm from '@/components/ReglagesForm';
 import { auth } from '@/auth';
 import { etatAbonnement } from '@/lib/abonnement';
+import { t, type CleUI } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Réglages — Hub familial' };
 
-const ABO_LIBELLE: Record<string, string> = {
-  libre: 'Accès libre',
-  actif: 'Abonnement actif ✓',
-  essai: 'Période d’essai',
-  impaye: 'Paiement en attente',
-  annule: 'Abonnement annulé',
+const ABO_CLE: Record<string, CleUI> = {
+  libre: 'ABO_LIBRE',
+  actif: 'ABO_ACTIF',
+  essai: 'ABO_ESSAI',
+  impaye: 'ABO_IMPAYE',
+  annule: 'ABO_ANNULE',
 };
 
 /**
- * Page « Réglages » = hub des préférences et du compte. Regroupe la
- * personnalisation, l'apparence (rappel du pied de page), le foyer, le compte
- * (RGPD), l'abonnement et la confidentialité — ces entrées ont quitté le menu.
+ * Page « Réglages » = hub des préférences et du compte : personnalisation
+ * (nom + langue), foyer, abonnement, compte (RGPD) et confidentialité.
  */
 export default async function PageParametres() {
-  const session = await auth();
-  const abo = await etatAbonnement().catch(() => null);
+  const [session, abo, langue] = await Promise.all([
+    auth(),
+    etatAbonnement().catch(() => null),
+    langueCourante(),
+  ]);
 
   return (
     <>
       <header className="entete">
         <div>
-          <h1>Réglages</h1>
-          <p>Tes préférences, ton foyer et ton compte</p>
+          <h1>{t('REG_TITRE', langue)}</h1>
+          <p>{t('REG_SOUS', langue)}</p>
         </div>
       </header>
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Personnalisation</h2>
+        <h2 className="bloc-titre">{t('REG_PERSO', langue)}</h2>
         <ReglagesForm nomCompte={session?.user?.name ?? ''} />
       </section>
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Mon foyer</h2>
-        <p className="compte-note">
-          Les personnes qui partagent les données du foyer, les invitations et le nom du foyer.
-        </p>
-        <Link className="bouton reglage-lien" href="/foyer">Gérer mon foyer</Link>
+        <h2 className="bloc-titre">{t('NAV_MON_FOYER', langue)}</h2>
+        <p className="compte-note">{t('REG_FOYER_DESC', langue)}</p>
+        <Link className="bouton reglage-lien" href="/foyer">{t('REG_FOYER_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Abonnement</h2>
+        <h2 className="bloc-titre">{t('REG_ABO_TITRE', langue)}</h2>
         <p className="compte-note">
           {abo
-            ? `Statut : ${ABO_LIBELLE[abo.statut] ?? abo.statut}.`
-            : 'Gère l’abonnement du foyer (accès à tous les modules).'}
+            ? `${t('REG_ABO_STATUT', langue)} : ${t(ABO_CLE[abo.statut] ?? 'ABO_LIBRE', langue)}.`
+            : t('REG_ABO_DESC', langue)}
         </p>
-        <Link className="bouton reglage-lien" href="/abonnement">Gérer l’abonnement</Link>
+        <Link className="bouton reglage-lien" href="/abonnement">{t('REG_ABO_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Mon compte</h2>
-        <p className="compte-note">
-          Exporter toutes tes données (portabilité) ou supprimer définitivement ton compte
-          (effacement).
-        </p>
-        <Link className="bouton reglage-lien" href="/compte">Mes données &amp; mon compte</Link>
+        <h2 className="bloc-titre">{t('REG_COMPTE_TITRE', langue)}</h2>
+        <p className="compte-note">{t('REG_COMPTE_DESC', langue)}</p>
+        <Link className="bouton reglage-lien" href="/compte">{t('REG_COMPTE_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Confidentialité</h2>
-        <p className="compte-note">
-          Comment tes données sont traitées et conservées.
-        </p>
-        <Link className="bouton reglage-lien" href="/confidentialite">Politique de confidentialité</Link>
+        <h2 className="bloc-titre">{t('REG_CONF_TITRE', langue)}</h2>
+        <p className="compte-note">{t('REG_CONF_DESC', langue)}</p>
+        <Link className="bouton reglage-lien" href="/confidentialite">{t('REG_CONF_BTN', langue)}</Link>
       </section>
     </>
   );

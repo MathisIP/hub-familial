@@ -5,6 +5,8 @@ import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import PiedDePage from '@/components/PiedDePage';
 import SideBar from '@/components/SideBar';
+import { I18nProvider } from '@/components/I18nProvider';
+import { langueCourante } from '@/lib/langue';
 import './globals.css';
 
 /** Titres = Fraunces (serif douce, italique dispo) ; corps = Quicksand. */
@@ -64,10 +66,11 @@ const SCRIPT_THEME = `
 })();
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const langue = await langueCourante();
   return (
     <html
-      lang="fr"
+      lang={langue}
       data-theme={THEME_DEFAUT}
       className={`${policeTitre.variable} ${policeCorps.variable}`}
       suppressHydrationWarning
@@ -77,12 +80,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
       </head>
       <body>
-        <div className="enveloppe">{children}</div>
-        <PiedDePage />
-        {/* Navigation (rail desktop + bandeau bas mobile) au niveau racine : ses
-            éléments `position: fixed` doivent se caler sur le viewport, pas sur un
-            ancêtre avec backdrop-filter (ce qui collait le bandeau en haut). */}
-        <SideBar />
+        <I18nProvider langue={langue}>
+          <div className="enveloppe">{children}</div>
+          <PiedDePage />
+          {/* Navigation (rail desktop + bandeau bas mobile) au niveau racine : ses
+              éléments `position: fixed` doivent se caler sur le viewport, pas sur un
+              ancêtre avec backdrop-filter (ce qui collait le bandeau en haut). */}
+          <SideBar />
+        </I18nProvider>
         <EnregistrerSW />
         <AstuceInstallIOS />
       </body>

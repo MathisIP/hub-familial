@@ -4,6 +4,7 @@ import { cssTodoThemes } from '@/lib/todo/theme';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 /** Rendu à chaque requête : les données Sheets ne doivent pas être figées. */
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,7 @@ export const metadata = { title: 'To-Do & Courses — Hub familial' };
 
 export default async function PageTodo() {
   await exigerAcces();
+  const langue = await langueCourante();
   let contenu;
   try {
     const initial = await chargerTodo();
@@ -35,8 +37,8 @@ export default async function PageTodo() {
 
       <header className="entete">
         <div>
-          <h1>{t('MOD_TODO')}</h1>
-          <p>Tâches du foyer et liste de courses partagée</p>
+          <h1>{t('MOD_TODO', langue)}</h1>
+          <p>{t('SUB_TODO', langue)}</p>
         </div>
       </header>
 

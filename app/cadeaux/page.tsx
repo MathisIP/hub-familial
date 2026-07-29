@@ -3,12 +3,14 @@ import { chargerCadeaux } from '@/lib/cadeaux/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cadeaux — Hub familial' };
 
 export default async function PageCadeaux() {
   await exigerAcces();
+  const langue = await langueCourante();
   let contenu;
   try {
     const initial = await chargerCadeaux();
@@ -26,8 +28,8 @@ export default async function PageCadeaux() {
     <>
       <header className="entete">
         <div>
-          <h1>{t('MOD_CADEAUX')}</h1>
-          <p>Idées, budget et suivi des cadeaux par occasion</p>
+          <h1>{t('MOD_CADEAUX', langue)}</h1>
+          <p>{t('SUB_CADEAUX', langue)}</p>
         </div>
       </header>
       {contenu}

@@ -1,21 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useT } from '@/components/I18nProvider';
+import { LANGUES_DISPO } from '@/lib/i18n';
 
 /**
- * Réglages personnels stockés localement (localStorage), propres à cet appareil :
- * le « nom affiché » dans la salutation d'accueil et la langue de l'interface.
- * Le thème et le mode clair/sombre se règlent dans le pied de page / la roue crantée.
+ * Réglages personnels : « nom affiché » (localStorage, propre à l'appareil) et
+ * LANGUE (cookie `hub-langue`, lisible côté serveur → toute l'app se rend dans la
+ * bonne langue après `router.refresh()`). Le thème/mode se règlent ailleurs.
  */
-const LANGUES: [string, string][] = [
-  ['fr', 'Français'],
-  ['en', 'English'],
-  ['es', 'Español'],
-  ['de', 'Deutsch'],
-  ['it', 'Italiano'],
-];
-
 export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
+  const t = useT();
+  const router = useRouter();
   const [nom, setNom] = useState('');
   const [langue, setLangue] = useState('fr');
   const [enregistre, setEnregistre] = useState(false);
@@ -23,10 +20,11 @@ export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
   useEffect(() => {
     try {
       setNom(localStorage.getItem('hub-nom') ?? '');
-      setLangue(localStorage.getItem('hub-langue') || 'fr');
     } catch {
       // stockage indisponible
     }
+    const m = document.cookie.match(/(?:^|;\s*)hub-langue=([^;]+)/);
+    if (m) setLangue(decodeURIComponent(m[1]));
   }, []);
 
   function soumettre(e: React.FormEvent) {
@@ -35,12 +33,14 @@ export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
       const v = nom.trim();
       if (v) localStorage.setItem('hub-nom', v);
       else localStorage.removeItem('hub-nom');
-      localStorage.setItem('hub-langue', langue);
-      setEnregistre(true);
-      setTimeout(() => setEnregistre(false), 2200);
     } catch {
       // stockage indisponible
     }
+    // Langue en cookie (1 an) → le serveur la relit et re-rend la bonne langue.
+    document.cookie = `hub-langue=${langue}; path=/; max-age=31536000; samesite=lax`;
+    setEnregistre(true);
+    setTimeout(() => setEnregistre(false), 2200);
+    router.refresh();
   }
 
   const prenomCompte = nomCompte.trim().split(/\s+/)[0] || '';
@@ -48,41 +48,38 @@ export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
   return (
     <form className="reglage-form" onSubmit={soumettre}>
       <label className="reglage-champ">
-        <span className="reglage-lbl">Nom affiché à l’accueil</span>
+        <span className="reglage-lbl">{t('REG_NOM_LBL')}</span>
         <input
           className="champ"
           value={nom}
           onChange={(e) => setNom(e.target.value)}
           placeholder={prenomCompte || 'Ton prénom'}
-          aria-label="Nom affiché"
+          aria-label={t('REG_NOM_LBL')}
         />
         <span className="reglage-aide">
-          Laisse vide pour utiliser le prénom de ton compte
-          {prenomCompte ? ` (« ${prenomCompte} »)` : ''}.
+          {t('REG_NOM_AIDE')}
+          {prenomCompte ? ` (« ${prenomCompte} »).` : '.'}
         </span>
       </label>
 
       <label className="reglage-champ">
-        <span className="reglage-lbl">Langue de l’application</span>
+        <span className="reglage-lbl">{t('REG_LANGUE_LBL')}</span>
         <select
           className="champ"
           value={langue}
           onChange={(e) => setLangue(e.target.value)}
-          aria-label="Langue"
+          aria-label={t('REG_LANGUE_LBL')}
         >
-          {LANGUES.map(([code, nom]) => (
-            <option key={code} value={code}>{nom}</option>
+          {LANGUES_DISPO.map((l) => (
+            <option key={l.code} value={l.code}>{l.nom}</option>
           ))}
         </select>
-        <span className="reglage-aide">
-          Le français est complet ; les autres langues sont en cours de traduction et
-          s’appliqueront progressivement.
-        </span>
+        <span className="reglage-aide">{t('REG_LANGUE_AIDE')}</span>
       </label>
 
       <div className="reglage-actions">
-        <button className="bouton bouton-primaire" type="submit">Enregistrer</button>
-        {enregistre && <span className="reglage-ok">Enregistré ✓</span>}
+        <button className="bouton bouton-primaire" type="submit">{t('REG_ENREGISTRER')}</button>
+        {enregistre && <span className="reglage-ok">{t('REG_ENREGISTRE')}</span>}
       </div>
     </form>
   );

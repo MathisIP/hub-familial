@@ -3,12 +3,14 @@ import { chargerRepas } from '@/lib/repas/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Repas — Hub familial' };
 
 export default async function PageRepas() {
   await exigerAcces();
+  const langue = await langueCourante();
   let contenu;
   try {
     const initial = await chargerRepas();
@@ -26,8 +28,8 @@ export default async function PageRepas() {
     <>
       <header className="entete">
         <div>
-          <h1>{t('MOD_REPAS')}</h1>
-          <p>Planning des dîners, recettes et quantités par personne</p>
+          <h1>{t('MOD_REPAS', langue)}</h1>
+          <p>{t('SUB_REPAS', langue)}</p>
         </div>
       </header>
       {contenu}

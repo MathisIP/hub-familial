@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { deconnexion } from '@/app/actions';
 import ReglagesApparence from '@/components/ReglagesApparence';
 import { estPublique } from '@/components/PiedDePage';
+import { useT } from '@/components/I18nProvider';
 import {
   Icones,
   IcMenu,
@@ -22,13 +23,12 @@ import {
   estSombre,
   type IdTheme,
 } from '@/lib/themes';
-import { t } from '@/lib/i18n';
+import type { CleUI } from '@/lib/i18n';
 
-type CleUI = Parameters<typeof t>[0];
-type Item = { href: string; icone: NomIcone; label?: string; cle?: CleUI };
+type Item = { href: string; icone: NomIcone; cle: CleUI };
 
 const NAV: Item[] = [
-  { href: '/', icone: 'home', label: 'Accueil' },
+  { href: '/', icone: 'home', cle: 'NAV_ACCUEIL' },
   { href: '/budget', icone: 'budget', cle: 'MOD_BUDGET' },
   { href: '/todo', icone: 'todo', cle: 'MOD_TODO' },
   { href: '/repas', icone: 'repas', cle: 'MOD_REPAS' },
@@ -42,34 +42,27 @@ function estActif(path: string | null, href: string): boolean {
   return href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
 }
 
-function libelle(item: Item): string {
-  return item.cle ? t(item.cle) : item.label ?? '';
-}
-
 /**
  * Navigation principale :
  *  - grand écran : RAIL permanent à droite (icônes, se déplie au survol) ;
  *  - mobile : BANDEAU FIXE EN BAS (clair/sombre à gauche · bouton central =
  *    onglet courant, ouvre le menu des onglets · roue crantée à droite = réglages).
- * Les icônes minimalistes suivent la teinte du thème (actif = accent).
  */
 export default function SideBar() {
   const path = usePathname();
+  const tr = useT();
   const [feuille, setFeuille] = useState<null | 'modules' | 'reglages'>(null);
   const [sombre, setSombre] = useState(false);
 
-  // Mode courant (pour l'icône soleil/lune du bandeau).
   useEffect(() => {
     const id = (document.documentElement.getAttribute('data-theme') as IdTheme) || THEME_DEFAUT;
     setSombre(estSombre(id));
   }, []);
 
-  // Ferme la feuille au changement de page.
   useEffect(() => {
     setFeuille(null);
   }, [path]);
 
-  // Échap + verrou de défilement quand une feuille est ouverte.
   useEffect(() => {
     if (!feuille) return;
     const surTouche = (e: KeyboardEvent) => e.key === 'Escape' && setFeuille(null);
@@ -104,7 +97,7 @@ export default function SideBar() {
         aria-current={actif ? 'page' : undefined}
       >
         <span className="sb-ic"><Ic /></span>
-        <span className="sb-lbl">{libelle(item)}</span>
+        <span className="sb-lbl">{tr(item.cle)}</span>
       </Link>
     );
   };
@@ -122,10 +115,10 @@ export default function SideBar() {
   return (
     <>
       {/* ---------- RAIL (grand écran) ---------- */}
-      <aside className="sb-rail" aria-label="Navigation principale">
-        <Link href="/" className="sb-rail-marque" aria-label="Accueil">
+      <aside className="sb-rail" aria-label={tr('NAV_ACCUEIL')}>
+        <Link href="/" className="sb-rail-marque" aria-label={tr('NAV_ACCUEIL')}>
           <img src="/icon-192.png" alt="" width={24} height={24} />
-          <b className="sb-lbl">{t('APP_TITRE').replace(/^🏡\s*/, '')}</b>
+          <b className="sb-lbl">{tr('APP_TITRE').replace(/^🏡\s*/, '')}</b>
         </Link>
         <nav className="sb-rail-nav">{NAV.map(lienRail)}</nav>
         <div className="sb-rail-bas">
@@ -134,30 +127,30 @@ export default function SideBar() {
             className={`sb-rail-item${estActif(path, '/parametres') ? ' actif' : ''}`}
           >
             <span className="sb-ic"><IcReglages /></span>
-            <span className="sb-lbl">Réglages</span>
+            <span className="sb-lbl">{tr('NAV_REGLAGES')}</span>
           </Link>
           <form action={deconnexion}>
             <button type="submit" className="sb-rail-item sb-deco">
               <span className="sb-ic"><IcDeconnexion /></span>
-              <span className="sb-lbl">Se déconnecter</span>
+              <span className="sb-lbl">{tr('NAV_DECONNEXION')}</span>
             </button>
           </form>
         </div>
       </aside>
 
       {/* ---------- BANDEAU FIXE (mobile) ---------- */}
-      <nav className="barre-mobile" aria-label="Navigation">
+      <nav className="barre-mobile" aria-label={tr('NAV_ACCUEIL')}>
         <button
           className="bm-ic"
           onClick={basculerMode}
-          aria-label={sombre ? 'Passer en mode clair' : 'Passer en mode sombre'}
+          aria-label={sombre ? tr('A_MODE_CLAIR') : tr('A_MODE_SOMBRE')}
         >
           {sombre ? <IcSoleil width={22} height={22} /> : <IcLune width={22} height={22} />}
         </button>
         <button
           className="bm-central"
           onClick={() => setFeuille((f) => (f === 'modules' ? null : 'modules'))}
-          aria-label="Choisir un onglet"
+          aria-label={tr('A_CHOISIR_ONGLET')}
           aria-expanded={feuille === 'modules'}
         >
           <IcCentral width={26} height={26} />
@@ -165,7 +158,7 @@ export default function SideBar() {
         <button
           className="bm-ic"
           onClick={() => setFeuille((f) => (f === 'reglages' ? null : 'reglages'))}
-          aria-label="Réglages"
+          aria-label={tr('NAV_REGLAGES')}
           aria-expanded={feuille === 'reglages'}
         >
           <IcReglages width={22} height={22} />
@@ -178,7 +171,7 @@ export default function SideBar() {
           <div className="bm-sheet" role="menu" onClick={(e) => e.stopPropagation()}>
             {feuille === 'modules' ? (
               <>
-                <p className="bm-sheet-titre">Aller à…</p>
+                <p className="bm-sheet-titre">{tr('NAV_ALLER_A')}</p>
                 <div className="bm-grille">
                   {NAV.map((item) => {
                     const Ic = Icones[item.icone];
@@ -192,7 +185,7 @@ export default function SideBar() {
                         onClick={() => setFeuille(null)}
                       >
                         <span className="bm-tuile-ic"><Ic width={24} height={24} /></span>
-                        <span>{libelle(item)}</span>
+                        <span>{tr(item.cle)}</span>
                       </Link>
                     );
                   })}
@@ -200,16 +193,16 @@ export default function SideBar() {
               </>
             ) : (
               <>
-                <p className="bm-sheet-titre">Apparence</p>
+                <p className="bm-sheet-titre">{tr('NAV_APPARENCE')}</p>
                 <ReglagesApparence modeVisible={false} />
                 <div className="menu-sep" />
-                <Link href="/foyer" className="bm-lien" onClick={() => setFeuille(null)}>Mon foyer</Link>
-                <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>Abonnement</Link>
-                <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>Mon compte</Link>
-                <Link href="/confidentialite" className="bm-lien" onClick={() => setFeuille(null)}>Confidentialité</Link>
+                <Link href="/foyer" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_FOYER')}</Link>
+                <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_ABONNEMENT')}</Link>
+                <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_COMPTE')}</Link>
+                <Link href="/confidentialite" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_CONFIDENTIALITE')}</Link>
                 <div className="menu-sep" />
                 <form action={deconnexion}>
-                  <button type="submit" className="bm-lien bm-deco">Se déconnecter</button>
+                  <button type="submit" className="bm-lien bm-deco">{tr('NAV_DECONNEXION')}</button>
                 </form>
               </>
             )}

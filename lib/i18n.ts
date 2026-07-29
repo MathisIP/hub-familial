@@ -189,7 +189,210 @@ const UI = {
   ETAT_ECHEC: { fr: 'Inaccessible', en: 'Unavailable' },
   ETAT_VERIF: { fr: 'Vérification…', en: 'Checking…' },
   BIENTOT: { fr: 'À venir', en: 'Coming soon' },
+
+  // Génériques (boutons/messages partagés)
+  G_FERMER: { fr: 'Fermer', en: 'Close' },
+  G_ANNULER: { fr: 'Annuler', en: 'Cancel' },
+  G_ENREGISTRER: { fr: 'Enregistrer', en: 'Save' },
+  G_MODIFIER: { fr: 'Modifier', en: 'Edit' },
+  G_SUPPRIMER: { fr: 'Supprimer', en: 'Delete' },
+  G_AJOUTER: { fr: 'Ajouter', en: 'Add' },
+  G_LIEU: { fr: 'Lieu', en: 'Place' },
+  G_NOTE: { fr: 'Note', en: 'Note' },
+  G_ERR_CHARGEMENT: { fr: 'Erreur de chargement.', en: 'Loading error.' },
+  G_ERR_ACTION: { fr: 'Action refusée.', en: 'Action refused.' },
+  G_JOURNEE: { fr: 'journée', en: 'all day' },
+  REL_AUJOURDHUI: { fr: "aujourd'hui", en: 'today' },
+  REL_DEMAIN: { fr: 'demain', en: 'tomorrow' },
+  REL_DANS: { fr: 'dans', en: 'in' },
+  REL_J: { fr: 'j', en: 'd' },
+
+  // Accueil — cartes
+  CARD_COMPTES: { fr: 'Mes comptes', en: 'My accounts' },
+  CARD_TOTAL: { fr: 'Total', en: 'Total' },
+  SEM_TITRE: { fr: 'Cette semaine', en: 'This week' },
+  SEM_LIEN: { fr: 'Agenda complet →', en: 'Full calendar →' },
+  SEM_CHARGEMENT: { fr: 'Chargement de l’agenda…', en: 'Loading calendar…' },
+  SEM_INDISPO: { fr: 'Agenda indisponible pour le moment.', en: 'Calendar unavailable right now.' },
+  SEM_RIEN: { fr: 'Rien de prévu ce jour.', en: 'Nothing planned that day.' },
+  CS_TITRE: { fr: 'Liste de courses', en: 'Shopping list' },
+  CS_AJOUT_LISTE: { fr: 'Ajouter à ma liste', en: 'Add to my list' },
+  CS_ENVOYER: { fr: 'Envoyer par message', en: 'Send by message' },
+  CS_PRODUIT_PH: { fr: 'Produit (ex. gel douche)…', en: 'Item (e.g. shower gel)…' },
+  CS_QTE: { fr: 'Qté', en: 'Qty' },
+  CS_VIDE: { fr: 'Ta liste de courses est vide.', en: 'Your shopping list is empty.' },
+  CS_AJOUTE_SUFFIXE: { fr: 'ajouté à ta liste de courses.', en: 'added to your shopping list.' },
+  DR_TITRE: { fr: '🗂️ Drive familial', en: '🗂️ Family Drive' },
+  DR_CHARGEMENT: { fr: 'Chargement du Drive…', en: 'Loading Drive…' },
+  DR_VIDE: { fr: 'Ce dossier est vide.', en: 'This folder is empty.' },
+  DR_OUVRIR_DOSSIER: { fr: 'Ouvrir le dossier', en: 'Open folder' },
+  DR_OUVRIR_DRIVE: { fr: 'Ouvrir dans Google Drive', en: 'Open in Google Drive' },
+  DR_AUTORISER: { fr: 'Autoriser Google Drive →', en: 'Authorize Google Drive →' },
+  IMPORT_BTN: { fr: 'Importer', en: 'Import' },
+  IMPORT_EN_COURS: { fr: 'Import en cours…', en: 'Importing…' },
+
+  // Saisie d'une opération (budget)
+  SAISIE_CTA: { fr: 'Ajouter une opération', en: 'Add a transaction' },
+  SAISIE_MONTANT: { fr: 'Montant (€)', en: 'Amount (€)' },
+  SAISIE_COMPTE: { fr: 'Compte', en: 'Account' },
+  SAISIE_COMPTE_DEP: { fr: 'Compte de départ', en: 'From account' },
+  SAISIE_COMPTE_DEST: { fr: 'Compte de destination', en: 'To account' },
+  SAISIE_CATEGORIE: { fr: 'Catégorie', en: 'Category' },
+  SAISIE_LIBELLE: { fr: 'Libellé', en: 'Label' },
+  SAISIE_LIBELLE_PH: { fr: 'ex. Courses', en: 'e.g. Groceries' },
+  SAISIE_DATE: { fr: 'Date', en: 'Date' },
+  SAISIE_ENREG_EN_COURS: { fr: 'Enregistrement…', en: 'Saving…' },
+  SAISIE_OK: { fr: 'Opération enregistrée ✓', en: 'Transaction saved ✓' },
+  SAISIE_ERR_MONTANT: { fr: 'Montant : un nombre positif est attendu.', en: 'Amount: a positive number is required.' },
+  SAISIE_ERR_COMPTE: { fr: 'Choisis un compte.', en: 'Choose an account.' },
+  SAISIE_ERR_VIREMENT: { fr: 'Un virement interne exige un compte de destination.', en: 'An internal transfer requires a destination account.' },
+  TX_DEPENSE: { fr: 'Dépense', en: 'Expense' },
+  TX_REVENU: { fr: 'Revenu', en: 'Income' },
+  TX_VIREMENT: { fr: 'Virement interne', en: 'Internal transfer' },
+
+  // Budget — dashboard
+  BUD_RESTE: { fr: 'Reste ce mois', en: 'Left this month' },
+  BUD_RESTE_N: { fr: 'revenus − dépenses', en: 'income − expenses' },
+  BUD_REVENUS: { fr: 'Revenus', en: 'Income' },
+  BUD_REVENUS_N: { fr: 'salaires du foyer', en: 'household salaries' },
+  BUD_DEPENSES: { fr: 'Dépenses', en: 'Expenses' },
+  BUD_DEPENSES_N: { fr: 'toutes catégories', en: 'all categories' },
+  BUD_PATRIMOINE: { fr: 'Patrimoine', en: 'Net worth' },
+  BUD_PATRIMOINE_N: { fr: 'comptes cumulés', en: 'total across accounts' },
+  BUD_SOLDES: { fr: 'Soldes des comptes', en: 'Account balances' },
+  BUD_PAR_CAT: { fr: 'Dépenses par catégorie', en: 'Spending by category' },
+  BUD_MOIS_COURANT: { fr: 'mois en cours', en: 'current month' },
+  BUD_DERNIERES_TX: { fr: 'Dernières transactions', en: 'Recent transactions' },
+  BUD_SANS_LIBELLE: { fr: '(sans libellé)', en: '(no label)' },
+  BUD_ECHEANCES: { fr: 'Échéances à venir', en: 'Upcoming due dates' },
+  MOIS_PRECEDENT: { fr: 'Mois précédent', en: 'Previous month' },
+  MOIS_SUIVANT: { fr: 'Mois suivant', en: 'Next month' },
+
+  REL_PASSE: { fr: 'passé', en: 'past' },
+  G_OK: { fr: 'OK', en: 'OK' },
+
+  // Énumérations fixes (affichées ; la valeur stockée reste en français)
+  ST_AFAIRE: { fr: 'À faire', en: 'To do' },
+  ST_ENCOURS: { fr: 'En cours', en: 'In progress' },
+  ST_FAIT: { fr: 'Fait', en: 'Done' },
+  PR_HAUTE: { fr: 'Haute', en: 'High' },
+  PR_MOY: { fr: 'Moyenne', en: 'Medium' },
+  PR_BASSE: { fr: 'Basse', en: 'Low' },
+  CAT_ENTREE: { fr: 'Entrée', en: 'Starter' },
+  CAT_PLAT: { fr: 'Plat', en: 'Main' },
+  CAT_DESSERT: { fr: 'Dessert', en: 'Dessert' },
+  RTYPE_VIANDE: { fr: 'Viande', en: 'Meat' },
+  RTYPE_POISSON: { fr: 'Poisson', en: 'Fish' },
+  RTYPE_VEGE: { fr: 'Végétarien', en: 'Vegetarian' },
+  CF_CHAUD: { fr: 'Chaud', en: 'Hot' },
+  CF_FROID: { fr: 'Froid', en: 'Cold' },
+
+  // To-Do
+  TODO_TAB_TACHES: { fr: 'Tâches', en: 'Tasks' },
+  TODO_TAB_COURSES: { fr: 'Courses', en: 'Shopping' },
+  TODO_NOUVELLE_TACHE: { fr: 'Nouvelle tâche…', en: 'New task…' },
+  TODO_QUI: { fr: 'Qui ?', en: 'Who?' },
+  TODO_PRIORITE: { fr: 'Priorité', en: 'Priority' },
+  TODO_TOUS: { fr: 'Tous', en: 'All' },
+  TODO_AUCUNE_TACHE: { fr: 'Aucune tâche. Ajoute la première ci-dessus.', en: 'No tasks. Add the first one above.' },
+  TODO_AUCUNE_POUR: { fr: 'Aucune tâche pour', en: 'No tasks for' },
+  TODO_ARTICLE_PH: { fr: 'Article à acheter…', en: 'Item to buy…' },
+  TODO_QTE_PH: { fr: 'Qté (ex. 400 g)', en: 'Qty (e.g. 400 g)' },
+  TODO_RAYON: { fr: 'Rayon', en: 'Aisle' },
+  TODO_LISTE_VIDE: { fr: 'Liste vide. Ajoute un article ci-dessus.', en: 'Empty list. Add an item above.' },
+  TODO_RETIRER_1: { fr: 'Retirer les', en: 'Remove the' },
+  TODO_RETIRER_2: { fr: 'article(s) coché(s)', en: 'checked item(s)' },
+
+  // Repas
+  REPAS_TAB_SEMAINE: { fr: 'Semaine', en: 'Week' },
+  REPAS_TAB_RECETTES: { fr: 'Recettes', en: 'Recipes' },
+  REPAS_PERS: { fr: 'pers.', en: 'ppl' },
+  REPAS_APERCU_TITRE: { fr: 'Aperçu des courses de la semaine', en: 'This week’s shopping preview' },
+  REPAS_APERCU_NOTE: { fr: 'Somme des ingrédients des dîners planifiés, quantités mises à l’échelle.', en: 'Sum of the planned meals’ ingredients, quantities scaled.' },
+  REPAS_NOUVELLE_RECETTE: { fr: 'Nouvelle recette', en: 'New recipe' },
+  REPAS_NOM_PH: { fr: 'Nom de la recette', en: 'Recipe name' },
+  REPAS_CATEGORIE: { fr: 'Catégorie', en: 'Category' },
+  REPAS_TYPE: { fr: 'Type', en: 'Type' },
+  REPAS_CHAUDFROID: { fr: 'Chaud/Froid', en: 'Hot/Cold' },
+  REPAS_ING_ARTICLE: { fr: 'Article', en: 'Item' },
+  REPAS_ING_QTE: { fr: 'Quantité', en: 'Quantity' },
+  REPAS_ING_UNITE: { fr: 'Unité', en: 'Unit' },
+  REPAS_ING_RAYON: { fr: 'Rayon', en: 'Aisle' },
+  REPAS_ING_QTE_PH: { fr: 'Qté', en: 'Qty' },
+  REPAS_ING_AJOUTER: { fr: '＋ Ingrédient', en: '＋ Ingredient' },
+  REPAS_NOTE_PH: { fr: 'Note (facultatif)', en: 'Note (optional)' },
+  REPAS_BEBE_FAVORI: { fr: '👶 Favori de bébé', en: '👶 Baby’s favourite' },
+  REPAS_BEBE_AGOUTER: { fr: '👶 Bébé n’a pas encore goûté', en: '👶 Baby hasn’t tried it yet' },
+  REPAS_BADGE_FAVORI: { fr: '👶 Favori bébé', en: '👶 Baby fave' },
+  REPAS_BADGE_AGOUTER: { fr: '👶 À goûter', en: '👶 To try' },
+  REPAS_RETIRER_ING: { fr: "Retirer l'ingrédient", en: 'Remove ingredient' },
+
+  // Événements
+  EVT_NOUVEL: { fr: 'Nouvel événement', en: 'New event' },
+  EVT_AUCUN: { fr: 'Aucun événement. Ajoute le premier ci-dessus.', en: 'No events. Add the first one above.' },
+  EVT_CONFIRMES: { fr: 'confirmés', en: 'confirmed' },
+  EVT_PERS: { fr: 'pers.', en: 'ppl' },
+  EVT_PLATS: { fr: 'plat(s)', en: 'dish(es)' },
+  EVT_DANS_AGENDA: { fr: 'dans l’agenda', en: 'in the calendar' },
+  EVT_AJOUTER_AGENDA: { fr: 'Ajouter à l’agenda', en: 'Add to calendar' },
+  EVT_RETIRER: { fr: 'retirer', en: 'remove' },
+  EVT_CHOISIR_AGENDA: { fr: 'Choisir l’agenda…', en: 'Choose calendar…' },
+  EVT_STATUT: { fr: 'Statut', en: 'Status' },
+  EVT_TYPE: { fr: 'Type', en: 'Type' },
+  EVT_NOM_PH: { fr: "Nom de l'événement", en: 'Event name' },
+  EVT_HEURE: { fr: 'Heure', en: 'Time' },
+  EVT_BUDGET_PH: { fr: 'Budget prévu (€)', en: 'Planned budget (€)' },
+  EVT_DEPENSE_PH: { fr: 'Dépensé (€)', en: 'Spent (€)' },
+
+  // Cadeaux
+  CAD_NOUVELLE: { fr: 'Nouvelle idée', en: 'New idea' },
+  CAD_SANS_OCCASION: { fr: 'Sans occasion', en: 'No occasion' },
+  CAD_PREVU: { fr: 'prévu', en: 'planned' },
+  CAD_PAYE: { fr: 'payé', en: 'paid' },
+  CAD_BUDGET: { fr: 'budget', en: 'budget' },
+  CAD_POUR: { fr: 'pour', en: 'for' },
+  CAD_PAR: { fr: 'par', en: 'by' },
+  CAD_IDEE_PH: { fr: 'Idée / cadeau', en: 'Idea / gift' },
+  CAD_POUR_QUI: { fr: 'Pour qui', en: 'For whom' },
+  CAD_OCCASION: { fr: 'Occasion', en: 'Occasion' },
+  CAD_BUDGET_PH: { fr: 'Budget prévu (€)', en: 'Planned budget (€)' },
+  CAD_PRIX_PH: { fr: 'Prix payé (€)', en: 'Price paid (€)' },
+  CAD_OFFERT_PAR: { fr: 'Offert par', en: 'Given by' },
+  CAD_OU_PH: { fr: 'Où / lien', en: 'Where / link' },
+
+  // Agenda (module)
+  AGD_NOUVEL: { fr: 'Nouvel événement', en: 'New event' },
+  AGD_AUCUN_1: { fr: 'Aucun événement à venir dans les', en: 'No upcoming events in the next' },
+  AGD_AUCUN_2: { fr: 'prochains jours.', en: 'days.' },
+  AGD_TITRE_PH: { fr: "Titre de l'événement", en: 'Event title' },
+  AGD_JOURNEE_ENTIERE: { fr: 'Journée entière', en: 'All day' },
+  AGD_DEBUT: { fr: 'Début', en: 'Start' },
+  AGD_FIN: { fr: 'Fin', en: 'End' },
+  AGD_DESC_PH: { fr: 'Note / description', en: 'Note / description' },
 } as const satisfies Record<string, Trad>;
+
+/* Correspondances valeur (français, stockée) → clé UI, pour les énumérations. */
+export const CLE_STATUT_TODO: Record<string, CleUI> = {
+  'À faire': 'ST_AFAIRE', 'En cours': 'ST_ENCOURS', 'Fait': 'ST_FAIT',
+};
+export const CLE_PRIORITE: Record<string, CleUI> = {
+  Haute: 'PR_HAUTE', Moyenne: 'PR_MOY', Basse: 'PR_BASSE',
+};
+export const CLE_CATEGORIE_PLAT: Record<string, CleUI> = {
+  'Entrée': 'CAT_ENTREE', Plat: 'CAT_PLAT', Dessert: 'CAT_DESSERT',
+};
+export const CLE_TYPE_RECETTE: Record<string, CleUI> = {
+  Viande: 'RTYPE_VIANDE', Poisson: 'RTYPE_POISSON', 'Végétarien': 'RTYPE_VEGE',
+};
+export const CLE_CHAUD_FROID: Record<string, CleUI> = {
+  Chaud: 'CF_CHAUD', Froid: 'CF_FROID',
+};
+
+/** Traduit une valeur d'énumération via sa table ; repli sur la valeur brute. */
+export function tEnum(table: Record<string, CleUI>, valeur: string, langue: IdLangue): string {
+  const cle = table[valeur];
+  return cle ? t(cle, langue) : valeur;
+}
 
 export type CleUI = keyof typeof UI;
 

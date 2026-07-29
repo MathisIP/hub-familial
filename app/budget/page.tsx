@@ -32,7 +32,7 @@ export default async function PageBudget({
     contenu = (
       <>
         <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
-        <VueBudget d={d} />
+        <VueBudget d={d} langue={langue} />
       </>
     );
   } catch (e) {

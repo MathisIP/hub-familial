@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import { useT, useLangue } from '@/components/I18nProvider';
+import { t, type IdLangue } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
 import { estDansAgenda, parseAgendaLien, type DonneesEvenements, type Evenement } from '@/lib/evenements/schema';
 import type { Agenda } from '@/lib/agenda/schema';
@@ -13,6 +15,8 @@ import type { Agenda } from '@/lib/agenda/schema';
  * dans l'onglet maître.
  */
 export default function VueEvenements({ initial }: { initial: DonneesEvenements }) {
+  const tr = useT();
+  const langue = useLangue();
   const [d, setD] = useState<DonneesEvenements>(initial);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -51,7 +55,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
       {!ajout && (
         <div className="saisie-barre">
           <button className="bouton" onClick={() => setAjout(true)} disabled={occupe}>
-            ＋ Nouvel événement
+            ＋ {tr('EVT_NOUVEL')}
           </button>
         </div>
       )}
@@ -67,7 +71,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
       {erreur && <p className="message erreur">{erreur}</p>}
 
       {d.evenements.length === 0 ? (
-        <p className="vide">Aucun événement. Ajoute le premier ci-dessus.</p>
+        <p className="vide">{tr('EVT_AUCUN')}</p>
       ) : (
         <ul className="liste ev-liste">
           {d.evenements.map((ev) =>
@@ -90,7 +94,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                   {ev.type && <span className="puce categorie">{ev.type}</span>}
                   {ev.joursRestants !== null && (
                     <span className={`puce ${ev.joursRestants < 0 ? '' : ev.joursRestants <= 14 ? 'echec' : ''}`.trim() || 'echeance'}>
-                      {libelleJours(ev.joursRestants)}
+                      {libelleJours(ev.joursRestants, langue)}
                     </span>
                   )}
                   <select
@@ -106,7 +110,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                     ))}
                   </select>
                   <button className="bouton discret" onClick={() => setEdite(ev.id)} disabled={occupe}>
-                    Modifier
+                    {tr('G_MODIFIER')}
                   </button>
                 </div>
 
@@ -121,8 +125,8 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                 <div className="ev-recaps">
                   {ev.invitesTotal > 0 && (
                     <span className="ev-recap">
-                      👥 {ev.invitesOui}/{ev.invitesTotal} confirmés
-                      {ev.personnesOui > 0 && ` (${ev.personnesOui} pers.)`}
+                      👥 {ev.invitesOui}/{ev.invitesTotal} {tr('EVT_CONFIRMES')}
+                      {ev.personnesOui > 0 && ` (${ev.personnesOui} ${tr('EVT_PERS')})`}
                     </span>
                   )}
                   {ev.checklistTotal > 0 && (
@@ -138,7 +142,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                   )}
                   {ev.menuItems > 0 && (
                     <span className="ev-recap">
-                      🍽️ {ev.menuItems} plat(s){ev.menuCoutNum > 0 ? ` · ~${formatEuro(ev.menuCoutNum)}` : ''}
+                      🍽️ {ev.menuItems} {tr('EVT_PLATS')}{ev.menuCoutNum > 0 ? ` · ~${formatEuro(ev.menuCoutNum)}` : ''}
                     </span>
                   )}
                 </div>
@@ -184,6 +188,7 @@ function SyncAgenda({
   occupe: boolean;
   action: (fn: () => Promise<Response>) => Promise<void>;
 }) {
+  const tr = useT();
   const [choix, setChoix] = useState(false);
 
   if (estDansAgenda(ev)) {
@@ -191,14 +196,14 @@ function SyncAgenda({
     return (
       <div className="ev-agenda">
         <span className="ev-agenda-ok">
-          📅 dans l’agenda{cal ? ` · ${cal.nom}` : ''}
+          📅 {tr('EVT_DANS_AGENDA')}{cal ? ` · ${cal.nom}` : ''}
         </span>
         <button
           className="bouton discret"
           onClick={() => action(() => envoiAgenda('DELETE', { id: ev.id }))}
           disabled={occupe}
         >
-          retirer
+          {tr('EVT_RETIRER')}
         </button>
       </div>
     );
@@ -208,7 +213,7 @@ function SyncAgenda({
     <div className="ev-agenda">
       {!choix ? (
         <button className="bouton discret" onClick={() => setChoix(true)} disabled={occupe}>
-          📅 Ajouter à l’agenda
+          📅 {tr('EVT_AJOUTER_AGENDA')}
         </button>
       ) : (
         <>
@@ -216,30 +221,30 @@ function SyncAgenda({
             className="champ"
             defaultValue=""
             disabled={occupe}
-            aria-label="Agenda cible"
+            aria-label={tr('EVT_CHOISIR_AGENDA')}
             onChange={(e) => {
               if (e.target.value) {
                 action(() => envoiAgenda('POST', { id: ev.id, calendarId: e.target.value })).then(() => setChoix(false));
               }
             }}
           >
-            <option value="">Choisir l’agenda…</option>
+            <option value="">{tr('EVT_CHOISIR_AGENDA')}</option>
             {agendas.map((a) => (
               <option key={a.id} value={a.id}>{a.nom}</option>
             ))}
           </select>
-          <button className="bouton discret" onClick={() => setChoix(false)} disabled={occupe}>annuler</button>
+          <button className="bouton discret" onClick={() => setChoix(false)} disabled={occupe}>{tr('G_ANNULER')}</button>
         </>
       )}
     </div>
   );
 }
 
-function libelleJours(j: number): string {
-  if (j < 0) return 'passé';
-  if (j === 0) return "aujourd'hui";
-  if (j === 1) return 'demain';
-  return `dans ${j} j`;
+function libelleJours(j: number, langue: IdLangue): string {
+  if (j < 0) return t('REL_PASSE', langue);
+  if (j === 0) return t('REL_AUJOURDHUI', langue);
+  if (j === 1) return t('REL_DEMAIN', langue);
+  return `${t('REL_DANS', langue)} ${j} ${t('REL_J', langue)}`;
 }
 
 /* -------------------------------- FORMULAIRE -------------------------------- */
@@ -257,6 +262,7 @@ function EvenementForm({
   onEnregistrerAction: (corps: Record<string, string>) => void;
   onAnnulerAction: () => void;
 }) {
+  const tr = useT();
   const [nom, setNom] = useState(evenement?.nom ?? '');
   const [type, setType] = useState(evenement?.type ?? '');
   const [date, setDate] = useState(evenement?.dateISO ?? '');
@@ -277,31 +283,31 @@ function EvenementForm({
   return (
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
-        <input className="champ rf-nom" placeholder="Nom de l'événement" value={nom} onChange={(e) => setNom(e.target.value)} disabled={occupe} autoFocus />
-        <Combobox value={type} onChange={setType} options={d.types} placeholder="Type" disabled={occupe} ariaLabel="Type" />
-        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
-          <option value="">Statut…</option>
+        <input className="champ rf-nom" placeholder={tr('EVT_NOM_PH')} value={nom} onChange={(e) => setNom(e.target.value)} disabled={occupe} autoFocus />
+        <Combobox value={type} onChange={setType} options={d.types} placeholder={tr('EVT_TYPE')} disabled={occupe} ariaLabel={tr('EVT_TYPE')} />
+        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
+          <option value="">{tr('EVT_STATUT')}…</option>
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       <div className="rf-ligne1">
-        <label className="saisie-champ"><span>Date</span>
+        <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>
           <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={occupe} />
         </label>
-        <label className="saisie-champ"><span>Heure</span>
+        <label className="saisie-champ"><span>{tr('EVT_HEURE')}</span>
           <input className="champ" type="time" value={heure} onChange={(e) => setHeure(e.target.value)} disabled={occupe} />
         </label>
-        <input className="champ" placeholder="Lieu" value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={occupe} />
+        <input className="champ" placeholder={tr('G_LIEU')} value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={occupe} />
       </div>
       <div className="rf-ligne1">
-        <input className="champ" inputMode="decimal" placeholder="Budget prévu (€)" value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
-        <input className="champ" inputMode="decimal" placeholder="Dépensé (€)" value={depense} onChange={(e) => setDepense(e.target.value)} disabled={occupe} />
+        <input className="champ" inputMode="decimal" placeholder={tr('EVT_BUDGET_PH')} value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
+        <input className="champ" inputMode="decimal" placeholder={tr('EVT_DEPENSE_PH')} value={depense} onChange={(e) => setDepense(e.target.value)} disabled={occupe} />
       </div>
-      <input className="champ" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
+      <input className="champ" placeholder={tr('G_NOTE')} value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
       <div className="rf-actions">
         <span className="rf-espace" />
-        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>Annuler</button>
-        <button type="submit" className="bouton" disabled={occupe || !nom.trim()}>Enregistrer</button>
+        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>{tr('G_ANNULER')}</button>
+        <button type="submit" className="bouton" disabled={occupe || !nom.trim()}>{tr('G_ENREGISTRER')}</button>
       </div>
     </form>
   );

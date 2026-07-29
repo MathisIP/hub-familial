@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@/components/I18nProvider';
 import type { Course } from '@/lib/todo/schema';
 
 /**
@@ -11,6 +12,7 @@ import type { Course } from '@/lib/todo/schema';
  *     cochés, groupés par rayon) via le partage natif du téléphone, ou un lien sms:.
  */
 export default function CoursesSemaine() {
+  const tr = useT();
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [produit, setProduit] = useState('');
   const [qteProduit, setQteProduit] = useState('');
@@ -32,8 +34,8 @@ export default function CoursesSemaine() {
         body: JSON.stringify({ article: art, quantite: qteProduit.trim() }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? 'Ajout refusé.');
-      setMessage(`« ${art} » ajouté à ta liste de courses.`);
+      if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_ACTION'));
+      setMessage(`« ${art} » ${tr('CS_AJOUTE_SUFFIXE')}`);
       setProduit('');
       setQteProduit('');
     } catch (e) {
@@ -50,10 +52,10 @@ export default function CoursesSemaine() {
     try {
       const r = await fetch('/api/todo', { cache: 'no-store' });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? 'Erreur de chargement.');
-      const texte = construireTexteListe(data.courses ?? []);
+      if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_CHARGEMENT'));
+      const texte = construireTexteListe(data.courses ?? [], tr('CS_TITRE'));
       if (!texte) {
-        setErreur('Ta liste de courses est vide.');
+        setErreur(tr('CS_VIDE'));
         return;
       }
       if (typeof navigator !== 'undefined' && navigator.share) {
@@ -75,7 +77,7 @@ export default function CoursesSemaine() {
   return (
     <section className="courses-semaine" aria-label="Liste de courses">
       <div className="cs-tete">
-        <h2>🛒 Liste de courses</h2>
+        <h2>🛒 {tr('CS_TITRE')}</h2>
       </div>
 
       {message && <p className="message info">{message}</p>}
@@ -87,10 +89,10 @@ export default function CoursesSemaine() {
           onClick={() => setAjoutOuvert((v) => !v)}
           aria-expanded={ajoutOuvert}
         >
-          ＋ Ajouter à ma liste
+          ＋ {tr('CS_AJOUT_LISTE')}
         </button>
         <button className="bouton" onClick={envoyerMessage} disabled={occupe}>
-          💬 Envoyer par message
+          💬 {tr('CS_ENVOYER')}
         </button>
       </div>
 
@@ -98,21 +100,21 @@ export default function CoursesSemaine() {
         <form className="cs-ajout" onSubmit={ajouterProduit}>
           <input
             className="champ"
-            placeholder="Produit (ex. gel douche)…"
+            placeholder={tr('CS_PRODUIT_PH')}
             value={produit}
             onChange={(e) => setProduit(e.target.value)}
-            aria-label="Produit à ajouter"
+            aria-label={tr('CS_PRODUIT_PH')}
             autoFocus
           />
           <input
             className="champ cs-ajout-qte"
-            placeholder="Qté"
+            placeholder={tr('CS_QTE')}
             value={qteProduit}
             onChange={(e) => setQteProduit(e.target.value)}
-            aria-label="Quantité"
+            aria-label={tr('CS_QTE')}
           />
           <button className="bouton" type="submit" disabled={occupe || !produit.trim()}>
-            Ajouter
+            {tr('G_AJOUTER')}
           </button>
         </form>
       )}
@@ -133,10 +135,10 @@ function grouperListe(courses: Course[]): [string, Course[]][] {
 }
 
 /** Texte de la liste de courses entière, groupée par rayon, pour un message. */
-function construireTexteListe(courses: Course[]): string {
+function construireTexteListe(courses: Course[], titre: string): string {
   const groupes = grouperListe(courses);
   if (groupes.length === 0) return '';
-  const lignes = ['🛒 Liste de courses', ''];
+  const lignes = [`🛒 ${titre}`, ''];
   for (const [rayon, items] of groupes) {
     lignes.push(`— ${rayon} —`);
     for (const c of items) lignes.push(`- ${c.article}${c.quantite ? ` (${c.quantite})` : ''}`);

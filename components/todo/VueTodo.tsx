@@ -2,6 +2,9 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import { useT } from '@/components/I18nProvider';
+import { useLangue } from '@/components/I18nProvider';
+import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE } from '@/lib/i18n';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
 import { STATUT_FAIT } from '@/lib/todo/schema';
 
@@ -11,6 +14,7 @@ import { STATUT_FAIT } from '@/lib/todo/schema';
  * Sheets restent la source de vérité, l'app ne garde jamais d'état divergent.
  */
 export default function VueTodo({ initial }: { initial: DonneesTodo }) {
+  const tr = useT();
   const [donnees, setDonnees] = useState<DonneesTodo>(initial);
   const [onglet, setOnglet] = useState<'taches' | 'courses'>('taches');
   const [occupe, setOccupe] = useState(false);
@@ -54,7 +58,7 @@ export default function VueTodo({ initial }: { initial: DonneesTodo }) {
           aria-selected={onglet === 'taches'}
           onClick={() => setOnglet('taches')}
         >
-          ✅ Tâches ({donnees.taches.filter((t) => t.statut !== STATUT_FAIT).length})
+          ✅ {tr('TODO_TAB_TACHES')} ({donnees.taches.filter((t) => t.statut !== STATUT_FAIT).length})
         </button>
         <button
           className="tab"
@@ -62,7 +66,7 @@ export default function VueTodo({ initial }: { initial: DonneesTodo }) {
           aria-selected={onglet === 'courses'}
           onClick={() => setOnglet('courses')}
         >
-          🛒 Courses ({donnees.courses.length - nbCoursesFaites})
+          🛒 {tr('TODO_TAB_COURSES')} ({donnees.courses.length - nbCoursesFaites})
         </button>
       </div>
 
@@ -108,6 +112,8 @@ function OngletTaches({
   occupe: boolean;
   action: ActionFn;
 }) {
+  const tr = useT();
+  const langue = useLangue();
   const [titre, setTitre] = useState('');
   const [assigne, setAssigne] = useState('');
   const [priorite, setPriorite] = useState('');
@@ -141,20 +147,20 @@ function OngletTaches({
       <form className="ajout" onSubmit={ajouter}>
         <input
           className="champ"
-          placeholder="Nouvelle tâche…"
+          placeholder={tr('TODO_NOUVELLE_TACHE')}
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          aria-label="Titre de la tâche"
+          aria-label={tr('TODO_NOUVELLE_TACHE')}
         />
-        <Combobox value={assigne} onChange={setAssigne} options={params.personnes} placeholder="Qui ?" ariaLabel="Assigné à" />
-        <select className="champ" value={priorite} onChange={(e) => setPriorite(e.target.value)} aria-label="Priorité">
-          <option value="">Priorité</option>
+        <Combobox value={assigne} onChange={setAssigne} options={params.personnes} placeholder={tr('TODO_QUI')} ariaLabel={tr('TODO_QUI')} />
+        <select className="champ" value={priorite} onChange={(e) => setPriorite(e.target.value)} aria-label={tr('TODO_PRIORITE')}>
+          <option value="">{tr('TODO_PRIORITE')}</option>
           {params.priorites.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p} value={p}>{tEnum(CLE_PRIORITE, p, langue)}</option>
           ))}
         </select>
         <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
-          Ajouter
+          {tr('G_AJOUTER')}
         </button>
       </form>
 
@@ -166,7 +172,7 @@ function OngletTaches({
             aria-selected={!filtrePersonne}
             onClick={() => setFiltrePersonne('')}
           >
-            Tous
+            {tr('TODO_TOUS')}
           </button>
           {individus.map((p) => (
             <button
@@ -185,8 +191,8 @@ function OngletTaches({
       {tachesAffichees.length === 0 ? (
         <p className="vide">
           {taches.length === 0
-            ? 'Aucune tâche. Ajoute la première ci-dessus.'
-            : `Aucune tâche pour ${filtrePersonne}.`}
+            ? tr('TODO_AUCUNE_TACHE')
+            : `${tr('TODO_AUCUNE_POUR')} ${filtrePersonne}.`}
         </p>
       ) : (
         <ul className="liste">
@@ -198,7 +204,7 @@ function OngletTaches({
               <span className="titre-tache">{t.tache}</span>
               <span className="meta">
                 {t.priorite && (
-                  <span className={`puce prio-${accent(t.priorite)}`}>{t.priorite}</span>
+                  <span className={`puce prio-${accent(t.priorite)}`}>{tEnum(CLE_PRIORITE, t.priorite, langue)}</span>
                 )}
                 {t.assigne && <span className="puce assigne">{t.assigne}</span>}
                 {t.categorie && <span className="puce categorie">{t.categorie}</span>}
@@ -219,7 +225,7 @@ function OngletTaches({
                 aria-label={`Statut de « ${t.tache} »`}
               >
                 {params.statuts.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{tEnum(CLE_STATUT_TODO, s, langue)}</option>
                 ))}
               </select>
             </li>
@@ -253,6 +259,7 @@ function OngletCourses({
   nbFaites: number;
   action: ActionFn;
 }) {
+  const tr = useT();
   const [article, setArticle] = useState('');
   const [quantite, setQuantite] = useState('');
   const [rayon, setRayon] = useState('');
@@ -286,26 +293,26 @@ function OngletCourses({
       <form className="ajout ajout-courses" onSubmit={ajouter}>
         <input
           className="champ"
-          placeholder="Article à acheter…"
+          placeholder={tr('TODO_ARTICLE_PH')}
           value={article}
           onChange={(e) => setArticle(e.target.value)}
-          aria-label="Article"
+          aria-label={tr('TODO_ARTICLE_PH')}
         />
         <input
           className="champ champ-qte"
-          placeholder="Qté (ex. 400 g)"
+          placeholder={tr('TODO_QTE_PH')}
           value={quantite}
           onChange={(e) => setQuantite(e.target.value)}
-          aria-label="Quantité"
+          aria-label={tr('CS_QTE')}
         />
-        <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder="Rayon" ariaLabel="Rayon" />
+        <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder={tr('TODO_RAYON')} ariaLabel={tr('TODO_RAYON')} />
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
-          Ajouter
+          {tr('G_AJOUTER')}
         </button>
       </form>
 
       {courses.length === 0 ? (
-        <p className="vide">Liste vide. Ajoute un article ci-dessus.</p>
+        <p className="vide">{tr('TODO_LISTE_VIDE')}</p>
       ) : (
         <>
           {groupes.map(({ rayon: nomRayon, articles }) => (
@@ -344,7 +351,7 @@ function OngletCourses({
                         onClick={() => setEdite(c.id)}
                         disabled={occupe}
                       >
-                        Modifier
+                        {tr('G_MODIFIER')}
                       </button>
                     </li>
                   ),
@@ -355,7 +362,7 @@ function OngletCourses({
           {nbFaites > 0 && (
             <div className="barre-outils">
               <button className="bouton discret" onClick={viderFaites} disabled={occupe}>
-                Retirer les {nbFaites} article(s) coché(s)
+                {tr('TODO_RETIRER_1')} {nbFaites} {tr('TODO_RETIRER_2')}
               </button>
             </div>
           )}
@@ -379,6 +386,7 @@ function EditionCourse({
   onAnnuler: () => void;
   onEnregistrer: (corps: { article: string; quantite: string; rayon: string }) => void;
 }) {
+  const tr = useT();
   const [article, setArticle] = useState(course.article);
   const [quantite, setQuantite] = useState(course.quantite);
   const [rayon, setRayon] = useState(course.rayon);
@@ -401,16 +409,16 @@ function EditionCourse({
       <input
         className="champ champ-qte"
         value={quantite}
-        placeholder="Qté"
+        placeholder={tr('CS_QTE')}
         onChange={(e) => setQuantite(e.target.value)}
-        aria-label="Quantité"
+        aria-label={tr('CS_QTE')}
       />
-      <Combobox value={rayon} onChange={setRayon} options={rayons} placeholder="Rayon" ariaLabel="Rayon" />
+      <Combobox value={rayon} onChange={setRayon} options={rayons} placeholder={tr('TODO_RAYON')} ariaLabel={tr('TODO_RAYON')} />
       <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
-        OK
+        {tr('G_OK')}
       </button>
       <button type="button" className="bouton discret" onClick={onAnnuler} disabled={occupe}>
-        Annuler
+        {tr('G_ANNULER')}
       </button>
     </form>
   );

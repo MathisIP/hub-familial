@@ -2,12 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useT } from '@/components/I18nProvider';
+import type { CleUI } from '@/lib/i18n';
 import {
   TYPE_DEPENSE,
   TYPE_REVENU,
   TYPE_VIREMENT,
   type ParametresSaisie,
 } from '@/lib/budget/schema';
+
+/** Libellé traduit d'un type d'opération (repli sur la valeur brute). */
+const CLE_TYPE: Record<string, CleUI> = {
+  [TYPE_DEPENSE]: 'TX_DEPENSE',
+  [TYPE_REVENU]: 'TX_REVENU',
+  [TYPE_VIREMENT]: 'TX_VIREMENT',
+};
 
 /**
  * Bouton « ＋ Ajouter une opération » → ouvre une modale avec le formulaire
@@ -19,6 +28,8 @@ const PARAMS_VIDE: ParametresSaisie = { comptes: [], types: [], categoriesDepens
 
 export default function SaisieTransaction({ params: paramsInitiaux }: { params?: ParametresSaisie }) {
   const router = useRouter();
+  const tr = useT();
+  const libType = (ty: string) => (CLE_TYPE[ty] ? tr(CLE_TYPE[ty]) : ty);
   const [ouvert, setOuvert] = useState(false);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -73,9 +84,9 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
     setInfo(null);
 
     const valeur = parseFloat(montant.replace(',', '.'));
-    if (!Number.isFinite(valeur) || valeur <= 0) { setErreur('Montant : un nombre positif est attendu.'); return; }
-    if (!compte) { setErreur('Choisis un compte.'); return; }
-    if (estVirement && !dest) { setErreur('Un virement interne exige un compte de destination.'); return; }
+    if (!Number.isFinite(valeur) || valeur <= 0) { setErreur(tr('SAISIE_ERR_MONTANT')); return; }
+    if (!compte) { setErreur(tr('SAISIE_ERR_COMPTE')); return; }
+    if (estVirement && !dest) { setErreur(tr('SAISIE_ERR_VIREMENT')); return; }
 
     const dateLabel = date ? `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : '';
     setOccupe(true);
@@ -90,9 +101,9 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
           libelle, dateLabel,
         }),
       });
-      if (!r.ok) throw new Error((await r.json()).erreur ?? 'Enregistrement refusé.');
+      if (!r.ok) throw new Error((await r.json()).erreur ?? tr('G_ERR_ACTION'));
       reset();
-      setInfo('Opération enregistrée ✓');
+      setInfo(tr('SAISIE_OK'));
       router.refresh(); // met à jour les soldes de l'accueil / le dashboard
     } catch (e2) {
       setErreur(e2 instanceof Error ? e2.message : String(e2));
@@ -104,22 +115,22 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
   return (
     <>
       <button className="bouton bouton-primaire saisie-cta" onClick={() => { setOuvert(true); setInfo(null); setErreur(null); }}>
-        ＋ Ajouter une opération
+        ＋ {tr('SAISIE_CTA')}
       </button>
 
       {ouvert && (
         <div className="modale-fond" onClick={() => setOuvert(false)} role="presentation">
-          <div className="modale" role="dialog" aria-modal="true" aria-label="Ajouter une opération" onClick={(e) => e.stopPropagation()}>
+          <div className="modale" role="dialog" aria-modal="true" aria-label={tr('SAISIE_CTA')} onClick={(e) => e.stopPropagation()}>
             <div className="modale-tete">
-              <h2>Ajouter une opération</h2>
-              <button className="modale-fermer" onClick={() => setOuvert(false)} aria-label="Fermer">✕</button>
+              <h2>{tr('SAISIE_CTA')}</h2>
+              <button className="modale-fermer" onClick={() => setOuvert(false)} aria-label={tr('G_FERMER')}>✕</button>
             </div>
 
-            <div className="type-choix" role="tablist" aria-label="Type d'opération">
+            <div className="type-choix" role="tablist">
               {typesDispo.map((ty) => (
                 <button key={ty} role="tab" aria-selected={type === ty}
                   className={`type-btn${type === ty ? ' actif' : ''}`} onClick={() => setType(ty)}>
-                  {ty}
+                  {libType(ty)}
                 </button>
               ))}
             </div>
@@ -129,12 +140,12 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
 
             <form className="saisie-form" onSubmit={soumettre}>
               <label className="saisie-champ">
-                <span>Montant (€)</span>
+                <span>{tr('SAISIE_MONTANT')}</span>
                 <input className="champ" inputMode="decimal" placeholder="0,00" value={montant} onChange={(e) => setMontant(e.target.value)} autoFocus />
               </label>
 
               <label className="saisie-champ">
-                <span>{estVirement ? 'Compte de départ' : 'Compte'}</span>
+                <span>{estVirement ? tr('SAISIE_COMPTE_DEP') : tr('SAISIE_COMPTE')}</span>
                 <select className="champ" value={compte} onChange={(e) => setCompte(e.target.value)}>
                   <option value="">—</option>
                   {params.comptes.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -143,7 +154,7 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
 
               {estVirement ? (
                 <label className="saisie-champ">
-                  <span>Compte de destination</span>
+                  <span>{tr('SAISIE_COMPTE_DEST')}</span>
                   <select className="champ" value={dest} onChange={(e) => setDest(e.target.value)}>
                     <option value="">—</option>
                     {params.comptes.filter((c) => c !== compte).map((c) => <option key={c} value={c}>{c}</option>)}
@@ -151,7 +162,7 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
                 </label>
               ) : (
                 <label className="saisie-champ">
-                  <span>Catégorie</span>
+                  <span>{tr('SAISIE_CATEGORIE')}</span>
                   <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)}>
                     <option value="">—</option>
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -160,18 +171,18 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
               )}
 
               <label className="saisie-champ">
-                <span>Libellé</span>
-                <input className="champ" placeholder="ex. Courses" value={libelle} onChange={(e) => setLibelle(e.target.value)} />
+                <span>{tr('SAISIE_LIBELLE')}</span>
+                <input className="champ" placeholder={tr('SAISIE_LIBELLE_PH')} value={libelle} onChange={(e) => setLibelle(e.target.value)} />
               </label>
 
               <label className="saisie-champ">
-                <span>Date</span>
+                <span>{tr('SAISIE_DATE')}</span>
                 <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </label>
 
               <div className="saisie-actions">
-                <button className="bouton discret" type="button" onClick={() => setOuvert(false)} disabled={occupe}>Fermer</button>
-                <button className="bouton" type="submit" disabled={occupe}>{occupe ? 'Enregistrement…' : 'Enregistrer'}</button>
+                <button className="bouton discret" type="button" onClick={() => setOuvert(false)} disabled={occupe}>{tr('G_FERMER')}</button>
+                <button className="bouton" type="submit" disabled={occupe}>{occupe ? tr('SAISIE_ENREG_EN_COURS') : tr('G_ENREGISTRER')}</button>
               </div>
             </form>
           </div>

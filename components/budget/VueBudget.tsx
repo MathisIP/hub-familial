@@ -5,6 +5,7 @@ import {
   type DonneesBudget,
   type LigneCategorie,
 } from '@/lib/budget/schema';
+import { t, type IdLangue } from '@/lib/i18n';
 
 /** Couleurs de pastille des comptes (corail + secondaires chaudes), cyclées. */
 const DOTS = ['#FF5C7A', '#FF9E6B', '#6FBEEA', '#E7B740', '#9A8CE6', '#5FBE9E'];
@@ -14,24 +15,24 @@ const DOTS = ['#FF5C7A', '#FF9E6B', '#6FBEEA', '#E7B740', '#9A8CE6', '#5FBE9E'];
  * KPIs (Reste en tuile héro), soldes des comptes en liste à pastilles, jauges
  * Réel/Budget (dépassement en rouge), transactions et échéances en cartes.
  */
-export default function VueBudget({ d }: { d: DonneesBudget }) {
+export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; langue?: IdLangue }) {
   const resteNum = parseEuro(d.kpis.reste);
   return (
     <>
-      <div className="bg-kpis" aria-label="Chiffres du mois">
+      <div className="bg-kpis">
         <div className="bg-kpi hero">
-          <div className="k-l">Reste ce mois</div>
+          <div className="k-l">{t('BUD_RESTE', langue)}</div>
           <div className={`k-v ${resteNum < 0 ? 'neg' : 'pos'}`}>{d.kpis.reste}</div>
-          <div className="k-n">revenus − dépenses</div>
+          <div className="k-n">{t('BUD_RESTE_N', langue)}</div>
         </div>
-        <Kpi l="Revenus" v={d.kpis.revenus} n="salaires du foyer" />
-        <Kpi l="Dépenses" v={d.kpis.depenses} n="toutes catégories" />
-        <Kpi l="Patrimoine" v={d.kpis.patrimoine} n="comptes cumulés" />
+        <Kpi l={t('BUD_REVENUS', langue)} v={d.kpis.revenus} n={t('BUD_REVENUS_N', langue)} />
+        <Kpi l={t('BUD_DEPENSES', langue)} v={d.kpis.depenses} n={t('BUD_DEPENSES_N', langue)} />
+        <Kpi l={t('BUD_PATRIMOINE', langue)} v={d.kpis.patrimoine} n={t('BUD_PATRIMOINE_N', langue)} />
       </div>
 
       {d.soldes.length > 0 && (
-        <section className="card-bloc" aria-label="Soldes des comptes">
-          <h2 className="section-titre">Soldes des comptes</h2>
+        <section className="card-bloc">
+          <h2 className="section-titre">{t('BUD_SOLDES', langue)}</h2>
           <div className="bg-comptes">
             {d.soldes.map((s, i) => (
               <div className="bg-compte" key={s.compte}>
@@ -45,8 +46,8 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.categories.length > 0 && (
-        <section className="card-bloc" aria-label="Dépenses par catégorie">
-          <h2 className="section-titre">Dépenses par catégorie — {d.periode || 'mois en cours'}</h2>
+        <section className="card-bloc">
+          <h2 className="section-titre">{t('BUD_PAR_CAT', langue)} — {d.periode || t('BUD_MOIS_COURANT', langue)}</h2>
           <div className="jauges">
             {d.categories.map((c) => (
               <Jauge key={c.categorie} c={c} />
@@ -56,25 +57,25 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.transactions.length > 0 && (
-        <section className="card-bloc" aria-label="Transactions récentes">
-          <h2 className="section-titre">Dernières transactions</h2>
+        <section className="card-bloc">
+          <h2 className="section-titre">{t('BUD_DERNIERES_TX', langue)}</h2>
           <ul className="tx-liste">
-            {d.transactions.map((t, i) => {
+            {d.transactions.map((tx, i) => {
               const classe =
-                t.type === TYPE_DEPENSE ? 'depense' : t.type === TYPE_REVENU ? 'revenu' : 'virement';
-              const signe = t.type === TYPE_DEPENSE ? '−' : t.type === TYPE_REVENU ? '+' : '';
+                tx.type === TYPE_DEPENSE ? 'depense' : tx.type === TYPE_REVENU ? 'revenu' : 'virement';
+              const signe = tx.type === TYPE_DEPENSE ? '−' : tx.type === TYPE_REVENU ? '+' : '';
               return (
-                <li className="tx" key={`${t.date}-${t.libelle}-${i}`}>
-                  <span className="tx-date">{t.date}</span>
-                  <span className="tx-lib">{t.libelle || '(sans libellé)'}</span>
+                <li className="tx" key={`${tx.date}-${tx.libelle}-${i}`}>
+                  <span className="tx-date">{tx.date}</span>
+                  <span className="tx-lib">{tx.libelle || t('BUD_SANS_LIBELLE', langue)}</span>
                   <span className="tx-meta">
-                    {t.compte}
-                    {t.dest ? ` → ${t.dest}` : ''}
-                    {t.categorie ? ` · ${t.categorie}` : ''}
+                    {tx.compte}
+                    {tx.dest ? ` → ${tx.dest}` : ''}
+                    {tx.categorie ? ` · ${tx.categorie}` : ''}
                   </span>
                   <span className={`tx-montant ${classe}`}>
                     {signe}
-                    {t.montant}
+                    {tx.montant}
                   </span>
                 </li>
               );
@@ -84,8 +85,8 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
       )}
 
       {d.echeances.length > 0 && (
-        <section className="card-bloc" aria-label="Échéances à venir">
-          <h2 className="section-titre">Échéances à venir</h2>
+        <section className="card-bloc">
+          <h2 className="section-titre">{t('BUD_ECHEANCES', langue)}</h2>
           <ul className="ech-liste">
             {d.echeances.map((e, i) => (
               <li className="ech" key={`${e.libelle}-${i}`}>
@@ -94,7 +95,7 @@ export default function VueBudget({ d }: { d: DonneesBudget }) {
                 <span className="e-date">{e.date}</span>
                 {e.joursRestants !== null && (
                   <span className={`e-quand ${e.joursRestants <= 30 ? 'proche' : ''}`}>
-                    {libelleJours(e.joursRestants)}
+                    {libelleJours(e.joursRestants, langue)}
                   </span>
                 )}
               </li>
@@ -141,8 +142,8 @@ function Jauge({ c }: { c: LigneCategorie }) {
   );
 }
 
-function libelleJours(j: number): string {
-  if (j === 0) return "aujourd'hui";
-  if (j === 1) return 'demain';
-  return `dans ${j} j`;
+function libelleJours(j: number, langue: IdLangue): string {
+  if (j === 0) return t('REL_AUJOURDHUI', langue);
+  if (j === 1) return t('REL_DEMAIN', langue);
+  return `${t('REL_DANS', langue)} ${j} ${t('REL_J', langue)}`;
 }

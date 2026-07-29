@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MOIS_FR, type SelectionMois } from '@/lib/budget/schema';
+import { useT, useLangue } from '@/components/I18nProvider';
+import { locale } from '@/lib/i18n';
+import { type SelectionMois } from '@/lib/budget/schema';
 
 /**
  * Sélecteur de mois du Budget. Le mois n'est plus un état partagé du classeur :
@@ -16,6 +18,10 @@ export default function SelecteurMois({
   annees: number[];
 }) {
   const router = useRouter();
+  const tr = useT();
+  const langue = useLangue();
+  const fmtMois = new Intl.DateTimeFormat(locale(langue), { month: 'long' });
+  const moisNoms = Array.from({ length: 12 }, (_, i) => fmtMois.format(new Date(2000, i, 1)));
 
   function aller(annee: number, mois: number) {
     router.push(`/budget?annee=${annee}&mois=${mois}`);
@@ -36,7 +42,7 @@ export default function SelecteurMois({
 
   return (
     <div className="mois-selecteur">
-      <button className="mois-fleche" onClick={() => decaler(-1)} disabled={premierMois} aria-label="Mois précédent">
+      <button className="mois-fleche" onClick={() => decaler(-1)} disabled={premierMois} aria-label={tr('MOIS_PRECEDENT')}>
         ‹
       </button>
 
@@ -44,10 +50,10 @@ export default function SelecteurMois({
         className="champ"
         value={selection.mois}
         onChange={(e) => aller(selection.annee, Number(e.target.value))}
-        aria-label="Mois"
+        aria-label={tr('MOIS_PRECEDENT')}
       >
-        {MOIS_FR.map((nom, i) => (
-          <option key={nom} value={i + 1}>{nom}</option>
+        {moisNoms.map((nom, i) => (
+          <option key={nom} value={i + 1} style={{ textTransform: 'capitalize' }}>{nom}</option>
         ))}
       </select>
 
@@ -62,7 +68,7 @@ export default function SelecteurMois({
         ))}
       </select>
 
-      <button className="mois-fleche" onClick={() => decaler(1)} disabled={dernierMois} aria-label="Mois suivant">
+      <button className="mois-fleche" onClick={() => decaler(1)} disabled={dernierMois} aria-label={tr('MOIS_SUIVANT')}>
         ›
       </button>
     </div>

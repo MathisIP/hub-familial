@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ImportDrive from '@/components/ImportDrive';
+import { useT } from '@/components/I18nProvider';
 import type { ContenuDossier, ElementDrive } from '@/lib/google/driveBrowse';
 
 /**
@@ -31,6 +32,7 @@ function icone(el: ElementDrive): string {
 }
 
 export default function DriveExplorer() {
+  const tr = useT();
   const [etat, setEtat] = useState<Etat>('charge');
   const [message, setMessage] = useState<string | null>(null);
   const [contenu, setContenu] = useState<ContenuDossier | null>(null);
@@ -47,7 +49,7 @@ export default function DriveExplorer() {
       if (!r.ok) {
         if (data.config) { setEtat('config'); setMessage(data.erreur); return; }
         if (data.reconnexion) { setEtat('reconnexion'); setMessage(data.erreur); return; }
-        setEtat('erreur'); setMessage(data.erreur ?? 'Erreur de chargement.'); return;
+        setEtat('erreur'); setMessage(data.erreur ?? tr('G_ERR_CHARGEMENT')); return;
       }
       setContenu(data as ContenuDossier);
       setEtat('ok');
@@ -86,7 +88,7 @@ export default function DriveExplorer() {
   return (
     <section className="drive-explorer" aria-label="Documents Drive">
       <div className="de-tete">
-        <h2>🗂️ Drive familial</h2>
+        <h2>{tr('DR_TITRE')}</h2>
         <ImportDrive onImporte={rafraichir} />
       </div>
 
@@ -108,13 +110,13 @@ export default function DriveExplorer() {
         </nav>
       )}
 
-      {etat === 'charge' && <p className="de-info">Chargement du Drive…</p>}
+      {etat === 'charge' && <p className="de-info">{tr('DR_CHARGEMENT')}</p>}
 
       {etat === 'config' && <p className="de-info">{message} Ajoute <code>DRIVE_HUB_URL</code> dans <code>.env</code> (URL du dossier « Hub Familial »).</p>}
 
       {etat === 'reconnexion' && (
         <p className="message erreur de-msg">
-          {message} <Link href="/connexion" className="import-reco">Autoriser Google Drive →</Link>
+          {message} <Link href="/connexion" className="import-reco">{tr('DR_AUTORISER')}</Link>
         </p>
       )}
 
@@ -122,7 +124,7 @@ export default function DriveExplorer() {
 
       {etat === 'ok' && contenu && (
         contenu.elements.length === 0 ? (
-          <p className="de-info">Ce dossier est vide.</p>
+          <p className="de-info">{tr('DR_VIDE')}</p>
         ) : (
           <ul className="de-liste">
             {contenu.elements.map((el) => (
@@ -132,7 +134,7 @@ export default function DriveExplorer() {
                   className={`de-item${el.estDossier ? ' dossier' : ''}`}
                   onClick={() => ouvrir(el)}
                   disabled={!el.estDossier && !el.lien}
-                  title={el.estDossier ? 'Ouvrir le dossier' : 'Ouvrir dans Google Drive'}
+                  title={el.estDossier ? tr('DR_OUVRIR_DOSSIER') : tr('DR_OUVRIR_DRIVE')}
                 >
                   <span className="de-ic" aria-hidden="true">{icone(el)}</span>
                   <span className="de-nom">{el.nom}</span>

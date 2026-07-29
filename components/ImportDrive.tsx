@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { useT } from '@/components/I18nProvider';
 
 /** Logo Google Drive (tricolore). */
 function LogoDrive() {
@@ -25,6 +26,7 @@ type Resultat = { nom: string; ok: boolean; erreur?: string };
  * `onImporte` est appelé après un import réussi (ex. rafraîchir l'explorateur).
  */
 export default function ImportDrive({ onImporte }: { onImporte?: () => void } = {}) {
+  const tr = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [occupe, setOccupe] = useState(false);
   const [succes, setSucces] = useState<string | null>(null);
@@ -85,7 +87,7 @@ export default function ImportDrive({ onImporte }: { onImporte?: () => void } = 
         disabled={occupe}
       >
         <LogoDrive />
-        {occupe ? 'Import en cours…' : 'Importer'}
+        {occupe ? tr('IMPORT_EN_COURS') : tr('IMPORT_BTN')}
       </button>
 
       {succes && <p className="message info import-msg">{succes}</p>}
@@ -93,7 +95,7 @@ export default function ImportDrive({ onImporte }: { onImporte?: () => void } = 
         <p className="message erreur import-msg">
           {erreur}
           {reconnexion && (
-            <> <Link href="/connexion" className="import-reco">Autoriser Google Drive →</Link></>
+            <> <Link href="/connexion" className="import-reco">{tr('DR_AUTORISER')}</Link></>
           )}
         </p>
       )}

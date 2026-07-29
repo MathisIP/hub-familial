@@ -1,20 +1,39 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { useT, useLangue } from '@/components/I18nProvider';
+import { locale, type IdLangue } from '@/lib/i18n';
 import {
   aujourdhuiISO,
-  libelleJourComplet,
-  libelleRelatif,
   type Agenda,
   type DonneesAgenda,
   type EvenementAgenda,
 } from '@/lib/agenda/schema';
+
+/** Date ISO (yyyy-mm-dd) → « lundi 4 août » dans la langue courante. */
+function jourComplet(iso: string, langue: IdLangue): string {
+  const [a, m, j] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat(locale(langue), { weekday: 'long', day: 'numeric', month: 'long' }).format(
+    new Date(a, m - 1, j),
+  );
+}
+
+/** Étiquette relative « aujourd'hui / demain » (ou vide) dans la langue courante. */
+function relatif(iso: string, aujourdIso: string, t: (c: 'REL_AUJOURDHUI' | 'REL_DEMAIN') => string): string {
+  if (iso === aujourdIso) return t('REL_AUJOURDHUI');
+  const [a, m, j] = aujourdIso.split('-').map(Number);
+  const demain = new Date(a, m - 1, j + 1);
+  const demainIso = `${demain.getFullYear()}-${String(demain.getMonth() + 1).padStart(2, '0')}-${String(demain.getDate()).padStart(2, '0')}`;
+  return iso === demainIso ? t('REL_DEMAIN') : '';
+}
 
 /**
  * Écran Agenda (client) : événements à venir groupés par jour, ajout (journée
  * entière ou horaire) et suppression. Rafraîchit depuis /api/agenda.
  */
 export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
+  const tr = useT();
+  const langue = useLangue();
   const [d, setD] = useState<DonneesAgenda>(initial);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -51,7 +70,7 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
       {!ajout && (
         <div className="saisie-barre">
           <button className="bouton" onClick={() => setAjout(true)} disabled={occupe}>
-            ＋ Nouvel événement
+            ＋ {tr('AGD_NOUVEL')}
           </button>
         </div>
       )}
@@ -86,22 +105,22 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
       {erreur && <p className="message erreur">{erreur}</p>}
 
       {groupes.length === 0 ? (
-        <p className="vide">Aucun événement à venir dans les {d.jours} prochains jours.</p>
+        <p className="vide">{tr('AGD_AUCUN_1')} {d.jours} {tr('AGD_AUCUN_2')}</p>
       ) : (
         groupes.map(({ jour, evenements }) => {
-          const rel = libelleRelatif(jour, aujourd);
+          const rel = relatif(jour, aujourd, tr);
           return (
             <section className="agenda-jour" key={jour}>
               <h2 className="ag-jour-titre">
                 {rel && <span className="ag-relatif">{rel}</span>}
-                {libelleJourComplet(jour)}
+                {jourComplet(jour, langue)}
               </h2>
               <ul className="liste">
                 {evenements.map((e) => (
                   <li className="ag-event" key={`${e.calendarId}:${e.id}`}>
                     <span className="ag-pastille ag-pastille-event" style={{ background: e.couleur }} aria-hidden="true" />
                     <span className="ag-heure">
-                      {e.journeeEntiere ? 'journée' : e.heureDebut}
+                      {e.journeeEntiere ? tr('G_JOURNEE') : e.heureDebut}
                       {!e.journeeEntiere && e.heureFin ? `–${e.heureFin}` : ''}
                     </span>
                     <span className="ag-corps">
@@ -117,7 +136,7 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                     <button
                       className="bouton discret ag-suppr"
                       onClick={() => {
-                        if (confirm(`Supprimer « ${e.titre} » ?`)) {
+                        if (confirm(`${tr('G_SUPPRIMER')} « ${e.titre} » ?`)) {
                           action(() =>
                             fetch('/api/agenda', {
                               method: 'DELETE',
@@ -128,7 +147,7 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                         }
                       }}
                       disabled={occupe}
-                      aria-label={`Supprimer ${e.titre}`}
+                      aria-label={`${tr('G_SUPPRIMER')} ${e.titre}`}
                     >
                       ✕
                     </button>
@@ -170,6 +189,7 @@ function FormAgenda({
   }) => void;
   onAnnulerAction: () => void;
 }) {
+  const tr = useT();
   const [calendarId, setCalendarId] = useState(agendas[0]?.id ?? '');
   const [titre, setTitre] = useState('');
   const [date, setDate] = useState(aujourdhuiISO());
@@ -187,38 +207,38 @@ function FormAgenda({
   return (
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
-        <input className="champ rf-nom" placeholder="Titre de l'événement" value={titre} onChange={(e) => setTitre(e.target.value)} disabled={occupe} autoFocus />
+        <input className="champ rf-nom" placeholder={tr('AGD_TITRE_PH')} value={titre} onChange={(e) => setTitre(e.target.value)} disabled={occupe} autoFocus />
         {agendas.length > 1 && (
           <select className="champ" value={calendarId} onChange={(e) => setCalendarId(e.target.value)} disabled={occupe} aria-label="Agenda">
             {agendas.map((a) => <option key={a.id} value={a.id}>{a.nom}</option>)}
           </select>
         )}
-        <label className="saisie-champ"><span>Date</span>
+        <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>
           <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={occupe} />
         </label>
       </div>
       <div className="rf-ligne1">
         <label className="ag-checkbox">
           <input type="checkbox" checked={journeeEntiere} onChange={(e) => setJourneeEntiere(e.target.checked)} disabled={occupe} />
-          <span>Journée entière</span>
+          <span>{tr('AGD_JOURNEE_ENTIERE')}</span>
         </label>
         {!journeeEntiere && (
           <>
-            <label className="saisie-champ"><span>Début</span>
+            <label className="saisie-champ"><span>{tr('AGD_DEBUT')}</span>
               <input className="champ" type="time" value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} disabled={occupe} />
             </label>
-            <label className="saisie-champ"><span>Fin</span>
+            <label className="saisie-champ"><span>{tr('AGD_FIN')}</span>
               <input className="champ" type="time" value={heureFin} onChange={(e) => setHeureFin(e.target.value)} disabled={occupe} />
             </label>
           </>
         )}
       </div>
-      <input className="champ" placeholder="Lieu" value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={occupe} />
-      <input className="champ" placeholder="Note / description" value={description} onChange={(e) => setDescription(e.target.value)} disabled={occupe} />
+      <input className="champ" placeholder={tr('G_LIEU')} value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={occupe} />
+      <input className="champ" placeholder={tr('AGD_DESC_PH')} value={description} onChange={(e) => setDescription(e.target.value)} disabled={occupe} />
       <div className="rf-actions">
         <span className="rf-espace" />
-        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>Annuler</button>
-        <button type="submit" className="bouton" disabled={occupe || !titre.trim()}>Ajouter</button>
+        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>{tr('G_ANNULER')}</button>
+        <button type="submit" className="bouton" disabled={occupe || !titre.trim()}>{tr('G_AJOUTER')}</button>
       </div>
     </form>
   );

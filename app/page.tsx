@@ -50,7 +50,7 @@ export default async function Accueil() {
       </section>
 
       <div className="grille-accueil">
-        <ResumeComptes soldes={accueil?.soldesHorsEpargne ?? []}>
+        <ResumeComptes soldes={accueil?.soldesHorsEpargne ?? []} langue={langue}>
           <SaisieTransaction params={accueil?.parametres} />
         </ResumeComptes>
 

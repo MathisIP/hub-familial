@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import { useT } from '@/components/I18nProvider';
 import { formatEuro } from '@/lib/argent';
 import {
   estProche,
@@ -16,6 +17,7 @@ import {
  * payé, statut (Idée → Offert), et éditeur. Rafraîchit après chaque écriture.
  */
 export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
+  const tr = useT();
   const [d, setD] = useState<DonneesCadeaux>(initial);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
       {!ajout && (
         <div className="saisie-barre">
           <button className="bouton" onClick={() => setAjout(true)} disabled={occupe}>
-            ＋ Nouvelle idée
+            ＋ {tr('CAD_NOUVELLE')}
           </button>
         </div>
       )}
@@ -73,10 +75,10 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
       {groupes.map(({ occasion, cadeaux }) => (
         <section className="occasion-groupe" key={occasion?.occasion ?? '—'}>
           <div className="occ-tete">
-            <h2 className="occ-nom">{occasion?.occasion ?? 'Sans occasion'}</h2>
+            <h2 className="occ-nom">{occasion?.occasion ?? tr('CAD_SANS_OCCASION')}</h2>
             {occasion?.date && <span className="occ-date">{occasion.date}</span>}
             {occasion && estProche(occasion) && (
-              <span className="pastille echec">dans {occasion.joursRestants} j</span>
+              <span className="pastille echec">{tr('REL_DANS')} {occasion.joursRestants} {tr('REL_J')}</span>
             )}
             <BudgetOccasion cadeaux={cadeaux} occasion={occasion} />
           </div>
@@ -103,12 +105,12 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                   <div className="cad-principal">
                     <span className="cad-idee">{c.idee}</span>
                     <span className="cad-meta">
-                      {c.pourQui && <span className="puce assigne">pour {c.pourQui}</span>}
-                      {c.offertPar && <span className="puce categorie">par {c.offertPar}</span>}
+                      {c.pourQui && <span className="puce assigne">{tr('CAD_POUR')} {c.pourQui}</span>}
+                      {c.offertPar && <span className="puce categorie">{tr('CAD_PAR')} {c.offertPar}</span>}
                       {(c.budgetNum > 0 || c.payeNum > 0) && (
                         <span className="cad-budget">
                           {c.payeNum > 0 ? formatEuro(c.payeNum) : formatEuro(c.budgetNum)}
-                          {c.payeNum > 0 && c.budgetNum > 0 && <span className="cad-prevu"> / prévu {formatEuro(c.budgetNum)}</span>}
+                          {c.payeNum > 0 && c.budgetNum > 0 && <span className="cad-prevu"> / {tr('CAD_PREVU')} {formatEuro(c.budgetNum)}</span>}
                         </span>
                       )}
                     </span>
@@ -131,7 +133,7 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                       ))}
                     </select>
                     <button className="bouton discret" onClick={() => setEdite(c.id)} disabled={occupe}>
-                      Modifier
+                      {tr('G_MODIFIER')}
                     </button>
                   </div>
                 </li>
@@ -172,16 +174,17 @@ function grouper(cadeaux: Cadeau[], occasions: Occasion[]): { occasion: Occasion
 }
 
 function BudgetOccasion({ cadeaux, occasion }: { cadeaux: Cadeau[]; occasion: Occasion | null }) {
+  const tr = useT();
   const prevu = cadeaux.reduce((s, c) => s + c.budgetNum, 0);
   const paye = cadeaux.reduce((s, c) => s + c.payeNum, 0);
   const budgetOcc = occasion?.budgetNum ?? 0;
   const depasse = budgetOcc > 0 && prevu > budgetOcc;
   return (
     <span className="occ-budget">
-      prévu <b>{formatEuro(prevu)}</b>
-      {paye > 0 && <> · payé {formatEuro(paye)}</>}
+      {tr('CAD_PREVU')} <b>{formatEuro(prevu)}</b>
+      {paye > 0 && <> · {tr('CAD_PAYE')} {formatEuro(paye)}</>}
       {budgetOcc > 0 && (
-        <span className={depasse ? 'depasse' : ''}> {depasse ? '⚠ ' : ''}(budget {formatEuro(budgetOcc)})</span>
+        <span className={depasse ? 'depasse' : ''}> {depasse ? '⚠ ' : ''}({tr('CAD_BUDGET')} {formatEuro(budgetOcc)})</span>
       )}
     </span>
   );
@@ -204,6 +207,7 @@ function CadeauForm({
   onAnnulerAction: () => void;
   onSupprimerAction?: () => void;
 }) {
+  const tr = useT();
   const [idee, setIdee] = useState(cadeau?.idee ?? '');
   const [pourQui, setPourQui] = useState(cadeau?.pourQui ?? '');
   const [occasion, setOccasion] = useState(cadeau?.occasion ?? '');
@@ -222,27 +226,27 @@ function CadeauForm({
   return (
     <form className="recette-form" onSubmit={soumettre}>
       <div className="rf-ligne1">
-        <input className="champ rf-nom" placeholder="Idée / cadeau" value={idee} onChange={(e) => setIdee(e.target.value)} disabled={occupe} autoFocus />
-        <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder="Pour qui" disabled={occupe} ariaLabel="Pour qui" />
-        <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder="Occasion" disabled={occupe} ariaLabel="Occasion" />
-        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label="Statut">
+        <input className="champ rf-nom" placeholder={tr('CAD_IDEE_PH')} value={idee} onChange={(e) => setIdee(e.target.value)} disabled={occupe} autoFocus />
+        <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder={tr('CAD_POUR_QUI')} disabled={occupe} ariaLabel={tr('CAD_POUR_QUI')} />
+        <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder={tr('CAD_OCCASION')} disabled={occupe} ariaLabel={tr('CAD_OCCASION')} />
+        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
           {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       <div className="rf-ligne1">
-        <input className="champ" inputMode="decimal" placeholder="Budget prévu (€)" value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
-        <input className="champ" inputMode="decimal" placeholder="Prix payé (€)" value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
-        <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder="Offert par" disabled={occupe} ariaLabel="Offert par" />
-        <input className="champ" placeholder="Où / lien" value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />
+        <input className="champ" inputMode="decimal" placeholder={tr('CAD_BUDGET_PH')} value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
+        <input className="champ" inputMode="decimal" placeholder={tr('CAD_PRIX_PH')} value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
+        <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder={tr('CAD_OFFERT_PAR')} disabled={occupe} ariaLabel={tr('CAD_OFFERT_PAR')} />
+        <input className="champ" placeholder={tr('CAD_OU_PH')} value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />
       </div>
-      <input className="champ" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
+      <input className="champ" placeholder={tr('G_NOTE')} value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
       <div className="rf-actions">
         {onSupprimerAction && (
-          <button type="button" className="bouton discret rf-danger" onClick={onSupprimerAction} disabled={occupe}>Supprimer</button>
+          <button type="button" className="bouton discret rf-danger" onClick={onSupprimerAction} disabled={occupe}>{tr('G_SUPPRIMER')}</button>
         )}
         <span className="rf-espace" />
-        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>Annuler</button>
-        <button type="submit" className="bouton" disabled={occupe || !idee.trim()}>Enregistrer</button>
+        <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>{tr('G_ANNULER')}</button>
+        <button type="submit" className="bouton" disabled={occupe || !idee.trim()}>{tr('G_ENREGISTRER')}</button>
       </div>
     </form>
   );

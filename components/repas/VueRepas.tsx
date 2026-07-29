@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import { useT, useLangue } from '@/components/I18nProvider';
+import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID } from '@/lib/i18n';
 import {
   agregerCourses,
   formatQuantite,
@@ -19,6 +21,7 @@ import {
  * chaque écriture.
  */
 export default function VueRepas({ initial }: { initial: DonneesRepas }) {
+  const tr = useT();
   const [d, setD] = useState<DonneesRepas>(initial);
   const [onglet, setOnglet] = useState<'semaine' | 'recettes'>('semaine');
   const [occupe, setOccupe] = useState(false);
@@ -51,10 +54,10 @@ export default function VueRepas({ initial }: { initial: DonneesRepas }) {
     <>
       <div className="tabs" role="tablist">
         <button className="tab" role="tab" aria-selected={onglet === 'semaine'} onClick={() => setOnglet('semaine')}>
-          🗓️ Semaine
+          🗓️ {tr('REPAS_TAB_SEMAINE')}
         </button>
         <button className="tab" role="tab" aria-selected={onglet === 'recettes'} onClick={() => setOnglet('recettes')}>
-          📖 Recettes ({d.recettes.length})
+          📖 {tr('REPAS_TAB_RECETTES')} ({d.recettes.length})
         </button>
       </div>
 
@@ -125,6 +128,8 @@ function JourLigne({
   occupe: boolean;
   action: ActionFn;
 }) {
+  const tr = useT();
+  const langue = useLangue();
   const [menu, setMenu] = useState({ entree: jour.entree, plat: jour.plat, dessert: jour.dessert });
   const [personnes, setPersonnes] = useState(String(jour.personnes));
 
@@ -170,25 +175,28 @@ function JourLigne({
             onBlur={() => enregistrer()}
             aria-label={`Nombre de personnes ${jour.jour}`}
           />
-          <span>pers.</span>
+          <span>{tr('REPAS_PERS')}</span>
         </label>
       </div>
 
       <div className="jr-services">
-        {SERVICES_UI.map(({ cle, label, cat }) => (
-          <label className="jr-service" key={cle}>
-            <span className="jr-service-lbl">{label}</span>
-            <Combobox
-              value={menu[cle]}
-              onChange={(v) => setMenu((m) => ({ ...m, [cle]: v }))}
-              onCommit={(v) => enregistrer({ ...menu, [cle]: v })}
-              options={recettes.filter((r) => !r.categorie || r.categorie === cat).map((r) => r.nom)}
-              placeholder={`${label}…`}
-              disabled={occupe}
-              ariaLabel={`${label} de ${jour.jour}`}
-            />
-          </label>
-        ))}
+        {SERVICES_UI.map(({ cle, cat }) => {
+          const label = tEnum(CLE_CATEGORIE_PLAT, cat, langue);
+          return (
+            <label className="jr-service" key={cle}>
+              <span className="jr-service-lbl">{label}</span>
+              <Combobox
+                value={menu[cle]}
+                onChange={(v) => setMenu((m) => ({ ...m, [cle]: v }))}
+                onCommit={(v) => enregistrer({ ...menu, [cle]: v })}
+                options={recettes.filter((r) => !r.categorie || r.categorie === cat).map((r) => r.nom)}
+                placeholder={`${label}…`}
+                disabled={occupe}
+                ariaLabel={`${label} · ${jour.jour}`}
+              />
+            </label>
+          );
+        })}
       </div>
 
       {ingredientsJour.length > 0 && (
@@ -211,6 +219,7 @@ function JourLigne({
 }
 
 function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses> }) {
+  const tr = useT();
   if (courses.length === 0) return null;
   // Regroupement par rayon.
   const parRayon = new Map<string, typeof courses>();
@@ -221,11 +230,8 @@ function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses>
   }
   return (
     <section className="apercu-courses">
-      <h2 className="bloc-titre">Aperçu des courses de la semaine</h2>
-      <p className="apercu-note">
-        Somme des ingrédients des dîners planifiés, quantités mises à l’échelle. Le bouton d’envoi
-        vers la liste de courses arrivera sur l’accueil.
-      </p>
+      <h2 className="bloc-titre">{tr('REPAS_APERCU_TITRE')}</h2>
+      <p className="apercu-note">{tr('REPAS_APERCU_NOTE')}</p>
       {[...parRayon.entries()].map(([rayon, items]) => (
         <div className="rayon-groupe" key={rayon}>
           <p className="rayon-titre">{rayon}</p>
@@ -246,6 +252,8 @@ function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses>
 /* =============================== RECETTES =============================== */
 
 function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boolean; action: ActionFn }) {
+  const tr = useT();
+  const langue = useLangue();
   const [edite, setEdite] = useState<string | 'nouvelle' | null>(null);
 
   return (
@@ -253,7 +261,7 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
       {edite !== 'nouvelle' && (
         <div className="saisie-barre">
           <button className="bouton" onClick={() => setEdite('nouvelle')} disabled={occupe}>
-            ＋ Nouvelle recette
+            ＋ {tr('REPAS_NOUVELLE_RECETTE')}
           </button>
         </div>
       )}
@@ -303,15 +311,15 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
               <div className="rc-tete">
                 <span className="rc-nom">{r.nom}</span>
                 <span className="rc-meta">
-                  {r.categorie && <span className="puce cat-plat">{r.categorie}</span>}
-                  {r.type && <span className="puce categorie">{r.type}</span>}
-                  {r.chaudFroid && <span className="puce categorie">{r.chaudFroid}</span>}
-                  <span className="puce assigne">{r.personnes} pers.</span>
-                  {r.favoriBebe && <span className="puce bebe-favori">👶 Favori bébé</span>}
-                  {r.bebePasGoute && <span className="puce bebe-agouter">👶 À goûter</span>}
+                  {r.categorie && <span className="puce cat-plat">{tEnum(CLE_CATEGORIE_PLAT, r.categorie, langue)}</span>}
+                  {r.type && <span className="puce categorie">{tEnum(CLE_TYPE_RECETTE, r.type, langue)}</span>}
+                  {r.chaudFroid && <span className="puce categorie">{tEnum(CLE_CHAUD_FROID, r.chaudFroid, langue)}</span>}
+                  <span className="puce assigne">{r.personnes} {tr('REPAS_PERS')}</span>
+                  {r.favoriBebe && <span className="puce bebe-favori">{tr('REPAS_BADGE_FAVORI')}</span>}
+                  {r.bebePasGoute && <span className="puce bebe-agouter">{tr('REPAS_BADGE_AGOUTER')}</span>}
                 </span>
                 <button className="bouton discret" onClick={() => setEdite(r.id)} disabled={occupe}>
-                  Modifier
+                  {tr('G_MODIFIER')}
                 </button>
               </div>
               <ul className="rc-ingredients">
@@ -360,6 +368,8 @@ function RecetteForm({
   onAnnulerAction: () => void;
   onSupprimerAction?: () => void;
 }) {
+  const tr = useT();
+  const langue = useLangue();
   const [nom, setNom] = useState(recette?.nom ?? '');
   const [categorie, setCategorie] = useState(recette?.categorie ?? '');
   const [type, setType] = useState(recette?.type ?? '');
@@ -404,28 +414,28 @@ function RecetteForm({
       <div className="rf-ligne1">
         <input
           className="champ rf-nom"
-          placeholder="Nom de la recette"
+          placeholder={tr('REPAS_NOM_PH')}
           value={nom}
           onChange={(e) => setNom(e.target.value)}
           disabled={occupe}
           autoFocus
         />
-        <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)} disabled={occupe} aria-label="Catégorie">
-          <option value="">Catégorie</option>
+        <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)} disabled={occupe} aria-label={tr('REPAS_CATEGORIE')}>
+          <option value="">{tr('REPAS_CATEGORIE')}</option>
           {d.categoriesPlat.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{tEnum(CLE_CATEGORIE_PLAT, c, langue)}</option>
           ))}
         </select>
-        <select className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} aria-label="Type">
-          <option value="">Type</option>
-          {d.types.map((t) => (
-            <option key={t} value={t}>{t}</option>
+        <select className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} aria-label={tr('REPAS_TYPE')}>
+          <option value="">{tr('REPAS_TYPE')}</option>
+          {d.types.map((ty) => (
+            <option key={ty} value={ty}>{tEnum(CLE_TYPE_RECETTE, ty, langue)}</option>
           ))}
         </select>
-        <select className="champ" value={chaudFroid} onChange={(e) => setChaudFroid(e.target.value)} disabled={occupe} aria-label="Chaud/Froid">
-          <option value="">Chaud/Froid</option>
+        <select className="champ" value={chaudFroid} onChange={(e) => setChaudFroid(e.target.value)} disabled={occupe} aria-label={tr('REPAS_CHAUDFROID')}>
+          <option value="">{tr('REPAS_CHAUDFROID')}</option>
           {d.chaudFroid.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{tEnum(CLE_CHAUD_FROID, c, langue)}</option>
           ))}
         </select>
         <label className="jr-pers">
@@ -444,13 +454,13 @@ function RecetteForm({
 
       <div className="rf-ingredients">
         <div className="rf-ing-entete">
-          <span>Article</span><span>Quantité</span><span>Unité</span><span>Rayon</span><span />
+          <span>{tr('REPAS_ING_ARTICLE')}</span><span>{tr('REPAS_ING_QTE')}</span><span>{tr('REPAS_ING_UNITE')}</span><span>{tr('REPAS_ING_RAYON')}</span><span />
         </div>
         {ingredients.map((ing, k) => (
           <div className="rf-ing-ligne" key={k}>
             <input
               className="champ"
-              placeholder="Article"
+              placeholder={tr('REPAS_ING_ARTICLE')}
               value={ing.article}
               onChange={(e) => majIngredient(k, 'article', e.target.value)}
               disabled={occupe}
@@ -458,7 +468,7 @@ function RecetteForm({
             <input
               className="champ"
               inputMode="decimal"
-              placeholder="Qté"
+              placeholder={tr('REPAS_ING_QTE_PH')}
               value={ing.quantite == null ? '' : formatQuantite(ing.quantite)}
               onChange={(e) => majIngredient(k, 'quantite', e.target.value)}
               disabled={occupe}
@@ -468,7 +478,7 @@ function RecetteForm({
               value={ing.unite}
               onChange={(e) => majIngredient(k, 'unite', e.target.value)}
               disabled={occupe}
-              aria-label="Unité"
+              aria-label={tr('REPAS_ING_UNITE')}
             >
               <option value="">—</option>
               {d.unites.map((u) => (
@@ -477,7 +487,7 @@ function RecetteForm({
             </select>
             <input
               className="champ"
-              placeholder="Rayon"
+              placeholder={tr('REPAS_ING_RAYON')}
               value={ing.rayon}
               onChange={(e) => majIngredient(k, 'rayon', e.target.value)}
               disabled={occupe}
@@ -487,20 +497,20 @@ function RecetteForm({
               className="bouton discret rf-suppr"
               onClick={() => setIngredients((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== k) : prev))}
               disabled={occupe}
-              aria-label="Retirer l'ingrédient"
+              aria-label={tr('REPAS_RETIRER_ING')}
             >
               ✕
             </button>
           </div>
         ))}
         <button type="button" className="bouton discret" onClick={() => setIngredients((prev) => [...prev, ingredientVide()])} disabled={occupe}>
-          ＋ Ingrédient
+          {tr('REPAS_ING_AJOUTER')}
         </button>
       </div>
 
       <input
         className="champ"
-        placeholder="Note (facultatif)"
+        placeholder={tr('REPAS_NOTE_PH')}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         disabled={occupe}
@@ -514,7 +524,7 @@ function RecetteForm({
             onChange={(e) => setFavoriBebe(e.target.checked)}
             disabled={occupe}
           />
-          <span>👶 Favori de bébé</span>
+          <span>{tr('REPAS_BEBE_FAVORI')}</span>
         </label>
         <label className="rf-check">
           <input
@@ -523,22 +533,22 @@ function RecetteForm({
             onChange={(e) => setBebePasGoute(e.target.checked)}
             disabled={occupe}
           />
-          <span>👶 Bébé n’a pas encore goûté</span>
+          <span>{tr('REPAS_BEBE_AGOUTER')}</span>
         </label>
       </div>
 
       <div className="rf-actions">
         {onSupprimerAction && (
           <button type="button" className="bouton discret rf-danger" onClick={onSupprimerAction} disabled={occupe}>
-            Supprimer
+            {tr('G_SUPPRIMER')}
           </button>
         )}
         <span className="rf-espace" />
         <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>
-          Annuler
+          {tr('G_ANNULER')}
         </button>
         <button type="submit" className="bouton" disabled={occupe || !nom.trim()}>
-          Enregistrer
+          {tr('G_ENREGISTRER')}
         </button>
       </div>
     </form>

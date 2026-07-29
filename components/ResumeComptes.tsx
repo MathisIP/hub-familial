@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { formatEuro, parseEuro, type Solde } from '@/lib/budget/schema';
+import { t, type IdLangue } from '@/lib/i18n';
 
 /** Couleurs de pastille des comptes (corail + secondaires chaudes), cyclées. */
 const DOTS = ['#FF5C7A', '#FF9E6B', '#6FBEEA', '#E7B740', '#9A8CE6'];
@@ -11,9 +12,11 @@ const DOTS = ['#FF5C7A', '#FF9E6B', '#6FBEEA', '#E7B740', '#9A8CE6'];
  */
 export default function ResumeComptes({
   soldes,
+  langue = 'fr',
   children,
 }: {
   soldes: Solde[];
+  langue?: IdLangue;
   children?: React.ReactNode;
 }) {
   if (soldes.length === 0) {
@@ -22,10 +25,10 @@ export default function ResumeComptes({
   const total = soldes.reduce((s, c) => s + parseEuro(c.solde), 0);
 
   return (
-    <section className="money-card" aria-label="Mes comptes">
+    <section className="money-card" aria-label={t('CARD_COMPTES', langue)}>
       <div className="mc-head">
-        <h2 className="mc-titre">Mes comptes</h2>
-        <span className="mc-total">Total&nbsp;<b>{formatEuro(total)}</b></span>
+        <h2 className="mc-titre">{t('CARD_COMPTES', langue)}</h2>
+        <span className="mc-total">{t('CARD_TOTAL', langue)}&nbsp;<b>{formatEuro(total)}</b></span>
       </div>
       <div className="mc-comptes">
         {soldes.map((s, i) => (

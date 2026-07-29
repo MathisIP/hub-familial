@@ -39,6 +39,13 @@ export const viewport: Viewport = {
   themeColor: THEMES[THEME_DEFAUT].PAGE,
   width: 'device-width',
   initialScale: 1,
+  // App à taille fixe (PWA) : pas de zoom pincé ni de double-tap zoom.
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  // Le contenu s'étend sous les zones sûres (encoche / barre d'accueil iPhone) ;
+  // le bandeau du bas gère lui-même son padding via env(safe-area-inset-bottom).
+  viewportFit: 'cover',
 };
 
 /**

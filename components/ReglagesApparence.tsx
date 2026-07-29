@@ -19,7 +19,7 @@ import { IcSoleil, IcLune } from '@/components/IconesNav';
  * (le thème appliqué = couleur × mode), mémorisé dans localStorage et relu par
  * le script inline du layout au chargement suivant.
  */
-export default function ReglagesApparence() {
+export default function ReglagesApparence({ modeVisible = true }: { modeVisible?: boolean }) {
   const [theme, setTheme] = useState<IdTheme>(THEME_DEFAUT);
 
   // Le serveur ignore le thème mémorisé : on se resynchronise après montage.
@@ -65,16 +65,18 @@ export default function ReglagesApparence() {
         })}
       </div>
 
-      <button
-        type="button"
-        className="pied-ic"
-        onClick={basculerMode}
-        aria-pressed={sombre}
-        aria-label={sombre ? 'Passer en mode clair' : 'Passer en mode sombre'}
-        title={sombre ? 'Mode clair' : 'Mode sombre'}
-      >
-        {sombre ? <IcSoleil width={16} height={16} /> : <IcLune width={16} height={16} />}
-      </button>
+      {modeVisible && (
+        <button
+          type="button"
+          className="pied-ic"
+          onClick={basculerMode}
+          aria-pressed={sombre}
+          aria-label={sombre ? 'Passer en mode clair' : 'Passer en mode sombre'}
+          title={sombre ? 'Mode clair' : 'Mode sombre'}
+        >
+          {sombre ? <IcSoleil width={16} height={16} /> : <IcLune width={16} height={16} />}
+        </button>
+      )}
     </div>
   );
 }

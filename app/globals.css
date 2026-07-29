@@ -46,8 +46,12 @@ a { color: var(--link-tx); }
 :root { --shadow-soft: 0 10px 26px -12px rgba(24, 22, 40, .16), 0 2px 8px -4px rgba(24, 22, 40, .10); }
 
 /* Réglage « néon » désactivé : les halos passent en transparent → plus aucune
-   lueur (les box-shadow/text-shadow/drop-shadow qui utilisent --glow disparaissent). */
+   lueur (les box-shadow/text-shadow/drop-shadow qui utilisent --glow disparaissent).
+   On neutralise aussi les ombres COLORÉES (--acc-deep) qui font aussi effet néon. */
 [data-neon="off"] { --glow: transparent !important; --glow2: transparent !important; }
+[data-neon="off"] .bouton-primaire { box-shadow: var(--shadow-soft); }
+[data-neon="off"] .tab[aria-selected='true'] { box-shadow: none; }
+[data-neon="off"] .bm-central { box-shadow: 0 6px 16px -8px rgba(20, 15, 25, .35), 0 0 0 5px var(--page); }
 .semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }

@@ -41,6 +41,10 @@ a { color: var(--link-tx); }
 /* Ombre douce commune aux cartes : plus présente qu'avant pour détacher les
    cartes blanches du fond en mode clair (quasi invisible en sombre). */
 :root { --shadow-soft: 0 10px 26px -12px rgba(24, 22, 40, .16), 0 2px 8px -4px rgba(24, 22, 40, .10); }
+
+/* Réglage « néon » désactivé : les halos passent en transparent → plus aucune
+   lueur (les box-shadow/text-shadow/drop-shadow qui utilisent --glow disparaissent). */
+[data-neon="off"] { --glow: transparent !important; --glow2: transparent !important; }
 .semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }
@@ -1404,10 +1408,10 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 
 /* Effet néon marqué sur l'icône de l'onglet actif en mode sombre — UNIQUEMENT
    dans la barre de menu (rail + tiroir), pas ailleurs. */
-[data-theme="nuit"] .sb-rail-item.actif .sb-ic,
-[data-theme$="-nuit"] .sb-rail-item.actif .sb-ic,
-[data-theme="nuit"] .sb-item.actif .sb-ic,
-[data-theme$="-nuit"] .sb-item.actif .sb-ic {
+[data-theme="nuit"]:not([data-neon="off"]) .sb-rail-item.actif .sb-ic,
+[data-theme$="-nuit"]:not([data-neon="off"]) .sb-rail-item.actif .sb-ic,
+[data-theme="nuit"]:not([data-neon="off"]) .sb-item.actif .sb-ic,
+[data-theme$="-nuit"]:not([data-neon="off"]) .sb-item.actif .sb-ic {
   filter:
     drop-shadow(0 0 3px var(--acc))
     drop-shadow(0 0 8px var(--glow))
@@ -1519,6 +1523,14 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 }
 .pied-ic:hover { color: var(--acc-deep); transform: scale(1.12); }
 .pied-ic:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 50%; }
+/* Bascule néon (pied de page) : allumée = accent + petite lueur (elle-même néon). */
+.bascule-neon.actif { color: var(--acc-deep); filter: drop-shadow(0 0 5px var(--glow)); }
+
+/* Bascule néon en ligne (Réglages mobile). Masquée sur desktop (→ pied de page). */
+.neon-ligne { display: flex; align-items: center; gap: .5rem; font-size: .9rem; cursor: pointer; }
+.neon-ligne input { width: 1.1rem; height: 1.1rem; accent-color: var(--acc); }
+.neon-ligne .neon-ic { display: inline-flex; color: var(--acc-deep); line-height: 0; }
+@media (min-width: 64rem) { .neon-ligne { display: none; } }
 
 /* ===================== ACCUEIL : GRILLE 2×2 SUR GRAND ÉCRAN ===================== */
 /* Mobile : une colonne (empilé). ≥ 60rem : 2×2 (1 haut-gauche, 2 haut-droite,

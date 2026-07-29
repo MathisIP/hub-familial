@@ -60,6 +60,24 @@ export const IcSoleil = (p: SVGProps<SVGSVGElement>) => (
 export const IcLune = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p}><path d="M20 14.2A8 8 0 1 1 9.8 4a6.5 6.5 0 0 0 10.2 10.2Z" /></Svg>
 );
+/* --- Icônes candidates pour le réglage « néon » --- */
+export const IcNeonEtincelle = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}><path d="M12 3.5c.45 4.6 2.4 6.55 7 7-4.6.45-6.55 2.4-7 7-.45-4.6-2.4-6.55-7-7 4.6-.45 6.55-2.4 7-7Z" /></Svg>
+);
+export const IcNeonSparkles = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M10 3.5c.35 3.3 1.65 4.6 4.95 4.95C11.65 8.8 10.35 10.1 10 13.4c-.35-3.3-1.65-4.6-4.95-4.95C8.35 8.1 9.65 6.8 10 3.5Z" />
+    <path d="M17.5 12.5l.55 1.9 1.9.55-1.9.55-.55 1.9-.55-1.9-1.9-.55 1.9-.55z" />
+    <path d="M6.5 15.5l.45 1.55 1.55.45-1.55.45-.45 1.55-.45-1.55L4.5 17.5l1.55-.45z" />
+  </Svg>
+);
+export const IcNeonEclair = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}><path d="M13 2 4.5 13.5H10l-1 8.5 9.5-12H13z" /></Svg>
+);
+export const IcNeonEtoile = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}><path d="M12 3.2l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.6l-5.2 2.6 1-5.75-4.2-4.1 5.8-.85z" /></Svg>
+);
+
 export const IcMenu = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2.6" /><path d="M14.5 4.5v15" /></Svg>
 );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useT } from '@/components/I18nProvider';
+import BasculeNeon from '@/components/BasculeNeon';
 import { LANGUES_DISPO } from '@/lib/i18n';
 
 /**
@@ -76,6 +77,9 @@ export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
         </select>
         <span className="reglage-aide">{t('REG_LANGUE_AIDE')}</span>
       </label>
+
+      {/* Sur mobile uniquement (sur desktop, le réglage est dans le pied de page). */}
+      <BasculeNeon variante="ligne" />
 
       <div className="reglage-actions">
         <button className="bouton bouton-primaire" type="submit">{t('REG_ENREGISTRER')}</button>

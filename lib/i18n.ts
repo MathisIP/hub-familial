@@ -141,6 +141,9 @@ const UI = {
   A_MODE_CLAIR: { fr: 'Passer en mode clair', en: 'Switch to light mode' },
   A_MODE_SOMBRE: { fr: 'Passer en mode sombre', en: 'Switch to dark mode' },
   A_COULEUR: { fr: 'Couleur du thème', en: 'Theme color' },
+  NEON_LABEL: { fr: 'Effet néon', en: 'Neon effect' },
+  A_NEON_ON: { fr: 'Activer l’effet néon', en: 'Turn on the neon effect' },
+  A_NEON_OFF: { fr: 'Désactiver l’effet néon', en: 'Turn off the neon effect' },
   A_ANNEE: { fr: 'Année', en: 'Year' },
   A_MOIS: { fr: 'Mois', en: 'Month' },
 

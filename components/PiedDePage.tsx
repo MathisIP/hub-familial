@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import ReglagesApparence from '@/components/ReglagesApparence';
+import BasculeNeon from '@/components/BasculeNeon';
 
 /** Pages publiques (sans session) : pas de barre ni de pied de page. */
 const PUBLIQUES = ['/connexion', '/confidentialite', '/hors-ligne', '/rejoindre'];
@@ -22,6 +23,7 @@ export default function PiedDePage() {
     <footer className="pied">
       <div className="pied-inner">
         <ReglagesApparence />
+        <BasculeNeon variante="icone" />
       </div>
     </footer>
   );

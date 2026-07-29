@@ -63,10 +63,11 @@ const COULEURS_PAGE = JSON.stringify(
 const SCRIPT_THEME = `
 (function () {
   var C = ${COULEURS_PAGE};
-  var t;
-  try { t = localStorage.getItem('hub-theme'); } catch (e) {}
+  var t, n;
+  try { t = localStorage.getItem('hub-theme'); n = localStorage.getItem('hub-neon'); } catch (e) {}
   if (!t || !C[t]) t = '${THEME_DEFAUT}';
   document.documentElement.setAttribute('data-theme', t);
+  document.documentElement.setAttribute('data-neon', n === 'off' ? 'off' : 'on');
   var m = document.querySelector('meta[name="theme-color"]');
   if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
   m.setAttribute('content', C[t]);

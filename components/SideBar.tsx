@@ -109,8 +109,13 @@ export default function SideBar() {
     );
   };
 
+  // Icône du bouton central : celle de l'onglet courant ; sur les pages de
+  // réglages/compte, la roue crantée ; sinon l'icône « menu » par défaut.
   const itemActif = NAV.find((n) => estActif(path, n.href));
-  const IcCentral = itemActif ? Icones[itemActif.icone] : IcMenu;
+  const surReglages = ['/parametres', '/foyer', '/compte', '/abonnement', '/confidentialite'].some(
+    (r) => estActif(path, r),
+  );
+  const IcCentral = itemActif ? Icones[itemActif.icone] : surReglages ? IcReglages : IcMenu;
 
   if (estPublique(path)) return null;
 

@@ -3,7 +3,6 @@ import { Fraunces, Quicksand } from 'next/font/google';
 import { cssDesThemes, THEME_DEFAUT, THEMES } from '@/lib/themes';
 import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
-import BarreHaut from '@/components/BarreHaut';
 import PiedDePage from '@/components/PiedDePage';
 import SideBar from '@/components/SideBar';
 import './globals.css';
@@ -78,7 +77,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
       </head>
       <body>
-        <BarreHaut />
         <div className="enveloppe">{children}</div>
         <PiedDePage />
         {/* Navigation (rail desktop + bandeau bas mobile) au niveau racine : ses

@@ -1521,10 +1521,13 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 /* ===================== ACCUEIL : GRILLE 2×2 SUR GRAND ÉCRAN ===================== */
 /* Mobile : une colonne (empilé). ≥ 60rem : 2×2 (1 haut-gauche, 2 haut-droite,
    3 bas-gauche, 4 bas-droite), dans l'ordre du DOM (comptes/agenda/courses/Drive). */
-.grille-accueil { display: grid; grid-template-columns: 1fr; gap: 1.1rem; align-items: start; }
-.grille-accueil > * { margin: 0 !important; }
+/* minmax(0, 1fr) (pas `1fr` = minmax(auto,1fr)) : autorise la colonne à rétrécir
+   sous la largeur du contenu → pas de débordement quand une carte a un contenu
+   large (agenda, Drive) qui se charge après coup. */
+.grille-accueil { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+.grille-accueil > * { margin: 0 !important; min-width: 0; }
 @media (min-width: 60rem) {
-  .grille-accueil { grid-template-columns: 1fr 1fr; gap: 1.35rem; }
+  .grille-accueil { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.35rem; }
 }
 
 /* ===================== PAGE RÉGLAGES ===================== */
@@ -1577,6 +1580,8 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   /* Le bandeau du bas remplace le rail ET le pied de page. */
   .pied { display: none; }
   body { padding-bottom: calc(4.9rem + env(safe-area-inset-bottom)); }
+  /* Plus de barre du haut : on dégage la zone sûre (barre d'état / encoche). */
+  .enveloppe { padding-top: calc(1.3rem + env(safe-area-inset-top)); }
 
   .barre-mobile {
     display: flex; align-items: center; justify-content: space-between;

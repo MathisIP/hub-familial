@@ -198,7 +198,6 @@ export default function SideBar() {
                 <p className="bm-sheet-titre">Apparence</p>
                 <ReglagesApparence modeVisible={false} />
                 <div className="menu-sep" />
-                <Link href="/parametres" className="bm-lien" onClick={() => setFeuille(null)}>Réglages</Link>
                 <Link href="/foyer" className="bm-lien" onClick={() => setFeuille(null)}>Mon foyer</Link>
                 <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>Abonnement</Link>
                 <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>Mon compte</Link>

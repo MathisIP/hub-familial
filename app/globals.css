@@ -14,6 +14,8 @@ html {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Défilement rigide : pas de rebond d'overscroll (qui révèle un fond blanc). */
+  overscroll-behavior: none;
 }
 
 body {
@@ -32,6 +34,7 @@ body {
   flex-direction: column;
   overflow-x: hidden;
   max-width: 100%;
+  overscroll-behavior: none;
 }
 .enveloppe { flex: 1 0 auto; width: 100%; min-width: 0; }
 .barre-haut, .pied { flex: none; }

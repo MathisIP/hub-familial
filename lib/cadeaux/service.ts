@@ -62,6 +62,8 @@ function valeurs(c: ChampsCadeau) {
     statut: c.statut ?? 'Idée',
     budgetPrevu: c.budgetPrevu ?? '',
     prixPaye: c.prixPaye ?? '',
+    partage: !!c.partage,
+    participation: c.participation ?? '',
     offertPar: c.offertPar ?? '',
     ou: c.ou ?? '',
     note: c.note ?? '',

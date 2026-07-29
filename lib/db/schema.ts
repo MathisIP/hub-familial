@@ -138,7 +138,10 @@ export const cadeaux = pgTable(
     idee: text('idee').notNull(),
     statut: text('statut').notNull().default('Idée'),
     budgetPrevu: text('budget_prevu').notNull().default(''),
-    prixPaye: text('prix_paye').notNull().default(''),
+    prixPaye: text('prix_paye').notNull().default(''), // coût (total si cadeau à plusieurs)
+    // Cadeau fait à plusieurs : ta participation (part réellement payée par le foyer).
+    partage: boolean('partage').notNull().default(false),
+    participation: text('participation').notNull().default(''),
     offertPar: text('offert_par').notNull().default(''),
     ou: text('ou').notNull().default(''),
     note: text('note').notNull().default(''),

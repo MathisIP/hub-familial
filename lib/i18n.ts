@@ -362,6 +362,13 @@ const UI = {
   CAD_PRIX_PH: { fr: 'Prix payé (€)', en: 'Price paid (€)' },
   CAD_OFFERT_PAR: { fr: 'Offert par', en: 'Given by' },
   CAD_OU_PH: { fr: 'Où / lien', en: 'Where / link' },
+  CAD_PRIX_PAYE_PH: { fr: 'Prix payé (€)', en: 'Price paid (€)' },
+  CAD_PARTAGE: { fr: 'Cadeau à plusieurs', en: 'Group gift' },
+  CAD_COUT_PH: { fr: 'Coût total (€)', en: 'Total cost (€)' },
+  CAD_PARTICIPATION_PH: { fr: 'Ta participation (€)', en: 'Your contribution (€)' },
+  CAD_BADGE_PARTAGE: { fr: 'à plusieurs', en: 'group' },
+  CAD_PART: { fr: 'ta part', en: 'your share' },
+  CAD_COUT: { fr: 'coût', en: 'cost' },
 
   // Agenda (module)
   AGD_NOUVEL: { fr: 'Nouvel événement', en: 'New event' },

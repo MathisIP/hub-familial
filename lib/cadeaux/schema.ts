@@ -19,9 +19,13 @@ export type Cadeau = {
   idee: string;
   statut: string;
   budgetPrevu: string;
-  prixPaye: string;
+  prixPaye: string; // coût (total si cadeau à plusieurs)
   budgetNum: number;
-  payeNum: number;
+  payeNum: number; // coût total en nombre
+  partage: boolean; // cadeau fait à plusieurs
+  participation: string; // ta part (si partagé)
+  participationNum: number;
+  depenseNum: number; // dépense réelle du foyer = partage ? participationNum : payeNum
   offertPar: string;
   ou: string;
   note: string;
@@ -52,6 +56,8 @@ export type ChampsCadeau = {
   statut?: string;
   budgetPrevu?: string;
   prixPaye?: string;
+  partage?: boolean;
+  participation?: string;
   offertPar?: string;
   ou?: string;
   note?: string;
@@ -68,10 +74,14 @@ export function construireCadeau(r: {
   statut: string;
   budgetPrevu: string;
   prixPaye: string;
+  partage: boolean;
+  participation: string;
   offertPar: string;
   ou: string;
   note: string;
 }): Cadeau {
+  const payeNum = parseEuro(r.prixPaye);
+  const participationNum = parseEuro(r.participation);
   return {
     id: r.id,
     pourQui: r.pourQui,
@@ -81,7 +91,12 @@ export function construireCadeau(r: {
     budgetPrevu: r.budgetPrevu,
     prixPaye: r.prixPaye,
     budgetNum: parseEuro(r.budgetPrevu),
-    payeNum: parseEuro(r.prixPaye),
+    payeNum,
+    partage: r.partage,
+    participation: r.participation,
+    participationNum,
+    // Dépense réelle du foyer : ta participation si partagé, sinon le prix payé.
+    depenseNum: r.partage ? participationNum : payeNum,
     offertPar: r.offertPar,
     ou: r.ou,
     note: r.note,

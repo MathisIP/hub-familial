@@ -109,11 +109,21 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                     <span className="cad-meta">
                       {c.pourQui && <span className="puce assigne">{tr('CAD_POUR')} {c.pourQui}</span>}
                       {c.offertPar && <span className="puce categorie">{tr('CAD_PAR')} {c.offertPar}</span>}
-                      {(c.budgetNum > 0 || c.payeNum > 0) && (
-                        <span className="cad-budget">
-                          {c.payeNum > 0 ? formatEuro(c.payeNum) : formatEuro(c.budgetNum)}
-                          {c.payeNum > 0 && c.budgetNum > 0 && <span className="cad-prevu"> / {tr('CAD_PREVU')} {formatEuro(c.budgetNum)}</span>}
-                        </span>
+                      {c.partage && <span className="puce categorie">🎁 {tr('CAD_BADGE_PARTAGE')}</span>}
+                      {c.partage ? (
+                        (c.participationNum > 0 || c.payeNum > 0) && (
+                          <span className="cad-budget">
+                            {formatEuro(c.participationNum)} <span className="cad-prevu">({tr('CAD_PART')})</span>
+                            {c.payeNum > 0 && <span className="cad-prevu"> · {tr('CAD_COUT')} {formatEuro(c.payeNum)}</span>}
+                          </span>
+                        )
+                      ) : (
+                        (c.budgetNum > 0 || c.payeNum > 0) && (
+                          <span className="cad-budget">
+                            {c.payeNum > 0 ? formatEuro(c.payeNum) : formatEuro(c.budgetNum)}
+                            {c.payeNum > 0 && c.budgetNum > 0 && <span className="cad-prevu"> / {tr('CAD_PREVU')} {formatEuro(c.budgetNum)}</span>}
+                          </span>
+                        )
                       )}
                     </span>
                     {(c.ou || c.note) && (
@@ -178,7 +188,7 @@ function grouper(cadeaux: Cadeau[], occasions: Occasion[]): { occasion: Occasion
 function BudgetOccasion({ cadeaux, occasion }: { cadeaux: Cadeau[]; occasion: Occasion | null }) {
   const tr = useT();
   const prevu = cadeaux.reduce((s, c) => s + c.budgetNum, 0);
-  const paye = cadeaux.reduce((s, c) => s + c.payeNum, 0);
+  const paye = cadeaux.reduce((s, c) => s + c.depenseNum, 0);
   const budgetOcc = occasion?.budgetNum ?? 0;
   const depasse = budgetOcc > 0 && prevu > budgetOcc;
   return (
@@ -205,7 +215,7 @@ function CadeauForm({
   d: DonneesCadeaux;
   cadeau?: Cadeau;
   occupe: boolean;
-  onEnregistrerAction: (corps: Record<string, string>) => void;
+  onEnregistrerAction: (corps: Record<string, string | boolean>) => void;
   onAnnulerAction: () => void;
   onSupprimerAction?: () => void;
 }) {
@@ -217,13 +227,15 @@ function CadeauForm({
   const [statut, setStatut] = useState(cadeau?.statut ?? d.statuts[0] ?? 'Idée');
   const [budgetPrevu, setBudgetPrevu] = useState(cadeau?.budgetPrevu ?? '');
   const [prixPaye, setPrixPaye] = useState(cadeau?.prixPaye ?? '');
+  const [partage, setPartage] = useState(cadeau?.partage ?? false);
+  const [participation, setParticipation] = useState(cadeau?.participation ?? '');
   const [offertPar, setOffertPar] = useState(cadeau?.offertPar ?? '');
   const [ou, setOu] = useState(cadeau?.ou ?? '');
   const [note, setNote] = useState(cadeau?.note ?? '');
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
-    onEnregistrerAction({ idee, pourQui, occasion, statut, budgetPrevu, prixPaye, offertPar, ou, note });
+    onEnregistrerAction({ idee, pourQui, occasion, statut, budgetPrevu, prixPaye, partage, participation, offertPar, ou, note });
   }
 
   return (
@@ -238,9 +250,18 @@ function CadeauForm({
       </div>
       <div className="rf-ligne1">
         <input className="champ" inputMode="decimal" placeholder={tr('CAD_BUDGET_PH')} value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
-        <input className="champ" inputMode="decimal" placeholder={tr('CAD_PRIX_PH')} value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
+        <input className="champ" inputMode="decimal" placeholder={partage ? tr('CAD_COUT_PH') : tr('CAD_PRIX_PH')} value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
         <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder={tr('CAD_OFFERT_PAR')} disabled={occupe} ariaLabel={tr('CAD_OFFERT_PAR')} />
         <input className="champ" placeholder={tr('CAD_OU_PH')} value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />
+      </div>
+      <div className="rf-ligne1">
+        <label className="rf-check">
+          <input type="checkbox" checked={partage} onChange={(e) => setPartage(e.target.checked)} disabled={occupe} />
+          <span>🎁 {tr('CAD_PARTAGE')}</span>
+        </label>
+        {partage && (
+          <input className="champ" inputMode="decimal" placeholder={tr('CAD_PARTICIPATION_PH')} value={participation} onChange={(e) => setParticipation(e.target.value)} disabled={occupe} />
+        )}
       </div>
       <input className="champ" placeholder={tr('G_NOTE')} value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
       <div className="rf-actions">

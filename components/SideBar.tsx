@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { deconnexion } from '@/app/actions';
 import ReglagesApparence from '@/components/ReglagesApparence';
+import { estPublique } from '@/components/PiedDePage';
 import {
   Icones,
   IcMenu,
@@ -110,6 +111,8 @@ export default function SideBar() {
 
   const itemActif = NAV.find((n) => estActif(path, n.href));
   const IcCentral = itemActif ? Icones[itemActif.icone] : IcMenu;
+
+  if (estPublique(path)) return null;
 
   return (
     <>

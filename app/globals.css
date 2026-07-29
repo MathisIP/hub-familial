@@ -10,6 +10,10 @@ html {
   /* Repli avant l'hydratation : évite le flash blanc si le thème mémorisé
      est 🌙 Nuit. Le script inline du layout écrase data-theme immédiatement. */
   background: var(--page, #FFF5F3);
+  /* Responsive strict : jamais de défilement horizontal, quel que soit l'appareil. */
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -26,8 +30,10 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  max-width: 100%;
 }
-.enveloppe { flex: 1 0 auto; width: 100%; }
+.enveloppe { flex: 1 0 auto; width: 100%; min-width: 0; }
 .barre-haut, .pied { flex: none; }
 
 a { color: var(--link-tx); }
@@ -1168,7 +1174,7 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   box-shadow: var(--shadow-soft, 0 8px 20px rgba(120,40,60,.07)), 0 0 26px -16px var(--glow);
   margin-bottom: 1.1rem;
 }
-.mc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
+.mc-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem; margin-bottom: .5rem; }
 .mc-titre { margin: 0; font-size: 1.15rem; }
 .mc-total { font-size: .82rem; color: var(--ink2); font-weight: 600; }
 .mc-total b { color: var(--ink); }
@@ -1180,7 +1186,7 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .mc-compte:last-child { border-bottom: 0; }
 .mc-compte:hover .mc-nom { color: var(--ink); }
 .mc-dot { width: .72rem; height: .72rem; border-radius: 50%; flex: none; }
-.mc-nom { flex: 1; font-size: .92rem; color: var(--ink2); font-weight: 500; }
+.mc-nom { flex: 1; min-width: 0; font-size: .92rem; color: var(--ink2); font-weight: 500; }
 .mc-val { font-weight: 700; font-variant-numeric: tabular-nums; }
 .mc-val.neg { color: var(--over-tx); }
 .mc-actions { margin-top: .9rem; }

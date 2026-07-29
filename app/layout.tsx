@@ -5,6 +5,7 @@ import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import BarreHaut from '@/components/BarreHaut';
 import PiedDePage from '@/components/PiedDePage';
+import SideBar from '@/components/SideBar';
 import './globals.css';
 
 /** Titres = Fraunces (serif douce, italique dispo) ; corps = Quicksand. */
@@ -80,6 +81,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BarreHaut />
         <div className="enveloppe">{children}</div>
         <PiedDePage />
+        {/* Navigation (rail desktop + bandeau bas mobile) au niveau racine : ses
+            éléments `position: fixed` doivent se caler sur le viewport, pas sur un
+            ancêtre avec backdrop-filter (ce qui collait le bandeau en haut). */}
+        <SideBar />
         <EnregistrerSW />
         <AstuceInstallIOS />
       </body>

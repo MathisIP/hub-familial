@@ -142,7 +142,11 @@ export async function invitationParJeton(
 }
 
 /**
- * Accepte une invitation : ajoute l'utilisateur au foyer et consomme l'invitation.
+ * Accepte une invitation : rattache l'utilisateur au foyer invité, le fait
+ * QUITTER ses autres foyers (typiquement le foyer perso auto-créé à sa 1re
+ * connexion), et supprime ceux devenus sans membre. Sans ce déménagement,
+ * l'utilisateur resterait membre de 2 foyers et `foyerCourant()` pourrait
+ * résoudre le mauvais (bug rencontré : l'invité voyait son foyer perso vide).
  * L'e-mail de l'utilisateur doit correspondre à celui de l'invitation.
  */
 export async function accepterInvitation(
@@ -157,10 +161,35 @@ export async function accepterInvitation(
     throw new ErreurValidation(`Cette invitation est destinée à ${inv.email}.`);
   }
 
-  await d
-    .insert(membres)
-    .values({ foyerId: inv.foyerId, utilisateurId: utilisateur.id, role: inv.role })
-    .onConflictDoNothing({ target: [membres.foyerId, membres.utilisateurId] });
-  await d.delete(invitations).where(eq(invitations.id, inv.id));
+  await d.transaction(async (tx) => {
+    // Foyers actuels de l'utilisateur AVANT rattachement.
+    const anciens = await tx
+      .select({ foyerId: membres.foyerId })
+      .from(membres)
+      .where(eq(membres.utilisateurId, utilisateur.id));
+
+    // Rattache au foyer invité (idempotent).
+    await tx
+      .insert(membres)
+      .values({ foyerId: inv.foyerId, utilisateurId: utilisateur.id, role: inv.role })
+      .onConflictDoNothing({ target: [membres.foyerId, membres.utilisateurId] });
+
+    // Quitte ses autres foyers ; supprime ceux qui n'ont plus aucun membre
+    // (cascade nettoie leurs données — cas du foyer perso vide auto-créé).
+    for (const a of anciens) {
+      if (a.foyerId === inv.foyerId) continue;
+      await tx
+        .delete(membres)
+        .where(and(eq(membres.utilisateurId, utilisateur.id), eq(membres.foyerId, a.foyerId)));
+      const reste = await tx
+        .select({ id: membres.id })
+        .from(membres)
+        .where(eq(membres.foyerId, a.foyerId))
+        .limit(1);
+      if (reste.length === 0) await tx.delete(foyers).where(eq(foyers.id, a.foyerId));
+    }
+
+    await tx.delete(invitations).where(eq(invitations.id, inv.id));
+  });
   return inv.foyerId;
 }

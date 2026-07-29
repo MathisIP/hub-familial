@@ -20,14 +20,36 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   transition: background-color .18s ease, color .18s ease;
+  /* Colonne pleine hauteur : le pied de page reste collé en bas même si le
+     contenu est court (page vide). */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
+.enveloppe { flex: 1 0 auto; width: 100%; }
+.barre-haut, .pied { flex: none; }
 
 a { color: var(--link-tx); }
+
+/* Ombre douce commune aux cartes : plus présente qu'avant pour détacher les
+   cartes blanches du fond en mode clair (quasi invisible en sombre). */
+:root { --shadow-soft: 0 10px 26px -12px rgba(24, 22, 40, .16), 0 2px 8px -4px rgba(24, 22, 40, .10); }
+.semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc {
+  box-shadow: var(--shadow-soft);
+}
 
 .enveloppe {
   max-width: 68rem;
   margin: 0 auto;
   padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+/* Grand écran : on exploite la largeur au lieu d'une colonne étroite centrée. */
+@media (min-width: 64rem) {
+  .enveloppe { max-width: 88rem; padding: 2rem clamp(2rem, 5vw, 4rem) 2.5rem; }
+}
+@media (min-width: 120rem) {
+  .enveloppe { max-width: 104rem; }
 }
 
 /* --- En-tête --- */
@@ -314,6 +336,17 @@ a { color: var(--link-tx); }
 .course.faite .article { text-decoration: line-through; color: var(--done-tx); }
 .course .article { flex: 1 1 auto; font-weight: 500; }
 .course .rayon { font-size: .78rem; color: var(--muted); }
+/* Pastille de quantité sur un article de courses. */
+.course-qte {
+  font-variant-numeric: tabular-nums; font-size: .8rem; color: var(--ink2);
+  background: color-mix(in srgb, var(--head) 45%, var(--cell));
+  padding: .08rem .55rem; border-radius: 999px; white-space: nowrap; flex: none;
+}
+.course.faite .course-qte { opacity: .6; }
+.course-mod { font-size: .78rem; padding: .28rem .6rem; flex: none; }
+/* Champ « quantité » plus étroit dans le formulaire d'ajout/édition. */
+.ajout .champ-qte { flex: 0 1 8.5rem; }
+.ajout.course-edit { margin-bottom: 0; }
 
 .rayon-groupe { margin-bottom: 1.1rem; }
 .rayon-titre {
@@ -1268,6 +1301,268 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   border-radius: .55rem; cursor: pointer;
 }
 .combo-item:hover { background: var(--link-bg); }
+
+/* ===================== CHROME GLOBAL : BARRE + PIED ===================== */
+/* Barre supérieure collante, présente sur toutes les pages authentifiées. */
+.barre-haut {
+  position: sticky; top: 0; z-index: 45;
+  background: color-mix(in srgb, var(--page) 86%, transparent);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.barre-inner {
+  max-width: 68rem; margin: 0 auto;
+  padding: .6rem clamp(1.25rem, 4vw, 2.5rem);
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.barre-marque {
+  display: inline-flex; align-items: center; gap: .6rem;
+  text-decoration: none; color: inherit;
+}
+.barre-marque .brand-logo {
+  border-radius: .55rem;
+  box-shadow: 0 2px 8px -3px var(--glow);
+}
+.barre-marque .brand-nom {
+  font-family: var(--police-titre), Georgia, serif;
+  font-weight: 600; font-size: 1.1rem; letter-spacing: -.01em;
+}
+.barre-marque:hover .brand-nom { color: var(--acc-deep); }
+
+/* --- Side bar (tiroir droit) + bouton d'ouverture --- */
+.sb-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.5rem; height: 2.5rem; border-radius: .95rem;
+  border: 1px solid var(--line2); background: var(--cell); color: var(--ink);
+  cursor: pointer; box-shadow: 0 1px 3px -1px rgba(120,40,60,.08);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+.sb-toggle:hover { border-color: var(--acc); box-shadow: 0 0 16px -4px var(--glow); transform: translateY(-1px); }
+
+.sb-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(25, 12, 18, .34);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  display: flex; justify-content: flex-end;
+  animation: sb-fade .18s ease;
+}
+.sb-panel {
+  width: min(85vw, 20rem); height: 100%; overflow-y: auto;
+  background: var(--page); border-left: 1px solid var(--line);
+  border-radius: 1.7rem 0 0 1.7rem;
+  padding: 1.1rem 1rem 1.5rem;
+  box-shadow: -20px 0 54px rgba(60, 20, 40, .22);
+  display: flex; flex-direction: column; gap: .35rem;
+  animation: sb-slide .24s cubic-bezier(.22, .61, .36, 1);
+}
+@keyframes sb-slide { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes sb-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.sb-tete { display: flex; align-items: center; justify-content: space-between; padding: .2rem .3rem .5rem; }
+.sb-marque { display: inline-flex; align-items: center; gap: .55rem; }
+.sb-marque img { border-radius: .5rem; }
+.sb-marque b {
+  font-family: var(--police-titre), Georgia, serif; font-weight: 600; font-size: 1.08rem;
+  letter-spacing: -.01em;
+}
+.sb-fermer {
+  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .6rem;
+  border: 0; background: none; color: var(--muted); cursor: pointer; line-height: 0;
+}
+.sb-fermer:hover { background: var(--link-bg); color: var(--ink); }
+
+.sb-nav { display: flex; flex-direction: column; gap: .18rem; }
+.sb-bas {
+  margin-top: auto; padding-top: .55rem; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: .18rem;
+}
+.sb-item {
+  display: flex; align-items: center; gap: .8rem; width: 100%;
+  padding: .68rem .8rem; border-radius: 1rem;
+  color: var(--ink2); text-decoration: none; font: inherit; font-weight: 600; font-size: .95rem;
+  text-align: left; border: 1px solid transparent; background: none; cursor: pointer;
+  transition: background-color .14s ease, color .14s ease, box-shadow .14s ease;
+}
+.sb-item:hover { background: var(--cell); color: var(--ink); box-shadow: 0 6px 16px -10px rgba(60, 20, 40, .3); }
+.sb-item.actif {
+  background: var(--cell); color: var(--acc-deep);
+  box-shadow: 0 8px 20px -12px var(--glow), inset 0 0 0 1px var(--line2);
+}
+.sb-item.actif .sb-ic { color: var(--acc); }
+.sb-ic { display: inline-flex; flex: none; line-height: 0; }
+.sb-deco { color: var(--over-tx); }
+.sb-deco:hover { color: var(--over-tx); background: var(--over-bg); box-shadow: none; }
+
+/* Effet néon marqué sur l'icône de l'onglet actif en mode sombre — UNIQUEMENT
+   dans la barre de menu (rail + tiroir), pas ailleurs. */
+[data-theme="nuit"] .sb-rail-item.actif .sb-ic,
+[data-theme$="-nuit"] .sb-rail-item.actif .sb-ic,
+[data-theme="nuit"] .sb-item.actif .sb-ic,
+[data-theme$="-nuit"] .sb-item.actif .sb-ic {
+  filter:
+    drop-shadow(0 0 3px var(--acc))
+    drop-shadow(0 0 8px var(--glow))
+    drop-shadow(0 0 16px var(--glow2))
+    drop-shadow(0 0 24px var(--glow2));
+}
+
+/* --- Rail permanent à droite (grand écran) --- */
+.sb-rail { display: none; }
+
+@media (min-width: 64rem) {
+  /* Réserve la largeur du rail replié ; le rail déplié flotte par-dessus. */
+  body { padding-right: 4.65rem; }
+  .sb-toggle { display: none; }
+  /* Le rail porte la marque + la nav → on efface la barre du haut sur desktop.
+     (On la garde dans le DOM car le rail y est imbriqué : simple neutralisation.) */
+  .barre-haut {
+    position: static; background: transparent; border-bottom: 0;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .barre-inner { padding: 0; }
+  .barre-marque { display: none; }
+
+  /* Bloc flottant en capsule : détaché des bords, arrondi aux deux bouts,
+     centré verticalement (ni tout en haut ni tout en bas). */
+  .sb-rail {
+    display: flex; flex-direction: column; gap: .3rem;
+    position: fixed; right: .75rem; top: 50%; transform: translateY(-50%);
+    height: auto; max-height: calc(100dvh - 1.6rem); width: 3.75rem; z-index: 46;
+    background: var(--cell); border: 1px solid var(--line);
+    border-radius: 2rem;
+    padding: .6rem .45rem .7rem; overflow: hidden;
+    box-shadow: 0 12px 34px -14px rgba(60, 20, 40, .3);
+    transition: width .24s cubic-bezier(.22, .61, .36, 1), box-shadow .24s ease;
+  }
+  .sb-rail:hover { width: 14.5rem; box-shadow: 0 18px 50px -14px rgba(60, 20, 40, .32); }
+
+  .sb-rail-marque {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    padding: .2rem .35rem .5rem; text-decoration: none; color: inherit;
+    white-space: nowrap; overflow: hidden;
+  }
+  .sb-rail-marque img { width: 24px; height: 24px; border-radius: .5rem; flex: none; box-shadow: 0 2px 8px -3px var(--glow); }
+  .sb-rail-marque b {
+    font-family: var(--police-titre), Georgia, serif; font-weight: 600; font-size: 1.05rem;
+    letter-spacing: -.01em;
+  }
+  .sb-rail:hover .sb-rail-marque { justify-content: flex-start; }
+
+  .sb-rail-nav { display: flex; flex-direction: column; gap: .22rem; }
+  .sb-rail-bas {
+    margin-top: auto; display: flex; flex-direction: column; gap: .22rem;
+    padding-top: .55rem; border-top: 1px solid var(--line);
+  }
+
+  .sb-rail-item {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    width: 100%; padding: .56rem .45rem; border-radius: .9rem;
+    color: var(--ink2); text-decoration: none; font: inherit; font-weight: 600; font-size: .93rem;
+    text-align: left; border: 1px solid transparent; background: none; cursor: pointer;
+    white-space: nowrap; overflow: hidden;
+    transition: background-color .14s ease, color .14s ease;
+  }
+  .sb-rail:hover .sb-rail-item { justify-content: flex-start; }
+  .sb-rail-item:hover { background: var(--link-bg); color: var(--ink); }
+  /* Actif = icône en couleur du thème (pas de case autour quand le rail est
+     replié) ; la pastille de fond n'apparaît que lorsque le rail est déplié. */
+  .sb-rail-item.actif { background: transparent; color: var(--acc-deep); }
+  .sb-rail-item.actif .sb-ic { color: var(--acc); }
+  .sb-rail:hover .sb-rail-item.actif { background: var(--link-bg); }
+  .sb-rail .sb-ic { flex: none; line-height: 0; }
+  .sb-rail .sb-deco { color: var(--over-tx); }
+  .sb-rail .sb-deco:hover { background: var(--over-bg); }
+
+  /* Libellés : révélés uniquement quand le rail est déplié. */
+  .sb-rail .sb-lbl {
+    max-width: 0; opacity: 0; overflow: hidden; padding-left: 0;
+    transition: max-width .22s ease, opacity .16s ease, padding-left .22s ease;
+  }
+  .sb-rail:hover .sb-lbl { max-width: 10rem; opacity: 1; padding-left: .85rem; }
+  .sb-rail-marque .sb-lbl { padding-left: 0; }
+  .sb-rail:hover .sb-rail-marque .sb-lbl { padding-left: .6rem; }
+}
+
+/* Pied de page : apparence (couleur + clair/sombre). Pas de ligne de séparation. */
+.pied { margin-top: 2rem; background: var(--page); }
+.pied-inner {
+  max-width: 68rem; margin: 0 auto;
+  padding: .5rem clamp(1.25rem, 4vw, 2.5rem) 1.15rem;
+  display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
+}
+.apparence { display: inline-flex; align-items: center; gap: .8rem; }
+.apparence-couleurs { display: inline-flex; align-items: center; gap: .55rem; }
+.swatch {
+  width: 1.55rem; height: 1.55rem; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 2px solid var(--cell); box-shadow: 0 0 0 1px var(--line2);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch.actif { box-shadow: 0 0 0 2px var(--ink), 0 0 14px -2px var(--glow); }
+/* Soleil/lune + roue crantée : le logo lui-même est cliquable (pas de bouton),
+   à la taille des pastilles couleur. La teinte suit le thème. */
+.pied-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.4rem; height: 1.4rem; padding: 0;
+  border: 0; background: none; color: var(--ink2); cursor: pointer;
+  text-decoration: none; line-height: 0;
+  transition: color .15s ease, transform .12s ease;
+}
+.pied-ic:hover { color: var(--acc-deep); transform: scale(1.12); }
+.pied-ic:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 50%; }
+
+/* ===================== ACCUEIL : GRILLE 2×2 SUR GRAND ÉCRAN ===================== */
+/* Mobile : une colonne (empilé). ≥ 60rem : 2×2 (1 haut-gauche, 2 haut-droite,
+   3 bas-gauche, 4 bas-droite), dans l'ordre du DOM (comptes/agenda/courses/Drive). */
+.grille-accueil { display: grid; grid-template-columns: 1fr; gap: 1.1rem; align-items: start; }
+.grille-accueil > * { margin: 0 !important; }
+@media (min-width: 60rem) {
+  .grille-accueil { grid-template-columns: 1fr 1fr; gap: 1.35rem; }
+}
+
+/* ===================== PAGE RÉGLAGES ===================== */
+.reglage-form { display: flex; flex-direction: column; gap: 1rem; max-width: 30rem; }
+.reglage-champ { display: flex; flex-direction: column; gap: .35rem; }
+.reglage-lbl { font-size: .9rem; font-weight: 600; color: var(--ink); }
+.reglage-aide { font-size: .8rem; color: var(--muted); }
+.reglage-actions { display: flex; align-items: center; gap: .8rem; }
+.reglage-ok { font-size: .85rem; color: var(--ok-tx); font-weight: 600; }
+/* Boutons de navigation du hub Réglages : compacts. */
+.reglage-lien {
+  display: inline-flex; align-items: center; align-self: flex-start;
+  font-size: .84rem; font-weight: 600; padding: .42rem .8rem; border-radius: .7rem;
+}
+
+/* ===================== AJUSTEMENTS MÉCANIQUES (courses & repas) ===================== */
+/* Accueil : ajout rapide d'un produit ponctuel à la liste de courses. */
+.cs-ajout { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .3rem 0 1rem; }
+.cs-ajout .champ { flex: 1 1 12rem; min-width: 0; }
+.cs-ajout .cs-ajout-qte { flex: 0 1 6rem; }
+.cs-sous-titre {
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin: .9rem 0 .3rem;
+}
+
+/* Repas : menu du jour en 3 services (entrée / plat / dessert). */
+.jr-services {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .55rem; margin: .5rem 0;
+}
+.jr-service { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.jr-service-lbl {
+  font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); font-weight: 700;
+}
+.jr-service .combo { flex: 1 1 auto; }
+
+/* Repas : cases « bébé » du formulaire de recette + badges sur la carte. */
+.rf-bebe { display: flex; flex-wrap: wrap; gap: 1rem 1.4rem; margin: .1rem 0; }
+.rf-check { display: inline-flex; align-items: center; gap: .45rem; font-size: .9rem; cursor: pointer; }
+.rf-check input { width: 1.1rem; height: 1.1rem; accent-color: var(--acc); }
+.puce.bebe-favori { background: var(--ok-bg); color: var(--ok-tx); }
+.puce.bebe-agouter { background: var(--head); color: var(--acc-deep); }
+.puce.cat-plat { background: var(--link-bg); color: var(--acc-deep); font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

@@ -1,13 +1,12 @@
-import MenuPrincipal from '@/components/MenuPrincipal';
 import ResumeComptes from '@/components/ResumeComptes';
 import SaisieTransaction from '@/components/budget/SaisieTransaction';
 import DriveExplorer from '@/components/DriveExplorer';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
+import NomAffiche from '@/components/NomAffiche';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
 import { auth } from '@/auth';
-import { t } from '@/lib/i18n';
 
 /** Salutation selon l'heure (Europe/Paris) + date du jour + prénom. */
 function contexteAccueil(nomComplet: string) {
@@ -38,30 +37,23 @@ export default async function Accueil() {
 
   return (
     <>
-      <header className="entete">
-        <div className="brand">
-          {/* Logo de l'app (icône « maison familiale »), pour la cohérence visuelle */}
-          <img className="brand-logo" src="/icon-192.png" alt="" width={36} height={36} />
-          <span className="brand-nom">{t('APP_TITRE').replace(/^🏡\s*/, '')}</span>
-        </div>
-        <MenuPrincipal />
-      </header>
-
       <section className="hero-accueil" aria-label="Bienvenue">
         <p className="hero-date">{date}</p>
-        <h1 className="hero-h1">{salut},<br /><em>{prenom}</em></h1>
+        <h1 className="hero-h1">{salut},<br /><NomAffiche defaut={prenom} /></h1>
         <p className="hero-sub">Votre foyer en un coup d’œil.</p>
       </section>
 
-      <ResumeComptes soldes={accueil?.soldesHorsEpargne ?? []}>
-        <SaisieTransaction params={accueil?.parametres} />
-      </ResumeComptes>
+      <div className="grille-accueil">
+        <ResumeComptes soldes={accueil?.soldesHorsEpargne ?? []}>
+          <SaisieTransaction params={accueil?.parametres} />
+        </ResumeComptes>
 
-      <SemaineAgenda />
+        <SemaineAgenda />
 
-      <CoursesSemaine />
+        <CoursesSemaine />
 
-      <DriveExplorer />
+        <DriveExplorer />
+      </div>
     </>
   );
 }

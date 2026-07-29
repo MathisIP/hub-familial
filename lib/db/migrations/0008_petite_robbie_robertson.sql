@@ -1,0 +1,1 @@
+ALTER TABLE "recettes" ADD COLUMN "categorie" text DEFAULT '' NOT NULL;

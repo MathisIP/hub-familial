@@ -1,4 +1,3 @@
-import LienAccueil from '@/components/LienAccueil';
 import { utilisateurCourant } from '@/lib/foyer';
 import { invitationParJeton } from '@/lib/membres';
 import { accepterAction } from '@/app/foyer/actions';
@@ -24,7 +23,6 @@ export default async function PageRejoindre({
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>Rejoindre un foyer</h1>

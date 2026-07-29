@@ -1,85 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { formatQuantite, type ArticleCourse } from '@/lib/repas/schema';
+import { useState } from 'react';
+import type { Course } from '@/lib/todo/schema';
 
 /**
- * Section d'accueil « Courses de la semaine » : agrège les dîners planifiés
- * (quantités mises à l'échelle et fusionnées côté serveur), chargée automatiquement
- * comme les autres sections de l'accueil. Design repris de la maquette validée :
- * en-tête avec compteur de dîners, articles groupés par rayon avec pastilles de
- * quantité, actions primaire/secondaire.
- *
- * Deux actions :
- *   · Envoyer par MESSAGE (partage natif du téléphone → SMS/WhatsApp/… , ou repli
- *     sur un lien sms:) — l'ancien « bouton SMS courses » du Site QG ;
- *   · Ajouter à la liste de courses partagée (onglet Courses de ToDo).
+ * Carte d'accueil « Liste de courses » : deux actions.
+ *   · « Ajouter à ma liste » révèle un champ pour ajouter un produit ponctuel
+ *     (ex. gel douche), indépendant des repas → POST /api/todo/courses.
+ *   · « Envoyer par message » envoie la liste de courses ENTIÈRE (articles non
+ *     cochés, groupés par rayon) via le partage natif du téléphone, ou un lien sms:.
  */
 export default function CoursesSemaine() {
-  const [articles, setArticles] = useState<ArticleCourse[] | null>(null);
-  const [diners, setDiners] = useState(0);
-  const [etat, setEtat] = useState<'charge' | 'ok' | 'erreur'>('charge');
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const [produit, setProduit] = useState('');
+  const [qteProduit, setQteProduit] = useState('');
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  async function charger() {
-    setEtat('charge');
-    setErreur(null);
-    try {
-      const r = await fetch('/api/courses/semaine', { cache: 'no-store' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? 'Erreur de chargement.');
-      setArticles(data.articles);
-      setDiners(data.diners ?? 0);
-      setEtat('ok');
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : String(e));
-      setEtat('erreur');
-    }
-  }
-
-  useEffect(() => {
-    void charger();
-  }, []);
-
-  const texte = articles ? construireTexte(articles) : '';
-
-  async function envoyerMessage() {
-    setMessage(null);
-    setErreur(null);
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        await navigator.share({ title: 'Courses de la semaine', text: texte });
-        return;
-      } catch {
-        // partage annulé ou indisponible → on tente le lien SMS
-      }
-    }
-    window.location.href = `sms:?body=${encodeURIComponent(texte)}`;
-  }
-
-  async function copier() {
-    try {
-      await navigator.clipboard.writeText(texte);
-      setMessage('Liste copiée dans le presse-papier.');
-    } catch {
-      setErreur('Copie impossible sur cet appareil.');
-    }
-  }
-
-  async function ajouterAuxCourses() {
+  async function ajouterProduit(e: React.FormEvent) {
+    e.preventDefault();
+    const art = produit.trim();
+    if (!art) return;
     setOccupe(true);
     setMessage(null);
     setErreur(null);
     try {
-      const r = await fetch('/api/courses/semaine', { method: 'POST' });
+      const r = await fetch('/api/todo/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ article: art, quantite: qteProduit.trim() }),
+      });
       const data = await r.json();
       if (!r.ok) throw new Error(data.erreur ?? 'Ajout refusé.');
-      setMessage(
-        `${data.ajoutes} article(s) ajouté(s) à ta liste de courses` +
-          (data.ignores ? `, ${data.ignores} déjà présent(s).` : '.'),
-      );
+      setMessage(`« ${art} » ajouté à ta liste de courses.`);
+      setProduit('');
+      setQteProduit('');
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
     } finally {
@@ -87,84 +43,103 @@ export default function CoursesSemaine() {
     }
   }
 
-  const parRayon = articles ? grouper(articles) : [];
-  const vide = etat === 'ok' && articles && articles.length === 0;
+  async function envoyerMessage() {
+    setMessage(null);
+    setErreur(null);
+    setOccupe(true);
+    try {
+      const r = await fetch('/api/todo', { cache: 'no-store' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.erreur ?? 'Erreur de chargement.');
+      const texte = construireTexteListe(data.courses ?? []);
+      if (!texte) {
+        setErreur('Ta liste de courses est vide.');
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          await navigator.share({ title: 'Liste de courses', text: texte });
+          return;
+        } catch {
+          // partage annulé ou indisponible → repli sur le lien SMS
+        }
+      }
+      window.location.href = `sms:?body=${encodeURIComponent(texte)}`;
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    } finally {
+      setOccupe(false);
+    }
+  }
 
   return (
-    <section className="courses-semaine" aria-label="Courses de la semaine">
+    <section className="courses-semaine" aria-label="Liste de courses">
       <div className="cs-tete">
-        <h2>🛒 Courses de la semaine</h2>
-        {etat === 'ok' && !vide && (
-          <span className="cs-compteur">{diners} dîner{diners > 1 ? 's' : ''} planifié{diners > 1 ? 's' : ''}</span>
-        )}
+        <h2>🛒 Liste de courses</h2>
       </div>
 
-      {etat === 'charge' && <p className="cs-vide">Préparation de la liste…</p>}
+      {message && <p className="message info">{message}</p>}
+      {erreur && <p className="message erreur">{erreur}</p>}
 
-      {etat === 'erreur' && (
-        <p className="message erreur">
-          {erreur} <button className="bouton discret cs-reessayer" onClick={charger}>Réessayer</button>
-        </p>
-      )}
+      <div className="cs-actions">
+        <button
+          className="bouton bouton-primaire"
+          onClick={() => setAjoutOuvert((v) => !v)}
+          aria-expanded={ajoutOuvert}
+        >
+          ＋ Ajouter à ma liste
+        </button>
+        <button className="bouton" onClick={envoyerMessage} disabled={occupe}>
+          💬 Envoyer par message
+        </button>
+      </div>
 
-      {etat === 'ok' && articles && (
-        <>
-          {message && <p className="message info">{message}</p>}
-          {erreur && <p className="message erreur">{erreur}</p>}
-
-          {vide ? (
-            <p className="cs-vide">
-              Aucun ingrédient : planifie des dîners (avec des recettes qui ont des quantités) dans le module Repas.
-            </p>
-          ) : (
-            parRayon.map(({ rayon, items }) => (
-              <div className="cs-rayon-groupe" key={rayon}>
-                <p className="cs-rayon">{rayon}</p>
-                <ul className="cs-arts">
-                  {items.map((a, k) => (
-                    <li key={k}>
-                      {a.article}
-                      {a.quantite != null && (
-                        <span className="cs-q">{formatQuantite(a.quantite)} {a.unite}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          )}
-
-          {/* Actions toujours disponibles dès que la liste est chargée (seul un envoi
-              en cours les désactive). */}
-          <div className="cs-actions">
-            <button className="bouton bouton-primaire" onClick={envoyerMessage} disabled={occupe}>💬 Envoyer par message</button>
-            <button className="bouton" onClick={ajouterAuxCourses} disabled={occupe}>📋 Ajouter à ma liste</button>
-            <button className="bouton discret" onClick={copier} disabled={occupe}>Copier</button>
-          </div>
-        </>
+      {ajoutOuvert && (
+        <form className="cs-ajout" onSubmit={ajouterProduit}>
+          <input
+            className="champ"
+            placeholder="Produit (ex. gel douche)…"
+            value={produit}
+            onChange={(e) => setProduit(e.target.value)}
+            aria-label="Produit à ajouter"
+            autoFocus
+          />
+          <input
+            className="champ cs-ajout-qte"
+            placeholder="Qté"
+            value={qteProduit}
+            onChange={(e) => setQteProduit(e.target.value)}
+            aria-label="Quantité"
+          />
+          <button className="bouton" type="submit" disabled={occupe || !produit.trim()}>
+            Ajouter
+          </button>
+        </form>
       )}
     </section>
   );
 }
 
-function grouper(articles: ArticleCourse[]): { rayon: string; items: ArticleCourse[] }[] {
-  const map = new Map<string, ArticleCourse[]>();
-  for (const a of articles) {
-    const cle = a.rayon || 'Autre';
+/** Groupe les articles NON cochés par rayon (pour l'envoi de la liste). */
+function grouperListe(courses: Course[]): [string, Course[]][] {
+  const map = new Map<string, Course[]>();
+  for (const c of courses) {
+    if (c.fait) continue;
+    const cle = c.rayon || 'Autre';
     if (!map.has(cle)) map.set(cle, []);
-    map.get(cle)!.push(a);
+    map.get(cle)!.push(c);
   }
-  return [...map.entries()].map(([rayon, items]) => ({ rayon, items }));
+  return [...map.entries()];
 }
 
-function construireTexte(articles: ArticleCourse[]): string {
-  const lignes = ['🛒 Courses de la semaine', ''];
-  for (const { rayon, items } of grouper(articles)) {
+/** Texte de la liste de courses entière, groupée par rayon, pour un message. */
+function construireTexteListe(courses: Course[]): string {
+  const groupes = grouperListe(courses);
+  if (groupes.length === 0) return '';
+  const lignes = ['🛒 Liste de courses', ''];
+  for (const [rayon, items] of groupes) {
     lignes.push(`— ${rayon} —`);
-    for (const a of items) {
-      const q = a.quantite != null ? ` (${formatQuantite(a.quantite)}${a.unite ? ' ' + a.unite : ''})` : '';
-      lignes.push(`- ${a.article}${q}`);
-    }
+    for (const c of items) lignes.push(`- ${c.article}${c.quantite ? ` (${c.quantite})` : ''}`);
     lignes.push('');
   }
   return lignes.join('\n').trim();

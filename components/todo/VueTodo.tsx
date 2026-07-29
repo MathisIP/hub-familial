@@ -254,13 +254,17 @@ function OngletCourses({
   action: ActionFn;
 }) {
   const [article, setArticle] = useState('');
+  const [quantite, setQuantite] = useState('');
   const [rayon, setRayon] = useState('');
+  const [edite, setEdite] = useState<string | null>(null);
 
   function ajouter(e: React.FormEvent) {
     e.preventDefault();
     if (!article.trim()) return;
-    const corps = { article: article.trim(), rayon };
+    const corps = { article: article.trim(), quantite: quantite.trim(), rayon };
     setArticle('');
+    setQuantite('');
+    setRayon('');
     action(() => fetch('/api/todo/courses', json(corps)));
   }
 
@@ -279,13 +283,20 @@ function OngletCourses({
 
   return (
     <>
-      <form className="ajout" onSubmit={ajouter}>
+      <form className="ajout ajout-courses" onSubmit={ajouter}>
         <input
           className="champ"
           placeholder="Article à acheter…"
           value={article}
           onChange={(e) => setArticle(e.target.value)}
           aria-label="Article"
+        />
+        <input
+          className="champ champ-qte"
+          placeholder="Qté (ex. 400 g)"
+          value={quantite}
+          onChange={(e) => setQuantite(e.target.value)}
+          aria-label="Quantité"
         />
         <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder="Rayon" ariaLabel="Rayon" />
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
@@ -301,19 +312,43 @@ function OngletCourses({
             <div className="rayon-groupe" key={nomRayon || '—'}>
               {nomRayon && <p className="rayon-titre">{nomRayon}</p>}
               <ul className="liste">
-                {articles.map((c) => (
-                  <li key={c.id} className={`course${c.fait ? ' faite' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={c.fait}
-                      disabled={occupe}
-                      onChange={(e) => cocher(c.id, e.target.checked)}
-                      aria-label={c.article}
-                    />
-                    <span className="article">{c.article}</span>
-                    {c.rayon && !nomRayon && <span className="rayon">{c.rayon}</span>}
-                  </li>
-                ))}
+                {articles.map((c) =>
+                  edite === c.id ? (
+                    <li key={c.id}>
+                      <EditionCourse
+                        course={c}
+                        rayons={params.rayons}
+                        occupe={occupe}
+                        onAnnuler={() => setEdite(null)}
+                        onEnregistrer={(corps) =>
+                          action(() =>
+                            fetch('/api/todo/courses', { ...json({ id: c.id, ...corps }), method: 'PUT' }),
+                          ).then(() => setEdite(null))
+                        }
+                      />
+                    </li>
+                  ) : (
+                    <li key={c.id} className={`course${c.fait ? ' faite' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={c.fait}
+                        disabled={occupe}
+                        onChange={(e) => cocher(c.id, e.target.checked)}
+                        aria-label={c.article}
+                      />
+                      <span className="article">{c.article}</span>
+                      {c.quantite && <span className="course-qte">{c.quantite}</span>}
+                      {c.rayon && !nomRayon && <span className="rayon">{c.rayon}</span>}
+                      <button
+                        className="bouton discret course-mod"
+                        onClick={() => setEdite(c.id)}
+                        disabled={occupe}
+                      >
+                        Modifier
+                      </button>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           ))}
@@ -327,6 +362,57 @@ function OngletCourses({
         </>
       )}
     </>
+  );
+}
+
+/** Édition inline d'un article de courses (libellé, quantité, rayon). */
+function EditionCourse({
+  course,
+  rayons,
+  occupe,
+  onAnnuler,
+  onEnregistrer,
+}: {
+  course: Course;
+  rayons: string[];
+  occupe: boolean;
+  onAnnuler: () => void;
+  onEnregistrer: (corps: { article: string; quantite: string; rayon: string }) => void;
+}) {
+  const [article, setArticle] = useState(course.article);
+  const [quantite, setQuantite] = useState(course.quantite);
+  const [rayon, setRayon] = useState(course.rayon);
+
+  function soumettre(e: React.FormEvent) {
+    e.preventDefault();
+    if (!article.trim()) return;
+    onEnregistrer({ article: article.trim(), quantite: quantite.trim(), rayon });
+  }
+
+  return (
+    <form className="ajout ajout-courses course-edit" onSubmit={soumettre}>
+      <input
+        className="champ"
+        value={article}
+        onChange={(e) => setArticle(e.target.value)}
+        aria-label="Article"
+        autoFocus
+      />
+      <input
+        className="champ champ-qte"
+        value={quantite}
+        placeholder="Qté"
+        onChange={(e) => setQuantite(e.target.value)}
+        aria-label="Quantité"
+      />
+      <Combobox value={rayon} onChange={setRayon} options={rayons} placeholder="Rayon" ariaLabel="Rayon" />
+      <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
+        OK
+      </button>
+      <button type="button" className="bouton discret" onClick={onAnnuler} disabled={occupe}>
+        Annuler
+      </button>
+    </form>
   );
 }
 

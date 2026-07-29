@@ -33,8 +33,37 @@ export type Course = {
   id: string;
   fait: boolean;
   article: string;
+  quantite: string; // texte libre : « 400 g », « 2 »… (vide = non chiffré)
   rayon: string;
 };
+
+/** Sépare une quantité texte « 400 g » en { n, unite }. n=null si non chiffré. */
+export function decouperQuantite(q: string): { n: number | null; unite: string } {
+  const s = (q ?? '').trim();
+  const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/);
+  if (!m) return { n: null, unite: s };
+  const n = parseFloat(m[1].replace(',', '.'));
+  return { n: Number.isFinite(n) ? n : null, unite: m[2].trim() };
+}
+
+/**
+ * Somme deux quantités texte : si les deux sont chiffrées et de même unité, on
+ * additionne (« 400 g » + « 200 g » → « 600 g ») ; sinon on les liste. Sert au
+ * regroupement d'un même article ajouté plusieurs fois (pas de ligne en double).
+ */
+export function sommeQuantites(a: string, b: string): string {
+  const A = (a ?? '').trim();
+  const B = (b ?? '').trim();
+  if (!A) return B;
+  if (!B) return A;
+  const da = decouperQuantite(A);
+  const db = decouperQuantite(B);
+  if (da.n != null && db.n != null && da.unite.toLowerCase() === db.unite.toLowerCase()) {
+    const n = Math.round((da.n + db.n) * 100) / 100;
+    return `${String(n).replace('.', ',')}${da.unite ? ' ' + da.unite : ''}`;
+  }
+  return `${A} + ${B}`;
+}
 
 export type Parametres = {
   statuts: string[];

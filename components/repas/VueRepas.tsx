@@ -5,7 +5,6 @@ import Combobox from '@/components/Combobox';
 import {
   agregerCourses,
   formatQuantite,
-  mettreALechelle,
   PERSONNES_DEFAUT,
   type DonneesRepas,
   type Ingredient,
@@ -82,15 +81,18 @@ function trouverRecette(nom: string, recettes: Recette[]): Recette | undefined {
 /* =============================== SEMAINE =============================== */
 
 function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boolean; action: ActionFn }) {
-  // Aperçu des courses : plats planifiés qui correspondent à une recette connue.
-  const platsPlanifies = useMemo(
-    () =>
-      d.semaine
-        .map((j) => ({ jour: j, recette: trouverRecette(j.diner, d.recettes) }))
-        .filter((x): x is { jour: JourRepas; recette: Recette } => !!x.recette)
-        .map((x) => ({ ingredients: x.recette.ingredients, base: x.recette.personnes, personnes: x.jour.personnes })),
-    [d.semaine, d.recettes],
-  );
+  // Aperçu des courses : agrège les recettes des 3 services (entrée/plat/dessert)
+  // de chaque jour, mises à l'échelle du nombre de personnes du jour.
+  const platsPlanifies = useMemo(() => {
+    const out: { ingredients: Recette['ingredients']; base: number; personnes: number }[] = [];
+    for (const j of d.semaine) {
+      for (const nom of [j.entree, j.plat, j.dessert]) {
+        const r = trouverRecette(nom, d.recettes);
+        if (r) out.push({ ingredients: r.ingredients, base: r.personnes, personnes: j.personnes });
+      }
+    }
+    return out;
+  }, [d.semaine, d.recettes]);
   const courses = useMemo(() => agregerCourses(platsPlanifies), [platsPlanifies]);
 
   return (
@@ -106,6 +108,12 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
   );
 }
 
+const SERVICES_UI = [
+  { cle: 'entree' as const, label: 'Entrée', cat: 'Entrée' },
+  { cle: 'plat' as const, label: 'Plat', cat: 'Plat' },
+  { cle: 'dessert' as const, label: 'Dessert', cat: 'Dessert' },
+];
+
 function JourLigne({
   jour,
   recettes,
@@ -117,36 +125,40 @@ function JourLigne({
   occupe: boolean;
   action: ActionFn;
 }) {
-  const [diner, setDiner] = useState(jour.diner);
+  const [menu, setMenu] = useState({ entree: jour.entree, plat: jour.plat, dessert: jour.dessert });
   const [personnes, setPersonnes] = useState(String(jour.personnes));
 
-  const recette = trouverRecette(diner, recettes);
   const nbPers = Math.max(parseInt(personnes, 10) || PERSONNES_DEFAUT, 1);
-  const ingredientsEchelle =
-    recette && recette.ingredients.length
-      ? mettreALechelle(recette.ingredients, recette.personnes, nbPers)
-      : [];
 
-  function enregistrer(dinerVal = diner) {
-    if (dinerVal === jour.diner && String(nbPers) === String(jour.personnes)) return;
-    // La note du jour est conservée telle quelle (pas d'édition sur cette ligne).
-    action(() => patch('/api/repas/semaine', { jour: jour.jour, diner: dinerVal, personnes: nbPers, note: jour.note }));
+  function enregistrer(prochain = menu) {
+    const inchange =
+      prochain.entree === jour.entree &&
+      prochain.plat === jour.plat &&
+      prochain.dessert === jour.dessert &&
+      String(nbPers) === String(jour.personnes);
+    if (inchange) return;
+    action(() =>
+      patch('/api/repas/semaine', {
+        jour: jour.jour,
+        entree: prochain.entree,
+        plat: prochain.plat,
+        dessert: prochain.dessert,
+        personnes: nbPers,
+        note: jour.note,
+      }),
+    );
   }
+
+  // Ingrédients du jour = agrégat des recettes des 3 services, mises à l'échelle.
+  const platsJour = SERVICES_UI.map(({ cle }) => trouverRecette(menu[cle], recettes))
+    .filter((r): r is Recette => !!r)
+    .map((r) => ({ ingredients: r.ingredients, base: r.personnes, personnes: nbPers }));
+  const ingredientsJour = agregerCourses(platsJour);
 
   return (
     <li className="jour-repas">
       <div className="jr-tete">
         <span className="jr-jour">{jour.jour}</span>
-        <Combobox
-          className="jr-diner"
-          value={diner}
-          onChange={setDiner}
-          onCommit={enregistrer}
-          options={recettes.map((r) => r.nom)}
-          placeholder="Dîner…"
-          disabled={occupe}
-          ariaLabel={`Dîner de ${jour.jour}`}
-        />
         <label className="jr-pers">
           <input
             className="champ"
@@ -162,32 +174,38 @@ function JourLigne({
         </label>
       </div>
 
-      {recette ? (
-        ingredientsEchelle.length > 0 ? (
-          <div className="jr-ingredients">
-            {recette.personnes !== nbPers && (
-              <span className="jr-echelle">
-                ↔ mis à l’échelle {recette.personnes} → {nbPers} pers.
-              </span>
-            )}
-            <ul>
-              {ingredientsEchelle.map((i, k) => (
-                <li key={k}>
-                  <span className="i-art">{i.article}</span>
-                  {i.quantite != null && (
-                    <span className="i-qte">{formatQuantite(i.quantite)} {i.unite}</span>
-                  )}
-                  {i.rayon && <span className="i-rayon">{i.rayon}</span>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="jr-vide">Recette sans ingrédient chiffré — ajoute des quantités dans l’onglet Recettes.</p>
-        )
-      ) : diner ? (
-        <p className="jr-vide">Plat libre (pas dans les recettes) — pas de quantités calculées.</p>
-      ) : null}
+      <div className="jr-services">
+        {SERVICES_UI.map(({ cle, label, cat }) => (
+          <label className="jr-service" key={cle}>
+            <span className="jr-service-lbl">{label}</span>
+            <Combobox
+              value={menu[cle]}
+              onChange={(v) => setMenu((m) => ({ ...m, [cle]: v }))}
+              onCommit={(v) => enregistrer({ ...menu, [cle]: v })}
+              options={recettes.filter((r) => !r.categorie || r.categorie === cat).map((r) => r.nom)}
+              placeholder={`${label}…`}
+              disabled={occupe}
+              ariaLabel={`${label} de ${jour.jour}`}
+            />
+          </label>
+        ))}
+      </div>
+
+      {ingredientsJour.length > 0 && (
+        <div className="jr-ingredients">
+          <ul>
+            {ingredientsJour.map((i, k) => (
+              <li key={k}>
+                <span className="i-art">{i.article}</span>
+                {i.quantite != null && (
+                  <span className="i-qte">{formatQuantite(i.quantite)} {i.unite}</span>
+                )}
+                {i.rayon && <span className="i-rayon">{i.rayon}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </li>
   );
 }
@@ -285,9 +303,12 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
               <div className="rc-tete">
                 <span className="rc-nom">{r.nom}</span>
                 <span className="rc-meta">
+                  {r.categorie && <span className="puce cat-plat">{r.categorie}</span>}
                   {r.type && <span className="puce categorie">{r.type}</span>}
                   {r.chaudFroid && <span className="puce categorie">{r.chaudFroid}</span>}
                   <span className="puce assigne">{r.personnes} pers.</span>
+                  {r.favoriBebe && <span className="puce bebe-favori">👶 Favori bébé</span>}
+                  {r.bebePasGoute && <span className="puce bebe-agouter">👶 À goûter</span>}
                 </span>
                 <button className="bouton discret" onClick={() => setEdite(r.id)} disabled={occupe}>
                   Modifier
@@ -328,19 +349,25 @@ function RecetteForm({
   onEnregistrerAction: (corps: {
     nom: string;
     ingredients: Ingredient[];
+    categorie: string;
     type: string;
     chaudFroid: string;
     note: string;
     personnes: number;
+    favoriBebe: boolean;
+    bebePasGoute: boolean;
   }) => void;
   onAnnulerAction: () => void;
   onSupprimerAction?: () => void;
 }) {
   const [nom, setNom] = useState(recette?.nom ?? '');
+  const [categorie, setCategorie] = useState(recette?.categorie ?? '');
   const [type, setType] = useState(recette?.type ?? '');
   const [chaudFroid, setChaudFroid] = useState(recette?.chaudFroid ?? '');
   const [note, setNote] = useState(recette?.note ?? '');
   const [personnes, setPersonnes] = useState(String(recette?.personnes ?? PERSONNES_DEFAUT));
+  const [favoriBebe, setFavoriBebe] = useState(recette?.favoriBebe ?? false);
+  const [bebePasGoute, setBebePasGoute] = useState(recette?.bebePasGoute ?? false);
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     recette && recette.ingredients.length ? recette.ingredients.map((i) => ({ ...i })) : [ingredientVide()],
   );
@@ -362,10 +389,13 @@ function RecetteForm({
     onEnregistrerAction({
       nom,
       ingredients: ingredients.filter((i) => i.article.trim() !== ''),
+      categorie,
       type,
       chaudFroid,
       note,
       personnes: Math.max(parseInt(personnes, 10) || PERSONNES_DEFAUT, 1),
+      favoriBebe,
+      bebePasGoute,
     });
   }
 
@@ -380,6 +410,12 @@ function RecetteForm({
           disabled={occupe}
           autoFocus
         />
+        <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)} disabled={occupe} aria-label="Catégorie">
+          <option value="">Catégorie</option>
+          {d.categoriesPlat.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         <select className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} aria-label="Type">
           <option value="">Type</option>
           {d.types.map((t) => (
@@ -469,6 +505,27 @@ function RecetteForm({
         onChange={(e) => setNote(e.target.value)}
         disabled={occupe}
       />
+
+      <div className="rf-bebe">
+        <label className="rf-check">
+          <input
+            type="checkbox"
+            checked={favoriBebe}
+            onChange={(e) => setFavoriBebe(e.target.checked)}
+            disabled={occupe}
+          />
+          <span>👶 Favori de bébé</span>
+        </label>
+        <label className="rf-check">
+          <input
+            type="checkbox"
+            checked={bebePasGoute}
+            onChange={(e) => setBebePasGoute(e.target.checked)}
+            disabled={occupe}
+          />
+          <span>👶 Bébé n’a pas encore goûté</span>
+        </label>
+      </div>
 
       <div className="rf-actions">
         {onSupprimerAction && (

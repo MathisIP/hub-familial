@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import LienAccueil from '@/components/LienAccueil';
 import ZoneSuppression from '@/components/compte/ZoneSuppression';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +11,6 @@ export const metadata = { title: 'Mon compte — Hub familial' };
 export default function PageCompte() {
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>Mon compte</h1>

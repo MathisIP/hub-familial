@@ -1,6 +1,4 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueCadeaux from '@/components/cadeaux/VueCadeaux';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerCadeaux } from '@/lib/cadeaux/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
@@ -26,13 +24,11 @@ export default async function PageCadeaux() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_CADEAUX')}</h1>
           <p>Idées, budget et suivi des cadeaux par occasion</p>
         </div>
-        <SelecteurTheme />
       </header>
       {contenu}
     </>

@@ -1,4 +1,3 @@
-import LienAccueil from '@/components/LienAccueil';
 import BoutonsAbonnement from '@/components/abonnement/BoutonsAbonnement';
 import { etatAbonnement } from '@/lib/abonnement';
 
@@ -20,7 +19,6 @@ export default async function PageAbonnement() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>Abonnement</h1>

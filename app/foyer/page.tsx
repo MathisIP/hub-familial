@@ -1,4 +1,3 @@
-import LienAccueil from '@/components/LienAccueil';
 import LienInvitation from '@/components/foyer/LienInvitation';
 import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
 import { chargerFoyerMembres } from '@/lib/membres';
@@ -18,7 +17,6 @@ export default async function PageFoyer() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>Mon foyer</h1>

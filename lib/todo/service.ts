@@ -14,6 +14,7 @@ import {
   construireTache,
   prochaineOccurrenceLabel,
   rangPriorite,
+  sommeQuantites,
   versISO,
   type Course,
   type DonneesTodo,
@@ -62,6 +63,7 @@ export async function chargerTodo(): Promise<DonneesTodo> {
     id: r.id,
     fait: r.fait,
     article: r.article,
+    quantite: r.quantite,
     rayon: r.rayon,
   }));
 
@@ -154,11 +156,36 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
 /* ----------------------------- MUTATIONS COURSES ---------------------------- */
 
 /** Ajoute un article à la liste de courses (case décochée). */
-export async function ajouterCourse(article: string, rayon = ''): Promise<void> {
+export async function ajouterCourse(article: string, rayon = '', quantite = ''): Promise<void> {
   const art = article.trim();
   if (!art) throw new ErreurValidation("L'article est requis.");
   const foyerId = await idFoyerCourant();
-  await db().insert(tCourses).values({ foyerId, fait: false, article: art, rayon: rayon.trim() });
+  await db()
+    .insert(tCourses)
+    .values({ foyerId, fait: false, article: art, quantite: quantite.trim(), rayon: rayon.trim() });
+}
+
+/** Modifie un article (libellé, quantité, rayon) avant l'achat, adressé par id. */
+export async function modifierCourse(
+  id: string,
+  champs: { article?: string; quantite?: string; rayon?: string },
+): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const set: { article?: string; quantite?: string; rayon?: string } = {};
+  if (champs.article !== undefined) {
+    const art = champs.article.trim();
+    if (!art) throw new ErreurValidation("L'article est requis.");
+    set.article = art;
+  }
+  if (champs.quantite !== undefined) set.quantite = champs.quantite.trim();
+  if (champs.rayon !== undefined) set.rayon = champs.rayon.trim();
+  if (Object.keys(set).length === 0) return;
+  const res = await db()
+    .update(tCourses)
+    .set(set)
+    .where(and(eq(tCourses.id, id), eq(tCourses.foyerId, foyerId)))
+    .returning({ id: tCourses.id });
+  if (res.length === 0) throw new ErreurValidation('Article introuvable.');
 }
 
 /** Coche / décoche un article (adressé par id). */
@@ -173,38 +200,67 @@ export async function cocherCourse(id: string, fait: boolean): Promise<void> {
 }
 
 /**
- * Ajoute plusieurs articles d'un coup (cases décochées), en sautant ceux déjà
- * présents (dédoublonnage sur le libellé, insensible à la casse). Renvoie le
- * nombre ajouté et le nombre ignoré. Alimente le bouton d'accueil « courses ».
+ * Ajoute plusieurs articles d'un coup (cases décochées). Un même article (libellé
+ * insensible à la casse) déjà présent — dans la liste OU dans le lot — n'ajoute
+ * PAS une nouvelle ligne : sa QUANTITÉ monte (somme des quantités quand elles sont
+ * chiffrées et de même unité). Renvoie le nombre de lignes ajoutées et le nombre
+ * de lignes existantes dont la quantité a été cumulée. Alimente le bouton d'accueil.
  */
 export async function ajouterCoursesEnLot(
-  items: { article: string; rayon?: string }[],
-): Promise<{ ajoutes: number; ignores: number }> {
+  items: { article: string; quantite?: string; rayon?: string }[],
+): Promise<{ ajoutes: number; cumules: number }> {
   const nettoyes = items
-    .map((i) => ({ article: (i.article ?? '').trim(), rayon: (i.rayon ?? '').trim() }))
+    .map((i) => ({
+      article: (i.article ?? '').trim(),
+      quantite: (i.quantite ?? '').trim(),
+      rayon: (i.rayon ?? '').trim(),
+    }))
     .filter((i) => i.article !== '');
-  if (nettoyes.length === 0) return { ajoutes: 0, ignores: 0 };
+  if (nettoyes.length === 0) return { ajoutes: 0, cumules: 0 };
 
   const foyerId = await idFoyerCourant();
   const d = db();
   const existants = await d
-    .select({ article: tCourses.article })
+    .select({ id: tCourses.id, article: tCourses.article, quantite: tCourses.quantite })
     .from(tCourses)
     .where(eq(tCourses.foyerId, foyerId));
-  const dejaLa = new Set(existants.map((e) => e.article.trim().toLowerCase()).filter(Boolean));
 
-  const aAjouter: { foyerId: string; fait: boolean; article: string; rayon: string }[] = [];
-  let ignores = 0;
+  type Rec = { id: string | null; article: string; quantite: string; rayon: string; touche: boolean };
+  const parCle = new Map<string, Rec>();
+  for (const e of existants) {
+    parCle.set(e.article.trim().toLowerCase(), {
+      id: e.id, article: e.article, quantite: e.quantite, rayon: '', touche: false,
+    });
+  }
+
+  let ajoutes = 0;
+  let cumules = 0;
   for (const it of nettoyes) {
     const cle = it.article.toLowerCase();
-    if (dejaLa.has(cle)) { ignores++; continue; }
-    dejaLa.add(cle); // évite aussi les doublons dans le lot lui-même
-    aAjouter.push({ foyerId, fait: false, article: it.article, rayon: it.rayon });
+    const ex = parCle.get(cle);
+    if (ex) {
+      ex.quantite = sommeQuantites(ex.quantite, it.quantite);
+      if (ex.id) { if (!ex.touche) cumules++; ex.touche = true; } // ligne existante cumulée
+    } else {
+      parCle.set(cle, { id: null, article: it.article, quantite: it.quantite, rayon: it.rayon, touche: true });
+      ajoutes++;
+    }
   }
-  if (aAjouter.length === 0) return { ajoutes: 0, ignores };
 
-  await d.insert(tCourses).values(aAjouter);
-  return { ajoutes: aAjouter.length, ignores };
+  const aInserer: { foyerId: string; fait: boolean; article: string; quantite: string; rayon: string }[] = [];
+  for (const rec of parCle.values()) {
+    if (rec.id === null) {
+      aInserer.push({ foyerId, fait: false, article: rec.article, quantite: rec.quantite, rayon: rec.rayon });
+    } else if (rec.touche) {
+      await d
+        .update(tCourses)
+        .set({ quantite: rec.quantite })
+        .where(and(eq(tCourses.id, rec.id), eq(tCourses.foyerId, foyerId)));
+    }
+  }
+  if (aInserer.length > 0) await d.insert(tCourses).values(aInserer);
+
+  return { ajoutes, cumules };
 }
 
 /** Retire (supprime) les articles cochés. Renvoie le nombre retiré. */

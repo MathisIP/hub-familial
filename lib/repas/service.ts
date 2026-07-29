@@ -5,6 +5,7 @@ import { recettes as tRecettes, semaine as tSemaine } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
+  CATEGORIES_PLAT,
   CHAUD_FROID,
   JOURS,
   TYPES_RECETTE,
@@ -38,19 +39,25 @@ export async function chargerRepas(): Promise<DonneesRepas> {
     id: r.id,
     nom: r.nom,
     ingredients: r.ingredients,
+    categorie: r.categorie,
     type: r.type,
     chaudFroid: r.chaudFroid,
     note: r.note,
     personnes: personnesValides(r.personnes),
+    favoriBebe: r.favoriBebe,
+    bebePasGoute: r.bebePasGoute,
   }));
 
   // Planning : on complète les 7 jours (ceux sans ligne prennent les défauts).
+  // `plat` retombe sur l'ancien `diner` (compat des plannings d'avant la refonte).
   const parJour = new Map(lignesSem.map((s) => [s.jour, s]));
   const semaine: JourRepas[] = JOURS.map((jour): JourRepas => {
     const s = parJour.get(jour);
     return {
       jour,
-      diner: s ? s.diner : '',
+      entree: s ? s.entree : '',
+      plat: s ? s.plat || s.diner : '',
+      dessert: s ? s.dessert : '',
       note: s ? s.note : '',
       personnes: personnesValides(s?.personnes),
     };
@@ -62,6 +69,7 @@ export async function chargerRepas(): Promise<DonneesRepas> {
     unites: [...UNITES],
     types: [...TYPES_RECETTE],
     chaudFroid: [...CHAUD_FROID],
+    categoriesPlat: [...CATEGORIES_PLAT],
   };
 }
 
@@ -73,11 +81,20 @@ export async function chargerRepas(): Promise<DonneesRepas> {
 export async function listeCoursesSemaine(): Promise<{ articles: ArticleCourse[]; diners: number }> {
   const { recettes, semaine } = await chargerRepas();
   const parNom = new Map(recettes.map((r) => [r.nom.trim().toLowerCase(), r]));
-  const plats = semaine
-    .map((j) => ({ j, r: parNom.get(j.diner.trim().toLowerCase()) }))
-    .filter((x): x is { j: JourRepas; r: Recette } => !!x.r)
-    .map((x) => ({ ingredients: x.r.ingredients, base: x.r.personnes, personnes: x.j.personnes }));
-  return { articles: agregerCourses(plats), diners: plats.length };
+  const plats: { ingredients: Recette['ingredients']; base: number; personnes: number }[] = [];
+  let joursPlanifies = 0;
+  for (const j of semaine) {
+    let jourACourse = false;
+    for (const nom of [j.entree, j.plat, j.dessert]) {
+      const r = parNom.get(nom.trim().toLowerCase());
+      if (r) {
+        plats.push({ ingredients: r.ingredients, base: r.personnes, personnes: j.personnes });
+        jourACourse = true;
+      }
+    }
+    if (jourACourse) joursPlanifies++;
+  }
+  return { articles: agregerCourses(plats), diners: joursPlanifies };
 }
 
 /* ------------------------------ RECETTES ------------------------------ */
@@ -85,10 +102,13 @@ export async function listeCoursesSemaine(): Promise<{ articles: ArticleCourse[]
 export type ChampsRecette = {
   nom: string;
   ingredients: Ingredient[];
+  categorie?: string;
   type?: string;
   chaudFroid?: string;
   note?: string;
   personnes: number;
+  favoriBebe?: boolean;
+  bebePasGoute?: boolean;
 };
 
 /** Nettoie la liste d'ingrédients (retire les lignes sans article). */
@@ -107,10 +127,13 @@ function valeurs(c: ChampsRecette) {
   return {
     nom: c.nom.trim(),
     ingredients: ingredientsPropres(c.ingredients),
+    categorie: c.categorie ?? '',
     type: c.type ?? '',
     chaudFroid: c.chaudFroid ?? '',
     note: c.note ?? '',
     personnes: personnesValides(c.personnes),
+    favoriBebe: !!c.favoriBebe,
+    bebePasGoute: !!c.bebePasGoute,
   };
 }
 
@@ -142,16 +165,26 @@ export async function supprimerRecette(id: string): Promise<void> {
 
 /* ------------------------------- SEMAINE ------------------------------- */
 
-export type ChampsJour = { diner: string; personnes: number; note?: string };
+export type ChampsJour = {
+  entree?: string;
+  plat?: string;
+  dessert?: string;
+  personnes: number;
+  note?: string;
+};
 
-/** Définit le dîner d'un jour (upsert sur foyer+jour). Le jour est son nom. */
+/** Définit le menu d'un jour (entrée/plat/dessert, upsert sur foyer+jour). */
 export async function definirJour(jour: string, c: ChampsJour): Promise<void> {
   if (!(JOURS as readonly string[]).includes(jour)) {
     throw new ErreurValidation(`Jour invalide : ${jour}.`);
   }
   const foyerId = await idFoyerCourant();
+  const plat = (c.plat ?? '').trim();
   const valeurs = {
-    diner: (c.diner ?? '').trim(),
+    entree: (c.entree ?? '').trim(),
+    plat,
+    dessert: (c.dessert ?? '').trim(),
+    diner: plat, // maintient la colonne historique alignée sur le plat
     note: c.note ?? '',
     personnes: personnesValides(c.personnes),
   };

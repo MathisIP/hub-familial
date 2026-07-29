@@ -186,6 +186,7 @@ export const courses = pgTable(
       .references(() => foyers.id, { onDelete: 'cascade' }),
     fait: boolean('fait').notNull().default(false),
     article: text('article').notNull(),
+    quantite: text('quantite').notNull().default(''), // texte libre : « 400 g », « 2 »…
     rayon: text('rayon').notNull().default(''),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -213,10 +214,14 @@ export const recettes = pgTable(
       .references(() => foyers.id, { onDelete: 'cascade' }),
     nom: text('nom').notNull(),
     ingredients: jsonb('ingredients').$type<IngredientJSON[]>().notNull(),
+    categorie: text('categorie').notNull().default(''), // Entrée / Plat / Dessert
     type: text('type').notNull().default(''),
     chaudFroid: text('chaud_froid').notNull().default(''),
     note: text('note').notNull().default(''),
     personnes: integer('personnes').notNull().default(2),
+    // Repères « bébé » : recette appréciée de bébé / pas encore goûtée par bébé.
+    favoriBebe: boolean('favori_bebe').notNull().default(false),
+    bebePasGoute: boolean('bebe_pas_goute').notNull().default(false),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('recettes_foyer_idx').on(t.foyerId)],
@@ -230,6 +235,10 @@ export const semaine = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     jour: text('jour').notNull(), // Lundi … Dimanche
+    // Menu du jour en 3 services. `diner` (historique) reste comme repli du `plat`.
+    entree: text('entree').notNull().default(''),
+    plat: text('plat').notNull().default(''),
+    dessert: text('dessert').notNull().default(''),
     diner: text('diner').notNull().default(''),
     note: text('note').notNull().default(''),
     personnes: integer('personnes').notNull().default(2),

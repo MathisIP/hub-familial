@@ -12,7 +12,7 @@
  *   · navigations (pages)                  → réseau d'abord, repli sur la copie en
  *                                            cache, sinon la page /hors-ligne.
  */
-const CACHE = 'hub-familial-v1';
+const CACHE = 'hub-familial-v2';
 const PRECACHE = ['/hors-ligne', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {

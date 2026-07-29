@@ -1,6 +1,4 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueRepas from '@/components/repas/VueRepas';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerRepas } from '@/lib/repas/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
@@ -26,13 +24,11 @@ export default async function PageRepas() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_REPAS')}</h1>
           <p>Planning des dîners, recettes et quantités par personne</p>
         </div>
-        <SelecteurTheme />
       </header>
       {contenu}
     </>

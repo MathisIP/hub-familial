@@ -16,18 +16,17 @@ export async function GET() {
 }
 
 /**
- * POST /api/courses/semaine — verse la liste dans l'onglet Courses de ToDo
- * (dédoublonnée). La quantité est intégrée au libellé (« Pâtes (400 g) »),
- * car l'onglet Courses n'a pas de colonne quantité. Recalcule côté serveur.
+ * POST /api/courses/semaine — verse la liste dans la liste de courses (avec sa
+ * colonne QUANTITÉ). Un article déjà présent voit sa quantité cumulée plutôt que
+ * dupliquée en ligne (cf. ajouterCoursesEnLot). Recalcule côté serveur.
  */
 export async function POST() {
   try {
     const { articles } = await listeCoursesSemaine();
     const items = articles.map((a) => ({
-      article:
-        a.quantite != null
-          ? `${a.article} (${formatQuantite(a.quantite)}${a.unite ? ' ' + a.unite : ''})`
-          : a.article,
+      article: a.article,
+      quantite:
+        a.quantite != null ? `${formatQuantite(a.quantite)}${a.unite ? ' ' + a.unite : ''}`.trim() : '',
       rayon: a.rayon,
     }));
     const res = await ajouterCoursesEnLot(items);

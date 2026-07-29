@@ -1,6 +1,4 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueTodo from '@/components/todo/VueTodo';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerTodo } from '@/lib/todo/service';
 import { cssTodoThemes } from '@/lib/todo/theme';
 import { ConfigManquante } from '@/lib/config';
@@ -35,14 +33,11 @@ export default async function PageTodo() {
           sélecteurs [data-theme] que le socle. */}
       <style dangerouslySetInnerHTML={{ __html: cssTodoThemes() }} />
 
-      <LienAccueil />
-
       <header className="entete">
         <div>
           <h1>{t('MOD_TODO')}</h1>
           <p>Tâches du foyer et liste de courses partagée</p>
         </div>
-        <SelecteurTheme />
       </header>
 
       {contenu}

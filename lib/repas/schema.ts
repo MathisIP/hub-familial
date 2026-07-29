@@ -33,6 +33,11 @@ export const UNITES = [
 export const TYPES_RECETTE = ['Viande', 'Poisson', 'Végétarien'] as const;
 export const CHAUD_FROID = ['Chaud', 'Froid'] as const;
 
+/** Catégories d'une recette selon le service. */
+export const CATEGORIES_PLAT = ['Entrée', 'Plat', 'Dessert'] as const;
+/** Correspondance service (clé) → catégorie de recette proposée dans ce créneau. */
+export const CATEGORIE_PAR_SERVICE = { entree: 'Entrée', plat: 'Plat', dessert: 'Dessert' } as const;
+
 /** Nombre de personnes par défaut du foyer (Lou & Mati) si rien n'est renseigné. */
 export const PERSONNES_DEFAUT = 2;
 
@@ -47,17 +52,26 @@ export type Recette = {
   id: string;
   nom: string;
   ingredients: Ingredient[];
+  categorie: string; // Entrée / Plat / Dessert (ou vide)
   type: string;
   chaudFroid: string;
   note: string;
   personnes: number; // base : pour combien de personnes les quantités sont données
+  favoriBebe: boolean; // recette appréciée de bébé
+  bebePasGoute: boolean; // bébé n'a pas encore goûté
 };
+
+/** Les 3 services d'un menu de jour. */
+export const SERVICES = ['entree', 'plat', 'dessert'] as const;
+export type Service = (typeof SERVICES)[number];
 
 export type JourRepas = {
   jour: string; // Lundi … Dimanche — identifiant du jour
-  diner: string; // nom de recette (ou texte libre)
+  entree: string; // nom de recette (ou texte libre)
+  plat: string;
+  dessert: string;
   note: string;
-  personnes: number; // pour ce dîner-là
+  personnes: number; // pour ce repas-là
 };
 
 export type DonneesRepas = {
@@ -66,6 +80,7 @@ export type DonneesRepas = {
   unites: string[];
   types: string[];
   chaudFroid: string[];
+  categoriesPlat: string[];
 };
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());

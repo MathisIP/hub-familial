@@ -1,6 +1,4 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueEvenements from '@/components/evenements/VueEvenements';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerEvenements } from '@/lib/evenements/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
@@ -26,13 +24,11 @@ export default async function PageEvenements() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_EVENEMENTS')}</h1>
           <p>Réceptions, invités, checklist et menu</p>
         </div>
-        <SelecteurTheme />
       </header>
       {contenu}
     </>

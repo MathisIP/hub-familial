@@ -43,6 +43,27 @@
       "when": 1784957076139,
       "tag": "0005_short_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785284481345,
+      "tag": "0006_thin_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785285224371,
+      "tag": "0007_fuzzy_scourge",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785286164634,
+      "tag": "0008_petite_robbie_robertson",
+      "breakpoints": true
     }
   ]
 }

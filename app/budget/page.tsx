@@ -1,7 +1,5 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerBudget } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
 import { ConfigManquante } from '@/lib/config';
@@ -46,13 +44,11 @@ export default async function PageBudget({
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_BUDGET')}</h1>
           <p>Comptes, dépenses et objectifs du foyer</p>
         </div>
-        <SelecteurTheme />
       </header>
       {contenu}
     </>

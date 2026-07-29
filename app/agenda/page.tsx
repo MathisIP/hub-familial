@@ -1,6 +1,4 @@
-import LienAccueil from '@/components/LienAccueil';
 import VueAgenda from '@/components/agenda/VueAgenda';
-import SelecteurTheme from '@/components/SelecteurTheme';
 import { chargerAgenda } from '@/lib/agenda/service';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
@@ -36,13 +34,11 @@ export default async function PageAgenda() {
 
   return (
     <>
-      <LienAccueil />
       <header className="entete">
         <div>
           <h1>{t('MOD_AGENDA')}</h1>
           <p>Agenda familial partagé</p>
         </div>
-        <SelecteurTheme />
       </header>
       {contenu}
     </>

@@ -3,6 +3,8 @@ import { Fraunces, Quicksand } from 'next/font/google';
 import { cssDesThemes, THEME_DEFAUT, THEMES } from '@/lib/themes';
 import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
+import BarreHaut from '@/components/BarreHaut';
+import PiedDePage from '@/components/PiedDePage';
 import './globals.css';
 
 /** Titres = Fraunces (serif douce, italique dispo) ; corps = Quicksand. */
@@ -68,7 +70,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
       </head>
       <body>
+        <BarreHaut />
         <div className="enveloppe">{children}</div>
+        <PiedDePage />
         <EnregistrerSW />
         <AstuceInstallIOS />
       </body>

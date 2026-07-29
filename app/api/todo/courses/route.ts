@@ -1,17 +1,40 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { ajouterCourse, cocherCourse, viderCoursesFaites } from '@/lib/todo/service';
+import { ajouterCourse, cocherCourse, modifierCourse, viderCoursesFaites } from '@/lib/todo/service';
 import { reponseErreur } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-/** POST /api/todo/courses — ajoute un article { article, rayon? }. */
+/** POST /api/todo/courses — ajoute un article { article, quantite?, rayon? }. */
 export async function POST(req: NextRequest) {
   try {
-    const { article, rayon } = (await req.json()) as { article?: string; rayon?: string };
+    const { article, quantite, rayon } = (await req.json()) as {
+      article?: string;
+      quantite?: string;
+      rayon?: string;
+    };
     if (!article?.trim()) {
       return NextResponse.json({ erreur: 'Article requis.' }, { status: 400 });
     }
-    await ajouterCourse(article, rayon ?? '');
+    await ajouterCourse(article, rayon ?? '', quantite ?? '');
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return reponseErreur(e);
+  }
+}
+
+/** PUT /api/todo/courses — modifie un article { id, article?, quantite?, rayon? }. */
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, article, quantite, rayon } = (await req.json()) as {
+      id?: string;
+      article?: string;
+      quantite?: string;
+      rayon?: string;
+    };
+    if (typeof id !== 'string' || id === '') {
+      return NextResponse.json({ erreur: 'Paramètre { id } requis.' }, { status: 400 });
+    }
+    await modifierCourse(id, { article, quantite, rayon });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

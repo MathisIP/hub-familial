@@ -18,6 +18,7 @@ import {
 } from '@/components/IconesNav';
 import {
   THEME_DEFAUT,
+  THEMES,
   familleDeTheme,
   themeDeFamille,
   estSombre,
@@ -78,6 +79,7 @@ export default function SideBar() {
     const id = (document.documentElement.getAttribute('data-theme') as IdTheme) || THEME_DEFAUT;
     const suivant = themeDeFamille(familleDeTheme(id).id, !estSombre(id));
     document.documentElement.setAttribute('data-theme', suivant);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES[suivant].PAGE);
     try {
       localStorage.setItem('hub-theme', suivant);
     } catch {

@@ -37,6 +37,7 @@ export default function ReglagesApparence({ modeVisible = true }: { modeVisible?
   function appliquer(id: IdTheme) {
     setTheme(id);
     document.documentElement.setAttribute('data-theme', id);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES[id].PAGE);
     try {
       localStorage.setItem('hub-theme', id);
     } catch {

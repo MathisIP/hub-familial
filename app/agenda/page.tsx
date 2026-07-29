@@ -25,9 +25,9 @@ export default async function PageAgenda() {
       const partageManquant = /not found|Not Found|403|forbidden/i.test(msg);
       contenu = (
         <div className="message erreur">
-          <p>Agenda inaccessible.</p>
-          {apiDesactivee && <p>➡ Active l’API Google Calendar dans le projet GCP <code>hub-familial-app</code>.</p>}
-          {partageManquant && <p>➡ Partage l’agenda avec <code>claude-sheet-access@hub-familial-app.iam.gserviceaccount.com</code> (droit « modifier les événements »).</p>}
+          <p>{t('AGD_INACCESSIBLE', langue)}</p>
+          {apiDesactivee && <p>{t('AGD_ERR_API', langue)} <code>hub-familial-app</code>.</p>}
+          {partageManquant && <p>{t('AGD_ERR_PARTAGE_A', langue)} <code>claude-sheet-access@hub-familial-app.iam.gserviceaccount.com</code> {t('AGD_ERR_PARTAGE_B', langue)}</p>}
           <p className="ag-erreur-detail">{msg}</p>
         </div>
       );

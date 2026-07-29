@@ -140,6 +140,9 @@ const UI = {
   A_CHOISIR_ONGLET: { fr: 'Choisir un onglet', en: 'Choose a tab' },
   A_MODE_CLAIR: { fr: 'Passer en mode clair', en: 'Switch to light mode' },
   A_MODE_SOMBRE: { fr: 'Passer en mode sombre', en: 'Switch to dark mode' },
+  A_COULEUR: { fr: 'Couleur du thème', en: 'Theme color' },
+  A_ANNEE: { fr: 'Année', en: 'Year' },
+  A_MOIS: { fr: 'Mois', en: 'Month' },
 
   // Accueil (hero)
   ACC_BONJOUR: { fr: 'Bonjour', en: 'Good morning' },
@@ -410,6 +413,147 @@ const UI = {
   },
   CPT_SUPPR_BTN: { fr: 'Supprimer définitivement mon compte', en: 'Permanently delete my account' },
   CPT_CONF_LIEN: { fr: 'Politique de confidentialité →', en: 'Privacy policy →' },
+
+  // Mon foyer
+  FOY_SOUS_A: { fr: 'Les personnes qui partagent les données de', en: 'The people who share the data of' },
+  FOY_NOM_TITRE: { fr: 'Nom du foyer', en: 'Household name' },
+  FOY_RENOMMER: { fr: 'Renommer', en: 'Rename' },
+  FOY_MEMBRES: { fr: 'Membres', en: 'Members' },
+  FOY_PROPRIETAIRE: { fr: 'Propriétaire', en: 'Owner' },
+  FOY_MEMBRE: { fr: 'Membre', en: 'Member' },
+  FOY_TOI: { fr: 'toi', en: 'you' },
+  FOY_RETIRER: { fr: 'Retirer', en: 'Remove' },
+  FOY_INVITER_TITRE: { fr: 'Inviter une personne', en: 'Invite someone' },
+  FOY_INVITER_NOTE: {
+    fr: 'Saisis son adresse Google. Un lien d’invitation sera créé : partage-le (SMS, WhatsApp…). La personne le suit, se connecte, et rejoint ton foyer.',
+    en: 'Enter their Google address. An invitation link will be created: share it (SMS, WhatsApp…). They follow it, sign in, and join your household.',
+  },
+  FOY_INVITER_BTN: { fr: 'Inviter', en: 'Invite' },
+  FOY_INVIT_ATTENTE: { fr: 'Invitations en attente', en: 'Pending invitations' },
+  FOY_EXPIRE: { fr: 'expire le', en: 'expires on' },
+  FOY_AIDE_A: {
+    fr: '⚠ Phase privée : pour que la personne invitée puisse se connecter, son adresse doit aussi figurer dans la liste blanche',
+    en: '⚠ Private phase: for the invited person to sign in, their address must also be in the allow-list',
+  },
+  FOY_AIDE_B: {
+    fr: '(env). Ce sera automatique une fois l’accès basé sur l’abonnement activé.',
+    en: '(env). This will be automatic once subscription-based access is enabled.',
+  },
+  FOY_LIEN_COPIE: { fr: 'Lien copié ✓', en: 'Link copied ✓' },
+  FOY_COPIER_LIEN: { fr: 'Copier le lien', en: 'Copy link' },
+
+  // Abonnement (page)
+  ABO_SOUS: { fr: 'L’abonnement du foyer donne accès à tous les modules du Hub.', en: 'The household subscription unlocks all Hub modules.' },
+  ABOP_LIBRE: { fr: 'Accès libre (facturation non activée).', en: 'Free access (billing not enabled).' },
+  ABOP_ACTIF: { fr: 'Abonnement actif ✓', en: 'Active subscription ✓' },
+  ABOP_ESSAI: { fr: 'Période d’essai', en: 'Trial period' },
+  ABOP_IMPAYE: { fr: 'Paiement en attente — régularise pour continuer.', en: 'Payment pending — settle it to continue.' },
+  ABOP_ANNULE: { fr: 'Abonnement annulé.', en: 'Subscription cancelled.' },
+  ABO_ESSAI_A: { fr: 'Essai gratuit jusqu’au', en: 'Free trial until' },
+  ABO_ESSAI_B: { fr: 'Abonne-toi pour ne pas perdre l’accès.', en: 'Subscribe so you don’t lose access.' },
+  ABO_ESSAI_OUVERT: { fr: 'Essai en cours. Abonne-toi quand tu veux pour pérenniser l’accès.', en: 'Trial in progress. Subscribe whenever you like to keep access.' },
+  ABO_SUSPENDU: { fr: 'Ton accès est suspendu : un abonnement actif est requis.', en: 'Your access is suspended: an active subscription is required.' },
+  ABO_NON_ACTIVE: { fr: 'La facturation n’est pas activée sur cette instance.', en: 'Billing is not enabled on this instance.' },
+  ABO_REDIRECTION: { fr: 'Redirection…', en: 'Redirecting…' },
+  ABO_SABONNER: { fr: 'S’abonner', en: 'Subscribe' },
+  ABO_GERER: { fr: 'Gérer mon abonnement', en: 'Manage my subscription' },
+
+  // Politique de confidentialité (gabarit)
+  CONF_RETOUR: { fr: 'Retour', en: 'Back' },
+  CONF_TITRE: { fr: 'Politique de confidentialité', en: 'Privacy policy' },
+  CONF_MAJ: { fr: 'Dernière mise à jour : [À COMPLÉTER : date]', en: 'Last updated: [TO COMPLETE: date]' },
+  CONF_AVERT: {
+    fr: '⚠ Modèle à finaliser : renseigne les champs entre crochets et fais relire ce document avant toute mise à disposition à d’autres foyers.',
+    en: '⚠ Template to finalize: fill in the bracketed fields and have this document reviewed before making it available to other households.',
+  },
+  CONF_S1_T: { fr: '1. Responsable du traitement', en: '1. Data controller' },
+  CONF_S1_P: {
+    fr: 'Le responsable du traitement des données est [À COMPLÉTER : nom / raison sociale], joignable à l’adresse [À COMPLÉTER : email de contact]. Le service « Hub familial » (ci-après « le Service ») est une application d’organisation familiale.',
+    en: 'The data controller is [TO COMPLETE: name / company], reachable at [TO COMPLETE: contact email]. The “Family Hub” service (hereafter “the Service”) is a household-organization application.',
+  },
+  CONF_S2_T: { fr: '2. Données collectées', en: '2. Data collected' },
+  CONF_S2_LI1: {
+    fr: 'Identité de connexion (via Google) : adresse e-mail, nom et photo de profil, pour l’authentification et l’accès restreint au Service.',
+    en: 'Login identity (via Google): email address, name and profile picture, for authentication and restricted access to the Service.',
+  },
+  CONF_S2_LI2: {
+    fr: 'Données saisies dans le foyer : budget (comptes, transactions, catégories, échéances), tâches et listes de courses, recettes et planning des repas, événements, cadeaux et occasions.',
+    en: 'Data entered in the household: budget (accounts, transactions, categories, due dates), tasks and shopping lists, recipes and meal planning, events, gifts and occasions.',
+  },
+  CONF_S2_LI3: {
+    fr: 'Jetons d’accès Google : lorsque tu autorises l’accès à Google Drive et Google Agenda, un jeton d’accès est conservé le temps de la session pour lire/écrire tes fichiers et événements en ton nom. Le Service ne stocke pas le contenu de ton Drive.',
+    en: 'Google access tokens: when you authorize access to Google Drive and Google Calendar, an access token is kept for the session to read/write your files and events on your behalf. The Service does not store your Drive content.',
+  },
+  CONF_S3_T: { fr: '3. Finalités et base légale', en: '3. Purposes and legal basis' },
+  CONF_S3_P: {
+    fr: 'Ces données sont traitées uniquement pour fournir le Service (organiser la vie du foyer). La base légale est l’exécution du contrat qui te lie au Service, et ton consentement pour les accès optionnels à Google Drive et Google Agenda (révocable à tout moment).',
+    en: 'This data is processed solely to provide the Service (organizing household life). The legal basis is the performance of the contract between you and the Service, and your consent for the optional access to Google Drive and Google Calendar (revocable at any time).',
+  },
+  CONF_S4_T: { fr: '4. Hébergement et sous-traitants', en: '4. Hosting and sub-processors' },
+  CONF_S4_LI1: { fr: 'Base de données : Neon, région Union européenne.', en: 'Database: Neon, European Union region.' },
+  CONF_S4_LI2: { fr: 'Hébergement de l’application : [À COMPLÉTER : Vercel / autre].', en: 'Application hosting: [TO COMPLETE: Vercel / other].' },
+  CONF_S4_LI3: { fr: 'Google (authentification, Drive, Agenda) : selon les scopes que tu autorises.', en: 'Google (authentication, Drive, Calendar): according to the scopes you authorize.' },
+  CONF_S4_LI4: { fr: '[À COMPLÉTER si applicable : Stripe pour le paiement, une fois l’abonnement en place].', en: '[TO COMPLETE if applicable: Stripe for payment, once the subscription is in place].' },
+  CONF_S5_T: { fr: '5. Durée de conservation', en: '5. Retention period' },
+  CONF_S5_A: { fr: 'Tes données sont conservées tant que ton compte est actif. Tu peux les supprimer à tout moment depuis', en: 'Your data is kept as long as your account is active. You can delete it at any time from' },
+  CONF_S5_B: { fr: ': la suppression efface définitivement ton foyer et toutes ses données.', en: ': deletion permanently erases your household and all its data.' },
+  CONF_S6_T: { fr: '6. Cookies', en: '6. Cookies' },
+  CONF_S6_P: {
+    fr: 'Le Service n’utilise qu’un cookie de session strictement nécessaire à l’authentification. Aucun traceur publicitaire ni outil de mesure d’audience tiers n’est déposé — aucun bandeau de consentement n’est donc requis à ce titre.',
+    en: 'The Service uses only a strictly necessary session cookie for authentication. No advertising tracker or third-party analytics tool is set — so no consent banner is required for this.',
+  },
+  CONF_S7_T: { fr: '7. Tes droits', en: '7. Your rights' },
+  CONF_S7_A: {
+    fr: 'Conformément au RGPD, tu disposes des droits d’accès, de rectification, d’effacement, de portabilité, de limitation et d’opposition. Deux de ces droits sont directement exerçables dans',
+    en: 'Under the GDPR, you have the rights of access, rectification, erasure, portability, restriction and objection. Two of these rights can be exercised directly in',
+  },
+  CONF_S7_LI1: { fr: 'Portabilité / accès : « Exporter mes données » (fichier JSON complet).', en: 'Portability / access: “Export my data” (full JSON file).' },
+  CONF_S7_LI2: { fr: 'Effacement : « Supprimer mon compte » (suppression définitive).', en: 'Erasure: “Delete my account” (permanent deletion).' },
+  CONF_S7_P2: {
+    fr: 'Pour les autres demandes, écris à [À COMPLÉTER : email de contact]. Tu peux aussi introduire une réclamation auprès de la CNIL (www.cnil.fr).',
+    en: 'For other requests, write to [TO COMPLETE: contact email]. You may also lodge a complaint with your data protection authority (e.g. the CNIL, www.cnil.fr).',
+  },
+  CONF_S8_T: { fr: '8. Sécurité', en: '8. Security' },
+  CONF_S8_P: {
+    fr: 'L’accès au Service est protégé par authentification Google et restreint aux comptes autorisés. Les échanges sont chiffrés (HTTPS) et la base est hébergée dans l’Union européenne.',
+    en: 'Access to the Service is protected by Google authentication and restricted to authorized accounts. Exchanges are encrypted (HTTPS) and the database is hosted in the European Union.',
+  },
+
+  // Erreur générique de chargement d'une page module
+  G_ERR_PAGE: { fr: 'Impossible de charger cette page :', en: 'Could not load this page:' },
+
+  // Connexion
+  CNX_ACCES: { fr: 'Accès réservé au foyer. Connecte-toi avec ton compte Google.', en: 'Access restricted to the household. Sign in with your Google account.' },
+  CNX_BOUTON: { fr: 'Se connecter avec Google', en: 'Sign in with Google' },
+
+  // Hors ligne
+  HL_TITRE: { fr: 'Hors ligne', en: 'Offline' },
+  HL_TXT: { fr: 'Pas de connexion pour le moment. Le Hub se rechargera dès que le réseau reviendra. Les pages déjà consultées restent accessibles.', en: 'No connection right now. The Hub will reload as soon as the network is back. Pages you already opened stay available.' },
+  HL_REESSAYER: { fr: 'Réessayer', en: 'Retry' },
+
+  // Astuce installation iOS
+  IOS_ARIA: { fr: "Installer l'application", en: 'Install the app' },
+  IOS_AVANT: { fr: 'Installe le Hub : appuie sur', en: 'Install the Hub: tap' },
+  IOS_PARTAGER: { fr: 'Partager', en: 'Share' },
+  IOS_PUIS: { fr: ', puis', en: ', then' },
+  IOS_ECRAN: { fr: '« Sur l’écran d’accueil »', en: '“Add to Home Screen”' },
+
+  // Rejoindre un foyer
+  RJ_TITRE: { fr: 'Rejoindre un foyer', en: 'Join a household' },
+  RJ_INTROUVABLE: { fr: 'Invitation introuvable ou déjà utilisée.', en: 'Invitation not found or already used.' },
+  RJ_EXPIREE: { fr: 'Cette invitation a expiré. Demande-en une nouvelle.', en: 'This invitation has expired. Ask for a new one.' },
+  RJ_MAUVAIS_A: { fr: 'Tu es connecté·e avec', en: 'You are signed in as' },
+  RJ_MAUVAIS_B: { fr: ', mais cette invitation est destinée à', en: ', but this invitation is for' },
+  RJ_RECONNECTE: { fr: 'Reconnecte-toi avec le bon compte Google pour accepter.', en: 'Sign in with the correct Google account to accept.' },
+  RJ_INVITE_A: { fr: 'Tu es invité·e à rejoindre le foyer', en: 'You’re invited to join the household' },
+  RJ_INVITE_B: { fr: 'et à en partager toutes les données.', en: 'and share all its data.' },
+  RJ_REJOINDRE: { fr: 'Rejoindre ce foyer', en: 'Join this household' },
+
+  // Agenda — messages d'erreur / config
+  AGD_INACCESSIBLE: { fr: 'Agenda inaccessible.', en: 'Calendar unavailable.' },
+  AGD_ERR_API: { fr: '➡ Active l’API Google Calendar dans le projet GCP', en: '➡ Enable the Google Calendar API in the GCP project' },
+  AGD_ERR_PARTAGE_A: { fr: '➡ Partage l’agenda avec', en: '➡ Share the calendar with' },
+  AGD_ERR_PARTAGE_B: { fr: '(droit « modifier les événements »).', en: '(“make changes to events” permission).' },
 
   // Noms des gammes de couleur (infobulles des pastilles)
   THEME_CORAIL: { fr: 'Corail', en: 'Coral' },

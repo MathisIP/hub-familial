@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@/components/I18nProvider';
 
 /**
  * Rappel d'installation pour iPhone/iPad. iOS ne propose PAS d'invite automatique
@@ -11,6 +12,7 @@ import { useEffect, useState } from 'react';
  *   · l'utilisateur l'a déjà fermé (mémorisé en localStorage).
  */
 export default function AstuceInstallIOS() {
+  const tr = useT();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -43,19 +45,19 @@ export default function AstuceInstallIOS() {
   }
 
   return (
-    <div className="install-ios" role="dialog" aria-label="Installer l'application">
+    <div className="install-ios" role="dialog" aria-label={tr('IOS_ARIA')}>
       <img className="install-ios-logo" src="/icon-192.png" alt="" width={34} height={34} />
       <p className="install-ios-txt">
-        Installe le Hub : appuie sur{' '}
+        {tr('IOS_AVANT')}{' '}
         <span className="install-ios-ic" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="15" height="15" focusable="false">
             <path d="M12 3l3.5 3.5-1.4 1.4L13 6.83V15h-2V6.83L9.9 7.9 8.5 6.5 12 3z" fill="currentColor" />
             <path d="M6 10h3v2H7v8h10v-8h-2v-2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1z" fill="currentColor" />
           </svg>
         </span>{' '}
-        <b>Partager</b>, puis <b>« Sur l’écran d’accueil »</b>.
+        <b>{tr('IOS_PARTAGER')}</b>{tr('IOS_PUIS')} <b>{tr('IOS_ECRAN')}</b>.
       </p>
-      <button className="install-ios-x" onClick={fermer} aria-label="Fermer">✕</button>
+      <button className="install-ios-x" onClick={fermer} aria-label={tr('G_FERMER')}>✕</button>
     </div>
   );
 }

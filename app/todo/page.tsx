@@ -24,7 +24,7 @@ export default async function PageTodo() {
         <p className="message erreur">{e.message}</p>
       ) : (
         <p className="message erreur">
-          Impossible de charger la To-Do : {(e as Error).message}
+          {t('G_ERR_PAGE', langue)} {(e as Error).message}
         </p>
       );
   }

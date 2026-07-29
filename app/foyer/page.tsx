@@ -2,6 +2,8 @@ import LienInvitation from '@/components/foyer/LienInvitation';
 import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
 import { chargerFoyerMembres } from '@/lib/membres';
 import { inviterAction, revoquerAction, retirerAction, renommerAction } from './actions';
+import { t, locale } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mon foyer — Hub familial' };
@@ -11,7 +13,7 @@ export const metadata = { title: 'Mon foyer — Hub familial' };
  * foyer. La gestion (inviter / retirer / renommer) est réservée au propriétaire.
  */
 export default async function PageFoyer() {
-  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  const [foyer, user, langue] = [await foyerCourant(), await utilisateurCourant(), await langueCourante()];
   const d = await chargerFoyerMembres(foyer.id, user.id);
   const proprio = d.monRole === 'proprietaire';
 
@@ -19,23 +21,23 @@ export default async function PageFoyer() {
     <>
       <header className="entete">
         <div>
-          <h1>Mon foyer</h1>
-          <p>Les personnes qui partagent les données de « {d.foyerNom} »</p>
+          <h1>{t('NAV_MON_FOYER', langue)}</h1>
+          <p>{t('FOY_SOUS_A', langue)} « {d.foyerNom} »</p>
         </div>
       </header>
 
       {proprio && (
         <section className="compte-bloc">
-          <h2 className="bloc-titre">Nom du foyer</h2>
+          <h2 className="bloc-titre">{t('FOY_NOM_TITRE', langue)}</h2>
           <form action={renommerAction} className="foyer-inline">
-            <input className="champ" name="nom" defaultValue={d.foyerNom} aria-label="Nom du foyer" />
-            <button className="bouton" type="submit">Renommer</button>
+            <input className="champ" name="nom" defaultValue={d.foyerNom} aria-label={t('FOY_NOM_TITRE', langue)} />
+            <button className="bouton" type="submit">{t('FOY_RENOMMER', langue)}</button>
           </form>
         </section>
       )}
 
       <section className="compte-bloc">
-        <h2 className="bloc-titre">Membres ({d.membres.length})</h2>
+        <h2 className="bloc-titre">{t('FOY_MEMBRES', langue)} ({d.membres.length})</h2>
         <ul className="foyer-liste">
           {d.membres.map((m) => (
             <li className="foyer-membre" key={m.membreId}>
@@ -44,13 +46,13 @@ export default async function PageFoyer() {
                 <span className="fm-email">{m.email}</span>
               </span>
               <span className={`puce ${m.role === 'proprietaire' ? 'assigne' : 'categorie'}`}>
-                {m.role === 'proprietaire' ? 'Propriétaire' : 'Membre'}
-                {m.utilisateurId === user.id ? ' · toi' : ''}
+                {m.role === 'proprietaire' ? t('FOY_PROPRIETAIRE', langue) : t('FOY_MEMBRE', langue)}
+                {m.utilisateurId === user.id ? ` · ${t('FOY_TOI', langue)}` : ''}
               </span>
               {proprio && m.role !== 'proprietaire' && m.utilisateurId !== user.id && (
                 <form action={retirerAction}>
                   <input type="hidden" name="id" value={m.membreId} />
-                  <button className="bouton discret rf-danger" type="submit">Retirer</button>
+                  <button className="bouton discret rf-danger" type="submit">{t('FOY_RETIRER', langue)}</button>
                 </form>
               )}
             </li>
@@ -60,11 +62,8 @@ export default async function PageFoyer() {
 
       {proprio && (
         <section className="compte-bloc">
-          <h2 className="bloc-titre">Inviter une personne</h2>
-          <p className="compte-note">
-            Saisis son adresse Google. Un lien d’invitation sera créé : partage-le (SMS, WhatsApp…).
-            La personne le suit, se connecte, et rejoint ton foyer.
-          </p>
+          <h2 className="bloc-titre">{t('FOY_INVITER_TITRE', langue)}</h2>
+          <p className="compte-note">{t('FOY_INVITER_NOTE', langue)}</p>
           <form action={inviterAction} className="foyer-inline">
             <input
               className="champ"
@@ -72,25 +71,27 @@ export default async function PageFoyer() {
               name="email"
               placeholder="adresse@gmail.com"
               required
-              aria-label="E-mail à inviter"
+              aria-label={t('FOY_INVITER_TITRE', langue)}
             />
-            <button className="bouton bouton-primaire" type="submit">Inviter</button>
+            <button className="bouton bouton-primaire" type="submit">{t('FOY_INVITER_BTN', langue)}</button>
           </form>
 
           {d.invitations.length > 0 && (
             <>
-              <h3 className="foyer-sous-titre">Invitations en attente</h3>
+              <h3 className="foyer-sous-titre">{t('FOY_INVIT_ATTENTE', langue)}</h3>
               <ul className="foyer-liste">
                 {d.invitations.map((inv) => (
                   <li className="foyer-membre" key={inv.id}>
                     <span className="fm-ident">
                       <span className="fm-nom">{inv.email}</span>
-                      <span className="fm-email">expire le {new Date(inv.expireLe).toLocaleDateString('fr-FR')}</span>
+                      <span className="fm-email">
+                        {t('FOY_EXPIRE', langue)} {new Date(inv.expireLe).toLocaleDateString(locale(langue))}
+                      </span>
                     </span>
                     <LienInvitation jeton={inv.jeton} />
                     <form action={revoquerAction}>
                       <input type="hidden" name="id" value={inv.id} />
-                      <button className="bouton discret rf-danger" type="submit">Annuler</button>
+                      <button className="bouton discret rf-danger" type="submit">{t('G_ANNULER', langue)}</button>
                     </form>
                   </li>
                 ))}
@@ -101,9 +102,7 @@ export default async function PageFoyer() {
       )}
 
       <p className="compte-note foyer-aide">
-        ⚠ Phase privée : pour que la personne invitée puisse se connecter, son adresse doit aussi
-        figurer dans la liste blanche <code>EMAILS_AUTORISES</code> (env). Ce sera automatique une fois
-        l’accès basé sur l’abonnement activé.
+        {t('FOY_AIDE_A', langue)} <code>EMAILS_AUTORISES</code> {t('FOY_AIDE_B', langue)}
       </p>
     </>
   );

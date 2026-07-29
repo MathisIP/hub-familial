@@ -50,7 +50,7 @@ export default function SelecteurMois({
         className="champ"
         value={selection.mois}
         onChange={(e) => aller(selection.annee, Number(e.target.value))}
-        aria-label={tr('MOIS_PRECEDENT')}
+        aria-label={tr('A_MOIS')}
       >
         {moisNoms.map((nom, i) => (
           <option key={nom} value={i + 1} style={{ textTransform: 'capitalize' }}>{nom}</option>
@@ -61,7 +61,7 @@ export default function SelecteurMois({
         className="champ"
         value={selection.annee}
         onChange={(e) => aller(Number(e.target.value), selection.mois)}
-        aria-label="Année"
+        aria-label={tr('A_ANNEE')}
       >
         {annees.map((a) => (
           <option key={a} value={a}>{a}</option>

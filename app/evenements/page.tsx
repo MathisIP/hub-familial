@@ -20,7 +20,7 @@ export default async function PageEvenements() {
       e instanceof ConfigManquante ? (
         <p className="message erreur">{e.message}</p>
       ) : (
-        <p className="message erreur">Impossible de charger les événements : {(e as Error).message}</p>
+        <p className="message erreur">{t('G_ERR_PAGE', langue)} {(e as Error).message}</p>
       );
   }
 

@@ -49,7 +49,7 @@ export default function ReglagesApparence({ modeVisible = true }: { modeVisible?
 
   return (
     <div className="apparence">
-      <div className="apparence-couleurs" role="radiogroup" aria-label="Couleur du thème">
+      <div className="apparence-couleurs" role="radiogroup" aria-label={tr('A_COULEUR')}>
         {FAMILLES.map((f) => {
           const actif = f.id === famille.id;
           const nom = CLE_FAMILLE[f.id] ? tr(CLE_FAMILLE[f.id]) : f.nom;

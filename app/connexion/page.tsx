@@ -1,5 +1,6 @@
 import { signIn } from '@/auth';
 import { t } from '@/lib/i18n';
+import { langueCourante } from '@/lib/langue';
 
 export const metadata = { title: 'Connexion — Hub familial' };
 
@@ -7,13 +8,14 @@ export const metadata = { title: 'Connexion — Hub familial' };
  * Page de connexion : accès réservé (Google, liste blanche). Un seul bouton qui
  * lance le flux OAuth Google via une action serveur.
  */
-export default function Connexion() {
+export default async function Connexion() {
+  const langue = await langueCourante();
   return (
     <div className="connexion">
       <div className="connexion-carte">
         <div className="connexion-logo">🏡</div>
-        <h1>{t('APP_TITRE')}</h1>
-        <p>Accès réservé au foyer. Connecte-toi avec ton compte Google.</p>
+        <h1>{t('APP_TITRE', langue)}</h1>
+        <p>{t('CNX_ACCES', langue)}</p>
         <form
           action={async () => {
             'use server';
@@ -21,7 +23,7 @@ export default function Connexion() {
           }}
         >
           <button type="submit" className="bouton connexion-bouton">
-            Se connecter avec Google
+            {t('CNX_BOUTON', langue)}
           </button>
         </form>
       </div>

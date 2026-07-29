@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useT } from '@/components/I18nProvider';
-import { IcNeonEtincelle } from '@/components/IconesNav';
+import { IcNeonEclair } from '@/components/IconesNav';
 
 /**
  * Réglage « effet néon » (halos/lueurs). Écrit `data-neon` sur <html> + mémorise
@@ -33,7 +33,7 @@ export default function BasculeNeon({ variante = 'icone' }: { variante?: 'icone'
     return (
       <label className="neon-ligne">
         <input type="checkbox" checked={actif} onChange={(e) => basculer(e.target.checked)} />
-        <span className="neon-ic" aria-hidden="true"><IcNeonEtincelle width={18} height={18} /></span>
+        <span className="neon-ic" aria-hidden="true"><IcNeonEclair width={18} height={18} /></span>
         <span>{tr('NEON_LABEL')}</span>
       </label>
     );
@@ -48,7 +48,7 @@ export default function BasculeNeon({ variante = 'icone' }: { variante?: 'icone'
       aria-label={label}
       title={label}
     >
-      <IcNeonEtincelle width={17} height={17} />
+      <IcNeonEclair width={17} height={17} />
     </button>
   );
 }

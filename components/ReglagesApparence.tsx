@@ -12,6 +12,8 @@ import {
   type IdFamille,
 } from '@/lib/themes';
 import { IcSoleil, IcLune } from '@/components/IconesNav';
+import { useT } from '@/components/I18nProvider';
+import { CLE_FAMILLE } from '@/lib/i18n';
 
 /**
  * Réglages d'apparence du pied de page : une pastille par COULEUR (famille) +
@@ -20,6 +22,7 @@ import { IcSoleil, IcLune } from '@/components/IconesNav';
  * le script inline du layout au chargement suivant.
  */
 export default function ReglagesApparence({ modeVisible = true }: { modeVisible?: boolean }) {
+  const tr = useT();
   const [theme, setTheme] = useState<IdTheme>(THEME_DEFAUT);
 
   // Le serveur ignore le thème mémorisé : on se resynchronise après montage.
@@ -49,6 +52,7 @@ export default function ReglagesApparence({ modeVisible = true }: { modeVisible?
       <div className="apparence-couleurs" role="radiogroup" aria-label="Couleur du thème">
         {FAMILLES.map((f) => {
           const actif = f.id === famille.id;
+          const nom = CLE_FAMILLE[f.id] ? tr(CLE_FAMILLE[f.id]) : f.nom;
           return (
             <button
               key={f.id}
@@ -56,8 +60,8 @@ export default function ReglagesApparence({ modeVisible = true }: { modeVisible?
               className={`swatch${actif ? ' actif' : ''}`}
               role="radio"
               aria-checked={actif}
-              aria-label={f.nom}
-              title={f.nom}
+              aria-label={nom}
+              title={nom}
               onClick={() => choisirCouleur(f.id)}
               style={{ background: THEMES[f.clair].ACC }}
             />
@@ -71,8 +75,8 @@ export default function ReglagesApparence({ modeVisible = true }: { modeVisible?
           className="pied-ic"
           onClick={basculerMode}
           aria-pressed={sombre}
-          aria-label={sombre ? 'Passer en mode clair' : 'Passer en mode sombre'}
-          title={sombre ? 'Mode clair' : 'Mode sombre'}
+          aria-label={sombre ? tr('A_MODE_CLAIR') : tr('A_MODE_SOMBRE')}
+          title={sombre ? tr('A_MODE_CLAIR') : tr('A_MODE_SOMBRE')}
         >
           {sombre ? <IcSoleil width={16} height={16} /> : <IcLune width={16} height={16} />}
         </button>

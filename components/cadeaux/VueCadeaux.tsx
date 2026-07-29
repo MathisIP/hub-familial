@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
-import { useT } from '@/components/I18nProvider';
+import { useT, useLangue } from '@/components/I18nProvider';
+import { tEnum, CLE_STATUT_CADEAU } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
 import {
   estProche,
@@ -18,6 +19,7 @@ import {
  */
 export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
   const tr = useT();
+  const langue = useLangue();
   const [d, setD] = useState<DonneesCadeaux>(initial);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -129,7 +131,7 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                       aria-label={`Statut de ${c.idee}`}
                     >
                       {d.statuts.map((s) => (
-                        <option key={s} value={s}>{s}</option>
+                        <option key={s} value={s}>{tEnum(CLE_STATUT_CADEAU, s, langue)}</option>
                       ))}
                     </select>
                     <button className="bouton discret" onClick={() => setEdite(c.id)} disabled={occupe}>
@@ -208,6 +210,7 @@ function CadeauForm({
   onSupprimerAction?: () => void;
 }) {
   const tr = useT();
+  const langue = useLangue();
   const [idee, setIdee] = useState(cadeau?.idee ?? '');
   const [pourQui, setPourQui] = useState(cadeau?.pourQui ?? '');
   const [occasion, setOccasion] = useState(cadeau?.occasion ?? '');
@@ -230,7 +233,7 @@ function CadeauForm({
         <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder={tr('CAD_POUR_QUI')} disabled={occupe} ariaLabel={tr('CAD_POUR_QUI')} />
         <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder={tr('CAD_OCCASION')} disabled={occupe} ariaLabel={tr('CAD_OCCASION')} />
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
-          {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
+          {d.statuts.map((s) => <option key={s} value={s}>{tEnum(CLE_STATUT_CADEAU, s, langue)}</option>)}
         </select>
       </div>
       <div className="rf-ligne1">

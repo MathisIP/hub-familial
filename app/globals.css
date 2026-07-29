@@ -655,7 +655,9 @@ a { color: var(--link-tx); }
   border: 1px solid var(--link-tx);
   border-radius: .7rem;
 }
-.rf-ligne1 { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+/* flex-end : les champs simples s'alignent sur le bas des champs à libellé
+   (Date/Heure/Début…), sinon ils flottaient au milieu (Lieu, nom vs Date). */
+.rf-ligne1 { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
 .rf-nom { flex: 1 1 14rem; min-width: 0; font-weight: 600; }
 .rf-ingredients { display: flex; flex-direction: column; gap: .4rem; }
 .rf-ing-entete, .rf-ing-ligne {

@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import Combobox from '@/components/Combobox';
 import { useT, useLangue } from '@/components/I18nProvider';
-import { t, type IdLangue } from '@/lib/i18n';
+import { t, tEnum, CLE_STATUT_EVT, type IdLangue } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
 import { estDansAgenda, parseAgendaLien, type DonneesEvenements, type Evenement } from '@/lib/evenements/schema';
 import type { Agenda } from '@/lib/agenda/schema';
@@ -106,7 +106,7 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                   >
                     <option value="">—</option>
                     {d.statuts.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>{tEnum(CLE_STATUT_EVT, s, langue)}</option>
                     ))}
                   </select>
                   <button className="bouton discret" onClick={() => setEdite(ev.id)} disabled={occupe}>
@@ -263,6 +263,7 @@ function EvenementForm({
   onAnnulerAction: () => void;
 }) {
   const tr = useT();
+  const langue = useLangue();
   const [nom, setNom] = useState(evenement?.nom ?? '');
   const [type, setType] = useState(evenement?.type ?? '');
   const [date, setDate] = useState(evenement?.dateISO ?? '');
@@ -287,7 +288,7 @@ function EvenementForm({
         <Combobox value={type} onChange={setType} options={d.types} placeholder={tr('EVT_TYPE')} disabled={occupe} ariaLabel={tr('EVT_TYPE')} />
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
           <option value="">{tr('EVT_STATUT')}…</option>
-          {d.statuts.map((s) => <option key={s} value={s}>{s}</option>)}
+          {d.statuts.map((s) => <option key={s} value={s}>{tEnum(CLE_STATUT_EVT, s, langue)}</option>)}
         </select>
       </div>
       <div className="rf-ligne1">

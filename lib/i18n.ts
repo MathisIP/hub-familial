@@ -369,7 +369,61 @@ const UI = {
   AGD_DEBUT: { fr: 'Début', en: 'Start' },
   AGD_FIN: { fr: 'Fin', en: 'End' },
   AGD_DESC_PH: { fr: 'Note / description', en: 'Note / description' },
+
+  // Statuts Événements
+  EVS_APLANIFIER: { fr: 'À planifier', en: 'To plan' },
+  EVS_ENPREP: { fr: 'En préparation', en: 'In preparation' },
+  EVS_PRET: { fr: 'Prêt', en: 'Ready' },
+  EVS_PASSE: { fr: 'Passé', en: 'Past' },
+  // Statuts Cadeaux
+  CDS_IDEE: { fr: 'Idée', en: 'Idea' },
+  CDS_AACHETER: { fr: 'À acheter', en: 'To buy' },
+  CDS_COMMANDE: { fr: 'Commandé', en: 'Ordered' },
+  CDS_RECU: { fr: 'Reçu', en: 'Received' },
+  CDS_EMBALLE: { fr: 'Emballé', en: 'Wrapped' },
+  CDS_OFFERT: { fr: 'Offert', en: 'Given' },
+  // Jours de la semaine
+  JOUR_LUNDI: { fr: 'Lundi', en: 'Monday' },
+  JOUR_MARDI: { fr: 'Mardi', en: 'Tuesday' },
+  JOUR_MERCREDI: { fr: 'Mercredi', en: 'Wednesday' },
+  JOUR_JEUDI: { fr: 'Jeudi', en: 'Thursday' },
+  JOUR_VENDREDI: { fr: 'Vendredi', en: 'Friday' },
+  JOUR_SAMEDI: { fr: 'Samedi', en: 'Saturday' },
+  JOUR_DIMANCHE: { fr: 'Dimanche', en: 'Sunday' },
+
+  // Mon compte (RGPD)
+  CPT_SOUS: { fr: 'Tes données et ta confidentialité', en: 'Your data and privacy' },
+  CPT_EXPORT_TITRE: { fr: 'Exporter mes données', en: 'Export my data' },
+  CPT_EXPORT_DESC: {
+    fr: "Télécharge l'intégralité des données de ton foyer (comptes et transactions, tâches et courses, recettes, cadeaux, événements…) dans un fichier JSON. C'est ton droit à la portabilité.",
+    en: 'Download all of your household’s data (accounts and transactions, tasks and shopping, recipes, gifts, events…) as a JSON file. This is your right to data portability.',
+  },
+  CPT_EXPORT_BTN: { fr: '⬇ Exporter mes données (JSON)', en: '⬇ Export my data (JSON)' },
+  CPT_SUPPR_TITRE: { fr: 'Supprimer mon compte', en: 'Delete my account' },
+  CPT_SUPPR_DESC: {
+    fr: 'Efface définitivement ton compte et toutes les données de ton foyer. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',
+    en: 'Permanently deletes your account and all your household’s data. This action is irreversible (right to erasure). Remember to export your data first if you want to keep a copy.',
+  },
+  CPT_CHECK: {
+    fr: 'Je comprends que la suppression est définitive et efface toutes les données de mon foyer.',
+    en: 'I understand that deletion is permanent and erases all my household’s data.',
+  },
+  CPT_SUPPR_BTN: { fr: 'Supprimer définitivement mon compte', en: 'Permanently delete my account' },
+  CPT_CONF_LIEN: { fr: 'Politique de confidentialité →', en: 'Privacy policy →' },
+
+  // Noms des gammes de couleur (infobulles des pastilles)
+  THEME_CORAIL: { fr: 'Corail', en: 'Coral' },
+  THEME_AMETHYSTE: { fr: 'Améthyste', en: 'Amethyst' },
+  THEME_LAGON: { fr: 'Lagon', en: 'Lagoon' },
+  THEME_MENTHE: { fr: 'Menthe', en: 'Mint' },
+  THEME_AMBRE: { fr: 'Ambre', en: 'Amber' },
+  THEME_INDIGO: { fr: 'Indigo', en: 'Indigo' },
 } as const satisfies Record<string, Trad>;
+
+export const CLE_FAMILLE: Record<string, CleUI> = {
+  corail: 'THEME_CORAIL', amethyste: 'THEME_AMETHYSTE', lagon: 'THEME_LAGON',
+  menthe: 'THEME_MENTHE', ambre: 'THEME_AMBRE', indigo: 'THEME_INDIGO',
+};
 
 /* Correspondances valeur (français, stockée) → clé UI, pour les énumérations. */
 export const CLE_STATUT_TODO: Record<string, CleUI> = {
@@ -386,6 +440,17 @@ export const CLE_TYPE_RECETTE: Record<string, CleUI> = {
 };
 export const CLE_CHAUD_FROID: Record<string, CleUI> = {
   Chaud: 'CF_CHAUD', Froid: 'CF_FROID',
+};
+export const CLE_STATUT_EVT: Record<string, CleUI> = {
+  'À planifier': 'EVS_APLANIFIER', 'En préparation': 'EVS_ENPREP', 'Prêt': 'EVS_PRET', 'Passé': 'EVS_PASSE',
+};
+export const CLE_STATUT_CADEAU: Record<string, CleUI> = {
+  'Idée': 'CDS_IDEE', 'À acheter': 'CDS_AACHETER', 'Commandé': 'CDS_COMMANDE',
+  'Reçu': 'CDS_RECU', 'Emballé': 'CDS_EMBALLE', 'Offert': 'CDS_OFFERT',
+};
+export const CLE_JOUR: Record<string, CleUI> = {
+  Lundi: 'JOUR_LUNDI', Mardi: 'JOUR_MARDI', Mercredi: 'JOUR_MERCREDI', Jeudi: 'JOUR_JEUDI',
+  Vendredi: 'JOUR_VENDREDI', Samedi: 'JOUR_SAMEDI', Dimanche: 'JOUR_DIMANCHE',
 };
 
 /** Traduit une valeur d'énumération via sa table ; repli sur la valeur brute. */

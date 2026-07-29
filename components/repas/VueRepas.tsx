@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
 import { useT, useLangue } from '@/components/I18nProvider';
-import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID } from '@/lib/i18n';
+import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID, CLE_JOUR } from '@/lib/i18n';
 import {
   agregerCourses,
   formatQuantite,
@@ -163,7 +163,7 @@ function JourLigne({
   return (
     <li className="jour-repas">
       <div className="jr-tete">
-        <span className="jr-jour">{jour.jour}</span>
+        <span className="jr-jour">{tEnum(CLE_JOUR, jour.jour, langue)}</span>
         <label className="jr-pers">
           <input
             className="champ"

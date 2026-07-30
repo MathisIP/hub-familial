@@ -1,27 +1,37 @@
-# Version vendable (multi-foyer) — guide de mise en route
+# Version vendable (multi-foyer) — état & mise en route base
 
-Ce document pilote le passage de l'app **mono-foyer (Google Sheets)** à un **produit
+Ce document a piloté le passage de l'app **mono-foyer (Google Sheets)** à un **produit
 multi-locataire (SaaS)** où chaque foyer est un client, avec ses données dans une
 base Postgres. Décisions actées :
 
 - **Socle** : Postgres + **Auth.js** (on garde la connexion Google + le flux de
   refresh token pour Drive/Agenda) + **Drizzle** (ORM).
-- **Toi = client n°1** : à terme, tes données quittent Google Sheets pour la base
-  (dogfooding). La migration se fait **module par module**, l'app reste utilisable.
 - **Drive + Agenda conservés** : ils passent par Google OAuth (déjà en place),
   indépendamment de la base.
 
-## Où on en est (Phase 0 — fondations)
+## ✅ Migration TERMINÉE (état actuel)
 
-Posé :
-- `lib/db/schema.ts` — tables `foyers`, `utilisateurs`, `membres`, `invitations`.
-- `lib/db/index.ts` — client Drizzle **paresseux** (`db()`), + `baseDisponible()`.
-  Sans `DATABASE_URL`, rien ne se connecte : l'app continue sur Sheets.
-- `drizzle.config.ts` + scripts `db:generate` / `db:migrate` / `db:studio`.
+**Les 6 modules sont sur Postgres.** Google Sheets n'est plus utilisé (le code Sheets
+a été retiré — voir « Ménage Sheets » dans [CLAUDE.md](CLAUDE.md)). En place :
 
-Reste (une fois la base créée) : 1re migration, branchement d'Auth.js sur la base
-(créer l'utilisateur + son foyer à la connexion), évolution de `configFoyer()`,
-puis migration du module pilote **Cadeaux**.
+- `lib/db/schema.ts` — toutes les tables, chacune scopée `foyer_id` : socle (`foyers`,
+  `utilisateurs`, `membres`, `invitations`) + données des modules (comptes, transactions,
+  budget_categories, echeances, taches, courses, recettes, semaine, evenements, cadeaux,
+  occasions).
+- `lib/db/index.ts` — client Drizzle **paresseux** (`db()`) + `baseDisponible()`.
+- `lib/foyer.ts` — `idFoyerCourant()` / `utilisateurCourant()`, provisionnement du
+  foyer à la 1re connexion ; chaque requête de module scope au foyer courant.
+- `drizzle.config.ts` + scripts `db:generate` / `db:migrate` / `db:studio` + migrations
+  dans `lib/db/migrations/`.
+- Complété par : **RGPD** (export + suppression, page confidentialité), **Stripe**
+  (abonnement par foyer, voir [STRIPE.md](STRIPE.md)), **membres/invitations** (page
+  « Mon foyer »).
+
+> ⚠ `DATABASE_URL` est désormais **requis** (local **et** Vercel) : sans lui, aucun
+> module ne charge. La section ci-dessous reste la référence pour (re)créer la base.
+
+Reste ouvert (extensions) : onboarding (nom du foyer à la 1re connexion), sous-listes
+Événements (invités/checklist/menu) en base, i18n es/de/it.
 
 ## Ce que TU dois faire : créer la base Neon
 
@@ -39,14 +49,14 @@ puis migration du module pilote **Cadeaux**.
 5. Plus tard (déploiement) : ajoute la **même** variable dans Vercel
    (Project → Settings → Environment Variables).
 
-## Une fois `DATABASE_URL` en place
+## Gestion de la base (migrations)
 
-Dis-le-moi — j'enchaîne :
+Le schéma vit dans `lib/db/schema.ts`. Après toute modification :
 
 ```powershell
-npm run db:generate   # génère la 1re migration SQL depuis le schéma
-npm run db:migrate    # l'applique à la base Neon
-npm run db:studio      # (optionnel) explorateur visuel des tables
+npm run db:generate   # génère une migration SQL depuis le schéma (lib/db/migrations/)
+npm run db:migrate    # applique les migrations en attente à la base Neon
+npm run db:studio     # (optionnel) explorateur visuel des tables
 ```
 
 > ⚠ `drizzle-kit` s'appuie sur `esbuild`, dont le script d'installation a pu être
@@ -55,12 +65,13 @@ npm run db:studio      # (optionnel) explorateur visuel des tables
 
 ## Rappels d'architecture pour la suite
 
-- **Isolation** : toute table de données de module portera `foyer_id` (FK vers
-  `foyers`), et chaque requête sera **scopée au foyer du user connecté**. Jamais de
-  lecture/écriture sans filtre `foyer_id`.
-- **`configFoyer()`** ([lib/config.ts](lib/config.ts)) reste le point de bascule :
-  il résoudra le foyer courant depuis la base (session → foyer) au lieu de `.env`.
-- **Facturation** (phase ultérieure) : Stripe → `foyers.statut_abonnement`,
-  accès conditionné à un abonnement actif/essai.
+- **Isolation** : toute table de données de module porte `foyer_id` (FK vers
+  `foyers`), et chaque requête est **scopée au foyer du user connecté** via
+  `idFoyerCourant()` ([lib/foyer.ts](lib/foyer.ts)). Jamais de lecture/écriture sans
+  filtre `foyer_id`.
+- **`configFoyer()`** ([lib/config.ts](lib/config.ts)) ne porte plus que la config des
+  services Google externes (agendas) ; le scope des **données** se fait par `idFoyerCourant()`.
+- **Facturation** : Stripe → `foyers.statut_abonnement`, accès conditionné à un
+  abonnement actif/essai (en place, voir [STRIPE.md](STRIPE.md)).
 - **RGPD** : hébergement UE (Neon EU + hébergeur UE ou Vercel), export + suppression
   de compte, politique de confidentialité, CGV/CGU.

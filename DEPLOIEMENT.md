@@ -3,41 +3,31 @@
 Objectif : mettre l'app en ligne pour l'ouvrir sur le téléphone même PC éteint,
 avec un accès protégé (connexion Google restreinte à vos adresses).
 
-Trois briques :
+Briques :
 - **Vercel** héberge l'app (gratuit, HTTPS automatique).
-- **Compte de service Google** (déjà en place) → lit/écrit vos données (Sheets, Agenda).
-- **Client OAuth Google** (nouveau) → sert uniquement à la *connexion* (qui peut ouvrir l'app).
+- **Base Postgres (Neon, UE)** — **source de vérité de tous les modules** (`DATABASE_URL`). Voir [MIGRATION_SAAS.md](MIGRATION_SAAS.md).
+- **Compte de service Google** (déjà en place) → **Google Agenda** (module Agenda). *(L'explorateur Drive de l'accueil passe, lui, par le jeton OAuth de l'utilisateur, pas par le compte de service.)*
+- **Client OAuth Google** → sert à la *connexion* (qui peut ouvrir l'app) et aux accès Drive de l'utilisateur.
 
 ---
 
 ## 1. Mettre le code en ligne
 
-`.gitignore` est déjà configuré pour **exclure les secrets** (`.env`,
-`credentials.json` ne partent jamais). Git n'est pas installé sur ce PC — choisis
-l'option qui te convient :
+**Déjà en place** : le dépôt est sur GitHub (`MathisIP/hub-familial`, branche `main`)
+et **chaque `git push` sur `main` redéploie automatiquement sur Vercel**. Le workflow
+courant est donc simplement :
 
-### Option A — GitHub Desktop (le plus simple, sans ligne de commande)
-1. Installer **GitHub Desktop** : https://desktop.github.com
-2. *File → Add local repository* → choisir le dossier du projet → *create a repository*.
-3. *Publish repository* → cocher **Keep this code private**.
-4. Vérifier dans la liste des fichiers que **`.env` et `credentials.json` n'y sont
-   PAS** (ils doivent être grisés / ignorés).
-
-### Option B — Vercel CLI (déploie sans GitHub)
-1. `npm i -g vercel`
-2. Dans le dossier du projet : `vercel` (suivre les invites). Puis passer
-   directement à l'étape 3 (les variables d'env se règlent pareil).
-
-### Option C — Git en ligne de commande
-Installer Git (https://git-scm.com/download/win), puis :
 ```powershell
-git init; git add -A; git commit -m "Hub familial"
-git remote add origin https://github.com/<toi>/hub-familial.git
-git branch -M main; git push -u origin main
+git add -A; git commit -m "..."; git push origin main
 ```
 
-> ⚠ Dans tous les cas : `credentials.json` et `.env` ne doivent JAMAIS se
-> retrouver en ligne. Ils sont dans `.gitignore` — vérifie quand même avant de publier.
+`.gitignore` **exclut les secrets** (`.env`, `credentials.json`, `*.b64` ne partent
+jamais). Réflexe avant chaque commit :
+
+```powershell
+git diff --cached --name-only | Select-String -Pattern '\.env$|credentials|\.b64|gserviceaccount'
+```
+(aucune ligne = pas de secret sur le point d'être versionné.)
 
 ---
 
@@ -69,16 +59,21 @@ Dans la console Google Cloud, projet **hub-familial-app** :
    Next.js (rien à configurer côté build).
 3. **Variables d'environnement** (Settings → Environment Variables) — tout ceci :
 
-   | Variable | Valeur |
-   |---|---|
-   | `BUDGET_SHEET_ID` … `EVENEMENTS_SHEET_ID` | les 5 IDs (comme dans `.env`) |
-   | `AGENDA_IDS` | les 3 IDs d'agenda séparés par des virgules |
-   | `DRIVE_A_CLASSER_URL` | l'URL du dossier Drive |
-   | `GOOGLE_CREDENTIALS_JSON` | **tout le contenu** de `credentials.json` (copier-coller le fichier entier) |
-   | `AUTH_SECRET` | la valeur générée (dans `.env`), ou en régénérer une |
-   | `AUTH_GOOGLE_ID` | le client ID OAuth (étape 2) |
-   | `AUTH_GOOGLE_SECRET` | le secret OAuth (étape 2) |
-   | `EMAILS_AUTORISES` | vos adresses, ex. `toi@gmail.com,lou@gmail.com` |
+   | Variable | Valeur | Requis |
+   |---|---|---|
+   | `DATABASE_URL` | chaîne Postgres Neon (pooled, `sslmode=require`) — **source de vérité** | ✅ |
+   | `AUTH_SECRET` | la valeur générée (dans `.env`), ou en régénérer une | ✅ |
+   | `AUTH_GOOGLE_ID` | le client ID OAuth (étape 2) | ✅ |
+   | `AUTH_GOOGLE_SECRET` | le secret OAuth (étape 2) | ✅ |
+   | `EMAILS_AUTORISES` | vos adresses, ex. `toi@gmail.com,lou@gmail.com` | ✅ |
+   | `GOOGLE_CREDENTIALS_JSON` | **tout le contenu** de `credentials.json` (Agenda) | ✅ |
+   | `AGENDA_IDS` | IDs d'agenda séparés par des virgules | selon usage |
+   | `DRIVE_HUB_URL` | URL du dossier Drive racine (explorateur) | selon usage |
+   | `DRIVE_A_CLASSER_URL` | URL du dossier Drive « À classer » (import) | selon usage |
+   | `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID` / `STRIPE_WEBHOOK_SECRET` | abonnement — voir [STRIPE.md](STRIPE.md) | pour facturer |
+
+   > ⚠ Sans `DATABASE_URL`, l'app ne peut charger aucun module (la base est la source
+   > de vérité). Sans `STRIPE_SECRET_KEY`, l'accès n'est **pas** verrouillé (facturation off).
 
 4. **Deploy**. Noter le domaine attribué (`https://xxx.vercel.app`).
 5. Retourner à l'étape 2 : ajouter ce domaine dans **Origines** et **URI de
@@ -100,10 +95,11 @@ Dans la console Google Cloud, projet **hub-familial-app** :
 ## Notes
 
 - **Sécurité** : la liste blanche `EMAILS_AUTORISES` est le garde-fou. Liste vide
-  = personne ne peut entrer (refus par défaut). Le compte de service et ses accès
-  aux Sheets/Agenda ne changent pas.
+  = personne ne peut entrer (refus par défaut). Le compte de service (Agenda) ne change pas.
 - **Tester la connexion en local** : renseigner `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`
   dans `.env` (le client OAuth autorise déjà `localhost:3000`), puis `npm run dev`.
 - **Mises à jour** : chaque `git push` sur `main` redéploie automatiquement.
-- **Pas encore de mode hors-ligne** (pas de service worker) : l'app a besoin d'une
-  connexion internet à l'ouverture.
+- **Mode hors-ligne** : un service worker met en cache la coquille de l'app → elle
+  **s'ouvre sans réseau** (les données, elles, viennent des API à la requête).
+- **Pour finaliser le lancement** (domaine, OAuth en production, stores, RGPD) :
+  voir le guide dédié `docs/GUIDE_FINALISATION.pdf` (hors dépôt, sur ta machine).

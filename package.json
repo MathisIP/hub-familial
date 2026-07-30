@@ -2,13 +2,12 @@
   "name": "hub-familial",
   "version": "0.1.0",
   "private": true,
-  "description": "Hub d'organisation familiale — application PWA adossée à l'écosystème Google Sheets",
+  "description": "Hub d'organisation familiale — application PWA multi-foyer (Postgres/Neon)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "diag": "node scripts/diag.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"

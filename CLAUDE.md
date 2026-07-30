@@ -8,51 +8,50 @@ Projet, code, commentaires et réponses en **français**.
 
 ## Ce qu'est ce projet
 
-**Hub familial** : application PWA (Next.js) qui remplace un ancien « Site QG » Google Sites et sert de portail unifié à un écosystème de **5 classeurs Google Sheets** (Budget, ToDo, Repas, Événements, Cadeaux), chacun piloté par des Apps Script. Les Sheets restent la **source de vérité** ; l'app lit (et écrira) par-dessus, module par module, sans les dupliquer.
+**Hub familial** : application PWA (Next.js) qui remplace un ancien « Site QG » Google Sites, portail unifié des modules du foyer (Budget, ToDo, Repas, Événements, Cadeaux, Agenda). **La source de vérité est désormais Postgres (Neon, UE)**, multi-foyer, scopé `foyer_id`. Le projet est né par-dessus **5 classeurs Google Sheets** (pilotés par des Apps Script) mais **tous les modules ont migré en base** ; les Sheets ne sont plus lus ni écrits par l'app (le code Sheets a été retiré, voir « Ménage Sheets » plus bas). Restent branchés sur Google, comme **services externes** (pas comme base) : **Google Agenda** (module Agenda) et **Google Drive** (explorateur + import de l'accueil).
 
 Ambition produit : **privé d'abord** (le foyer), puis **distribuable à d'autres foyers**. Cette contrainte de revente dicte l'architecture — voir « Règles d'architecture » plus bas.
 
-Le contexte complet est dans [Contexte/Recapitulatif_projet_et_objectifs.md](Contexte/Recapitulatif_projet_et_objectifs.md). Les `Contexte/*/​*.gs` sont les **Apps Script de référence** (non déployés par l'app, mais ils définissent le schéma réel des onglets, les thèmes et l'i18n — s'y référer avant de deviner quoi que ce soit).
+Le contexte complet est dans [Contexte/Recapitulatif_projet_et_objectifs.md](Contexte/Recapitulatif_projet_et_objectifs.md). Les `Contexte/*/​*.gs` sont les **Apps Script d'origine** (jamais déployés par l'app) : ils gardent leur valeur d'archive (schéma métier, thèmes, i18n d'origine) mais **ne décrivent plus la source de vérité** — celle-ci est le schéma Drizzle [lib/db/schema.ts](lib/db/schema.ts).
 
 ## Commandes
 
 ```powershell
-npm run dev     # Serveur de dev (http://localhost:3000)
-npm run build   # Build de prod — vérifie aussi les types TypeScript
-npm run lint    # ESLint (next lint)
-npm run diag    # Vérifie l'accès aux 5 classeurs + liste leurs onglets réels
+npm run dev          # Serveur de dev (http://localhost:3000)
+npm run build        # Build de prod — vérifie aussi les types TypeScript
+npm run lint         # ESLint (next lint)
+npm run db:generate  # Génère une migration Drizzle depuis lib/db/schema.ts
+npm run db:migrate   # Applique les migrations à la base (Neon)
+npm run db:studio    # Explorateur Drizzle Studio (base du foyer)
 ```
-
-`npm run diag` est l'outil à lancer après tout changement de partage, de clé ou de langue dans les Sheets. Il est autonome (JS pur, sans Next) pour tourner même si le build casse.
 
 ## Règles d'architecture (non négociables)
 
 Ces trois règles viennent des échecs de la version précédente et de la contrainte de revente. Les enfreindre casse silencieusement.
 
-1. **Zéro identifiant en dur.** Aucun ID de classeur hors de `.env`, et aucune lecture de `process.env.*_SHEET_ID` hors de [lib/config.ts](lib/config.ts). Tout passe par `configFoyer()` / `idClasseur()`. Le jour du multi-foyer, **seul ce fichier** change (config par foyer au lieu de `.env`).
+1. **Zéro identifiant en dur.** Aucun identifiant de foyer/agenda hors de `.env`, et aucune lecture de `process.env.*` de config hors de [lib/config.ts](lib/config.ts). Tout passe par `configFoyer()`. Le jour du multi-foyer, **seul ce fichier** change (config par foyer au lieu de `.env`). Pour les **données**, le scope se fait par `idFoyerCourant()` ([lib/foyer.ts](lib/foyer.ts)) sur chaque requête.
 
-2. **Jamais de nom d'onglet en dur.** Les Apps Script renomment réellement les onglets selon la langue active (registre `LANGUES`). On désigne un onglet par sa **clé canonique** (`SEMAINE`, `TACHES`, `VUE_ENSEMBLE`…) et on résout via `nomOnglet()` de [lib/i18n.ts](lib/i18n.ts). Construire les plages A1 avec `plage()` (elle échappe apostrophes, emojis, `&`). L'ancien code codait `'Semaine!A:B'` en dur : il cassait au premier changement de langue.
+2. **Isolation stricte par foyer.** Toute requête base porte un `where foyer_id = idFoyerCourant()`. Une donnée d'un foyer ne doit jamais fuiter vers un autre. C'est la contrainte n°1 du multi-foyer vendable.
 
-3. **Secrets côté serveur uniquement.** Tout l'accès Google est dans [lib/google/](lib/google/), marqué `import 'server-only'`. Une importation depuis un composant client devient une **erreur de compilation**, pas une fuite. `credentials.json` ne doit jamais atteindre le bundle navigateur. C'est la raison du choix back-end (Next.js) plutôt qu'appels API côté client.
+3. **Secrets côté serveur uniquement.** Tout l'accès Google est dans [lib/google/](lib/google/), marqué `import 'server-only'`, et l'accès base dans [lib/db/](lib/db/). Une importation depuis un composant client devient une **erreur de compilation**, pas une fuite. `credentials.json` / `DATABASE_URL` ne doivent jamais atteindre le bundle navigateur.
 
-Pièges API rencontrés (ne pas réintroduire) :
-- `spreadsheets.values.get` **omet** `values` quand la plage est vide (au lieu d'un tableau vide). Les lectures renvoient donc toujours `[]`.
-- **Ne pas utiliser `append`** pour ajouter une ligne dans un onglet dont une colonne porte des cases à cocher/validation sur toute sa hauteur (cas de `Courses`, grille 1001 lignes) : l'API considère toute la colonne comme « la table » et place la nouvelle ligne en bas de grille (~ligne 1001), détachée des données. Calculer la prochaine ligne libre et écrire avec `ecrirePlage` (cf. `prochaineLigne()` dans `lib/todo/service.ts`).
-- Les déclencheurs `onEdit`/`onFormSubmit` des Apps Script **ne s'exécutent PAS** sur les écritures via l'API. Toute logique qu'ils portaient (ex. régénération d'une tâche récurrente cochée « Fait ») doit être répliquée côté service.
+> **Historique (règle abandonnée).** L'ancienne règle « jamais de nom d'onglet en dur » (via `nomOnglet()`/`plage()`) n'a plus lieu d'être : plus aucun module ne lit un Sheet. Les pièges de l'API Sheets (`values` omis sur plage vide, `append` sur colonne à cases à cocher, déclencheurs `onEdit` non exécutés via API) sont archivés — ils ne concernent plus le code actif. Voir « Ménage Sheets » plus bas.
 
 ## Structure
 
-- [lib/config.ts](lib/config.ts) — config du foyer, point de bascule mono→multi-foyer (`server-only`).
-- [lib/i18n.ts](lib/i18n.ts) — registre `LANGUES` (FR complet, EN/ES à venir), `nomOnglet()`, `t()`, `plage()`. Transposition de la Phase H des Apps Script.
+- [lib/config.ts](lib/config.ts) — config des services Google externes du foyer (agendas), point de bascule mono→multi-foyer (`server-only`). Le scope des **données** se fait par `idFoyerCourant()` ([lib/foyer.ts](lib/foyer.ts)).
+- [lib/i18n.ts](lib/i18n.ts) — dictionnaire UI multilingue `t()` / `tEnum()` (FR complet, EN quasi complet, ES/DE/IT à venir avec repli FR). Cookie `hub-langue`. (Le registre d'onglets Sheets + `nomOnglet()`/`plage()` ont été retirés.)
 - [lib/themes.ts](lib/themes.ts) — **REFONTE « Corail » (25/07/2026)** : les 9 anciens thèmes sont remplacés par une teinte principale **Corail** en **clair (`corail`, défaut) + sombre (`nuit`)**. Nouveaux rôles `ACC`/`ACC_DEEP`/`ON_ACC`/`GLOW`/`GLOW2` (marque corail + halos) en plus des rôles historiques. Polices via **next/font** dans [layout.tsx](app/layout.tsx) : titres **Fraunces** (variable `--police-titre`), corps **Quicksand** (`--police-corps`). Les 5 autres gammes validées en maquette (Améthyste/Lagon/Menthe/Ambre/Indigo) seront ajoutées comme thèmes (mêmes rôles). Maquettes de référence dans [maquettes/](maquettes/). `cssDesThemes()` génère le CSS de tous les thèmes. Extension To-Do ([lib/todo/theme.ts](lib/todo/theme.ts)) mise à jour (corail/nuit). [[refonte-ui-corail]]
-- [lib/google/sheets.ts](lib/google/sheets.ts) — client Sheets (compte de service), `lirePlage()`, `inspecterClasseur()` (`server-only`).
-- [app/](app/) — App Router. `layout.tsx` injecte le CSS des thèmes + un script inline anti-flash. `page.tsx` = portail des 5 modules. `api/etat/route.ts` = diagnostic de connexion. `manifest.ts` = PWA.
-- [components/](components/) — `SelecteurTheme` et `BandeauEtat` (client).
-- `scripts/diag.mjs` — cf. `npm run diag`.
+- [lib/db/](lib/db/) — socle Postgres : `schema.ts` (Drizzle, toutes les tables scopées `foyer_id`), client `postgres.js` (Neon UE), migrations. **Source de vérité de tous les modules.**
+- [lib/google/](lib/google/) — services Google externes (`server-only`) : `auth.ts` (`googleAuth(scopes)`), Agenda (`lib/agenda/`) et Drive (`driveBrowse.ts` / `driveImport.ts`). Plus de client Sheets.
+- [app/](app/) — App Router. `layout.tsx` injecte le CSS des thèmes + un script inline anti-flash + `SideBar`. `page.tsx` = accueil (tableau de bord). `manifest.ts` = PWA.
+- [components/](components/) — îlots client (`SideBar`, `ReglagesApparence`, `BasculeNeon`, cartes d'accueil, vues de modules…).
 
 ## État d'avancement
 
-Échafaudage posé et **vérifié** (build vert, `/api/etat` renvoie `tousOk: true` sur les 5 classeurs, le 21/07/2026).
+Échafaudage posé et **vérifié** (build vert, les 5 classeurs accessibles, le 21/07/2026 — au temps où l'app lisait les Sheets ; depuis, tout a migré en base).
+
+**Ménage Sheets (30/07/2026)** : les 5 modules étant tous sur Postgres, le code Google Sheets **devenu dormant a été supprimé** — `lib/google/sheets.ts`, l'endpoint `app/api/etat/`, le composant orphelin `BandeauEtat.tsx`, le script `scripts/diag.mjs` (+ commande `npm run diag`), le registre d'onglets et `nomOnglet()`/`plage()` de [lib/i18n.ts](lib/i18n.ts), et les `*_SHEET_ID` de `.env`/`.env.example`. `lib/config.ts` ne porte plus que les agendas. **Aucun module ne lit/écrit un Sheet.** Les 5 classeurs peuvent être « dé-partagés » du compte de service sans rien casser. (`googleAuth()` reste — utilisé par Agenda + Drive.)
 
 **Module To-Do & Courses : terminé et vérifié** (21/07/2026). Route `/todo`, API sous `app/api/todo/`, service `lib/todo/`. Fonctionnalités : liste des tâches triée (retards/priorité), ajout, changement de statut avec **régénération des tâches récurrentes**, liste de courses groupée par rayon, cases à cocher, ajout d'article, retrait des articles cochés. Rôles de couleur du module dans `lib/todo/theme.ts`.
 - **⚡ MIGRÉ EN BASE (version vendable, 24/07/2026)** — 2ᵉ module SaaS. Service sur **Postgres** scopé au foyer (`idFoyerCourant()`), tables `taches` + `courses` ([lib/db/schema.ts](lib/db/schema.ts), chacune `foyer_id`). **Identifiant = `id` (UUID)**. Récurrence répliquée en base (cocher « Fait » une tâche récurrente insère la prochaine occurrence via `prochaineOccurrenceLabel`). Listes : statuts/priorités/récurrences = **constantes** ; personnes/catégories/rayons **dérivées** des données existantes → champs Assigné/Rayon passés en **saisie libre (Combobox maison)** pour ne pas rester bloqués si la liste est vide. `viderCoursesFaites` = DELETE des articles cochés. Échéance stockée en texte « jj/mm/aaaa ». Validé contre Neon. ⚠ `DATABASE_URL` requis (local + Vercel).
@@ -152,7 +151,7 @@ Restent des extensions possibles : sélecteur de mois hors Budget, édition des 
 
 ## Accès Google (vérifié 21/07/2026)
 
-Compte de service `claude-sheet-access@hub-familial-app.iam.gserviceaccount.com`, clé dans `credentials.json`, accès lecture/écriture aux 5 classeurs. `.env` porte les 5 IDs. **Ne pas reconfigurer.** (Un ancien compte `node-app-connector` n'avait accès qu'à ToDo — piste morte.)
+Compte de service `claude-sheet-access@hub-familial-app.iam.gserviceaccount.com`, clé dans `credentials.json` (ou `GOOGLE_CREDENTIALS_JSON`). Utilisé désormais **uniquement** pour **Google Agenda** (module Agenda) ; l'accès **Google Drive** passe, lui, par le **jeton OAuth de l'utilisateur** (un compte de service ne peut pas lire un Drive perso). Le partage historique avec les 5 classeurs Sheets n'est plus utilisé (voir « Ménage Sheets »). **Ne pas reconfigurer le compte de service.**
 
 ## Fichiers sensibles
 

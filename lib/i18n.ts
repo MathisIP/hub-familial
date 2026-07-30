@@ -1,13 +1,12 @@
 /**
- * CADRE MULTILINGUE.
- * ==================
- * Deux volets distincts :
- *  1. ONGLETS Sheets (legacy) — noms d'onglets par module, en français. Utilisés
- *     par le client Sheets (`lib/google/sheets.ts`). On garde `nomOnglet()` /
- *     `plage()` inchangés (la règle « jamais de nom d'onglet en dur » tient).
- *  2. UI multilingue — dictionnaire plat `clé → { fr, en?, es?… }`. `t(clé, langue)`
- *     résout la langue avec repli sur le français. FR = référence complète ; EN en
- *     cours ; ES/DE/IT à venir (repli FR tant qu'ils ne sont pas remplis).
+ * CADRE MULTILINGUE (UI).
+ * =======================
+ * Dictionnaire plat `clé → { fr, en?, es?… }`. `t(clé, langue)` résout la langue
+ * avec repli sur le français. FR = référence complète ; EN en cours ; ES/DE/IT à
+ * venir (repli FR tant qu'ils ne sont pas remplis).
+ *
+ * (Le registre historique des onglets Google Sheets a été retiré : les données
+ * du foyer vivent en base, plus aucun module ne lit un Sheet.)
  */
 
 export type IdLangue = 'fr' | 'en' | 'es' | 'de' | 'it';
@@ -30,78 +29,6 @@ export function langueValide(v: string | undefined | null): IdLangue {
 /** Locale BCP-47 pour `Intl` (dates, etc.) selon la langue. */
 export function locale(langue: IdLangue): string {
   return { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE', it: 'it-IT' }[langue] ?? 'fr-FR';
-}
-
-/* ----------------------- ONGLETS Sheets (legacy, FR) ----------------------- */
-
-const ONGLETS = {
-  BUDGET: {
-    VUE_ENSEMBLE: "🌸 Vue d'ensemble",
-    TABLEAU_BORD: 'Tableau de bord',
-    VUE_ANNUELLE: 'Vue annuelle',
-    EPARGNE: 'Épargne',
-    TRANSACTIONS: 'Transactions',
-    IMPORT_CSV: 'Import CSV',
-    PARAMETRES: 'Paramètres',
-    ECHEANCES: 'Échéances',
-    LISEZMOI: 'Lisez-moi',
-    REPONSES_FORM: 'Réponses au formulaire 1',
-  },
-  TODO: {
-    REPONSES_FORM: 'Réponses au formulaire 1',
-    LISEZMOI: 'Lisez-moi',
-    APERCU: 'Aperçu',
-    TACHES: 'Tâches',
-    COURSES: 'Courses',
-    PARAMETRES: 'Paramètres',
-    LOU: 'Lou',
-    MATI: 'Mati',
-    NOUS_DEUX: 'Nous deux',
-  },
-  REPAS: {
-    LISEZMOI: 'Lisez-moi',
-    SEMAINE: 'Semaine',
-    RECETTES: 'Recettes',
-    RECHERCHE: 'Recherche',
-  },
-  EVENEMENTS: {
-    LISEZMOI: 'Lisez-moi',
-    APERCU: 'Aperçu',
-    EVENEMENTS: 'Événements',
-    INVITES: 'Invités',
-    CHECKLIST: 'Checklist',
-    MENU_COURSES: 'Menu & Courses',
-    PARAMETRES: 'Paramètres',
-  },
-  CADEAUX: {
-    LISEZMOI: 'Lisez-moi',
-    APERCU: 'Aperçu',
-    CADEAUX: 'Cadeaux',
-    OCCASIONS: 'Occasions',
-    PARAMETRES: 'Paramètres',
-  },
-} as const;
-
-export type Module = keyof typeof ONGLETS;
-export type ClesOnglet<M extends Module> = keyof (typeof ONGLETS)[M];
-
-/** Nom réel de l'onglet Sheets (français ; les Sheets sont legacy). */
-export function nomOnglet<M extends Module>(
-  mod: M,
-  cle: ClesOnglet<M>,
-  _langue: IdLangue = LANGUE_DEFAUT,
-): string {
-  const onglets = ONGLETS[mod] as Record<string, string>;
-  return onglets[cle as string];
-}
-
-/**
- * Construit une plage A1 en échappant le nom d'onglet (emojis, accents,
- * apostrophes, esperluettes) — sinon l'API Sheets renvoie une erreur de parsing.
- */
-export function plage(nomDeLOnglet: string, a1?: string): string {
-  const echappe = `'${nomDeLOnglet.replace(/'/g, "''")}'`;
-  return a1 ? `${echappe}!${a1}` : echappe;
 }
 
 /* ----------------------------- UI multilingue ----------------------------- */
@@ -186,14 +113,10 @@ const UI = {
   ABO_IMPAYE: { fr: 'Paiement en attente', en: 'Payment pending' },
   ABO_ANNULE: { fr: 'Abonnement annulé', en: 'Subscription cancelled' },
 
-  // Divers (page connexion, bandeau d'état, sélecteurs — legacy/secondaire)
+  // Divers (page connexion, sélecteurs — secondaire)
   APP_SOUS_TITRE: { fr: "L'organisation du foyer, en un seul endroit", en: 'Your household, all in one place' },
   THEME: { fr: '🎨 Thème', en: '🎨 Theme' },
   LANGUE: { fr: '🌍 Langue', en: '🌍 Language' },
-  ETAT_CONNEXION: { fr: 'État de la connexion', en: 'Connection status' },
-  ETAT_OK: { fr: 'Connecté', en: 'Connected' },
-  ETAT_ECHEC: { fr: 'Inaccessible', en: 'Unavailable' },
-  ETAT_VERIF: { fr: 'Vérification…', en: 'Checking…' },
   BIENTOT: { fr: 'À venir', en: 'Coming soon' },
 
   // Génériques (boutons/messages partagés)

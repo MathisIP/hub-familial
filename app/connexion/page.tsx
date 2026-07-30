@@ -2,7 +2,7 @@ import { signIn } from '@/auth';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
-export const metadata = { title: 'Connexion — Hub familial' };
+export const metadata = { title: 'Connexion — Nestync' };
 
 /**
  * Page de connexion : accès réservé (Google, liste blanche). Un seul bouton qui

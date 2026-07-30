@@ -25,14 +25,14 @@ const policeCorps = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: 'Hub familial',
+  title: 'Nestync',
   description: "L'organisation du foyer, en un seul endroit.",
   // iOS n'a pas d'invite d'installation : ces balises font qu'une fois ajoutée à
   // l'écran d'accueil, l'app se lance en plein écran (sans la barre Safari), avec
   // son nom et son icône (apple-touch-icon = app/apple-icon.png, servi par Next).
   appleWebApp: {
     capable: true,
-    title: 'Hub',
+    title: 'Nestync',
     statusBarStyle: 'default',
   },
 };

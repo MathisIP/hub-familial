@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
-export const metadata = { title: 'Politique de confidentialité — Hub familial' };
+export const metadata = { title: 'Politique de confidentialité — Nestync' };
 
 /**
  * Politique de confidentialité (RGPD). Page PUBLIQUE (exclue de l'authentification

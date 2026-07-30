@@ -6,7 +6,7 @@ import { t, type CleUI } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Réglages — Hub familial' };
+export const metadata = { title: 'Réglages — Nestync' };
 
 const ABO_CLE: Record<string, CleUI> = {
   libre: 'ABO_LIBRE',

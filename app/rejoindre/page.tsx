@@ -5,7 +5,7 @@ import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Rejoindre un foyer — Hub familial' };
+export const metadata = { title: 'Rejoindre un foyer — Nestync' };
 
 /**
  * Acceptation d'une invitation. Le lien porte `?jeton=`. On N'appelle PAS

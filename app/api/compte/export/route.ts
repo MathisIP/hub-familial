@@ -18,7 +18,7 @@ export async function GET() {
     return new NextResponse(json, {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Content-Disposition': `attachment; filename="hub-familial-export-${jour}.json"`,
+        'Content-Disposition': `attachment; filename="nestync-export-${jour}.json"`,
       },
     });
   } catch (e) {

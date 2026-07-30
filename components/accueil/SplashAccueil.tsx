@@ -48,7 +48,7 @@ export default function SplashAccueil({ children }: { children: ReactNode }) {
       {children}
       {!cache && (
         <div className={`splash${tousPrets ? ' splash-parti' : ''}`} role="status" aria-live="polite" aria-hidden={tousPrets}>
-          <img className="splash-logo" src="/icon-192.png" alt="Hub familial" width={96} height={96} />
+          <img className="splash-logo" src="/icon-192.png" alt="Nestync" width={96} height={96} />
           <span className="splash-spinner" aria-hidden="true" />
         </div>
       )}

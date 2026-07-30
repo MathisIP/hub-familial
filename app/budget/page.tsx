@@ -9,7 +9,7 @@ import { langueCourante } from '@/lib/langue';
 /** Rendu à chaque requête : le tableau de bord reflète l'état courant du Sheet. */
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Budget — Hub familial' };
+export const metadata = { title: 'Budget — Nestync' };
 
 export default async function PageBudget({
   searchParams,

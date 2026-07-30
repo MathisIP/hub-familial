@@ -1,8 +1,8 @@
 {
-  "name": "hub-familial",
+  "name": "nestync",
   "version": "0.1.0",
   "private": true,
-  "description": "Hub d'organisation familiale — application PWA multi-foyer (Postgres/Neon)",
+  "description": "Nestync — application PWA d'organisation familiale, multi-foyer (Postgres/Neon)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

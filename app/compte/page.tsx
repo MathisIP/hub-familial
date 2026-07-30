@@ -4,7 +4,7 @@ import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Mon compte — Hub familial' };
+export const metadata = { title: 'Mon compte — Nestync' };
 
 /**
  * Page « Mon compte » : droits RGPD de la personne — export (portabilité) et

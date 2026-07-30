@@ -36,7 +36,7 @@ export function locale(langue: IdLangue): string {
 type Trad = { fr: string } & Partial<Record<IdLangue, string>>;
 
 const UI = {
-  APP_TITRE: { fr: '🏡 Hub familial', en: '🏡 Family Hub' },
+  APP_TITRE: { fr: '🏡 Nestync', en: '🏡 Nestync' },
 
   // Modules (libellés courts, nav + titres)
   MOD_BUDGET: { fr: 'Budget', en: 'Budget' },
@@ -376,7 +376,7 @@ const UI = {
   FOY_COPIER_LIEN: { fr: 'Copier le lien', en: 'Copy link' },
 
   // Abonnement (page)
-  ABO_SOUS: { fr: 'L’abonnement du foyer donne accès à tous les modules du Hub.', en: 'The household subscription unlocks all Hub modules.' },
+  ABO_SOUS: { fr: 'L’abonnement du foyer donne accès à tous les modules de Nestync.', en: 'The household subscription unlocks all Nestync modules.' },
   ABOP_LIBRE: { fr: 'Accès libre (facturation non activée).', en: 'Free access (billing not enabled).' },
   ABOP_ACTIF: { fr: 'Abonnement actif ✓', en: 'Active subscription ✓' },
   ABOP_ESSAI: { fr: 'Période d’essai', en: 'Trial period' },
@@ -401,8 +401,8 @@ const UI = {
   },
   CONF_S1_T: { fr: '1. Responsable du traitement', en: '1. Data controller' },
   CONF_S1_P: {
-    fr: 'Le responsable du traitement des données est [À COMPLÉTER : nom / raison sociale], joignable à l’adresse [À COMPLÉTER : email de contact]. Le service « Hub familial » (ci-après « le Service ») est une application d’organisation familiale.',
-    en: 'The data controller is [TO COMPLETE: name / company], reachable at [TO COMPLETE: contact email]. The “Family Hub” service (hereafter “the Service”) is a household-organization application.',
+    fr: 'Le responsable du traitement des données est [À COMPLÉTER : nom / raison sociale], joignable à l’adresse [À COMPLÉTER : email de contact]. Le service « Nestync » (ci-après « le Service ») est une application d’organisation familiale.',
+    en: 'The data controller is [TO COMPLETE: name / company], reachable at [TO COMPLETE: contact email]. The “Nestync” service (hereafter “the Service”) is a household-organization application.',
   },
   CONF_S2_T: { fr: '2. Données collectées', en: '2. Data collected' },
   CONF_S2_LI1: {
@@ -461,12 +461,12 @@ const UI = {
 
   // Hors ligne
   HL_TITRE: { fr: 'Hors ligne', en: 'Offline' },
-  HL_TXT: { fr: 'Pas de connexion pour le moment. Le Hub se rechargera dès que le réseau reviendra. Les pages déjà consultées restent accessibles.', en: 'No connection right now. The Hub will reload as soon as the network is back. Pages you already opened stay available.' },
+  HL_TXT: { fr: 'Pas de connexion pour le moment. Nestync se rechargera dès que le réseau reviendra. Les pages déjà consultées restent accessibles.', en: 'No connection right now. Nestync will reload as soon as the network is back. Pages you already opened stay available.' },
   HL_REESSAYER: { fr: 'Réessayer', en: 'Retry' },
 
   // Astuce installation iOS
   IOS_ARIA: { fr: "Installer l'application", en: 'Install the app' },
-  IOS_AVANT: { fr: 'Installe le Hub : appuie sur', en: 'Install the Hub: tap' },
+  IOS_AVANT: { fr: 'Installe Nestync : appuie sur', en: 'Install Nestync: tap' },
   IOS_PARTAGER: { fr: 'Partager', en: 'Share' },
   IOS_PUIS: { fr: ', puis', en: ', then' },
   IOS_ECRAN: { fr: '« Sur l’écran d’accueil »', en: '“Add to Home Screen”' },

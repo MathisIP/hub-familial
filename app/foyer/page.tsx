@@ -6,7 +6,7 @@ import { t, locale } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Mon foyer — Hub familial' };
+export const metadata = { title: 'Mon foyer — Nestync' };
 
 /**
  * Page « Mon foyer » : membres du foyer, invitations (lien à partager) et nom du

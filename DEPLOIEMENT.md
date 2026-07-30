@@ -1,4 +1,8 @@
-# Déploiement — Hub familial (Vercel + connexion Google)
+# Déploiement — Nestync (Vercel + connexion Google)
+
+> Note : le dépôt GitHub (`MathisIP/hub-familial`) et le projet Google Cloud
+> (`hub-familial-app`) gardent leur nom technique historique — seul le **nom
+> commercial** de l'app devient **Nestync**.
 
 Objectif : mettre l'app en ligne pour l'ouvrir sur le téléphone même PC éteint,
 avec un accès protégé (connexion Google restreinte à vos adresses).

@@ -1,6 +1,6 @@
 # Facturation Stripe — abonnement par foyer
 
-Chaque foyer paie un abonnement pour utiliser le Hub. L'accès est conditionné à
+Chaque foyer paie un abonnement pour utiliser Nestync. L'accès est conditionné à
 `foyers.statut_abonnement` / `abonnement_fin`.
 
 > ⚠ **Tant que `STRIPE_SECRET_KEY` est absent, rien n'est verrouillé** (l'app
@@ -10,7 +10,7 @@ Chaque foyer paie un abonnement pour utiliser le Hub. L'accès est conditionné 
 ## 1. Créer le produit et le prix (dans Stripe, en mode Test)
 
 1. Compte sur **https://stripe.com** → bascule en **Mode test** (interrupteur en haut).
-2. **Catalogue de produits → Ajouter un produit** : nom « Hub familial », **prix
+2. **Catalogue de produits → Ajouter un produit** : nom « Nestync », **prix
    récurrent** (ex. 4,99 €/mois). Enregistre.
 3. Copie l'**ID du prix** (`price_…`) → variable `STRIPE_PRICE_ID`.
 4. **Développeurs → Clés API** : copie la **clé secrète de test** (`sk_test_…`) →

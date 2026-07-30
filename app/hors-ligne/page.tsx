@@ -7,7 +7,7 @@ import { langueCourante } from '@/lib/langue';
  * cache est demandée sans réseau. Publique (hors authentification), servable hors
  * ligne (mise en cache par le SW).
  */
-export const metadata: Metadata = { title: 'Hors ligne — Hub familial' };
+export const metadata: Metadata = { title: 'Hors ligne — Nestync' };
 
 export default async function HorsLigne() {
   const langue = await langueCourante();

@@ -1,4 +1,4 @@
-# Hub familial
+# Nestync
 
 Application **PWA** (Next.js 15 / React 19 / TypeScript) qui centralise l'organisation
 d'un foyer. Pensée **privée d'abord**, puis **multi-foyer / vendable** (SaaS).

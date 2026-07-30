@@ -9,7 +9,7 @@ import { langueCourante } from '@/lib/langue';
 /** Rendu à chaque requête : les données Sheets ne doivent pas être figées. */
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'To-Do & Courses — Hub familial' };
+export const metadata = { title: 'To-Do & Courses — Nestync' };
 
 export default async function PageTodo() {
   await exigerAcces();

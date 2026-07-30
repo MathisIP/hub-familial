@@ -1,5 +1,5 @@
 /*
- * Service worker du Hub familial — coquille hors ligne.
+ * Service worker de Nestync — coquille hors ligne.
  * =====================================================
  * L'app reste « connectée par nature » (les données viennent des API Google au
  * moment de la requête) : ce worker ne rend PAS les données disponibles hors ligne,
@@ -12,7 +12,7 @@
  *   · navigations (pages)                  → réseau d'abord, repli sur la copie en
  *                                            cache, sinon la page /hors-ligne.
  */
-const CACHE = 'hub-familial-v3';
+const CACHE = 'nestync-v1';
 const PRECACHE = ['/hors-ligne', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {

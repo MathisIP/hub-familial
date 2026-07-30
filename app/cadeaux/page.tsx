@@ -6,7 +6,7 @@ import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Cadeaux — Hub familial' };
+export const metadata = { title: 'Cadeaux — Nestync' };
 
 export default async function PageCadeaux() {
   await exigerAcces();

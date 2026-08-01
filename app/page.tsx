@@ -1,6 +1,6 @@
 import ResumeComptes from '@/components/ResumeComptes';
 import SaisieTransaction from '@/components/budget/SaisieTransaction';
-import DriveExplorer from '@/components/DriveExplorer';
+import SectionDocuments from '@/components/documents/SectionDocuments';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
 import SplashAccueil from '@/components/accueil/SplashAccueil';
@@ -59,7 +59,7 @@ export default async function Accueil() {
 
         <CoursesSemaine />
 
-        <DriveExplorer />
+        <SectionDocuments />
       </div>
     </SplashAccueil>
   );

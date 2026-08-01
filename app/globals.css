@@ -54,7 +54,7 @@ a { color: var(--link-tx); }
 [data-neon="off"] .bm-central { box-shadow: 0 6px 16px -8px rgba(20, 15, 25, .35), 0 0 0 5px var(--page); }
 
 /* Écran de chargement de l'accueil (logo centré) — visible tant que l'agenda et
-   le Drive ne sont pas chargés, puis fondu de sortie. */
+   les documents ne sont pas chargés, puis fondu de sortie. */
 .splash {
   position: fixed;
   inset: 0;
@@ -89,7 +89,7 @@ a { color: var(--link-tx); }
   .splash-logo { animation: none; }
   .splash-spinner { animation-duration: 1.4s; }
 }
-.semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc {
+.semaine, .courses-semaine, .documents, .resume-comptes, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }
 
@@ -944,7 +944,7 @@ a { color: var(--link-tx); }
 }
 
 /* ===================== ACCUEIL : RÉSUMÉ COMPTES & ACTIONS ===================== */
-/* Comptes encadrés comme les sections Drive / Agenda / Courses (cohérence). */
+/* Comptes encadrés comme les sections Documents / Agenda / Courses (cohérence). */
 .resume-comptes {
   margin-top: 1.5rem;
   background: var(--cell);
@@ -966,13 +966,6 @@ a { color: var(--link-tx); }
   margin: 1.25rem 0 .5rem;
 }
 .bouton-action { font-size: .95rem; padding: .6rem 1rem; text-decoration: none; display: inline-flex; align-items: center; }
-.import-drive { display: inline-flex; flex-direction: column; gap: .3rem; }
-.import-aide { font-size: .8rem; color: var(--muted); max-width: 22rem; margin: 0; }
-.import-aide code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
-.bouton-drive { display: inline-flex; align-items: center; gap: .5rem; }
-.import-msg { margin: .3rem 0 0; max-width: 24rem; }
-.import-reco { color: var(--link-tx); text-decoration: underline; white-space: nowrap; }
-.import-ouvrir { font-size: .78rem; color: var(--muted); text-decoration: underline; }
 
 /* --- Modale (ajout d'opération) --- */
 .modale-fond {
@@ -1042,50 +1035,66 @@ a { color: var(--link-tx); }
 }
 .bouton-primaire:hover { border-color: transparent; filter: brightness(1.04); }
 
-/* ===================== ACCUEIL : EXPLORATEUR DRIVE ===================== */
-.drive-explorer {
+/* ===================== ACCUEIL : DOCUMENTS ===================== */
+.documents {
   margin-top: 2rem;
   background: var(--cell);
   border: 1px solid var(--line);
   border-radius: 1rem;
   padding: 1.2rem 1.35rem;
 }
-.de-tete {
+.doc-tete {
   display: flex; flex-wrap: wrap; align-items: center;
   justify-content: space-between; gap: .6rem;
 }
-.de-tete h2 { margin: 0; font-size: 1.05rem; }
+.doc-tete h2 { margin: 0; font-size: 1.05rem; }
+.doc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.doc-dossier { width: 11rem; max-width: 100%; }
+.doc-btn { white-space: nowrap; }
 
-/* Fil d'Ariane */
-.de-fil { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem; margin: .9rem 0 .2rem; }
-.de-sep { color: var(--muted); margin: 0 .1rem; }
-.de-crumb {
-  font: inherit; font-size: .85rem; color: var(--link-tx);
-  background: none; border: none; cursor: pointer;
-  padding: .15rem .35rem; border-radius: .4rem; max-width: 12rem;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.doc-info { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
+.doc-msg { margin: .8rem 0 0; }
+
+/* Groupes par dossier */
+.doc-groupes { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 1rem; }
+.doc-gtitre {
+  display: flex; align-items: center; gap: .5rem;
+  margin: 0 0 .45rem; font-size: .85rem; font-weight: 700;
+  color: var(--head); text-transform: uppercase; letter-spacing: .04em;
 }
-.de-crumb:hover:not(:disabled) { background: var(--link-bg); }
-.de-crumb:disabled { color: var(--ink); font-weight: 600; cursor: default; }
-
-.de-info { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
-.de-info code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
-.de-msg { margin: .8rem 0 0; }
-
-/* Liste des éléments (dossiers puis fichiers) */
-.de-liste { list-style: none; margin: .9rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
-.de-item {
-  display: flex; align-items: center; gap: .7rem; width: 100%; text-align: left;
-  font: inherit; font-size: .92rem; color: var(--ink);
-  padding: .55rem .8rem; border-radius: .6rem;
-  background: var(--page); border: 1px solid var(--line); cursor: pointer;
+.doc-gcount {
+  font-size: .75rem; font-weight: 700; color: var(--muted);
+  background: var(--soft); border-radius: 999px; padding: .05rem .45rem;
 }
-.de-item:hover:not(:disabled) { border-color: var(--link-tx); }
-.de-item:disabled { opacity: .55; cursor: default; }
-.de-item.dossier .de-nom { font-weight: 600; }
-.de-ic { flex: none; font-size: 1.05rem; line-height: 1; }
-.de-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.de-fleche { flex: none; color: var(--muted); font-size: .95rem; }
+
+/* Liste des fichiers */
+.doc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.doc-item {
+  display: flex; align-items: center; gap: .3rem;
+  background: var(--page); border: 1px solid var(--line); border-radius: .6rem;
+}
+.doc-item:hover { border-color: var(--link-tx); }
+.doc-lien {
+  display: flex; align-items: center; gap: .7rem; flex: 1 1 auto; min-width: 0;
+  padding: .55rem .8rem; font-size: .92rem; color: var(--ink); text-decoration: none;
+}
+.doc-ic { flex: none; font-size: 1.05rem; line-height: 1; }
+.doc-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-taille { flex: none; color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.doc-menu {
+  flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted);
+  background: none; border: 0; cursor: pointer; padding: .5rem .7rem; border-radius: .5rem;
+}
+.doc-menu:hover { background: var(--soft); color: var(--ink); }
+
+/* Édition inline */
+.doc-edit {
+  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  background: var(--page); border: 1px solid var(--link-tx); border-radius: .6rem; padding: .6rem .7rem;
+}
+.doc-edit .champ { flex: 1 1 9rem; min-width: 0; }
+.doc-edit-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.doc-suppr { color: var(--over-tx, #c0392b); }
 
 /* ===================== RAPPEL D'INSTALLATION iOS ===================== */
 .install-ios {
@@ -1186,7 +1195,7 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 }
 
 /* Arrondis plus doux, cohérents avec la maquette. */
-.semaine, .courses-semaine, .drive-explorer, .resume-comptes, .compte-bloc,
+.semaine, .courses-semaine, .documents, .resume-comptes, .compte-bloc,
 .apercu-courses, .saisie-panel, .connexion-carte, .modale, .menu-panel,
 .recette-form, .etat {
   border-radius: 1.4rem;
@@ -1578,10 +1587,10 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 
 /* ===================== ACCUEIL : GRILLE 2×2 SUR GRAND ÉCRAN ===================== */
 /* Mobile : une colonne (empilé). ≥ 60rem : 2×2 (1 haut-gauche, 2 haut-droite,
-   3 bas-gauche, 4 bas-droite), dans l'ordre du DOM (comptes/agenda/courses/Drive). */
+   3 bas-gauche, 4 bas-droite), dans l'ordre du DOM (comptes/agenda/courses/documents). */
 /* minmax(0, 1fr) (pas `1fr` = minmax(auto,1fr)) : autorise la colonne à rétrécir
    sous la largeur du contenu → pas de débordement quand une carte a un contenu
-   large (agenda, Drive) qui se charge après coup. */
+   large (agenda, documents) qui se charge après coup. */
 .grille-accueil { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; align-items: start; }
 .grille-accueil > * { margin: 0 !important; min-width: 0; }
 @media (min-width: 60rem) {

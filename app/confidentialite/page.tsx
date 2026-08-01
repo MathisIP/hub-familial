@@ -41,6 +41,7 @@ export default async function PageConfidentialite() {
         <li>{t('CONF_S4_LI1', langue)}</li>
         <li>{t('CONF_S4_LI2', langue)}</li>
         <li>{t('CONF_S4_LI3', langue)}</li>
+        <li>{t('CONF_S4_LI5', langue)}</li>
         <li>{t('CONF_S4_LI4', langue)}</li>
       </ul>
 

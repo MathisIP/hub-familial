@@ -4,13 +4,13 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 
 /**
  * Écran de chargement de l'accueil : logo centré + spinner, affiché tant que les
- * composants asynchrones (agenda + Drive) ne se sont pas chargés. Une fois les
+ * composants asynchrones (agenda + documents) ne se sont pas chargés. Une fois les
  * deux « prêts » (succès OU erreur — on ne bloque jamais indéfiniment), le splash
  * disparaît en fondu et l'accueil apparaît d'un coup.
  *
  * Les composants concernés appellent `useSignalPret(cle, pret)`.
  */
-const ATTENDUS = ['agenda', 'drive'] as const;
+const ATTENDUS = ['agenda', 'documents'] as const;
 const DELAI_SECURITE = 8000; // ms : masque le splash même si un composant ne répond pas
 
 const Ctx = createContext<(cle: string) => void>(() => {});

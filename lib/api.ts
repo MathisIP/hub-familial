@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
+import { StockageNonConfigure } from '@/lib/stockage';
 
 /**
  * Traduit une exception en réponse JSON. Centralisé pour que toutes les routes
@@ -12,7 +13,7 @@ export function reponseErreur(e: unknown): NextResponse {
   if (e instanceof ErreurValidation) {
     return NextResponse.json({ erreur: e.message }, { status: 400 });
   }
-  if (e instanceof ConfigManquante) {
+  if (e instanceof ConfigManquante || e instanceof StockageNonConfigure) {
     return NextResponse.json({ erreur: e.message }, { status: 503 });
   }
   const err = e as { message?: string };

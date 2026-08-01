@@ -369,3 +369,29 @@ export type LigneCompte = typeof comptes.$inferSelect;
 export type LigneBudgetCategorie = typeof budgetCategories.$inferSelect;
 export type LigneTransaction = typeof transactions.$inferSelect;
 export type LigneEcheance = typeof echeances.$inferSelect;
+
+/* ========================= MODULE DOCUMENTS ========================= */
+/**
+ * Fichiers du foyer (remplace l'ancien explorateur Google Drive). Le CONTENU
+ * vit dans le stockage objet (cf. `lib/stockage/`), la base ne garde que les
+ * métadonnées + la `cle` qui pointe vers le fichier stocké.
+ * `dossier` = rangement à UN niveau (texte libre, comme les rayons des courses).
+ */
+export const documents = pgTable(
+  'documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    dossier: text('dossier').notNull().default(''),
+    cle: text('cle').notNull(), // chemin dans le stockage objet
+    type: text('type').notNull().default(''), // type MIME
+    taille: integer('taille').notNull().default(0), // octets
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('documents_foyer_idx').on(t.foyerId)],
+);
+
+export type LigneDocument = typeof documents.$inferSelect;

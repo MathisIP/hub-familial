@@ -394,4 +394,24 @@ export const documents = pgTable(
   (t) => [index('documents_foyer_idx').on(t.foyerId)],
 );
 
+/**
+ * Dossiers du module Documents. Ils existent **indépendamment** des fichiers :
+ * c'est ce qui permet de créer un dossier VIDE puis d'y déposer des documents.
+ * `documents.dossier` porte le NOM du dossier (pas de FK) : renommer un dossier
+ * met à jour la ligne ici + les documents concernés, en une passe.
+ */
+export const dossiers = pgTable(
+  'dossiers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('dossiers_foyer_idx').on(t.foyerId), unique('dossiers_foyer_nom').on(t.foyerId, t.nom)],
+);
+
 export type LigneDocument = typeof documents.$inferSelect;
+export type LigneDossier = typeof dossiers.$inferSelect;

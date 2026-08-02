@@ -16,7 +16,7 @@ export type Document = {
 
 export type DonneesDocuments = {
   documents: Document[];
-  /** Dossiers existants, dérivés des documents (alimente le datalist). */
+  /** Tous les dossiers du foyer, y compris les dossiers VIDES. */
   dossiers: string[];
 };
 
@@ -24,6 +24,13 @@ export type ChampsDocument = {
   nom?: string;
   dossier?: string;
 };
+
+/**
+ * Dossier d'arrivée par défaut : tout fichier ajouté sans préciser de dossier
+ * (notamment depuis l'accueil) atterrit ici. Sert aussi de repli d'affichage
+ * pour les documents historiques sans dossier.
+ */
+export const DOSSIER_DEFAUT = 'Fichiers non classés';
 
 /** Taille de fichier lisible (« 1,2 Mo »). */
 export function formatTaille(octets: number): string {
@@ -57,24 +64,42 @@ export function normaliserDossier(v: string | undefined | null): string {
   return (v ?? '').trim();
 }
 
-/** Regroupe les documents par dossier ; les sans-dossier arrivent en dernier. */
+/**
+ * Regroupe les documents par dossier. `tousLesDossiers` permet d'afficher aussi
+ * les dossiers VIDES (ils n'apparaissent dans aucun document). Le dossier
+ * d'arrivée par défaut est toujours listé en dernier — c'est la « boîte de
+ * réception », pas un rangement.
+ */
 export function grouperParDossier(
   documents: Document[],
+  tousLesDossiers: string[] = [],
 ): { dossier: string; documents: Document[] }[] {
   const map = new Map<string, Document[]>();
+  for (const nom of tousLesDossiers) map.set(normaliserDossier(nom) || DOSSIER_DEFAUT, []);
   for (const d of documents) {
-    const cle = normaliserDossier(d.dossier);
+    const cle = normaliserDossier(d.dossier) || DOSSIER_DEFAUT;
     const liste = map.get(cle);
     if (liste) liste.push(d);
     else map.set(cle, [d]);
   }
   return [...map.entries()]
     .sort(([a], [b]) => {
-      if (a === '') return 1; // « sans dossier » en dernier
-      if (b === '') return -1;
+      if (a === DOSSIER_DEFAUT) return 1;
+      if (b === DOSSIER_DEFAUT) return -1;
       return a.localeCompare(b, 'fr');
     })
     .map(([dossier, docs]) => ({ dossier, documents: docs }));
+}
+
+/** Filtre par nom de fichier (insensible à la casse et aux accents). */
+export function chercherDocuments(documents: Document[], requete: string): Document[] {
+  const q = sansAccents(requete.trim());
+  if (!q) return [];
+  return documents.filter((d) => sansAccents(d.nom).includes(q));
+}
+
+function sansAccents(v: string): string {
+  return v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
 /** Taille maximale acceptée par fichier (garde-fou coût + temps de téléversement). */

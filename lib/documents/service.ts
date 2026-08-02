@@ -1,12 +1,13 @@
 import 'server-only';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { documents as tDocuments } from '@/lib/db/schema';
+import { documents as tDocuments, dossiers as tDossiers } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
 import { televerser, supprimerFichier, lireFichier } from '@/lib/stockage';
 import {
   TAILLE_MAX,
+  DOSSIER_DEFAUT,
   normaliserDossier,
   type ChampsDocument,
   type Document,
@@ -34,7 +35,8 @@ function versDocument(l: {
   return {
     id: l.id,
     nom: l.nom,
-    dossier: l.dossier,
+    // Les documents historiques sans dossier sont rattachés à la boîte d'arrivée.
+    dossier: l.dossier || DOSSIER_DEFAUT,
     type: l.type,
     taille: l.taille,
     creeLe: l.creeLe.toISOString(),
@@ -43,17 +45,73 @@ function versDocument(l: {
 
 export async function chargerDocuments(): Promise<DonneesDocuments> {
   const foyerId = await idFoyerCourant();
-  const lignes = await db()
-    .select()
-    .from(tDocuments)
-    .where(eq(tDocuments.foyerId, foyerId))
-    .orderBy(desc(tDocuments.creeLe));
+  const [lignes, lignesDossiers] = await Promise.all([
+    db().select().from(tDocuments).where(eq(tDocuments.foyerId, foyerId)).orderBy(desc(tDocuments.creeLe)),
+    db().select().from(tDossiers).where(eq(tDossiers.foyerId, foyerId)),
+  ]);
 
   const documents = lignes.map(versDocument);
-  const dossiers = [...new Set(documents.map((d) => d.dossier).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, 'fr'),
-  );
+  // Union : dossiers déclarés (dont les VIDES) + ceux portés par les documents.
+  const dossiers = [
+    ...new Set([
+      ...lignesDossiers.map((d) => d.nom),
+      ...documents.map((d) => d.dossier),
+    ].filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b, 'fr'));
+
   return { documents, dossiers };
+}
+
+/** Crée le dossier s'il n'existe pas déjà (idempotent). */
+async function assurerDossier(foyerId: string, nom: string): Promise<void> {
+  const n = normaliserDossier(nom);
+  if (!n) return;
+  await db()
+    .insert(tDossiers)
+    .values({ foyerId, nom: n })
+    .onConflictDoNothing({ target: [tDossiers.foyerId, tDossiers.nom] });
+}
+
+export async function creerDossier(nom: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const n = normaliserDossier(nom);
+  if (!n) throw new ErreurValidation('Le nom du dossier ne peut pas être vide.');
+  await assurerDossier(foyerId, n);
+}
+
+/** Renomme un dossier : la ligne `dossiers` ET les documents qu'il contient. */
+export async function renommerDossier(ancien: string, nouveau: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const a = normaliserDossier(ancien);
+  const n = normaliserDossier(nouveau);
+  if (!n) throw new ErreurValidation('Le nom du dossier ne peut pas être vide.');
+  if (a === n) return;
+  if (a === DOSSIER_DEFAUT) throw new ErreurValidation('Ce dossier ne peut pas être renommé.');
+
+  // Le dossier cible peut déjà exister → on fusionne (pas de doublon en base).
+  await assurerDossier(foyerId, n);
+  await db().delete(tDossiers).where(and(eq(tDossiers.foyerId, foyerId), eq(tDossiers.nom, a)));
+  await db()
+    .update(tDocuments)
+    .set({ dossier: n })
+    .where(and(eq(tDocuments.foyerId, foyerId), eq(tDocuments.dossier, a)));
+}
+
+/**
+ * Supprime un dossier. Les fichiers ne sont JAMAIS perdus : ils repartent dans
+ * la boîte d'arrivée (« Fichiers non classés »).
+ */
+export async function supprimerDossier(nom: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const n = normaliserDossier(nom);
+  if (!n || n === DOSSIER_DEFAUT) {
+    throw new ErreurValidation('Ce dossier ne peut pas être supprimé.');
+  }
+  await db()
+    .update(tDocuments)
+    .set({ dossier: DOSSIER_DEFAUT })
+    .where(and(eq(tDocuments.foyerId, foyerId), eq(tDocuments.dossier, n)));
+  await db().delete(tDossiers).where(and(eq(tDossiers.foyerId, foyerId), eq(tDossiers.nom, n)));
 }
 
 /** Téléverse un fichier et enregistre ses métadonnées. */
@@ -70,11 +128,14 @@ export async function ajouterDocument(
     throw new ErreurValidation('Fichier trop volumineux (25 Mo maximum).');
   }
 
+  // Sans dossier précisé (ex. ajout depuis l'accueil) → boîte d'arrivée.
+  const cible = normaliserDossier(dossier) || DOSSIER_DEFAUT;
   const { cle, taille } = await televerser(foyerId, nomPropre, donnees, type);
+  await assurerDossier(foyerId, cible);
 
   const [ligne] = await db()
     .insert(tDocuments)
-    .values({ foyerId, nom: nomPropre, dossier: normaliserDossier(dossier), cle, type, taille })
+    .values({ foyerId, nom: nomPropre, dossier: cible, cle, type, taille })
     .returning();
 
   return versDocument(ligne);
@@ -90,7 +151,11 @@ export async function modifierDocument(id: string, champs: ChampsDocument): Prom
     if (!n) throw new ErreurValidation('Le nom ne peut pas être vide.');
     maj.nom = n;
   }
-  if (champs.dossier !== undefined) maj.dossier = normaliserDossier(champs.dossier);
+  if (champs.dossier !== undefined) {
+    const cible = normaliserDossier(champs.dossier) || DOSSIER_DEFAUT;
+    await assurerDossier(foyerId, cible); // déplacer vers un nouveau dossier le crée
+    maj.dossier = cible;
+  }
   if (Object.keys(maj).length === 0) return;
 
   await db()

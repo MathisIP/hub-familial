@@ -53,6 +53,7 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S6_T', langue)}</h2>
       <p>{t('CONF_S6_P', langue)}</p>
+      <p>{t('CONF_S6_P2', langue)}</p>
 
       <h2>{t('CONF_S7_T', langue)}</h2>
       <p>

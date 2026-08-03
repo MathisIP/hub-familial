@@ -5,6 +5,7 @@ import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import PiedDePage from '@/components/PiedDePage';
 import SideBar from '@/components/SideBar';
+import Analytique from '@/components/Analytique';
 import { I18nProvider } from '@/components/I18nProvider';
 import { langueCourante } from '@/lib/langue';
 import { auth } from '@/auth';
@@ -103,6 +104,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </I18nProvider>
         <EnregistrerSW />
         <AstuceInstallIOS />
+        {/* Mesure d'audience SANS COOKIE (pages vues agrégées, pas de suivi
+            inter-sites). Les URL sont anonymisées avant envoi — cf. le composant.
+            Déclarée dans la politique de confidentialité. */}
+        <Analytique />
       </body>
     </html>
   );

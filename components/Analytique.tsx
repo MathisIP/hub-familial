@@ -18,24 +18,28 @@ import { Analytics } from '@vercel/analytics/next';
  *   · les identifiants (UUID) présents dans un chemin sont masqués.
  */
 
-/** Remplace les UUID d'un chemin par « : id » et supprime la query string. */
-function anonymiserChemin(url: string): string {
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
+/**
+ * Nettoie l'URL d'un événement : supprime la query string et le fragment, et
+ * masque les identifiants du chemin.
+ *
+ * ⚠ Renvoie une URL **absolue** : Vercel parse cette valeur, et un chemin relatif
+ * fait échouer le traitement (l'événement est alors abandonné en silence).
+ * En cas de doute on renvoie l'URL d'origine plutôt que de perdre la mesure.
+ */
+function anonymiserUrl(url: string): string {
   try {
-    const u = new URL(url, 'https://nestync.app');
-    const chemin = u.pathname.replace(
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-      ':id',
-    );
-    return chemin; // query string volontairement abandonnée
+    const u = new URL(url);
+    u.search = '';
+    u.hash = '';
+    u.pathname = u.pathname.replace(UUID, ':id');
+    return u.toString();
   } catch {
-    return '/';
+    return url;
   }
 }
 
 export default function Analytique() {
-  return (
-    <Analytics
-      beforeSend={(evenement) => ({ ...evenement, url: anonymiserChemin(evenement.url) })}
-    />
-  );
+  return <Analytics beforeSend={(evenement) => ({ ...evenement, url: anonymiserUrl(evenement.url) })} />;
 }

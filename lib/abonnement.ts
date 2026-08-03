@@ -56,9 +56,10 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
 }
 
 /**
- * À appeler en tête des pages protégées. Deux verrous, dans cet ordre :
+ * À appeler en tête des pages protégées. Trois verrous, dans cet ordre :
  *  1. **appartenance à un foyer** — sinon /bienvenue (rejoindre un foyer) ;
- *  2. **abonnement/essai valide** — sinon /abonnement.
+ *  2. **prise en main faite** — sinon /demarrage (nommer le foyer, inviter) ;
+ *  3. **abonnement/essai valide** — sinon /abonnement.
  *
  * ⚠ Le 1er verrou est explicite car `etatAbonnement()` sort AVANT de toucher au
  * foyer quand Stripe n'est pas configuré : sans cela, une personne sans foyer
@@ -67,14 +68,17 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
  */
 export async function exigerAcces(): Promise<void> {
   let sansFoyer = false;
+  let onboardingAFaire = false;
   try {
-    await foyerCourant();
+    const foyer = await foyerCourant();
+    onboardingAFaire = !foyer.onboardingFait;
   } catch (err) {
     if (!(err instanceof SansFoyer)) throw err;
     sansFoyer = true;
   }
   // `redirect()` lève une exception de contrôle : jamais depuis un bloc `try`.
   if (sansFoyer) redirect('/bienvenue');
+  if (onboardingAFaire) redirect('/demarrage');
 
   const e = await etatAbonnement();
   if (!e.autorise) redirect('/abonnement');

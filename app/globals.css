@@ -2031,3 +2031,55 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .bv-ic { font-size: 1.8rem; line-height: 1; }
 .bv-note { font-size: .85rem; }
 .bv-carte-attente { opacity: .85; }
+
+/* ===================== PRISE EN MAIN (onboarding) ===================== */
+.onb-page { max-width: 38rem; margin: 0 auto; padding-top: 1.5rem; }
+.onb-entete { text-align: center; margin-bottom: 1.6rem; }
+.onb-entete h1 { font-family: var(--police-titre), Georgia, serif; font-size: 1.9rem; margin: 0 0 .3rem; }
+.onb-entete p { color: var(--muted); margin: 0; }
+
+/* Fil de progression */
+.onb-fil { list-style: none; display: flex; gap: .5rem; padding: 0; margin: 0 0 1.2rem; justify-content: center; }
+.onb-pas { display: flex; align-items: center; gap: .45rem; font-size: .85rem; color: var(--muted); }
+.onb-pas + .onb-pas::before { content: ''; width: 1.4rem; height: 1px; background: var(--line); margin-right: .5rem; }
+.onb-pas-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%; font-size: .78rem; font-weight: 700;
+  background: var(--soft); border: 1px solid var(--line); color: var(--muted);
+}
+.onb-pas.actif { color: var(--ink); font-weight: 700; }
+.onb-pas.actif .onb-pas-n {
+  background: linear-gradient(155deg, var(--acc), var(--acc-deep));
+  color: var(--on-acc); border-color: transparent;
+}
+.onb-pas.fait .onb-pas-n { background: var(--ok-bg, var(--soft)); color: var(--ok-tx); }
+@media (max-width: 30rem) { .onb-pas-t { display: none; } }
+
+/* Carte d'étape */
+.onb-carte {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.6rem;
+}
+.onb-carte h2 { font-family: var(--police-titre), Georgia, serif; font-size: 1.3rem; margin: 0 0 .4rem; }
+.onb-sous { color: var(--muted); font-size: .93rem; line-height: 1.55; margin: 0 0 1.1rem; }
+.onb-form { display: flex; flex-direction: column; gap: .8rem; }
+.onb-form-ligne { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.onb-form-ligne .champ { flex: 1 1 12rem; min-width: 0; }
+.onb-champ { font-size: 1.05rem; }
+.onb-actions { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; margin-top: 1.2rem; }
+.onb-aide { font-size: .85rem; color: var(--muted); margin: 1rem 0 0; line-height: 1.5; }
+
+/* Invitations en cours */
+.onb-invites { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; gap: .45rem; }
+.onb-invites li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  background: var(--page); border: 1px solid var(--line);
+  border-radius: .6rem; padding: .5rem .75rem; font-size: .9rem;
+}
+.onb-invite-mail { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Récapitulatif des modules */
+.onb-modules { list-style: none; padding: 0; margin: 0 0 .5rem; display: flex; flex-direction: column; gap: .5rem; }
+.onb-modules li { display: flex; align-items: baseline; gap: .6rem; font-size: .92rem; color: var(--muted); }
+.onb-modules strong { color: var(--ink); }
+.onb-final { width: 100%; justify-content: center; margin-top: 1.2rem; padding: .85rem 1rem; font-size: 1rem; }

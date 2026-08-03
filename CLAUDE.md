@@ -86,6 +86,8 @@ Ces trois règles viennent des échecs de la version précédente et de la contr
 - ⚠ `utilisateurCourant()` **crée désormais la ligne utilisateur** si absente : une identité doit pouvoir exister **sans** foyer (sinon un nouvel arrivant plantait sur /rejoindre-foyer).
 - **Jour du lancement : passer `INSCRIPTION_OUVERTE=true`, rien d'autre.**
 
+**Prise en main / onboarding (01/08/2026)** — colonne `foyers.onboarding_fait` (migration 0013). ⚠ **Défaut `true` à dessein** : les foyers déjà en service ne subissent pas l'onboarding ; seuls les foyers **nouvellement créés** posent `false` (dans `foyerCourant`). Page **/demarrage** ([Demarrage.tsx](components/onboarding/Demarrage.tsx)) en 3 étapes : nommer le foyer → inviter ses proches (sautable) → récapitulatif des 7 modules + astuce d'installation. `terminerOnboarding` clôture. ⚠ **/demarrage n'appelle PAS `exigerAcces()`** (ce serait une boucle de redirection) : il utilise `foyerCourantOuBienvenue()` et repart vers `/` si l'onboarding est déjà fait. Ordre des verrous dans `exigerAcces()` : foyer → onboarding → abonnement.
+
 Reste à faire : onboarding (nom du foyer à la 1re connexion), sous-listes Événements, finaliser le gabarit de confidentialité, config Stripe (test). [[pivot-saas-multi-foyer]]
 
 Erreurs métier : `ErreurValidation` ([lib/erreurs.ts](lib/erreurs.ts)) → 400 via `reponseErreur` ([lib/api.ts](lib/api.ts)) ; `ConfigManquante` → 503. Une saisie invalide ne doit jamais remonter en 500.

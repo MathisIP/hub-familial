@@ -1,0 +1,1 @@
+ALTER TABLE "foyers" ADD COLUMN "onboarding_fait" boolean DEFAULT true NOT NULL;

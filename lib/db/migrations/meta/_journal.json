@@ -92,6 +92,13 @@
       "when": 1785785175426,
       "tag": "0012_magenta_smasher",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785788215202,
+      "tag": "0013_cultured_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

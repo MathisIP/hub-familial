@@ -43,6 +43,13 @@ export const foyers = pgTable('foyers', {
   statutAbonnement: text('statut_abonnement').notNull().default('essai'),
   stripeCustomerId: text('stripe_customer_id'),
   abonnementFin: timestamp('abonnement_fin', { withTimezone: true }),
+  /**
+   * Prise en main effectuée (nom du foyer choisi, proches invités) ?
+   * ⚠ Défaut `true` À DESSEIN : les foyers déjà en service ne doivent pas se
+   * voir imposer l'onboarding. Ce sont les foyers NOUVELLEMENT créés qui posent
+   * explicitement `false` (cf. `foyerCourant`).
+   */
+  onboardingFait: boolean('onboarding_fait').notNull().default(true),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

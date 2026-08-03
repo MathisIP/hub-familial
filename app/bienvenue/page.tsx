@@ -84,9 +84,10 @@ export default async function PageBienvenue() {
                 action={async () => {
                   'use server';
                   // `foyerCourant()` provisionne le foyer + l'essai quand la
-                  // politique l'autorise (cf. lib/acces.ts).
+                  // politique l'autorise (cf. lib/acces.ts), avec
+                  // `onboarding_fait = false` → on enchaîne sur la prise en main.
                   await foyerCourant();
-                  redirect('/');
+                  redirect('/demarrage');
                 }}
               >
                 <button type="submit" className="bouton bouton-primaire">

@@ -194,6 +194,12 @@ export async function accepterInvitation(
   return inv.foyerId;
 }
 
+/** Clôture la prise en main : le foyer est configuré, on n'y revient plus. */
+export async function terminerOnboarding(foyerId: string, appelantId: string): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  await db().update(foyers).set({ onboardingFait: true }).where(eq(foyers.id, foyerId));
+}
+
 /* ==================== DEMANDES D'ADHÉSION (sens inverse) ==================== */
 /**
  * Ici, c'est la personne qui frappe à la porte : elle donne l'e-mail du

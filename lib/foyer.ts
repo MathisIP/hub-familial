@@ -88,7 +88,14 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
   return d.transaction(async (tx) => {
     const [f] = await tx
       .insert(foyers)
-      .values({ nom: nomFoyerParDefaut(u.nom), statutAbonnement: 'essai', abonnementFin: finEssai })
+      .values({
+        nom: nomFoyerParDefaut(u.nom),
+        statutAbonnement: 'essai',
+        abonnementFin: finEssai,
+        // Nouveau foyer → prise en main à faire (nom, invitations). Les foyers
+        // déjà en service gardent `true` (défaut de la colonne).
+        onboardingFait: false,
+      })
       .returning();
     await tx.insert(membres).values({ foyerId: f.id, utilisateurId: u.id, role: 'proprietaire' });
     return f;

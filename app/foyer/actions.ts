@@ -12,6 +12,7 @@ import {
   demanderAdhesion,
   accepterDemande,
   refuserDemande,
+  terminerOnboarding,
 } from '@/lib/membres';
 
 /** Invite un e-mail à rejoindre le foyer courant. */
@@ -55,6 +56,47 @@ export async function accepterAction(formData: FormData): Promise<void> {
   const jeton = String(formData.get('jeton') ?? '');
   const user = await utilisateurCourant();
   await accepterInvitation(jeton, { id: user.id, email: user.email });
+  redirect('/');
+}
+
+/* -------------------- Prise en main (onboarding) -------------------- */
+
+/** Étape 1 : nommer son foyer. Renvoie une erreur exploitable par le formulaire. */
+export async function nommerFoyerAction(
+  _precedent: { erreur?: string } | null,
+  formData: FormData,
+): Promise<{ erreur?: string; ok?: boolean }> {
+  try {
+    const nom = String(formData.get('nom') ?? '');
+    const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+    await renommerFoyer(foyer.id, user.id, nom);
+    revalidatePath('/demarrage');
+    return { ok: true };
+  } catch (e) {
+    return { erreur: e instanceof Error ? e.message : 'Nom refusé.' };
+  }
+}
+
+/** Étape 2 : inviter un proche (facultatif, répétable). */
+export async function inviterOnboardingAction(
+  _precedent: { erreur?: string; invite?: string } | null,
+  formData: FormData,
+): Promise<{ erreur?: string; invite?: string }> {
+  try {
+    const email = String(formData.get('email') ?? '');
+    const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+    await inviterMembre(foyer.id, user.id, email);
+    revalidatePath('/demarrage');
+    return { invite: email.trim() };
+  } catch (e) {
+    return { erreur: e instanceof Error ? e.message : 'Invitation refusée.' };
+  }
+}
+
+/** Étape 3 : clôturer la prise en main et entrer dans l'app. */
+export async function terminerOnboardingAction(): Promise<void> {
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  await terminerOnboarding(foyer.id, user.id);
   redirect('/');
 }
 

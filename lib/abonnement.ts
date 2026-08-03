@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { db } from '@/lib/db';
 import { foyers } from '@/lib/db/schema';
-import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
+import { foyerCourant, utilisateurCourant, SansFoyer } from '@/lib/foyer';
 import { stripe, stripeDisponible } from '@/lib/stripe';
 import { ErreurValidation } from '@/lib/erreurs';
 
@@ -32,7 +32,17 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
   if (!stripeDisponible()) {
     return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false };
   }
-  const foyer = await foyerCourant();
+  // Personne sans foyer : état neutre plutôt qu'une exception, pour que les pages
+  // de réglages restent affichables. `exigerAcces` la renvoie vers /bienvenue.
+  let foyer;
+  try {
+    foyer = await foyerCourant();
+  } catch (err) {
+    if (err instanceof SansFoyer) {
+      return { autorise: false, statut: 'sans_foyer', finEssai: null, gereParStripe: true, aDejaPaye: false };
+    }
+    throw err;
+  }
   const fin = foyer.abonnementFin ? new Date(foyer.abonnementFin) : null;
   const essaiValide = foyer.statutAbonnement === 'essai' && (fin === null || fin.getTime() > Date.now());
   const autorise = foyer.statutAbonnement === 'actif' || essaiValide;
@@ -45,8 +55,27 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
   };
 }
 
-/** À appeler en tête des pages protégées : redirige vers /abonnement si non autorisé. */
+/**
+ * À appeler en tête des pages protégées. Deux verrous, dans cet ordre :
+ *  1. **appartenance à un foyer** — sinon /bienvenue (rejoindre un foyer) ;
+ *  2. **abonnement/essai valide** — sinon /abonnement.
+ *
+ * ⚠ Le 1er verrou est explicite car `etatAbonnement()` sort AVANT de toucher au
+ * foyer quand Stripe n'est pas configuré : sans cela, une personne sans foyer
+ * passerait le contrôle et planterait plus loin, au premier accès aux données.
+ * (`foyerCourant` est mémoïsé par requête : ce double appel ne coûte rien.)
+ */
 export async function exigerAcces(): Promise<void> {
+  let sansFoyer = false;
+  try {
+    await foyerCourant();
+  } catch (err) {
+    if (!(err instanceof SansFoyer)) throw err;
+    sansFoyer = true;
+  }
+  // `redirect()` lève une exception de contrôle : jamais depuis un bloc `try`.
+  if (sansFoyer) redirect('/bienvenue');
+
   const e = await etatAbonnement();
   if (!e.autorise) redirect('/abonnement');
 }

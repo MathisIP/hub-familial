@@ -12,14 +12,18 @@ import Google from 'next-auth/providers/google';
  * annuel exigé par Google pour ce type de périmètre. Ne pas réintroduire de
  * scope Drive/Gmail sans mesurer cette conséquence.
  *
- * Variables d'environnement : AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET,
- * EMAILS_AUTORISES.
+ * ⚠ **La connexion est OUVERTE À TOUS** (plus de liste blanche ici). C'est
+ * nécessaire : pour être invité dans un foyer ou demander à en rejoindre un, il
+ * faut d'abord pouvoir se connecter — l'ancienne liste blanche créait un blocage
+ * circulaire. Se connecter ne donne accès à RIEN par soi-même : le contrôle
+ * porte désormais sur la **création d'un foyer** ([lib/acces.ts](lib/acces.ts))
+ * et sur l'**abonnement** ([lib/abonnement.ts](lib/abonnement.ts)).
+ *
+ * ⚠ Ce fichier est chargé par le middleware (runtime **edge**) : il ne doit
+ * JAMAIS importer la base de données ni `lib/acces.ts`.
+ *
+ * Variables d'environnement : AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET.
  */
-const emailsAutorises = (process.env.EMAILS_AUTORISES ?? '')
-  .split(',')
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
@@ -29,12 +33,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   pages: { signIn: '/connexion' },
   callbacks: {
-    /** N'autorise QUE les adresses de la liste blanche. Liste vide → tout refusé. */
-    signIn({ profile }) {
-      const email = String(profile?.email ?? '').toLowerCase();
-      return emailsAutorises.length > 0 && emailsAutorises.includes(email);
-    },
-
     /**
      * Contrôle d'accès du middleware. Échappatoire DEV : tant que l'OAuth n'est pas
      * configuré ET qu'on n'est pas en production, on laisse passer (localhost).

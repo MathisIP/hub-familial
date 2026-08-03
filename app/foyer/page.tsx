@@ -1,5 +1,5 @@
 import LienInvitation from '@/components/foyer/LienInvitation';
-import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
+import { foyerCourantOuBienvenue, utilisateurCourant } from '@/lib/foyer';
 import { chargerFoyerMembres, demandesEnAttente } from '@/lib/membres';
 import {
   inviterAction,
@@ -20,7 +20,11 @@ export const metadata = { title: 'Mon foyer — Nestync' };
  * foyer. La gestion (inviter / retirer / renommer) est réservée au propriétaire.
  */
 export default async function PageFoyer() {
-  const [foyer, user, langue] = [await foyerCourant(), await utilisateurCourant(), await langueCourante()];
+  const [foyer, user, langue] = [
+    await foyerCourantOuBienvenue(),
+    await utilisateurCourant(),
+    await langueCourante(),
+  ];
   const d = await chargerFoyerMembres(foyer.id, user.id);
   const proprio = d.monRole === 'proprietaire';
   // Réservé au propriétaire : `demandesEnAttente` refuserait un simple membre.

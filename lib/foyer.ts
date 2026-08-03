@@ -1,9 +1,11 @@
 import 'server-only';
 import { cache } from 'react';
+import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { db, baseDisponible } from '@/lib/db';
 import { foyers, membres, utilisateurs, type Foyer } from '@/lib/db/schema';
+import { peutCreerFoyer } from '@/lib/acces';
 
 /**
  * RÉSOLUTION DU FOYER COURANT (serveur uniquement, runtime Node).
@@ -25,6 +27,19 @@ export class FoyerIndisponible extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'FoyerIndisponible';
+  }
+}
+
+/**
+ * L'utilisateur est bien connecté mais n'appartient à AUCUN foyer, et la
+ * politique d'accès ne l'autorise pas à en créer un. Ce n'est pas une panne :
+ * c'est le cas normal d'une personne qui doit **rejoindre** un foyer existant.
+ * `exigerAcces()` l'attrape et redirige vers /bienvenue.
+ */
+export class SansFoyer extends Error {
+  constructor() {
+    super("Aucun foyer : rejoins un foyer existant ou attends l'ouverture des inscriptions.");
+    this.name = 'SansFoyer';
   }
 }
 
@@ -62,7 +77,13 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
     if (f) return f;
   }
 
-  // 3) Sinon : provisionner un foyer (essai de 14 jours) et rattacher l'utilisateur.
+  // 3) Aucun foyer : en créer un n'est possible que si la politique l'autorise
+  //    (lancement public, ou adresse de la liste `EMAILS_AUTORISES`). Sinon la
+  //    personne doit REJOINDRE un foyer existant — on le signale à l'appelant,
+  //    qui la redirige vers /bienvenue.
+  if (!peutCreerFoyer(u.email)) throw new SansFoyer();
+
+  //    Provisionnement : foyer + essai de 14 jours, l'utilisateur en est propriétaire.
   const finEssai = new Date(Date.now() + 14 * 86400000);
   return d.transaction(async (tx) => {
     const [f] = await tx
@@ -77,6 +98,25 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
 /** Identifiant du foyer courant — raccourci pour scoper les requêtes des modules. */
 export async function idFoyerCourant(): Promise<string> {
   return (await foyerCourant()).id;
+}
+
+/**
+ * Comme `foyerCourant()`, mais renvoie proprement vers /bienvenue quand la
+ * personne n'appartient à aucun foyer — au lieu de faire planter la page.
+ * À utiliser dans les pages qui exigent un foyer sans passer par `exigerAcces`.
+ */
+export async function foyerCourantOuBienvenue(): Promise<Foyer> {
+  let sansFoyer = false;
+  try {
+    return await foyerCourant();
+  } catch (err) {
+    if (!(err instanceof SansFoyer)) throw err;
+    sansFoyer = true;
+  } finally {
+    // `redirect()` lève : on ne l'appelle jamais depuis le `try`.
+  }
+  if (sansFoyer) redirect('/bienvenue');
+  throw new SansFoyer(); // inatteignable, pour le typage
 }
 
 /**

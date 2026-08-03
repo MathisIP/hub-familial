@@ -2014,3 +2014,20 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   vertical-align: middle;
 }
 .fm-message { display: block; font-size: .85rem; color: var(--muted); font-style: italic; margin-top: .15rem; }
+
+/* --- Page « Bienvenue » (connecte, sans foyer) --- */
+.bv-choix {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem; margin-top: 1rem;
+}
+.bv-carte {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.4rem 1.5rem;
+  display: flex; flex-direction: column; align-items: flex-start; gap: .5rem;
+}
+.bv-carte h2 { font-family: var(--police-titre), Georgia, serif; font-size: 1.15rem; margin: 0; }
+.bv-carte p { margin: 0; color: var(--muted); font-size: .93rem; line-height: 1.55; }
+.bv-carte .bouton { margin-top: .5rem; }
+.bv-ic { font-size: 1.8rem; line-height: 1; }
+.bv-note { font-size: .85rem; }
+.bv-carte-attente { opacity: .85; }

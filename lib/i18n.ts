@@ -45,6 +45,7 @@ const UI = {
   MOD_EVENEMENTS: { fr: 'Événements', en: 'Events' },
   MOD_CADEAUX: { fr: 'Cadeaux', en: 'Gifts' },
   MOD_AGENDA: { fr: 'Agenda', en: 'Calendar' },
+  MOD_DOCUMENTS: { fr: 'Documents', en: 'Documents' },
 
   // Sous-titres des pages de module
   SUB_BUDGET: { fr: 'Comptes, dépenses et objectifs du foyer', en: 'Household accounts, spending and goals' },
@@ -53,6 +54,7 @@ const UI = {
   SUB_EVENEMENTS: { fr: 'Réceptions, invités, checklist et menu', en: 'Gatherings, guests, checklist and menu' },
   SUB_CADEAUX: { fr: 'Idées, budget et suivi des cadeaux par occasion', en: 'Ideas, budget and gift tracking by occasion' },
   SUB_AGENDA: { fr: 'Agenda familial partagé', en: 'Shared family calendar' },
+  SUB_DOCUMENTS: { fr: 'Les papiers du foyer, rangés et privés', en: 'Household paperwork, sorted and private' },
 
   // Navigation
   NAV_ACCUEIL: { fr: 'Accueil', en: 'Home' },
@@ -156,11 +158,27 @@ const UI = {
   DOC_CHARGEMENT: { fr: 'Chargement des documents…', en: 'Loading documents…' },
   DOC_VIDE: { fr: 'Aucun document. Téléverse le premier ci-dessus.', en: 'No documents yet. Upload your first one above.' },
   DOC_TELEVERSER: { fr: '⬆ Téléverser', en: '⬆ Upload' },
+  DOC_AJOUTER: { fr: '⬆ Ajouter un document', en: '⬆ Add a document' },
   DOC_ENVOI: { fr: 'Envoi…', en: 'Uploading…' },
-  DOC_DOSSIER_PH: { fr: 'Dossier (facultatif)', en: 'Folder (optional)' },
-  DOC_SANS_DOSSIER: { fr: '📄 Sans dossier', en: '📄 No folder' },
   DOC_OUVRIR: { fr: 'Ouvrir le document', en: 'Open document' },
   DOC_NOM: { fr: 'Nom du document', en: 'Document name' },
+  DOC_LIEN_ONGLET: { fr: 'Tous mes documents →', en: 'All my documents →' },
+  DOC_AJOUTE_SUFFIXE: { fr: 'document(s) ajouté(s) dans « Fichiers non classés ».', en: 'document(s) added to “Unsorted files”.' },
+  DOC_RECHERCHE_PH: { fr: 'Rechercher un document…', en: 'Search a document…' },
+  DOC_AUCUN_RESULTAT: { fr: 'Aucun document ne correspond.', en: 'No matching document.' },
+  DOC_RESULTATS: { fr: 'Résultats', en: 'Results' },
+  DOC_NOUVEAU_DOSSIER_PH: { fr: 'Nom du nouveau dossier', en: 'New folder name' },
+  DOC_CREER_DOSSIER: { fr: '＋ Dossier', en: '＋ Folder' },
+  DOC_DEPOSER_DANS: { fr: 'Déposer dans', en: 'Upload to' },
+  DOC_DOSSIER_VIDE: { fr: 'Dossier vide.', en: 'Empty folder.' },
+  DOC_GERER_DOSSIER: { fr: 'Renommer ou supprimer le dossier', en: 'Rename or delete folder' },
+  DOC_NOM_DOSSIER: { fr: 'Nom du dossier', en: 'Folder name' },
+  DOC_SUPPR_DOSSIER: { fr: 'Supprimer le dossier', en: 'Delete folder' },
+  DOC_SUPPR_DOSSIER_AIDE: {
+    fr: 'Les fichiers ne sont pas supprimés : ils repartent dans « Fichiers non classés ».',
+    en: 'Files are not deleted: they go back to “Unsorted files”.',
+  },
+  DOC_DEPLACER_VERS: { fr: 'Déplacer vers', en: 'Move to' },
 
   // Saisie d'une opération (budget)
   SAISIE_CTA: { fr: 'Ajouter une opération', en: 'Add a transaction' },

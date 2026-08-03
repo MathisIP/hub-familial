@@ -78,6 +78,10 @@ export const IcNeonEtoile = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p}><path d="M12 3.2l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.6l-5.2 2.6 1-5.75-4.2-4.1 5.8-.85z" /></Svg>
 );
 
+export const IcDocuments = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}><path d="M3.5 7.5a2 2 0 0 1 2-2h3.2l1.8 2.2h8a2 2 0 0 1 2 2v8.3a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" /></Svg>
+);
+
 export const IcMenu = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2.6" /><path d="M14.5 4.5v15" /></Svg>
 );
@@ -94,6 +98,7 @@ export const Icones = {
   evenements: IcEvenements,
   cadeaux: IcCadeaux,
   agenda: IcAgenda,
+  documents: IcDocuments,
   reglages: IcReglages,
   deconnexion: IcDeconnexion,
 } as const;

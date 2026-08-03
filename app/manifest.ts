@@ -9,8 +9,8 @@ import { THEMES, THEME_DEFAUT } from '@/lib/themes';
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Nestync App',
-    short_name: 'Nestync App',
+    name: 'Nestync',
+    short_name: 'Nestync',
     description: "L'organisation du foyer, en un seul endroit.",
     start_url: '/',
     display: 'standalone',

@@ -36,6 +36,7 @@ const NAV: Item[] = [
   { href: '/evenements', icone: 'evenements', cle: 'MOD_EVENEMENTS' },
   { href: '/cadeaux', icone: 'cadeaux', cle: 'MOD_CADEAUX' },
   { href: '/agenda', icone: 'agenda', cle: 'MOD_AGENDA' },
+  { href: '/documents', icone: 'documents', cle: 'MOD_DOCUMENTS' },
 ];
 
 function estActif(path: string | null, href: string): boolean {

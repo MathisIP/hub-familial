@@ -1,40 +1,26 @@
 /**
  * MODULE BUDGET — SCHÉMA & HELPERS PURS (partagés serveur ↔ client).
  * ==================================================================
- * Le Budget est un tableau de bord **calculé par le tableur**. L'app N'RE­CALCULE
- * rien : elle lit les valeurs déjà agrégées de l'onglet « Tableau de bord »
- * (moteur) — principe « Sheets = source de vérité ». On repère les valeurs par
- * leur LIBELLÉ (scan de la colonne A), pas par un n° de ligne figé, pour rester
- * robuste si la disposition bouge.
- *
- * Onglet Transactions — en-têtes ligne 1, données ligne 2+ :
- *   A Date · B Type · C Compte · D Compte destination · E Catégorie
- *   F Libellé · G Montant · H Note
- * Onglet Échéances — en-têtes ligne 1, données ligne 2+ :
- *   A Échéance · B Date · C Récurrence · D Note
+ * Le tableau de bord est **entièrement recalculé côté serveur** depuis la base
+ * ([lib/budget/service.ts]) : soldes = solde initial + Σ transactions, KPIs =
+ * Σ du mois, réel par catégorie = Σ des dépenses du mois. Ce fichier ne porte
+ * que les types et les helpers purs, utilisables des deux côtés.
  */
-
-export const COL_TX = {
-  DATE: 1, TYPE: 2, COMPTE: 3, DEST: 4, CATEGORIE: 5, LIBELLE: 6, MONTANT: 7, NOTE: 8,
-} as const;
 
 export const TYPE_DEPENSE = 'Dépense';
 export const TYPE_REVENU = 'Revenu';
 export const TYPE_VIREMENT = 'Virement interne';
 
-/** Étiquette de source écrite en colonne H (comme « Formulaire » côté Sheets). */
-export const SOURCE_APP = 'App';
-
-/** Noms de mois EXACTS du moteur (Budget/00_Constantes.gs) — l'ordre = le n° de mois. */
+/** Noms de mois affichés (l'ordre = le n° de mois). */
 export const MOIS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
 ] as const;
 
-/** Mois sélectionné dans le moteur (mois : 1–12). */
+/** Mois affiché (mois : 1–12) — simple filtre de lecture. */
 export type SelectionMois = { annee: number; mois: number };
 
-/** Listes déroulantes de la saisie, lues dans l'onglet Paramètres. */
+/** Listes déroulantes de la saisie, dérivées des comptes/catégories du foyer. */
 export type ParametresSaisie = {
   comptes: string[];
   types: string[];
@@ -93,7 +79,7 @@ export type Echeance = {
 
 export type DonneesBudget = {
   periode: string; // ex. « Juillet 2026 »
-  selection: SelectionMois; // mois/année pilotant le moteur
+  selection: SelectionMois; // mois/année affichés
   anneesDisponibles: number[]; // pour le sélecteur de mois
   kpis: Kpis;
   categories: LigneCategorie[];

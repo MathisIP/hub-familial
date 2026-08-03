@@ -1087,6 +1087,48 @@ a { color: var(--link-tx); }
 }
 .doc-menu:hover { background: var(--soft); color: var(--ink); }
 
+/* Section d'accueil réduite : ajouter + rechercher */
+.doc-accueil { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem; }
+.doc-accueil .doc-btn { white-space: nowrap; }
+.doc-recherche { flex: 1 1 12rem; min-width: 0; }
+.doc-resultats { margin-top: .9rem; }
+.doc-badge {
+  flex: none; font-size: .75rem; color: var(--muted);
+  background: var(--soft); border-radius: 999px; padding: .1rem .5rem;
+  max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ===================== ONGLET DOCUMENTS ===================== */
+.vd-outils {
+  display: flex; flex-wrap: wrap; gap: .6rem; align-items: center;
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1rem; padding: .9rem 1rem; margin-bottom: 1.2rem;
+}
+.vd-recherche { flex: 1 1 14rem; min-width: 0; }
+.vd-nouveau, .vd-depot { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.vd-nouveau .champ { width: 11rem; max-width: 100%; }
+.vd-depot .champ { width: 12rem; max-width: 100%; }
+.vd-lbl { font-size: .85rem; color: var(--muted); }
+
+.vd-groupes { display: flex; flex-direction: column; gap: 1.1rem; }
+.vd-groupe {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1rem; padding: 1rem 1.15rem;
+}
+.vd-gtitre {
+  display: flex; align-items: center; gap: .55rem; margin: 0 0 .6rem;
+  font-size: .95rem; font-family: var(--police-titre), Georgia, serif;
+}
+.vd-gnom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vd-gcount {
+  font-size: .75rem; font-weight: 700; color: var(--muted);
+  background: var(--soft); border-radius: 999px; padding: .05rem .45rem;
+}
+.vd-gmenu { margin-left: auto; }
+.vd-gedit { margin-bottom: .6rem; }
+.vd-vide { margin: .2rem 0 0; font-style: italic; }
+.vd-aide { flex: 1 1 100%; margin: .3rem 0 0; font-size: .8rem; color: var(--muted); }
+
 /* Édition inline */
 .doc-edit {
   display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;

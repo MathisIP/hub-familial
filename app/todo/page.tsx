@@ -6,7 +6,7 @@ import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
-/** Rendu à chaque requête : les données Sheets ne doivent pas être figées. */
+/** Rendu à chaque requête : les données du foyer ne doivent pas être figées. */
 export const dynamic = 'force-dynamic';
 
 export const metadata = { title: 'To-Do & Courses — Nestync' };

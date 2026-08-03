@@ -5,9 +5,9 @@ import * as schema from './schema';
 
 /**
  * Client Postgres (Drizzle) — créé PARESSEUSEMENT à la première requête.
- * Tant que `DATABASE_URL` est absent, on ne se connecte à rien : les modules
- * encore adossés à Google Sheets continuent de fonctionner normalement pendant
- * la migration progressive vers la base. `server-only` : jamais côté navigateur.
+ * `DATABASE_URL` est REQUIS : c'est la source de vérité de tous les modules.
+ * S'il est absent, on ne se connecte à rien et les pages dégradent proprement
+ * (message de config) au lieu de planter. `server-only` : jamais côté navigateur.
  */
 
 type DB = ReturnType<typeof drizzle<typeof schema>>;

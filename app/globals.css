@@ -10,8 +10,13 @@ html {
   /* Repli avant l'hydratation : évite le flash blanc si le thème mémorisé
      est 🌙 Nuit. Le script inline du layout écrase data-theme immédiatement. */
   background: var(--page, #FFF5F3);
-  /* Responsive strict : jamais de défilement horizontal, quel que soit l'appareil. */
+  /* Responsive strict : jamais de défilement horizontal, quel que soit l'appareil.
+     ⚠ `clip` et NON `hidden` : `hidden` transforme l'élément en conteneur de
+     défilement, et l'avoir sur html ET body imbrique deux conteneurs — ce qui
+     neutralisait la molette. `clip` découpe sans rien rendre scrollable.
+     La 1re déclaration sert de repli pour les moteurs sans `clip`. */
   overflow-x: hidden;
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* Défilement rigide : pas de rebond d'overscroll (qui révèle un fond blanc). */
@@ -33,6 +38,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-x: clip; /* cf. html : ne jamais rendre <body> scrollable */
   max-width: 100%;
   overscroll-behavior: none;
 }
@@ -1910,3 +1916,70 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .vt-pied-liens a { color: var(--muted); text-decoration: none; font-size: .9rem; }
 .vt-pied-liens a:hover { color: var(--acc-deep); text-decoration: underline; }
 .vt-pied-legal { font-size: .82rem; color: var(--muted); margin: 0; }
+
+/* --- Vitrine : démonstration interactive des thèmes --- */
+.vt-demo-panneau {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.6rem; align-items: center;
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.4rem; padding: 1.6rem;
+}
+@media (max-width: 48rem) { .vt-demo-panneau { grid-template-columns: minmax(0, 1fr); } }
+
+.vt-demo-lbl {
+  font-size: .78rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); margin: 0 0 .6rem;
+}
+.vt-demo-pastilles { display: flex; flex-wrap: wrap; gap: .6rem; }
+.vt-pastille-c {
+  width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer; padding: 0;
+  box-shadow: 0 3px 10px -4px rgba(0, 0, 0, .35);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.vt-pastille-c:hover { transform: scale(1.08); }
+.vt-pastille-c.actif { border-color: var(--ink); transform: scale(1.12); }
+.vt-demo-nom { margin: .7rem 0 1.2rem; font-weight: 700; font-size: 1rem; }
+
+.vt-demo-bascules { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
+.vt-demo-b {
+  font: inherit; font-size: .9rem; font-weight: 600; color: var(--ink);
+  background: var(--page); border: 1px solid var(--line); border-radius: 999px;
+  padding: .5rem 1rem; cursor: pointer;
+}
+.vt-demo-b:hover { border-color: var(--acc); }
+.vt-demo-b.actif { background: var(--soft); border-color: var(--acc); color: var(--acc-deep); }
+
+/* Aperçu façon mini-application */
+.vt-demo-apercu { display: flex; justify-content: center; }
+.vt-demo-carte {
+  width: 100%; max-width: 21rem;
+  background: var(--page); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.2rem 1.3rem;
+  box-shadow: var(--shadow-soft);
+}
+.vt-demo-jour { font-size: .78rem; color: var(--muted); margin: 0; }
+.vt-demo-titre {
+  font-family: var(--police-titre), Georgia, serif; font-size: 1.35rem;
+  font-weight: 700; margin: .15rem 0 1rem;
+}
+.vt-demo-soldes { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+.vt-demo-soldes div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: .6rem;
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: .7rem; padding: .55rem .8rem;
+}
+.vt-demo-soldes span { font-size: .85rem; color: var(--muted); }
+.vt-demo-soldes strong { font-size: .95rem; font-variant-numeric: tabular-nums; }
+.vt-demo-cta { width: 100%; justify-content: center; pointer-events: none; }
+.vt-demo-section {
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--head); font-weight: 700; margin: 1.2rem 0 .5rem;
+}
+.vt-demo-liste { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .4rem; }
+.vt-demo-liste li { display: flex; align-items: center; gap: .6rem; font-size: .9rem; }
+.vt-demo-q {
+  flex: none; min-width: 2.6rem; text-align: center;
+  font-size: .72rem; font-weight: 700; color: var(--on-acc);
+  background: var(--head); border-radius: 999px; padding: .1rem .45rem;
+}

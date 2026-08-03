@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import Tarifs from '@/components/vitrine/Tarifs';
+import DemoThemes from '@/components/vitrine/DemoThemes';
 import { ESSAI_JOURS } from '@/lib/offres';
 
 /**
@@ -36,6 +37,7 @@ export default function Vitrine() {
         </span>
         <nav className="vt-nav-liens">
           <a href="#fonctions">Fonctionnalités</a>
+          <a href="#apparence">Apparence</a>
           <a href="#tarifs">Tarifs</a>
           <Link href="/connexion" className="bouton bouton-primaire vt-nav-cta">Se connecter</Link>
         </nav>
@@ -91,6 +93,9 @@ export default function Vitrine() {
           ))}
         </div>
       </section>
+
+      {/* ---------------- Démo interactive des thèmes ---------------- */}
+      <DemoThemes />
 
       {/* ---------------- Confiance / vie privée ---------------- */}
       <section className="vt-section vt-prive">

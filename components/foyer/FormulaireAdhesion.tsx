@@ -22,12 +22,19 @@ export default function FormulaireAdhesion({ monEmail }: { monEmail: string }) {
       <div className="adh-ok">
         <p className="adh-ok-ic" aria-hidden="true">📨</p>
         <h2>Demande envoyée</h2>
+        {/* Message volontairement identique que l'adresse existe ou non : il ne
+            doit pas permettre de deviner qui utilise Nestync. */}
         <p>
-          Le responsable du foyer <strong>{etat.ok}</strong> a reçu ta demande. Dès qu’il
-          l’accepte, tu retrouveras ici toutes les données du foyer.
+          Si l’adresse <strong>{etat.ok}</strong> correspond bien au responsable de ton
+          foyer, ta demande vient de lui être transmise.
+        </p>
+        <p>
+          Il doit maintenant l’<strong>accepter</strong> depuis Réglages → Mon foyer.
+          Tu auras accès au foyer dès qu’il l’aura fait.
         </p>
         <p className="adh-aide">
-          Préviens-le : la demande l’attend dans <strong>Réglages → Mon foyer</strong>.
+          Pas de nouvelle ? Vérifie l’adresse auprès de lui : c’est celle avec laquelle
+          il s’est inscrit.
         </p>
         <Link href="/" className="bouton bouton-primaire">Retour à l’accueil</Link>
       </div>

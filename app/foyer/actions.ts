@@ -70,13 +70,11 @@ export async function demanderAdhesionAction(formData: FormData): Promise<{ ok?:
   const message = String(formData.get('message') ?? '');
   const user = await utilisateurCourant();
   try {
-    const foyerNom = await demanderAdhesion(
-      { id: user.id, email: user.email, nom: user.nom },
-      email,
-      message,
-    );
+    await demanderAdhesion({ id: user.id, email: user.email, nom: user.nom }, email, message);
     revalidatePath('/rejoindre-foyer');
-    return { ok: foyerNom };
+    // On renvoie l'ADRESSE SAISIE, pas le nom du foyer : la confirmation doit
+    // être identique que l'adresse corresponde à un foyer ou non (cf. demanderAdhesion).
+    return { ok: email.trim() };
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Demande impossible.' };
   }

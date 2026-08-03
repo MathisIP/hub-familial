@@ -226,31 +226,30 @@ async function foyerDuResponsable(email: string): Promise<{ id: string; nom: str
 
 /**
  * Dépose (ou relance) une demande d'adhésion auprès du responsable d'un foyer.
- * Renvoie le nom du foyer visé, pour l'afficher en confirmation.
+ *
+ * ⚠ CONFIDENTIALITÉ : on ne dit JAMAIS si l'adresse correspond à un foyer
+ * existant. Sinon n'importe qui pourrait tester des adresses une à une pour
+ * découvrir qui utilise Nestync (énumération d'adresses e-mail). Quand aucun
+ * foyer ne correspond, on ne crée rien et on sort **silencieusement** : l'appelant
+ * affiche le même message dans tous les cas.
  */
 export async function demanderAdhesion(
   demandeur: { id: string; email: string; nom?: string | null },
   emailResponsable: string,
   message = '',
-): Promise<string> {
+): Promise<void> {
   const email = S(emailResponsable).toLowerCase();
   if (!email || !email.includes('@')) {
     throw new ErreurValidation('Indique l’adresse e-mail du responsable du foyer.');
   }
+  // Sa propre adresse : pas une fuite (il la connaît), et l'erreur est utile.
   if (email === demandeur.email.toLowerCase()) {
     throw new ErreurValidation('C’est ta propre adresse : indique celle du responsable du foyer.');
   }
 
   const foyer = await foyerDuResponsable(email);
-  if (!foyer) {
-    throw new ErreurValidation(
-      'Aucun foyer trouvé pour cette adresse. Vérifie-la auprès du responsable : c’est celle avec laquelle il s’est inscrit.',
-    );
-  }
-
-  if (await roleDe(foyer.id, demandeur.id)) {
-    throw new ErreurValidation('Tu fais déjà partie de ce foyer.');
-  }
+  if (!foyer) return; // adresse inconnue → même réponse que pour un succès
+  if (await roleDe(foyer.id, demandeur.id)) return; // déjà membre → rien à faire
 
   // Une seule demande vivante par (foyer, demandeur) : une relance la réactive.
   await db()
@@ -267,8 +266,6 @@ export async function demanderAdhesion(
       target: [demandesAdhesion.foyerId, demandesAdhesion.demandeurId],
       set: { statut: 'en_attente', message: S(message).slice(0, 500), creeLe: new Date() },
     });
-
-  return foyer.nom;
 }
 
 /** Demandes en attente reçues par un foyer (réservé au propriétaire). */

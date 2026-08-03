@@ -5,7 +5,7 @@ import ReglagesApparence from '@/components/ReglagesApparence';
 import BasculeNeon from '@/components/BasculeNeon';
 
 /** Pages publiques (sans session) : pas de barre ni de pied de page. */
-const PUBLIQUES = ['/connexion', '/confidentialite', '/hors-ligne', '/rejoindre'];
+const PUBLIQUES = ['/connexion', '/conditions', '/confidentialite', '/hors-ligne', '/rejoindre'];
 export function estPublique(path: string | null): boolean {
   return !!path && PUBLIQUES.some((p) => path === p || path.startsWith(p + '/'));
 }

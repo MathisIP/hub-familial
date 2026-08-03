@@ -1759,3 +1759,150 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* ============================================================
+   VITRINE PUBLIQUE (nestync.app) — visible sans session.
+   Autonome : ne dépend d'aucune classe de l'app, mais réutilise
+   les variables de thème pour rester cohérente avec le produit.
+   ============================================================ */
+.vitrine { max-width: 68rem; margin: 0 auto; padding: 0 1.1rem 3rem; }
+.vitrine h1, .vitrine h2, .vitrine h3 { font-family: var(--police-titre), Georgia, serif; }
+
+/* En-tête */
+.vt-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.1rem 0; flex-wrap: wrap;
+}
+.vt-marque {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-family: var(--police-titre), Georgia, serif; font-size: 1.25rem; font-weight: 700;
+}
+.vt-logo { border-radius: .6rem; }
+.vt-nav-liens { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+.vt-nav-liens a { color: var(--muted); text-decoration: none; font-size: .95rem; }
+.vt-nav-liens a:hover { color: var(--acc-deep); }
+.vt-nav-cta { color: var(--on-acc); font-size: .92rem; padding: .5rem .95rem; }
+
+/* Hero */
+.vt-hero { text-align: center; padding: 3.2rem 0 2.6rem; }
+.vt-pastille {
+  display: inline-block; font-size: .82rem; font-weight: 600; color: var(--acc-deep);
+  background: var(--soft); border: 1px solid var(--line); border-radius: 999px;
+  padding: .35rem .9rem; margin: 0 0 1.2rem;
+}
+.vt-h1 { font-size: clamp(2.1rem, 6vw, 3.4rem); line-height: 1.12; margin: 0 0 1rem; text-wrap: balance; }
+.vt-lede { max-width: 38rem; margin: 0 auto; color: var(--muted); font-size: 1.08rem; line-height: 1.6; }
+.vt-hero-actions { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; margin: 1.8rem 0 .9rem; }
+.vt-cta { font-size: 1rem; padding: .8rem 1.5rem; }
+.vt-hero-note { font-size: .85rem; color: var(--muted); margin: 0; }
+
+/* Bande d'accroches */
+.vt-bande {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem;
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1rem;
+  padding: 1.3rem 1.5rem; margin: 1rem 0 3rem;
+}
+.vt-bande-item { display: flex; flex-direction: column; gap: .2rem; }
+.vt-bande-item strong { font-size: .98rem; }
+.vt-bande-item span { font-size: .9rem; color: var(--muted); }
+
+/* Sections */
+.vt-section { padding: 3rem 0; }
+.vt-h2 { font-size: clamp(1.5rem, 3.6vw, 2.1rem); margin: 0 0 .5rem; text-align: center; text-wrap: balance; }
+.vt-sous { text-align: center; color: var(--muted); max-width: 36rem; margin: 0 auto 2rem; }
+
+/* Cartes modules */
+.vt-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+.vt-carte {
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1rem;
+  padding: 1.2rem 1.3rem;
+}
+.vt-carte-ic { font-size: 1.6rem; line-height: 1; }
+.vt-carte h3 { margin: .6rem 0 .35rem; font-size: 1.05rem; }
+.vt-carte p { margin: 0; font-size: .92rem; color: var(--muted); line-height: 1.55; }
+
+/* Vie privée */
+.vt-prive { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 2rem; align-items: center; }
+.vt-prive .vt-h2 { text-align: left; }
+.vt-prive-txt p { color: var(--muted); line-height: 1.65; }
+.vt-liste { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; gap: .5rem; }
+.vt-liste li { position: relative; padding-left: 1.5rem; font-size: .95rem; }
+.vt-liste li::before { content: "\2713"; position: absolute; left: 0; color: var(--acc-deep); font-weight: 700; }
+.vt-prive-badge {
+  display: flex; flex-direction: column; align-items: center; gap: .6rem;
+  background: var(--soft); border: 1px solid var(--line); border-radius: 1.4rem; padding: 2.2rem 1.4rem;
+}
+.vt-cadenas { font-size: 3rem; line-height: 1; }
+.vt-prive-lbl { font-weight: 700; color: var(--acc-deep); text-align: center; }
+@media (max-width: 46rem) { .vt-prive { grid-template-columns: minmax(0, 1fr); } }
+
+/* Étapes */
+.vt-etapes { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.2rem; }
+.vt-etape { text-align: center; }
+.vt-etape-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  background: linear-gradient(155deg, var(--acc), var(--acc-deep)); color: var(--on-acc);
+  font-family: var(--police-titre), Georgia, serif; font-weight: 700; font-size: 1.1rem;
+}
+.vt-etape h3 { margin: .7rem 0 .3rem; font-size: 1.05rem; }
+.vt-etape p { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.55; }
+
+/* Tarifs */
+.vt-tarifs { display: flex; flex-direction: column; align-items: center; }
+.vt-bascule {
+  display: inline-flex; gap: .25rem; margin: 0 auto 1.6rem; padding: .3rem;
+  background: var(--soft); border: 1px solid var(--line); border-radius: 999px;
+}
+.vt-bascule-b {
+  font: inherit; font-size: .92rem; font-weight: 600; color: var(--muted);
+  background: none; border: 0; cursor: pointer; padding: .5rem 1.1rem; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: .4rem;
+}
+.vt-bascule-b.actif { background: var(--page); color: var(--ink); box-shadow: var(--shadow-soft); }
+.vt-eco {
+  font-size: .72rem; font-weight: 700; color: var(--on-acc);
+  background: var(--acc-deep); border-radius: 999px; padding: .05rem .4rem;
+}
+.vt-prix-carte {
+  width: 100%; max-width: 26rem; text-align: center;
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1.4rem; padding: 1.8rem 1.6rem;
+}
+.vt-prix-nom { font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; }
+.vt-prix { display: flex; align-items: baseline; justify-content: center; gap: .4rem; margin: .5rem 0 .2rem; }
+.vt-prix-n { font-family: var(--police-titre), Georgia, serif; font-size: 2.8rem; font-weight: 700; }
+.vt-prix-p { color: var(--muted); font-size: .95rem; }
+.vt-prix-detail { color: var(--muted); font-size: .88rem; margin: 0 0 1.3rem; }
+.vt-prix-cta { display: inline-flex; width: 100%; justify-content: center; padding: .85rem 1rem; font-size: 1rem; }
+.vt-prix-note { font-size: .8rem; color: var(--muted); margin: .6rem 0 0; }
+.vt-inclus { list-style: none; padding: 0; margin: 1.4rem 0 0; text-align: left; display: flex; flex-direction: column; gap: .55rem; }
+.vt-inclus li { display: flex; gap: .55rem; font-size: .92rem; }
+.vt-check { color: var(--acc-deep); font-weight: 700; flex: none; }
+.vt-tva { font-size: .82rem; color: var(--muted); margin-top: 1.1rem; text-align: center; }
+.vt-tva a { color: var(--link-tx); }
+
+/* FAQ */
+.vt-faq { max-width: 42rem; margin: 0 auto; display: flex; flex-direction: column; gap: .6rem; }
+.vt-faq details { background: var(--cell); border: 1px solid var(--line); border-radius: .9rem; padding: .9rem 1.1rem; }
+.vt-faq summary { cursor: pointer; font-weight: 600; font-size: .98rem; }
+.vt-faq details[open] summary { margin-bottom: .5rem; color: var(--acc-deep); }
+.vt-faq p { margin: 0; color: var(--muted); font-size: .93rem; line-height: 1.6; }
+
+/* Appel final */
+.vt-final {
+  text-align: center; background: var(--soft); border: 1px solid var(--line);
+  border-radius: 1.4rem; padding: 2.6rem 1.5rem; margin: 1rem 0 2.5rem;
+}
+.vt-final h2 { font-size: clamp(1.4rem, 3.4vw, 2rem); margin: 0 0 .5rem; text-wrap: balance; }
+.vt-final p { color: var(--muted); margin: 0 0 1.4rem; }
+
+/* Pied de page */
+.vt-pied { border-top: 1px solid var(--line); padding-top: 1.6rem; text-align: center; }
+.vt-pied-marque {
+  display: inline-flex; align-items: center; gap: .5rem; font-weight: 700;
+  font-family: var(--police-titre), Georgia, serif;
+}
+.vt-pied-liens { display: flex; flex-wrap: wrap; gap: 1.2rem; justify-content: center; margin: .9rem 0; }
+.vt-pied-liens a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+.vt-pied-liens a:hover { color: var(--acc-deep); text-decoration: underline; }
+.vt-pied-legal { font-size: .82rem; color: var(--muted); margin: 0; }

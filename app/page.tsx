@@ -4,6 +4,7 @@ import SectionDocuments from '@/components/documents/SectionDocuments';
 import SemaineAgenda from '@/components/agenda/SemaineAgenda';
 import CoursesSemaine from '@/components/CoursesSemaine';
 import SplashAccueil from '@/components/accueil/SplashAccueil';
+import Vitrine from '@/components/vitrine/Vitrine';
 import NomAffiche from '@/components/NomAffiche';
 import { chargerAccueilBudget, type AccueilBudget } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
@@ -34,9 +35,14 @@ function contexteAccueil(nomComplet: string, langue: IdLangue) {
 export const dynamic = 'force-dynamic';
 
 export default async function Accueil() {
+  // `/` est publique (cf. middleware) : un visiteur non connecté voit la VITRINE,
+  // un membre son tableau de bord. Échappatoire dev identique à `auth.ts`.
+  const session = await auth();
+  const devOuvert = process.env.NODE_ENV !== 'production' && !process.env.AUTH_GOOGLE_ID;
+  if (!session?.user && !devOuvert) return <Vitrine />;
+
   await exigerAcces();
-  const [session, accueil, langue] = await Promise.all([
-    auth(),
+  const [accueil, langue] = await Promise.all([
     chargerAccueilBudget().catch(() => null as AccueilBudget | null),
     langueCourante(),
   ]);

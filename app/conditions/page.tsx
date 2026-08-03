@@ -1,0 +1,190 @@
+import Link from 'next/link';
+import { ESSAI_JOURS, OFFRES, formatPrix } from '@/lib/offres';
+
+export const metadata = {
+  title: 'Conditions générales — Nestync',
+  description: 'Conditions générales de vente et d’utilisation du service Nestync.',
+};
+
+/**
+ * CONDITIONS GÉNÉRALES (vente + utilisation) — page PUBLIQUE (cf. middleware).
+ *
+ * ⚠ GABARIT à finaliser : les champs `[À COMPLÉTER]` doivent être renseignés
+ * (identité de l'éditeur, SIREN, contact, hébergeurs) et le document RELU par un
+ * professionnel avant toute commercialisation. Il reprend les obligations B2C
+ * françaises : information précontractuelle, droit de rétractation (et sa
+ * renonciation pour un service immédiat), reconduction et résiliation « en trois
+ * clics », garanties légales, médiation de la consommation.
+ */
+export default function PageConditions() {
+  const mensuel = OFFRES[0];
+  const annuel = OFFRES[1];
+
+  return (
+    <article className="doc-legal">
+      <Link className="lien-retour" href="/">← Retour</Link>
+      <h1>Conditions générales de vente et d’utilisation</h1>
+      <p className="doc-maj">Dernière mise à jour : [À COMPLÉTER : date]</p>
+
+      <p className="doc-avertissement">
+        ⚠ <strong>Modèle à finaliser.</strong> Renseignez les champs entre crochets et faites
+        relire ce document par un professionnel du droit avant de commercialiser le service.
+      </p>
+
+      <h2>1. Identification de l’éditeur</h2>
+      <p>
+        Le service <strong>Nestync</strong> (ci-après « le Service ») est édité par
+        [À COMPLÉTER : nom / raison sociale], [À COMPLÉTER : forme juridique et capital
+        le cas échéant], immatriculé sous le numéro [À COMPLÉTER : SIREN/SIRET], dont le
+        siège est situé [À COMPLÉTER : adresse].
+      </p>
+      <ul>
+        <li>Contact : [À COMPLÉTER : adresse e-mail]</li>
+        <li>Directeur de la publication : [À COMPLÉTER : nom]</li>
+        <li>Hébergement de l’application : [À COMPLÉTER : Vercel Inc. / autre]</li>
+        <li>Hébergement des données : [À COMPLÉTER : Neon, région Union européenne]</li>
+      </ul>
+
+      <h2>2. Objet</h2>
+      <p>
+        Les présentes conditions régissent l’accès au Service et sa souscription par toute
+        personne physique majeure agissant à des fins non professionnelles (ci-après
+        « l’Utilisateur »). Toute création de compte vaut acceptation pleine et entière
+        des présentes.
+      </p>
+
+      <h2>3. Description du Service</h2>
+      <p>
+        Nestync est une application d’organisation familiale accessible par navigateur et
+        installable sur mobile. Elle regroupe des modules de gestion du foyer : budget,
+        tâches et courses, repas, événements, cadeaux, agenda et documents. Un abonnement
+        couvre <strong>un foyer</strong> et l’ensemble de ses membres invités.
+      </p>
+
+      <h2>4. Compte et accès</h2>
+      <ul>
+        <li>La création d’un compte s’effectue via une authentification Google. L’Utilisateur est responsable de la confidentialité de son accès.</li>
+        <li>L’Utilisateur qui crée le foyer en est le propriétaire : il peut inviter, retirer des membres et gérer l’abonnement.</li>
+        <li>Chaque membre accède à l’intégralité des données du foyer. L’Utilisateur s’engage à n’inviter que des personnes de confiance.</li>
+        <li>L’Utilisateur s’engage à ne pas détourner le Service de son objet, ni à y héberger de contenu illicite.</li>
+      </ul>
+
+      <h2>5. Essai gratuit</h2>
+      <p>
+        Le Service est proposé avec un essai gratuit de <strong>{ESSAI_JOURS} jours</strong>,
+        sans saisie de carte bancaire et sans reconduction automatique en offre payante.
+        À l’issue de l’essai, l’accès aux modules est suspendu tant qu’aucun abonnement n’est
+        souscrit ; les données restent conservées et exportables.
+      </p>
+
+      <h2>6. Prix et modalités de paiement</h2>
+      <p>Les prix sont indiqués en euros, toutes taxes comprises :</p>
+      <ul>
+        <li><strong>Formule mensuelle</strong> : {formatPrix(mensuel.prix)} {mensuel.periode}.</li>
+        <li><strong>Formule annuelle</strong> : {formatPrix(annuel.prix)} {annuel.periode}, soit {formatPrix(annuel.parMois)} par mois.</li>
+      </ul>
+      <p>
+        Le paiement s’effectue par carte bancaire via notre prestataire <strong>Stripe</strong>.
+        Aucune coordonnée bancaire n’est conservée par l’éditeur. La facture est disponible
+        depuis l’espace « Mon abonnement ». L’éditeur se réserve le droit de modifier ses
+        tarifs ; tout changement est notifié au moins 30 jours à l’avance et ne s’applique
+        qu’à compter de la période suivante.
+      </p>
+
+      <h2>7. Durée, reconduction et résiliation</h2>
+      <ul>
+        <li>L’abonnement est souscrit pour la période choisie (mensuelle ou annuelle) et se reconduit tacitement pour une durée identique.</li>
+        <li>
+          <strong>Résiliation en trois clics</strong> : l’Utilisateur peut résilier à tout moment
+          depuis « Mon abonnement », par un procédé aussi simple que la souscription, sans avoir
+          à motiver sa demande ni à contacter le service client.
+        </li>
+        <li>La résiliation prend effet au terme de la période en cours. L’accès reste ouvert jusqu’à cette date ; aucune somme n’est remboursée au prorata pour la période entamée, sauf disposition légale contraire.</li>
+        <li>L’éditeur peut suspendre un compte en cas de défaut de paiement ou de manquement grave aux présentes, après information de l’Utilisateur.</li>
+      </ul>
+
+      <h2>8. Droit de rétractation</h2>
+      <p>
+        Conformément aux articles L. 221-18 et suivants du Code de la consommation,
+        l’Utilisateur dispose d’un délai de <strong>quatorze (14) jours</strong> à compter
+        de la souscription pour se rétracter, sans motif ni pénalité.
+      </p>
+      <p>
+        Le Service étant fourni <strong>immédiatement</strong> après souscription, l’Utilisateur
+        est invité, au moment du paiement, à demander expressément l’exécution immédiate et à
+        reconnaître qu’il <strong>renonce alors à son droit de rétractation</strong> une fois le
+        service pleinement exécuté. À défaut d’une telle demande, le délai de rétractation
+        s’applique dans les conditions de droit commun.
+      </p>
+      <p>
+        Pour exercer ce droit : écrire à [À COMPLÉTER : adresse e-mail] avec les nom, prénom et
+        adresse e-mail du compte concerné. Le remboursement intervient sous 14 jours par le même
+        moyen de paiement.
+      </p>
+
+      <h2>9. Disponibilité et maintenance</h2>
+      <p>
+        L’éditeur s’engage à mettre en œuvre les moyens raisonnables pour assurer la
+        disponibilité du Service, sans obligation de résultat. Des interruptions peuvent
+        survenir pour maintenance ou du fait de prestataires tiers (hébergeur, fournisseur
+        d’authentification). Une interruption prolongée et imputable à l’éditeur peut donner
+        lieu à un geste commercial ou à un remboursement au prorata.
+      </p>
+
+      <h2>10. Garanties légales et responsabilité</h2>
+      <p>
+        L’Utilisateur bénéficie de la <strong>garantie légale de conformité</strong> des contenus
+        et services numériques (articles L. 224-25-1 et suivants du Code de la consommation).
+        La responsabilité de l’éditeur ne saurait être engagée pour les dommages indirects, ni
+        pour une perte de données résultant d’une suppression volontaire par l’Utilisateur ou
+        un membre de son foyer. Il appartient à l’Utilisateur d’exporter régulièrement ses
+        données s’il souhaite en conserver une copie.
+      </p>
+
+      <h2>11. Contenus déposés par l’Utilisateur</h2>
+      <p>
+        L’Utilisateur reste propriétaire des contenus qu’il dépose (documents, textes, données).
+        Il concède à l’éditeur la seule licence technique nécessaire à l’hébergement et à
+        l’affichage de ces contenus dans le cadre du Service. L’éditeur n’exploite ces contenus
+        à aucune autre fin.
+      </p>
+
+      <h2>12. Données personnelles</h2>
+      <p>
+        Le traitement des données est décrit dans la{' '}
+        <Link href="/confidentialite">politique de confidentialité</Link>. L’Utilisateur dispose
+        des droits d’accès, de rectification, d’effacement, de portabilité, de limitation et
+        d’opposition, dont deux sont exerçables directement depuis « Mon compte » (export et
+        suppression définitive).
+      </p>
+
+      <h2>13. Propriété intellectuelle</h2>
+      <p>
+        La marque, le nom de domaine, les interfaces et le code du Service demeurent la
+        propriété exclusive de l’éditeur. Aucune reproduction ou réutilisation n’est autorisée
+        sans accord écrit préalable.
+      </p>
+
+      <h2>14. Modification des conditions</h2>
+      <p>
+        L’éditeur peut modifier les présentes conditions. Toute modification substantielle est
+        notifiée au moins 30 jours avant son entrée en vigueur ; l’Utilisateur qui la refuse
+        peut résilier sans frais avant cette date.
+      </p>
+
+      <h2>15. Médiation et droit applicable</h2>
+      <p>
+        En cas de litige, l’Utilisateur s’adresse d’abord à [À COMPLÉTER : adresse e-mail].
+        À défaut d’accord, il peut recourir gratuitement à un médiateur de la consommation :
+        [À COMPLÉTER : nom et coordonnées du médiateur], ou à la plateforme européenne de
+        règlement en ligne des litiges. Les présentes sont soumises au <strong>droit français</strong> ;
+        à défaut de résolution amiable, les tribunaux compétents sont ceux du domicile du
+        défendeur ou du lieu de livraison du service, au choix de l’Utilisateur.
+      </p>
+
+      <p className="doc-maj">
+        <Link href="/">← Revenir à l’accueil</Link> · <Link href="/confidentialite">Politique de confidentialité</Link>
+      </p>
+    </article>
+  );
+}

@@ -7,6 +7,7 @@ import PiedDePage from '@/components/PiedDePage';
 import SideBar from '@/components/SideBar';
 import { I18nProvider } from '@/components/I18nProvider';
 import { langueCourante } from '@/lib/langue';
+import { auth } from '@/auth';
 import './globals.css';
 
 /** Titres = Fraunces (serif douce, italique dispo) ; corps = Quicksand. */
@@ -75,7 +76,11 @@ const SCRIPT_THEME = `
 `;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const langue = await langueCourante();
+  const [langue, session] = await Promise.all([langueCourante(), auth()]);
+  // La navigation de l'app n'a de sens que pour un membre connecté : sur la
+  // vitrine publique (`/` sans session), on ne l'affiche pas du tout.
+  const devOuvert = process.env.NODE_ENV !== 'production' && !process.env.AUTH_GOOGLE_ID;
+  const connecte = !!session?.user || devOuvert;
   return (
     <html
       lang={langue}
@@ -90,11 +95,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <I18nProvider langue={langue}>
           <div className="enveloppe">{children}</div>
-          <PiedDePage />
+          {connecte && <PiedDePage />}
           {/* Navigation (rail desktop + bandeau bas mobile) au niveau racine : ses
               éléments `position: fixed` doivent se caler sur le viewport, pas sur un
               ancêtre avec backdrop-filter (ce qui collait le bandeau en haut). */}
-          <SideBar />
+          {connecte && <SideBar />}
         </I18nProvider>
         <EnregistrerSW />
         <AstuceInstallIOS />

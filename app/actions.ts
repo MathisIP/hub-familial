@@ -6,7 +6,9 @@ import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
 
 /** Déconnexion (action serveur, utilisable depuis un composant client via <form>). */
 export async function deconnexion() {
-  await signOut({ redirectTo: '/connexion' });
+  // Retour sur la VITRINE publique (`/` sans session) plutôt que sur le formulaire
+  // de connexion : on ressort du produit, pas dans une impasse.
+  await signOut({ redirectTo: '/' });
 }
 
 /**
@@ -18,5 +20,7 @@ export async function supprimerCompte() {
   const foyer = await foyerCourant();
   const user = await utilisateurCourant();
   await supprimerFoyerEtUtilisateur(foyer.id, user.id);
-  await signOut({ redirectTo: '/connexion' });
+  // Retour sur la VITRINE publique (`/` sans session) plutôt que sur le formulaire
+  // de connexion : on ressort du produit, pas dans une impasse.
+  await signOut({ redirectTo: '/' });
 }

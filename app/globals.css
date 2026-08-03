@@ -821,6 +821,10 @@ a { color: var(--link-tx); }
   width: 100%;
 }
 .connexion-logo { font-size: 3rem; line-height: 1; }
+.connexion-logo-img { border-radius: 1.1rem; margin: 0 auto; display: block; }
+.connexion-retour { margin: 1.1rem 0 0; font-size: .88rem; }
+.connexion-retour a { color: var(--muted); text-decoration: none; }
+.connexion-retour a:hover { color: var(--acc-deep); text-decoration: underline; }
 .connexion-carte h1 { margin: .5rem 0 .3rem; font-size: 1.4rem; }
 .connexion-carte p { color: var(--muted); font-size: .9rem; margin: 0 0 1.5rem; }
 .connexion-bouton { width: 100%; justify-content: center; font-size: 1rem; padding: .7rem 1rem; }

@@ -483,6 +483,7 @@ const UI = {
   // Connexion
   CNX_ACCES: { fr: 'Accès réservé au foyer. Connecte-toi avec ton compte Google.', en: 'Access restricted to the household. Sign in with your Google account.' },
   CNX_BOUTON: { fr: 'Se connecter avec Google', en: 'Sign in with Google' },
+  CNX_DECOUVRIR: { fr: '← Découvrir Nestync et les tarifs', en: '← Discover Nestync and pricing' },
 
   // Hors ligne
   HL_TITRE: { fr: 'Hors ligne', en: 'Offline' },

@@ -383,6 +383,9 @@ const UI = {
   },
   FOY_INVITER_BTN: { fr: 'Inviter', en: 'Invite' },
   FOY_INVIT_ATTENTE: { fr: 'Invitations en attente', en: 'Pending invitations' },
+  FOY_DEMANDES: { fr: 'Demandes reçues', en: 'Join requests' },
+  FOY_ACCEPTER: { fr: 'Accepter', en: 'Accept' },
+  FOY_REFUSER: { fr: 'Refuser', en: 'Decline' },
   FOY_EXPIRE: { fr: 'expire le', en: 'expires on' },
   FOY_AIDE_A: {
     fr: '⚠ Phase privée : pour que la personne invitée puisse se connecter, son adresse doit aussi figurer dans la liste blanche',

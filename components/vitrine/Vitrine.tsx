@@ -61,6 +61,14 @@ export default function Vitrine() {
         <p className="vt-hero-note">
           Fonctionne sur iPhone, Android et ordinateur · Données hébergées en Europe
         </p>
+
+        {/* Second parcours, à égalité de visibilité : rejoindre un foyer existant. */}
+        <p className="vt-rejoindre">
+          Quelqu’un de ta famille utilise déjà Nestync ?{' '}
+          <Link href="/rejoindre-foyer" className="vt-rejoindre-lien">
+            Rejoindre son foyer →
+          </Link>
+        </p>
       </section>
 
       {/* ---------------- Problème → promesse ---------------- */}
@@ -169,6 +177,7 @@ export default function Vitrine() {
         <nav className="vt-pied-liens">
           <Link href="/conditions">Conditions générales</Link>
           <Link href="/confidentialite">Confidentialité</Link>
+          <Link href="/rejoindre-foyer">Rejoindre un foyer</Link>
           <Link href="/connexion">Se connecter</Link>
         </nav>
         <p className="vt-pied-legal">© {new Date().getFullYear()} Nestync — L’organisation du foyer, en un seul endroit.</p>

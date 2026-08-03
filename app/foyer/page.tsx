@@ -1,7 +1,14 @@
 import LienInvitation from '@/components/foyer/LienInvitation';
 import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
-import { chargerFoyerMembres } from '@/lib/membres';
-import { inviterAction, revoquerAction, retirerAction, renommerAction } from './actions';
+import { chargerFoyerMembres, demandesEnAttente } from '@/lib/membres';
+import {
+  inviterAction,
+  revoquerAction,
+  retirerAction,
+  renommerAction,
+  accepterDemandeAction,
+  refuserDemandeAction,
+} from './actions';
 import { t, locale } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
@@ -16,6 +23,8 @@ export default async function PageFoyer() {
   const [foyer, user, langue] = [await foyerCourant(), await utilisateurCourant(), await langueCourante()];
   const d = await chargerFoyerMembres(foyer.id, user.id);
   const proprio = d.monRole === 'proprietaire';
+  // Réservé au propriétaire : `demandesEnAttente` refuserait un simple membre.
+  const demandes = proprio ? await demandesEnAttente(foyer.id, user.id) : [];
 
   return (
     <>
@@ -92,6 +101,39 @@ export default async function PageFoyer() {
                     <form action={revoquerAction}>
                       <input type="hidden" name="id" value={inv.id} />
                       <button className="bouton discret rf-danger" type="submit">{t('G_ANNULER', langue)}</button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* Demandes reçues : quelqu'un a frappé à la porte du foyer. */}
+          {demandes.length > 0 && (
+            <>
+              <h3 className="foyer-sous-titre">
+                {t('FOY_DEMANDES', langue)}
+                <span className="foyer-badge">{demandes.length}</span>
+              </h3>
+              <ul className="foyer-liste">
+                {demandes.map((dem) => (
+                  <li className="foyer-membre" key={dem.id}>
+                    <span className="fm-ident">
+                      <span className="fm-nom">{dem.nom || dem.email}</span>
+                      <span className="fm-email">{dem.email}</span>
+                      {dem.message && <span className="fm-message">« {dem.message} »</span>}
+                    </span>
+                    <form action={accepterDemandeAction}>
+                      <input type="hidden" name="id" value={dem.id} />
+                      <button className="bouton bouton-primaire" type="submit">
+                        {t('FOY_ACCEPTER', langue)}
+                      </button>
+                    </form>
+                    <form action={refuserDemandeAction}>
+                      <input type="hidden" name="id" value={dem.id} />
+                      <button className="bouton discret rf-danger" type="submit">
+                        {t('FOY_REFUSER', langue)}
+                      </button>
                     </form>
                   </li>
                 ))}

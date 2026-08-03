@@ -79,7 +79,15 @@ export async function idFoyerCourant(): Promise<string> {
   return (await foyerCourant()).id;
 }
 
-/** Utilisateur connecté (ligne `utilisateurs`). Nécessite une session + la base. */
+/**
+ * Utilisateur connecté (ligne `utilisateurs`). Nécessite une session + la base.
+ *
+ * ⚠ Crée la ligne si elle n'existe pas encore : l'IDENTITÉ doit pouvoir exister
+ * SANS foyer. Sans cela, un nouvel arrivant qui va directement « rejoindre un
+ * foyer » (sans passer par une page appelant `foyerCourant`) échouerait — et
+ * l'appel à `foyerCourant` lui provisionnerait justement le foyer personnel
+ * qu'on cherche à éviter.
+ */
 export const utilisateurCourant = cache(async () => {
   if (!baseDisponible()) {
     throw new FoyerIndisponible('Base multi-foyer non configurée (DATABASE_URL absent).');
@@ -87,7 +95,14 @@ export const utilisateurCourant = cache(async () => {
   const session = await auth();
   const email = session?.user?.email?.toLowerCase();
   if (!email) throw new FoyerIndisponible('Aucun utilisateur connecté.');
-  const [u] = await db().select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
-  if (!u) throw new FoyerIndisponible('Utilisateur introuvable.');
+
+  const d = db();
+  await d
+    .insert(utilisateurs)
+    .values({ email, nom: session?.user?.name ?? null, image: session?.user?.image ?? null })
+    .onConflictDoNothing({ target: utilisateurs.email });
+
+  const [u] = await d.select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
+  if (!u) throw new FoyerIndisponible("Impossible de résoudre l'utilisateur.");
   return u;
 });

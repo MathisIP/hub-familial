@@ -85,6 +85,13 @@
       "when": 1785776844495,
       "tag": "0011_previous_thor_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785785175426,
+      "tag": "0012_magenta_smasher",
+      "breakpoints": true
     }
   ]
 }

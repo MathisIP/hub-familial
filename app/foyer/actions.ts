@@ -9,6 +9,9 @@ import {
   retirerMembre,
   renommerFoyer,
   accepterInvitation,
+  demanderAdhesion,
+  accepterDemande,
+  refuserDemande,
 } from '@/lib/membres';
 
 /** Invite un e-mail à rejoindre le foyer courant. */
@@ -53,4 +56,44 @@ export async function accepterAction(formData: FormData): Promise<void> {
   const user = await utilisateurCourant();
   await accepterInvitation(jeton, { id: user.id, email: user.email });
   redirect('/');
+}
+
+/* -------------------- Demandes d'adhésion -------------------- */
+
+/**
+ * Dépose une demande auprès du responsable d'un foyer (page /rejoindre-foyer).
+ * N'appelle PAS `foyerCourant` : le demandeur n'a pas encore de foyer, et on ne
+ * veut surtout pas lui en provisionner un au passage.
+ */
+export async function demanderAdhesionAction(formData: FormData): Promise<{ ok?: string; erreur?: string }> {
+  const email = String(formData.get('email') ?? '');
+  const message = String(formData.get('message') ?? '');
+  const user = await utilisateurCourant();
+  try {
+    const foyerNom = await demanderAdhesion(
+      { id: user.id, email: user.email, nom: user.nom },
+      email,
+      message,
+    );
+    revalidatePath('/rejoindre-foyer');
+    return { ok: foyerNom };
+  } catch (e) {
+    return { erreur: e instanceof Error ? e.message : 'Demande impossible.' };
+  }
+}
+
+/** Le propriétaire accepte une demande reçue. */
+export async function accepterDemandeAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  await accepterDemande(foyer.id, user.id, id);
+  revalidatePath('/foyer');
+}
+
+/** Le propriétaire refuse une demande reçue. */
+export async function refuserDemandeAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  await refuserDemande(foyer.id, user.id, id);
+  revalidatePath('/foyer');
 }

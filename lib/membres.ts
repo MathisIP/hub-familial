@@ -2,7 +2,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { foyers, membres, utilisateurs, invitations } from '@/lib/db/schema';
+import { foyers, membres, utilisateurs, invitations, demandesAdhesion } from '@/lib/db/schema';
 import { ErreurValidation } from '@/lib/erreurs';
 
 /**
@@ -192,4 +192,169 @@ export async function accepterInvitation(
     await tx.delete(invitations).where(eq(invitations.id, inv.id));
   });
   return inv.foyerId;
+}
+
+/* ==================== DEMANDES D'ADHÉSION (sens inverse) ==================== */
+/**
+ * Ici, c'est la personne qui frappe à la porte : elle donne l'e-mail du
+ * responsable du foyer, et celui-ci accepte ou refuse depuis « Mon foyer ».
+ * Complète les invitations, sans les remplacer.
+ */
+
+export type DemandeVue = {
+  id: string;
+  email: string;
+  nom: string | null;
+  message: string;
+  creeLe: string;
+};
+
+/** Demande en cours de l'utilisateur (pour lui montrer où il en est). */
+export type MaDemandeVue = { foyerNom: string; statut: string; creeLe: string };
+
+/** Foyer dont l'utilisateur d'e-mail donné est PROPRIÉTAIRE. */
+async function foyerDuResponsable(email: string): Promise<{ id: string; nom: string } | null> {
+  const [row] = await db()
+    .select({ id: foyers.id, nom: foyers.nom })
+    .from(utilisateurs)
+    .innerJoin(membres, eq(membres.utilisateurId, utilisateurs.id))
+    .innerJoin(foyers, eq(foyers.id, membres.foyerId))
+    .where(and(eq(utilisateurs.email, email.toLowerCase()), eq(membres.role, 'proprietaire')))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Dépose (ou relance) une demande d'adhésion auprès du responsable d'un foyer.
+ * Renvoie le nom du foyer visé, pour l'afficher en confirmation.
+ */
+export async function demanderAdhesion(
+  demandeur: { id: string; email: string; nom?: string | null },
+  emailResponsable: string,
+  message = '',
+): Promise<string> {
+  const email = S(emailResponsable).toLowerCase();
+  if (!email || !email.includes('@')) {
+    throw new ErreurValidation('Indique l’adresse e-mail du responsable du foyer.');
+  }
+  if (email === demandeur.email.toLowerCase()) {
+    throw new ErreurValidation('C’est ta propre adresse : indique celle du responsable du foyer.');
+  }
+
+  const foyer = await foyerDuResponsable(email);
+  if (!foyer) {
+    throw new ErreurValidation(
+      'Aucun foyer trouvé pour cette adresse. Vérifie-la auprès du responsable : c’est celle avec laquelle il s’est inscrit.',
+    );
+  }
+
+  if (await roleDe(foyer.id, demandeur.id)) {
+    throw new ErreurValidation('Tu fais déjà partie de ce foyer.');
+  }
+
+  // Une seule demande vivante par (foyer, demandeur) : une relance la réactive.
+  await db()
+    .insert(demandesAdhesion)
+    .values({
+      foyerId: foyer.id,
+      demandeurId: demandeur.id,
+      demandeurEmail: demandeur.email,
+      demandeurNom: demandeur.nom ?? null,
+      message: S(message).slice(0, 500),
+      statut: 'en_attente',
+    })
+    .onConflictDoUpdate({
+      target: [demandesAdhesion.foyerId, demandesAdhesion.demandeurId],
+      set: { statut: 'en_attente', message: S(message).slice(0, 500), creeLe: new Date() },
+    });
+
+  return foyer.nom;
+}
+
+/** Demandes en attente reçues par un foyer (réservé au propriétaire). */
+export async function demandesEnAttente(foyerId: string, appelantId: string): Promise<DemandeVue[]> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  const rows = await db()
+    .select()
+    .from(demandesAdhesion)
+    .where(and(eq(demandesAdhesion.foyerId, foyerId), eq(demandesAdhesion.statut, 'en_attente')));
+  return rows.map((r) => ({
+    id: r.id,
+    email: r.demandeurEmail,
+    nom: r.demandeurNom,
+    message: r.message,
+    creeLe: r.creeLe.toISOString(),
+  }));
+}
+
+/** Là où en est MA demande (affiché au demandeur tant qu'elle n'est pas traitée). */
+export async function maDemande(utilisateurId: string): Promise<MaDemandeVue | null> {
+  const [row] = await db()
+    .select({ foyerNom: foyers.nom, statut: demandesAdhesion.statut, creeLe: demandesAdhesion.creeLe })
+    .from(demandesAdhesion)
+    .innerJoin(foyers, eq(foyers.id, demandesAdhesion.foyerId))
+    .where(eq(demandesAdhesion.demandeurId, utilisateurId))
+    .limit(1);
+  return row ? { ...row, creeLe: row.creeLe.toISOString() } : null;
+}
+
+/** Le propriétaire accepte : le demandeur rejoint le foyer (et quitte les autres). */
+export async function accepterDemande(
+  foyerId: string,
+  appelantId: string,
+  demandeId: string,
+): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  const d = db();
+  const [dem] = await d
+    .select()
+    .from(demandesAdhesion)
+    .where(and(eq(demandesAdhesion.id, demandeId), eq(demandesAdhesion.foyerId, foyerId)))
+    .limit(1);
+  if (!dem) throw new ErreurValidation('Demande introuvable.');
+
+  await d.transaction(async (tx) => {
+    const anciens = await tx
+      .select({ foyerId: membres.foyerId })
+      .from(membres)
+      .where(eq(membres.utilisateurId, dem.demandeurId));
+
+    await tx
+      .insert(membres)
+      .values({ foyerId, utilisateurId: dem.demandeurId, role: 'membre' })
+      .onConflictDoNothing({ target: [membres.foyerId, membres.utilisateurId] });
+
+    // Même règle que pour les invitations : un utilisateur n'appartient qu'à un
+    // foyer ; on supprime au passage les foyers devenus vides.
+    for (const a of anciens) {
+      if (a.foyerId === foyerId) continue;
+      await tx
+        .delete(membres)
+        .where(and(eq(membres.utilisateurId, dem.demandeurId), eq(membres.foyerId, a.foyerId)));
+      const reste = await tx
+        .select({ id: membres.id })
+        .from(membres)
+        .where(eq(membres.foyerId, a.foyerId))
+        .limit(1);
+      if (reste.length === 0) await tx.delete(foyers).where(eq(foyers.id, a.foyerId));
+    }
+
+    await tx
+      .update(demandesAdhesion)
+      .set({ statut: 'acceptee' })
+      .where(eq(demandesAdhesion.id, demandeId));
+  });
+}
+
+/** Le propriétaire refuse : la demande est marquée, sans rattachement. */
+export async function refuserDemande(
+  foyerId: string,
+  appelantId: string,
+  demandeId: string,
+): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  await db()
+    .update(demandesAdhesion)
+    .set({ statut: 'refusee' })
+    .where(and(eq(demandesAdhesion.id, demandeId), eq(demandesAdhesion.foyerId, foyerId)));
 }

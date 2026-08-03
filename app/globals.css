@@ -1983,3 +1983,34 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   font-size: .72rem; font-weight: 700; color: var(--on-acc);
   background: var(--head); border-radius: 999px; padding: .1rem .45rem;
 }
+
+/* --- Vitrine : second parcours « rejoindre un foyer » --- */
+.vt-rejoindre {
+  margin: 1.4rem 0 0; font-size: .95rem; color: var(--muted);
+}
+.vt-rejoindre-lien {
+  color: var(--acc-deep); font-weight: 700; text-decoration: none;
+  border-bottom: 2px solid var(--acc); padding-bottom: .1rem; white-space: nowrap;
+}
+.vt-rejoindre-lien:hover { background: var(--soft); }
+
+/* --- Page « Rejoindre un foyer » --- */
+.adh { max-width: 34rem; margin: 0 auto; }
+.adh-form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+.adh-ok {
+  text-align: center; background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 2rem 1.5rem; margin-top: 1rem;
+}
+.adh-ok-ic { font-size: 2.6rem; line-height: 1; margin: 0 0 .5rem; }
+.adh-ok h2 { font-family: var(--police-titre), Georgia, serif; margin: 0 0 .6rem; font-size: 1.3rem; }
+.adh-ok p { color: var(--muted); margin: 0 0 1rem; }
+.adh-aide { font-size: .88rem; }
+
+/* --- Demandes reçues (page Mon foyer) --- */
+.foyer-badge {
+  display: inline-block; margin-left: .5rem;
+  font-size: .72rem; font-weight: 700; color: var(--on-acc);
+  background: var(--acc-deep); border-radius: 999px; padding: .1rem .45rem;
+  vertical-align: middle;
+}
+.fm-message { display: block; font-size: .85rem; color: var(--muted); font-style: italic; margin-top: .15rem; }

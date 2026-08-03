@@ -92,7 +92,45 @@ export const invitations = pgTable(
   (t) => [index('invitations_email_idx').on(t.email)],
 );
 
+/**
+ * Demandes d'adhésion — le pendant « inversé » des invitations.
+ * Une invitation part du foyer vers une personne ; ici, c'est la personne qui
+ * FRAPPE À LA PORTE : elle indique l'e-mail du responsable du foyer, et celui-ci
+ * accepte ou refuse depuis « Mon foyer ». Utile quand le responsable n'a pas
+ * pensé (ou pas su) envoyer un lien d'invitation.
+ *
+ * `statut` : en_attente | acceptee | refusee. On garde la ligne après décision
+ * pour éviter qu'une même personne relance en boucle.
+ */
+export const STATUTS_DEMANDE = ['en_attente', 'acceptee', 'refusee'] as const;
+export type StatutDemande = (typeof STATUTS_DEMANDE)[number];
+
+export const demandesAdhesion = pgTable(
+  'demandes_adhesion',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    demandeurId: uuid('demandeur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    // Copies figées : le responsable doit voir QUI demande, même si le compte change.
+    demandeurEmail: text('demandeur_email').notNull(),
+    demandeurNom: text('demandeur_nom'),
+    message: text('message').notNull().default(''),
+    statut: text('statut').notNull().default('en_attente'),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('demandes_foyer_idx').on(t.foyerId),
+    // Une seule demande vivante par (foyer, demandeur) : la relance met à jour.
+    unique('demandes_foyer_demandeur').on(t.foyerId, t.demandeurId),
+  ],
+);
+
 export type Foyer = typeof foyers.$inferSelect;
+export type LigneDemandeAdhesion = typeof demandesAdhesion.$inferSelect;
 export type Utilisateur = typeof utilisateurs.$inferSelect;
 export type Membre = typeof membres.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;

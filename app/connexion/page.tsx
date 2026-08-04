@@ -27,7 +27,7 @@ function destinationSure(brut: string | undefined): string {
 }
 
 /**
- * Page de connexion : accès réservé (Google, liste blanche). Un seul bouton qui
+ * Page de connexion : identification Google, ouverte à tous. Un seul bouton qui
  * lance le flux OAuth Google via une action serveur.
  *
  * Un lien de retour vers la vitrine (`/`) évite d'enfermer un visiteur venu

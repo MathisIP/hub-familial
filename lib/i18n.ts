@@ -388,12 +388,8 @@ const UI = {
   FOY_REFUSER: { fr: 'Refuser', en: 'Decline' },
   FOY_EXPIRE: { fr: 'expire le', en: 'expires on' },
   FOY_AIDE_A: {
-    fr: '⚠ Phase privée : pour que la personne invitée puisse se connecter, son adresse doit aussi figurer dans la liste blanche',
-    en: '⚠ Private phase: for the invited person to sign in, their address must also be in the allow-list',
-  },
-  FOY_AIDE_B: {
-    fr: '(env). Ce sera automatique une fois l’accès basé sur l’abonnement activé.',
-    en: '(env). This will be automatic once subscription-based access is enabled.',
+    fr: '💡 La personne invitée doit se connecter avec l’adresse Google exacte que tu as saisie — c’est ce qui lui donne accès au foyer. Si elle utilise une autre adresse, l’invitation sera refusée.',
+    en: '💡 The invited person must sign in with the exact Google address you entered — that is what grants them access to the household. With a different address, the invitation will be refused.',
   },
   FOY_LIEN_COPIE: { fr: 'Lien copié ✓', en: 'Link copied ✓' },
   FOY_COPIER_LIEN: { fr: 'Copier le lien', en: 'Copy link' },
@@ -484,7 +480,7 @@ const UI = {
   G_ERR_PAGE: { fr: 'Impossible de charger cette page :', en: 'Could not load this page:' },
 
   // Connexion
-  CNX_ACCES: { fr: 'Accès réservé au foyer. Connecte-toi avec ton compte Google.', en: 'Access restricted to the household. Sign in with your Google account.' },
+  CNX_ACCES: { fr: 'Connecte-toi avec ton compte Google. Pas de mot de passe à retenir.', en: 'Sign in with your Google account. No password to remember.' },
   CNX_BOUTON: { fr: 'Se connecter avec Google', en: 'Sign in with Google' },
   CNX_DECOUVRIR: { fr: '← Découvrir Nestync et les tarifs', en: '← Discover Nestync and pricing' },
 

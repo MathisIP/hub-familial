@@ -147,9 +147,7 @@ export default async function PageFoyer() {
         </section>
       )}
 
-      <p className="compte-note foyer-aide">
-        {t('FOY_AIDE_A', langue)} <code>EMAILS_AUTORISES</code> {t('FOY_AIDE_B', langue)}
-      </p>
+      <p className="compte-note foyer-aide">{t('FOY_AIDE_A', langue)}</p>
     </>
   );
 }

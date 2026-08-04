@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useT } from '@/components/I18nProvider';
 
 /**
@@ -46,7 +47,7 @@ export default function AstuceInstallIOS() {
 
   return (
     <div className="install-ios" role="dialog" aria-label={tr('IOS_ARIA')}>
-      <img className="install-ios-logo" src="/icon-192.png" alt="" width={34} height={34} />
+      <Image className="install-ios-logo" src="/icon-192.png" alt="" width={34} height={34} />
       <p className="install-ios-txt">
         {tr('IOS_AVANT')}{' '}
         <span className="install-ios-ic" aria-hidden="true">

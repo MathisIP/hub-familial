@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import Image from 'next/image';
 
 /**
  * Écran de chargement de l'accueil : logo centré + spinner, affiché tant que les
@@ -48,7 +49,9 @@ export default function SplashAccueil({ children }: { children: ReactNode }) {
       {children}
       {!cache && (
         <div className={`splash${tousPrets ? ' splash-parti' : ''}`} role="status" aria-live="polite" aria-hidden={tousPrets}>
-          <img className="splash-logo" src="/icon-192.png" alt="Nestync" width={96} height={96} />
+          {/* `priority` : ce logo est le premier élément visible de l'app — le
+              charger en différé retarderait précisément ce qu'on veut montrer. */}
+          <Image className="splash-logo" src="/icon-192.png" alt="Nestync" width={96} height={96} priority />
           <span className="splash-spinner" aria-hidden="true" />
         </div>
       )}

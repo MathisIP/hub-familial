@@ -1,7 +1,10 @@
 import 'server-only';
 import { google, type calendar_v3 } from 'googleapis';
+import { and, eq } from 'drizzle-orm';
 import { googleAuth } from '@/lib/google/auth';
-import { configFoyer } from '@/lib/config';
+import { db } from '@/lib/db';
+import { foyerAgendas } from '@/lib/db/schema';
+import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
   COULEURS_AGENDA,
@@ -13,12 +16,17 @@ import {
 } from '@/lib/agenda/schema';
 
 /**
- * SERVICE AGENDA (serveur uniquement) — Google Calendar, compte de service,
- * PLUSIEURS agendas (AGENDA_IDS dans .env). Chaque agenda doit être partagé avec
- * le compte de service (« modifier les événements ») et l'API Calendar activée.
+ * SERVICE AGENDA (serveur uniquement) — Google Calendar.
  *
- * Contrairement à Drive, un compte de service lit/écrit un agenda partagé sans
- * problème de quota.
+ * ⚠ ISOLATION : les calendriers sont rattachés AU FOYER (table `foyer_agendas`),
+ * plus à la variable d'environnement globale `AGENDA_IDS`. Celle-ci faisait voir
+ * les mêmes agendas à tous les foyers — une fuite de données dès le 2ᵉ foyer.
+ * Chaque requête est donc scopée par `idFoyerCourant()`.
+ *
+ * L'accès passe encore par le compte de service : chaque calendrier doit lui être
+ * partagé (« modifier les événements »), et l'API Calendar activée. Étape suivante
+ * prévue : jeton OAuth de l'utilisateur (colonne `ajoute_par`), pour que chaque
+ * foyer connecte ses propres agendas sans partage manuel.
  */
 
 let cache: calendar_v3.Calendar | null = null;
@@ -29,15 +37,36 @@ function clientCalendar(): calendar_v3.Calendar {
   return cache;
 }
 
-/** IDs des agendas configurés, ou erreur claire si aucun. */
-function idsAgendas(): string[] {
-  const ids = configFoyer().agendaIds;
+/** Calendriers rattachés AU FOYER courant (vide si aucun n'est configuré). */
+async function agendasDuFoyer(): Promise<string[]> {
+  const foyerId = await idFoyerCourant();
+  const lignes = await db()
+    .select({ calendarId: foyerAgendas.calendarId })
+    .from(foyerAgendas)
+    .where(eq(foyerAgendas.foyerId, foyerId));
+  return lignes.map((l) => l.calendarId);
+}
+
+/** Idem, mais exige au moins un agenda (pour les opérations d'écriture). */
+async function exigerAgendas(): Promise<string[]> {
+  const ids = await agendasDuFoyer();
   if (ids.length === 0) {
     throw new ErreurValidation(
-      "Agenda non configuré : ajoute AGENDA_IDS (identifiants séparés par des virgules) dans .env.",
+      "Aucun agenda n'est rattaché à ce foyer. Ajoute-en un depuis la page Agenda.",
     );
   }
   return ids;
+}
+
+/** Vérifie qu'un calendrier appartient bien au foyer courant (garde-fou d'écriture). */
+async function exigerAgendaDuFoyer(calendarId: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const [ligne] = await db()
+    .select({ id: foyerAgendas.id })
+    .from(foyerAgendas)
+    .where(and(eq(foyerAgendas.foyerId, foyerId), eq(foyerAgendas.calendarId, calendarId)))
+    .limit(1);
+  if (!ligne) throw new ErreurValidation('Cet agenda n’appartient pas à ton foyer.');
 }
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
@@ -74,7 +103,7 @@ async function nomAgenda(cal: calendar_v3.Calendar, id: string): Promise<string>
 
 /** Liste des agendas configurés (id + nom + couleur), sans charger les événements. */
 export async function listerAgendas(): Promise<Agenda[]> {
-  const ids = configFoyer().agendaIds;
+  const ids = await agendasDuFoyer();
   if (ids.length === 0) return [];
   const cal = clientCalendar();
   return Promise.all(
@@ -88,7 +117,7 @@ export async function listerAgendas(): Promise<Agenda[]> {
 
 /** Événements de la semaine EN COURS (lundi → dimanche), tous agendas fusionnés. */
 export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAgenda[]; agendas: Agenda[]; lundiISO: string }> {
-  const ids = configFoyer().agendaIds;
+  const ids = await agendasDuFoyer();
   const now = new Date();
   const decalLundi = (now.getDay() + 6) % 7; // 0 = lundi
   const lundi = new Date(now.getFullYear(), now.getMonth(), now.getDate() - decalLundi);
@@ -127,8 +156,12 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
 
 /** Événements à venir sur `jours` jours, fusionnés depuis tous les agendas. */
 export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
+  // Aucun agenda rattaché : état VIDE, pas une erreur. Un foyer qui n'a pas
+  // encore connecté de calendrier n'a rien fait de mal.
+  const ids = await agendasDuFoyer();
+  if (ids.length === 0) return { evenements: [], agendas: [], jours };
+
   const cal = clientCalendar();
-  const ids = idsAgendas();
   const maintenant = new Date();
   const fin = new Date(maintenant.getTime() + jours * 86400000);
 
@@ -168,7 +201,7 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
 /** Crée un événement dans l'agenda choisi. Renvoie son id. */
 export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
   const cal = clientCalendar();
-  const ids = idsAgendas();
+  const ids = await exigerAgendas();
   const calendarId = S(n.calendarId) || ids[0];
   if (!ids.includes(calendarId)) throw new ErreurValidation('Agenda inconnu.');
 
@@ -203,8 +236,13 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
   return S(rep.data.id);
 }
 
-/** Supprime un événement (dans son agenda d'origine). */
+/**
+ * Supprime un événement (dans son agenda d'origine).
+ * ⚠ `calendarId` vient du client : sans vérification, on pourrait supprimer un
+ * événement dans l'agenda d'un AUTRE foyer en devinant son identifiant.
+ */
 export async function supprimerEvenement(calendarId: string, id: string): Promise<void> {
   if (!S(calendarId) || !S(id)) throw new ErreurValidation('Agenda et identifiant requis.');
+  await exigerAgendaDuFoyer(calendarId);
   await clientCalendar().events.delete({ calendarId, eventId: id });
 }

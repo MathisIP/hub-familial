@@ -136,8 +136,38 @@ export const demandesAdhesion = pgTable(
   ],
 );
 
+/**
+ * Agendas Google rattachés à un foyer (module Agenda).
+ *
+ * ⚠ Remplace la variable d'environnement globale `AGENDA_IDS`, qui faisait voir
+ * LES MÊMES agendas à tous les foyers — une fuite de données dès le 2ᵉ foyer.
+ * Chaque foyer ne voit désormais que les calendriers qui lui sont rattachés.
+ *
+ * `ajoutePar` : l'utilisateur dont le jeton Google donne accès au calendrier
+ * (étape 2, OAuth par utilisateur). `null` = accès par le compte de service
+ * (mode historique, calendriers partagés manuellement avec lui).
+ */
+export const foyerAgendas = pgTable(
+  'foyer_agendas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    calendarId: text('calendar_id').notNull(),
+    nom: text('nom').notNull().default(''),
+    ajoutePar: uuid('ajoute_par').references(() => utilisateurs.id, { onDelete: 'set null' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('foyer_agendas_foyer_idx').on(t.foyerId),
+    unique('foyer_agendas_foyer_cal').on(t.foyerId, t.calendarId),
+  ],
+);
+
 export type Foyer = typeof foyers.$inferSelect;
 export type LigneDemandeAdhesion = typeof demandesAdhesion.$inferSelect;
+export type LigneFoyerAgenda = typeof foyerAgendas.$inferSelect;
 export type Utilisateur = typeof utilisateurs.$inferSelect;
 export type Membre = typeof membres.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;

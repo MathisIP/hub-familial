@@ -165,9 +165,35 @@ export const foyerAgendas = pgTable(
   ],
 );
 
+/**
+ * Autorisation Google Agenda accordée par un utilisateur (OAuth « incrémental »).
+ *
+ * Pourquoi une table et pas la session : le jeton doit rester utilisable **côté
+ * serveur, hors de toute requête de l'utilisateur** (afficher l'agenda du foyer à
+ * un autre membre, par exemple). Le `refresh_token` permet de renouveler l'accès
+ * sans redemander l'autorisation.
+ *
+ * ⚠ SÉCURITÉ : les jetons sont des identifiants durables donnant accès au
+ * calendrier de la personne. Ils sont **chiffrés au repos** ([lib/crypto.ts])
+ * afin qu'une fuite de la base ne les livre pas en clair.
+ */
+export const comptesGoogle = pgTable('comptes_google', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  utilisateurId: uuid('utilisateur_id')
+    .notNull()
+    .unique()
+    .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+  accessTokenChiffre: text('access_token_chiffre').notNull(),
+  refreshTokenChiffre: text('refresh_token_chiffre'),
+  expireLe: timestamp('expire_le', { withTimezone: true }),
+  scope: text('scope').notNull().default(''),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Foyer = typeof foyers.$inferSelect;
 export type LigneDemandeAdhesion = typeof demandesAdhesion.$inferSelect;
 export type LigneFoyerAgenda = typeof foyerAgendas.$inferSelect;
+export type LigneCompteGoogle = typeof comptesGoogle.$inferSelect;
 export type Utilisateur = typeof utilisateurs.$inferSelect;
 export type Membre = typeof membres.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;

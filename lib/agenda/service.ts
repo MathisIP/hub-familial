@@ -5,6 +5,7 @@ import { googleAuth } from '@/lib/google/auth';
 import { db } from '@/lib/db';
 import { foyerAgendas } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
+import { jetonAgenda } from '@/lib/agenda/oauth';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
   COULEURS_AGENDA,
@@ -37,36 +38,62 @@ function clientCalendar(): calendar_v3.Calendar {
   return cache;
 }
 
+type AgendaFoyer = { calendarId: string; nom: string; ajoutePar: string | null };
+
 /** Calendriers rattachés AU FOYER courant (vide si aucun n'est configuré). */
-async function agendasDuFoyer(): Promise<string[]> {
+async function agendasDuFoyer(): Promise<AgendaFoyer[]> {
   const foyerId = await idFoyerCourant();
-  const lignes = await db()
-    .select({ calendarId: foyerAgendas.calendarId })
+  return db()
+    .select({
+      calendarId: foyerAgendas.calendarId,
+      nom: foyerAgendas.nom,
+      ajoutePar: foyerAgendas.ajoutePar,
+    })
     .from(foyerAgendas)
     .where(eq(foyerAgendas.foyerId, foyerId));
-  return lignes.map((l) => l.calendarId);
 }
 
 /** Idem, mais exige au moins un agenda (pour les opérations d'écriture). */
-async function exigerAgendas(): Promise<string[]> {
+async function exigerAgendas(): Promise<AgendaFoyer[]> {
   const ids = await agendasDuFoyer();
   if (ids.length === 0) {
     throw new ErreurValidation(
-      "Aucun agenda n'est rattaché à ce foyer. Ajoute-en un depuis la page Agenda.",
+      "Aucun agenda n'est rattaché à ce foyer. Connecte ton Google Agenda depuis la page Agenda.",
     );
   }
   return ids;
 }
 
-/** Vérifie qu'un calendrier appartient bien au foyer courant (garde-fou d'écriture). */
-async function exigerAgendaDuFoyer(calendarId: string): Promise<void> {
+/**
+ * Client Google pour un calendrier donné.
+ *  · `ajoutePar` renseigné → jeton OAuth de la personne qui l'a rattaché ;
+ *  · sinon → compte de service (calendriers partagés manuellement avec lui).
+ * Renvoie `null` si l'autorisation a été révoquée : le calendrier est alors
+ * simplement ignoré, plutôt que de faire échouer tout l'agenda du foyer.
+ */
+async function clientPour(a: AgendaFoyer): Promise<calendar_v3.Calendar | null> {
+  if (!a.ajoutePar) return clientCalendar();
+  const jeton = await jetonAgenda(a.ajoutePar);
+  if (!jeton) return null;
+  const oauth = new google.auth.OAuth2();
+  oauth.setCredentials({ access_token: jeton });
+  return google.calendar({ version: 'v3', auth: oauth });
+}
+
+/** Vérifie qu'un calendrier appartient au foyer courant, et le renvoie. */
+async function exigerAgendaDuFoyer(calendarId: string): Promise<AgendaFoyer> {
   const foyerId = await idFoyerCourant();
   const [ligne] = await db()
-    .select({ id: foyerAgendas.id })
+    .select({
+      calendarId: foyerAgendas.calendarId,
+      nom: foyerAgendas.nom,
+      ajoutePar: foyerAgendas.ajoutePar,
+    })
     .from(foyerAgendas)
     .where(and(eq(foyerAgendas.foyerId, foyerId), eq(foyerAgendas.calendarId, calendarId)))
     .limit(1);
   if (!ligne) throw new ErreurValidation('Cet agenda n’appartient pas à ton foyer.');
+  return ligne;
 }
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
@@ -104,14 +131,16 @@ async function nomAgenda(cal: calendar_v3.Calendar, id: string): Promise<string>
 /** Liste des agendas configurés (id + nom + couleur), sans charger les événements. */
 export async function listerAgendas(): Promise<Agenda[]> {
   const ids = await agendasDuFoyer();
-  if (ids.length === 0) return [];
-  const cal = clientCalendar();
   return Promise.all(
-    ids.map(async (id, i): Promise<Agenda> => ({
-      id,
-      nom: await nomAgenda(cal, id),
-      couleur: COULEURS_AGENDA[i % COULEURS_AGENDA.length],
-    })),
+    ids.map(async (a, i): Promise<Agenda> => {
+      const cal = await clientPour(a);
+      return {
+        id: a.calendarId,
+        // Nom mémorisé au rattachement : évite un aller-retour réseau par agenda.
+        nom: a.nom || (cal ? await nomAgenda(cal, a.calendarId) : a.calendarId),
+        couleur: COULEURS_AGENDA[i % COULEURS_AGENDA.length],
+      };
+    }),
   );
 }
 
@@ -125,25 +154,26 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
   const lundiISO = `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
   if (ids.length === 0) return { evenements: [], agendas: [], lundiISO };
 
-  const cal = clientCalendar();
   const parAgenda = await Promise.all(
-    ids.map(async (id, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
+    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
       const couleur = COULEURS_AGENDA[i % COULEURS_AGENDA.length];
-      const [nom, rep] = await Promise.all([
-        nomAgenda(cal, id),
-        cal.events.list({
-          calendarId: id,
-          timeMin: lundi.toISOString(),
-          timeMax: lundiSuivant.toISOString(),
-          singleEvents: true,
-          orderBy: 'startTime',
-          maxResults: 100,
-        }),
-      ]);
+      const id = a.calendarId;
+      const cal = await clientPour(a);
+      const agenda = { id, nom: a.nom || id, couleur };
+      if (!cal) return { agenda, evenements: [] }; // autorisation révoquée
+
+      const rep = await cal.events.list({
+        calendarId: id,
+        timeMin: lundi.toISOString(),
+        timeMax: lundiSuivant.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 100,
+      });
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { id, nom, couleur }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || (await nomAgenda(cal, id)) }, evenements };
     }),
   );
 
@@ -161,28 +191,29 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
   const ids = await agendasDuFoyer();
   if (ids.length === 0) return { evenements: [], agendas: [], jours };
 
-  const cal = clientCalendar();
   const maintenant = new Date();
   const fin = new Date(maintenant.getTime() + jours * 86400000);
 
   const parAgenda = await Promise.all(
-    ids.map(async (id, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
+    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
       const couleur = COULEURS_AGENDA[i % COULEURS_AGENDA.length];
-      const [nom, rep] = await Promise.all([
-        nomAgenda(cal, id),
-        cal.events.list({
-          calendarId: id,
-          timeMin: maintenant.toISOString(),
-          timeMax: fin.toISOString(),
-          singleEvents: true,
-          orderBy: 'startTime',
-          maxResults: 100,
-        }),
-      ]);
+      const id = a.calendarId;
+      const cal = await clientPour(a);
+      const agenda = { id, nom: a.nom || id, couleur };
+      if (!cal) return { agenda, evenements: [] }; // autorisation révoquée
+
+      const rep = await cal.events.list({
+        calendarId: id,
+        timeMin: maintenant.toISOString(),
+        timeMax: fin.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 100,
+      });
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { id, nom, couleur }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || (await nomAgenda(cal, id)) }, evenements };
     }),
   );
 
@@ -200,10 +231,17 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
 
 /** Crée un événement dans l'agenda choisi. Renvoie son id. */
 export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
-  const cal = clientCalendar();
   const ids = await exigerAgendas();
-  const calendarId = S(n.calendarId) || ids[0];
-  if (!ids.includes(calendarId)) throw new ErreurValidation('Agenda inconnu.');
+  const calendarId = S(n.calendarId) || ids[0].calendarId;
+  // L'agenda demandé doit appartenir au foyer : `calendarId` vient du client.
+  const cible = ids.find((a) => a.calendarId === calendarId);
+  if (!cible) throw new ErreurValidation('Agenda inconnu.');
+  const cal = await clientPour(cible);
+  if (!cal) {
+    throw new ErreurValidation(
+      'L’accès à cet agenda a expiré. Reconnecte ton Google Agenda depuis la page Agenda.',
+    );
+  }
 
   const titre = S(n.titre);
   if (!titre) throw new ErreurValidation("Le titre de l'événement est requis.");
@@ -243,6 +281,8 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
  */
 export async function supprimerEvenement(calendarId: string, id: string): Promise<void> {
   if (!S(calendarId) || !S(id)) throw new ErreurValidation('Agenda et identifiant requis.');
-  await exigerAgendaDuFoyer(calendarId);
-  await clientCalendar().events.delete({ calendarId, eventId: id });
+  const cible = await exigerAgendaDuFoyer(calendarId);
+  const cal = await clientPour(cible);
+  if (!cal) throw new ErreurValidation('L’accès à cet agenda a expiré.');
+  await cal.events.delete({ calendarId, eventId: id });
 }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { deconnexion } from '@/app/actions';
 import ReglagesApparence from '@/components/ReglagesApparence';
-import { estPublique } from '@/components/PiedDePage';
+import { sansNavigation } from '@/components/PiedDePage';
 import { useT } from '@/components/I18nProvider';
 import {
   Icones,
@@ -113,7 +113,7 @@ export default function SideBar() {
   );
   const IcCentral = itemActif ? Icones[itemActif.icone] : surReglages ? IcReglages : IcMenu;
 
-  if (estPublique(path)) return null;
+  if (sansNavigation(path)) return null;
 
   return (
     <>

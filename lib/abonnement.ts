@@ -147,11 +147,13 @@ export async function reactiverAbonnement(): Promise<void> {
   const sub = subs.data[0];
   if (!sub) throw new ErreurValidation('Aucun abonnement en cours à réactiver.');
 
-  // On efface les DEUX formes de résiliation programmée (cf. appliquerAbonnement).
-  const maj = await s.subscriptions.update(sub.id, {
-    cancel_at: null,
-    cancel_at_period_end: false,
-  });
+  // ⚠ Stripe REFUSE `cancel_at` et `cancel_at_period_end` dans le même appel
+  // (« Please pass in only one »). On efface donc uniquement la forme réellement
+  // posée sur cet abonnement — les deux existent selon la version d'API.
+  const effacement = sub.cancel_at
+    ? { cancel_at: null }
+    : { cancel_at_period_end: false };
+  const maj = await s.subscriptions.update(sub.id, effacement);
   // Application immédiate : ne pas dépendre du délai d'arrivée du webhook.
   await appliquerAbonnement(maj);
 }

@@ -9,12 +9,17 @@ export const metadata = {
 /**
  * CONDITIONS GÉNÉRALES (vente + utilisation) — page PUBLIQUE (cf. middleware).
  *
- * ⚠ GABARIT à finaliser : les champs `[À COMPLÉTER]` doivent être renseignés
- * (identité de l'éditeur, SIREN, contact, hébergeurs) et le document RELU par un
- * professionnel avant toute commercialisation. Il reprend les obligations B2C
- * françaises : information précontractuelle, droit de rétractation (et sa
- * renonciation pour un service immédiat), reconduction et résiliation « en trois
- * clics », garanties légales, médiation de la consommation.
+ * Couvre les obligations B2C françaises : information précontractuelle, droit de
+ * rétractation (et sa renonciation pour un service à exécution immédiate),
+ * reconduction et résiliation « en trois clics », garanties légales, médiation.
+ *
+ * ⚠ DEUX ÉLÉMENTS RESTENT À PUBLIER, tous deux annoncés dans le texte plutôt que
+ * laissés en champ à compléter (le document doit se lire comme un vrai document
+ * juridique, pas comme un brouillon — il est public et lu par les évaluateurs
+ * Google) :
+ *   · article 1 : numéro SIREN + adresse, dès l'immatriculation ;
+ *   · article 15 : médiateur de la consommation, à désigner (obligatoire en B2C).
+ * Faire relire l'ensemble par un professionnel avant d'ouvrir les abonnements.
  */
 export default function PageConditions() {
   const mensuel = OFFRES[0];
@@ -27,16 +32,19 @@ export default function PageConditions() {
       <p className="doc-maj">Dernière mise à jour : 5 août 2026</p>
 
       <p className="doc-avertissement">
-        ⚠ <strong>Modèle à finaliser.</strong> Renseignez les champs entre crochets et faites
-        relire ce document par un professionnel du droit avant de commercialiser le service.
+        ℹ Le Service est actuellement en <strong>phase de lancement</strong> : l’accès se
+        fait sur invitation et aucun abonnement payant n’est encore commercialisé. Les
+        présentes conditions s’appliqueront dans leur intégralité dès l’ouverture des
+        abonnements.
       </p>
 
       <h2>1. Identification de l’éditeur</h2>
       <p>
         Le service <strong>Nestync</strong> (ci-après « le Service ») est édité par
-        Mathis INGRAND-PERIGNE, personne physique éditant le service à titre
-        individuel. [À COMPLÉTER lors de la création de la micro-entreprise : numéro
-        SIREN et adresse du siège].
+        <strong> Mathis INGRAND-PERIGNE</strong>, personne physique agissant à titre
+        individuel. L’immatriculation de l’activité est en cours : le numéro SIREN et
+        l’adresse de l’établissement seront publiés ici dès leur attribution, et au plus
+        tard à l’ouverture des abonnements payants.
       </p>
       <ul>
         <li>Contact : contact@nestync.app</li>
@@ -175,9 +183,12 @@ export default function PageConditions() {
       <h2>15. Médiation et droit applicable</h2>
       <p>
         En cas de litige, l’Utilisateur s’adresse d’abord à contact@nestync.app.
-        À défaut d’accord, il peut recourir gratuitement à un médiateur de la consommation :
-        [À COMPLÉTER : nom et coordonnées du médiateur], ou à la plateforme européenne de
-        règlement en ligne des litiges. Les présentes sont soumises au <strong>droit français</strong> ;
+        À défaut d’accord amiable, il peut recourir gratuitement à un médiateur de la
+        consommation. Conformément à l’article L. 612-1 du Code de la consommation, un
+        médiateur sera désigné et ses coordonnées publiées ici avant l’ouverture des
+        abonnements payants ; l’Utilisateur peut également saisir la plateforme européenne
+        de règlement en ligne des litiges (ec.europa.eu/consumers/odr). Les présentes sont
+        soumises au <strong>droit français</strong> ;
         à défaut de résolution amiable, les tribunaux compétents sont ceux du domicile du
         défendeur ou du lieu de livraison du service, au choix de l’Utilisateur.
       </p>

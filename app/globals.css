@@ -95,6 +95,64 @@ a { color: var(--link-tx); }
   .splash-logo { animation: none; }
   .splash-spinner { animation-duration: 1.4s; }
 }
+
+/* Texte réservé aux lecteurs d'écran : retiré de l'affichage sans être retiré
+   de l'arbre d'accessibilité (ce que feraient `display:none` ou `hidden`). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Squelette de chargement (app/loading.tsx) -----------------------------
+   Affiché INSTANTANÉMENT à chaque navigation, pendant que le serveur prépare la
+   page. Sans lui, l'écran restait figé sur la page précédente : l'app semblait
+   ne pas répondre au clic. Le squelette reprend la silhouette d'une page de
+   module (titre + cartes) pour que l'arrivée du vrai contenu ne fasse pas
+   sauter la mise en page. */
+.sk {
+  background: color-mix(in srgb, var(--line) 60%, transparent);
+  border-radius: .5rem;
+  position: relative;
+  overflow: hidden;
+}
+/* Le reflet qui balaie : c'est lui qui dit « ça charge » plutôt que « c'est cassé ». */
+.sk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--cell) 70%, transparent),
+    transparent
+  );
+  animation: sk-balayage 1.4s ease-in-out infinite;
+}
+@keyframes sk-balayage { to { transform: translateX(100%); } }
+
+.sk-titre { height: 2rem; width: min(14rem, 60%); }
+.sk-sous { height: 1rem; width: min(22rem, 85%); margin-top: .75rem; }
+.sk-carte {
+  height: 9rem;
+  border-radius: 1rem;
+  background: var(--cell);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+.sk-grille { display: grid; gap: 1.25rem; margin-top: 2rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Pas de balayage : on garde un aplat statique, toujours lisible comme « en cours ». */
+  .sk::after { animation: none; opacity: 0; }
+}
 .semaine, .courses-semaine, .documents, .resume-comptes, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }

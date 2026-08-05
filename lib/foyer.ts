@@ -51,6 +51,16 @@ function nomFoyerParDefaut(nom?: string | null): string {
 /**
  * Foyer de l'utilisateur connecté (création à la volée si première venue).
  * Mémoïsé par requête (`cache`) : un seul aller-retour base par rendu.
+ *
+ * ⚡ PERFORMANCE — cette fonction est sur le chemin critique de **chaque** page
+ * et **chaque** route d'API : son coût est payé partout. Elle tenait autrefois en
+ * 4 requêtes SÉQUENTIELLES (insert utilisateur, select utilisateur, select
+ * membre, select foyer), soit 4 allers-retours réseau avant que la page ne
+ * commence seulement à charger ses propres données. Le cas courant — quelqu'un
+ * qui a déjà un compte et un foyer, c'est-à-dire la quasi-totalité des chargements
+ * — tient désormais en **une seule** requête jointe (tous les champs joints sont
+ * indexés : `utilisateurs.email` unique, `membres_utilisateur_idx`, `foyers.id`).
+ * Les écritures ne se produisent plus qu'à la toute première venue.
  */
 export const foyerCourant = cache(async (): Promise<Foyer> => {
   if (!baseDisponible()) {
@@ -62,20 +72,31 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
 
   const d = db();
 
-  // 1) Utilisateur (upsert tolérant aux connexions concurrentes).
-  await d
-    .insert(utilisateurs)
-    .values({ email, nom: session?.user?.name ?? null, image: session?.user?.image ?? null })
-    .onConflictDoNothing({ target: utilisateurs.email });
-  const [u] = await d.select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
-  if (!u) throw new FoyerIndisponible("Impossible de résoudre l'utilisateur.");
+  // 1) Chemin courant : utilisateur + appartenance + foyer d'un seul coup.
+  //    `orderBy` rend le choix déterministe si quelqu'un appartient à plusieurs
+  //    foyers — sinon la page pourrait basculer de l'un à l'autre au hasard.
+  const [ligne] = await d
+    .select({ utilisateur: utilisateurs, foyer: foyers })
+    .from(utilisateurs)
+    .leftJoin(membres, eq(membres.utilisateurId, utilisateurs.id))
+    .leftJoin(foyers, eq(foyers.id, membres.foyerId))
+    .where(eq(utilisateurs.email, email))
+    .orderBy(membres.creeLe)
+    .limit(1);
 
-  // 2) Appartenance existante → son foyer.
-  const [m] = await d.select().from(membres).where(eq(membres.utilisateurId, u.id)).limit(1);
-  if (m) {
-    const [f] = await d.select().from(foyers).where(eq(foyers.id, m.foyerId)).limit(1);
-    if (f) return f;
+  if (ligne?.foyer) return ligne.foyer;
+
+  // 2) Rare : personne connue mais sans foyer, ou toute première connexion.
+  //    On paie ici les écritures — une fois par personne, pas à chaque page.
+  let u = ligne?.utilisateur ?? null;
+  if (!u) {
+    await d
+      .insert(utilisateurs)
+      .values({ email, nom: session?.user?.name ?? null, image: session?.user?.image ?? null })
+      .onConflictDoNothing({ target: utilisateurs.email });
+    [u] = await d.select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
   }
+  if (!u) throw new FoyerIndisponible("Impossible de résoudre l'utilisateur.");
 
   // 3) Aucun foyer : en créer un n'est possible que si la politique l'autorise
   //    (lancement public, ou adresse de la liste `EMAILS_AUTORISES`). Sinon la
@@ -85,11 +106,13 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
 
   //    Provisionnement : foyer + essai de 14 jours, l'utilisateur en est propriétaire.
   const finEssai = new Date(Date.now() + 14 * 86400000);
+  const utilisateurId = u.id;
+  const nomUtilisateur = u.nom;
   return d.transaction(async (tx) => {
     const [f] = await tx
       .insert(foyers)
       .values({
-        nom: nomFoyerParDefaut(u.nom),
+        nom: nomFoyerParDefaut(nomUtilisateur),
         statutAbonnement: 'essai',
         abonnementFin: finEssai,
         // Nouveau foyer → prise en main à faire (nom, invitations). Les foyers
@@ -97,7 +120,7 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
         onboardingFait: false,
       })
       .returning();
-    await tx.insert(membres).values({ foyerId: f.id, utilisateurId: u.id, role: 'proprietaire' });
+    await tx.insert(membres).values({ foyerId: f.id, utilisateurId, role: 'proprietaire' });
     return f;
   });
 });
@@ -143,7 +166,12 @@ export const utilisateurCourant = cache(async () => {
   const email = session?.user?.email?.toLowerCase();
   if (!email) throw new FoyerIndisponible('Aucun utilisateur connecté.');
 
+  // On LIT d'abord : la ligne existe dans l'immense majorité des appels, et une
+  // écriture inutile à chaque page coûtait un aller-retour de plus.
   const d = db();
+  const [connu] = await d.select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
+  if (connu) return connu;
+
   await d
     .insert(utilisateurs)
     .values({ email, nom: session?.user?.name ?? null, image: session?.user?.image ?? null })

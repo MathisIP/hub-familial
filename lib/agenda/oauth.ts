@@ -19,9 +19,20 @@ import { chiffrer, dechiffrer } from '@/lib/crypto';
  * dans la console Google Cloud.
  */
 
-/** Périmètre demandé : lister/lire les calendriers + gérer les événements. */
+/**
+ * Périmètre demandé — volontairement le plus ÉTROIT qui couvre nos usages :
+ *  · `calendar.calendarlist.readonly` : lire la LISTE des calendriers (noms), pour
+ *    l'écran de sélection. Ne donne accès à aucun contenu d'événement.
+ *  · `calendar.events` : lire ET écrire les événements des calendriers choisis.
+ *
+ * ⚠ On demandait auparavant `calendar.readonly`, qui donne accès en lecture à
+ * **tous** les agendas alors qu'on n'a besoin que d'en lister les noms. Un
+ * périmètre plus large est plus difficile à justifier lors de la vérification
+ * Google — et inutilement intrusif pour l'utilisateur. Ne pas l'élargir sans
+ * raison précise.
+ */
 export const SCOPES_AGENDA = [
-  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
   'https://www.googleapis.com/auth/calendar.events',
 ].join(' ');
 

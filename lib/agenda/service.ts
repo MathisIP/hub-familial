@@ -118,7 +118,17 @@ function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur:
   };
 }
 
-/** Nom d'un agenda (via calendars.get), repli sur l'id si indisponible. */
+/**
+ * Nom d'un agenda, en DERNIER RECOURS seulement.
+ *
+ * ⚠ `calendars.get` exige `calendar.readonly`, que nous ne demandons plus
+ * (périmètre volontairement étroit — cf. SCOPES_AGENDA). Cet appel échoue donc
+ * pour les calendriers connectés en OAuth, et retombe sur l'identifiant.
+ * Ce n'est pas un problème : le nom est mémorisé dans `foyer_agendas.nom` au
+ * moment du rattachement (lu depuis `calendarList`, lui accessible). Cette
+ * fonction ne sert qu'aux calendriers historiques du compte de service, dont le
+ * nom n'a pas été enregistré.
+ */
 async function nomAgenda(cal: calendar_v3.Calendar, id: string): Promise<string> {
   try {
     const meta = await cal.calendars.get({ calendarId: id });

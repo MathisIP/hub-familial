@@ -482,12 +482,16 @@ const UI = {
     en: 'Connecting your Google Calendar is entirely optional: Nestync works without it. If you enable it, here is exactly what we request and why.',
   },
   CONF_S9_SCOPE1: {
-    fr: 'Consulter tes agendas (calendar.readonly) : afficher la liste de tes calendriers pour que tu choisisses ceux à partager avec ton foyer, et afficher leurs événements à venir.',
-    en: 'View your calendars (calendar.readonly): list your calendars so you can choose which ones to share with your household, and display their upcoming events.',
+    fr: 'Lister tes agendas (calendar.calendarlist.readonly) : afficher le NOM de tes calendriers, uniquement pour que tu choisisses ceux à partager avec ton foyer. Ce niveau d’accès ne donne aucun accès au contenu de tes événements.',
+    en: 'List your calendars (calendar.calendarlist.readonly): display the NAMES of your calendars, solely so you can choose which ones to share with your household. This scope gives no access to the content of your events.',
   },
   CONF_S9_SCOPE2: {
-    fr: 'Gérer les événements (calendar.events) : créer un événement depuis Nestync, et supprimer un événement que tu as créé depuis Nestync.',
-    en: 'Manage events (calendar.events): create an event from Nestync, and delete an event you created from Nestync.',
+    fr: 'Gérer les événements des calendriers que tu as choisis (calendar.events) : afficher leurs événements à venir dans l’agenda du foyer, créer un événement depuis Nestync, et supprimer un événement affiché dans Nestync.',
+    en: 'Manage events on the calendars you selected (calendar.events): display their upcoming events in the household calendar, create an event from Nestync, and delete an event shown in Nestync.',
+  },
+  CONF_S9_MINIMAL: {
+    fr: 'Nous demandons volontairement le périmètre le plus étroit possible : Nestync ne demande PAS l’accès en lecture à l’ensemble de tes agendas, seulement la liste de leurs noms et les événements des calendriers que tu as toi-même sélectionnés.',
+    en: 'We deliberately request the narrowest possible scope: Nestync does NOT request read access to all your calendars — only the list of their names, and the events of the calendars you selected yourself.',
   },
   CONF_S9_USAGE: {
     fr: 'Ces données servent EXCLUSIVEMENT à faire fonctionner l’agenda partagé de ton foyer, à ta demande. Elles ne sont jamais utilisées à des fins publicitaires, jamais vendues ni transmises à des tiers, jamais exploitées pour entraîner des modèles d’intelligence artificielle, et aucun humain ne les consulte — sauf accord explicite de ta part pour résoudre un problème technique, ou obligation légale.',

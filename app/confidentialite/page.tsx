@@ -80,6 +80,7 @@ export default async function PageConfidentialite() {
         <li>{t('CONF_S9_SCOPE1', langue)}</li>
         <li>{t('CONF_S9_SCOPE2', langue)}</li>
       </ul>
+      <p>{t('CONF_S9_MINIMAL', langue)}</p>
       <p>{t('CONF_S9_USAGE', langue)}</p>
       <p>
         <strong>{t('CONF_S9_LIMITED', langue)}</strong>{' '}

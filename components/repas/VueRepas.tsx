@@ -13,6 +13,7 @@ import {
   type JourRepas,
   type Recette,
 } from '@/lib/repas/schema';
+import Astuce from '@/components/Astuce';
 
 /**
  * Écran Repas (client). Deux onglets : planning de la semaine (avec nb de
@@ -176,6 +177,7 @@ function JourLigne({
             aria-label={`Nombre de personnes ${jour.jour}`}
           />
           <span>{tr('REPAS_PERS')}</span>
+          <Astuce texte={tr('AIDE_PERSONNES')} />
         </label>
       </div>
 
@@ -448,7 +450,8 @@ function RecetteForm({
             disabled={occupe}
             aria-label="Personnes (base)"
           />
-          <span>pers.</span>
+          <span>{tr('REPAS_PERS')}</span>
+          <Astuce texte={tr('AIDE_PERSONNES_BASE')} />
         </label>
       </div>
 

@@ -153,6 +153,60 @@ const UI = {
   CS_QTE: { fr: 'Qté', en: 'Qty' },
   CS_VIDE: { fr: 'Ta liste de courses est vide.', en: 'Your shopping list is empty.' },
   CS_AJOUTE_SUFFIXE: { fr: 'ajouté à ta liste de courses.', en: 'added to your shopping list.' },
+  /* --- Budget : initialisation des comptes --- */
+  INIT_TITRE: { fr: 'Commençons par tes comptes 💶', en: 'Let’s start with your accounts 💶' },
+  INIT_SOUS_A: { fr: 'Indique le', en: 'Enter the' },
+  INIT_SOUS_B: { fr: 'solde actuel', en: 'current balance' },
+  INIT_SOUS_C: {
+    fr: 'de chacun de tes comptes. Nestync partira de ces montants : chaque opération que tu saisiras viendra ensuite s’ajouter ou se soustraire automatiquement.',
+    en: 'of each of your accounts. Nestync starts from these amounts: every transaction you enter is then added or subtracted automatically.',
+  },
+  INIT_NOM: { fr: 'Nom du compte', en: 'Account name' },
+  INIT_SOLDE: { fr: 'Solde actuel (€)', en: 'Current balance (€)' },
+  INIT_AJOUTER_LIGNE: { fr: '＋ Ajouter un compte', en: '＋ Add an account' },
+  INIT_RETIRER_LIGNE: { fr: 'Retirer cette ligne', en: 'Remove this row' },
+  INIT_VALIDER: { fr: 'Créer mes comptes', en: 'Create my accounts' },
+  INIT_VALIDER_AJOUT: { fr: 'Ajouter', en: 'Add' },
+  INIT_ENREGISTREMENT: { fr: 'Enregistrement…', en: 'Saving…' },
+  INIT_NOTE: {
+    fr: '💡 Tu pourras ajouter, renommer ou retirer des comptes plus tard. Rien n’est figé — et aucune information bancaire ne t’est demandée, seulement un montant.',
+    en: '💡 You can add, rename or remove accounts later. Nothing is set in stone — and no banking details are requested, only an amount.',
+  },
+  AIDE_NOM_COMPTE: {
+    fr: 'Le nom que TU utilises au quotidien : « Compte commun », « Livret A », « Compte de Lou »… Il apparaîtra tel quel dans l’app.',
+    en: 'The name YOU use day to day: “Joint account”, “Savings”, “Lou’s account”… It appears exactly as typed in the app.',
+  },
+  AIDE_SOLDE_ACTUEL: {
+    fr: 'Le montant qu’il y a sur ce compte aujourd’hui. Regarde ton appli bancaire et recopie. Un découvert se saisit avec un signe moins (ex. -120,50).',
+    en: 'The amount on that account today. Check your banking app and copy it. Enter an overdraft with a minus sign (e.g. -120.50).',
+  },
+
+  /* --- Info-bulles d'aide (<Astuce>) : expliquer sans encombrer l'écran --- */
+  AIDE_QUANTITE: {
+    fr: 'Écris la quantité comme tu la dirais : « 400 g », « 2 », « 1 L ». Si tu ajoutes deux fois le même article, les quantités s’additionnent au lieu de créer une seconde ligne.',
+    en: 'Write the quantity as you would say it: “400 g”, “2”, “1 L”. Adding the same item twice adds the quantities up instead of creating a second line.',
+  },
+  AIDE_PERSONNES: {
+    fr: 'Le nombre de convives pour ce jour. Les quantités des recettes sont recalculées automatiquement : une recette prévue pour 2 affichera le double pour 4.',
+    en: 'How many people eat that day. Recipe quantities are rescaled automatically: a recipe for 2 will show double for 4.',
+  },
+  AIDE_PERSONNES_BASE: {
+    fr: 'Pour combien de personnes cette recette est-elle écrite ? C’est la référence qui permet de mettre les quantités à l’échelle du nombre de convives.',
+    en: 'How many people is this recipe written for? It is the reference used to scale quantities to the number of guests.',
+  },
+  AIDE_DOSSIER: {
+    fr: 'Un rangement simple, à un seul niveau : « Papiers », « Santé », « Impôts »… Laisse vide et le fichier ira dans « Fichiers non classés », tu le rangeras plus tard.',
+    en: 'Simple, single-level filing: “Paperwork”, “Health”, “Taxes”… Leave empty and the file goes to “Unsorted files”, to be sorted later.',
+  },
+  AIDE_BUDGET_PREVU: {
+    fr: 'Ce que tu comptes dépenser pour ce cadeau. Sert à suivre le budget d’une occasion avant l’achat — laisse vide si tu ne sais pas encore.',
+    en: 'What you plan to spend on this gift. Used to track an occasion’s budget before buying — leave empty if you don’t know yet.',
+  },
+  AIDE_OCCASION: {
+    fr: 'L’événement auquel se rattache ce cadeau : « Noël 2026 », « Anniversaire de Léa »… Saisis librement : une nouvelle occasion est créée si elle n’existe pas, et les cadeaux sont regroupés par occasion.',
+    en: 'The event this gift belongs to: “Christmas 2026”, “Léa’s birthday”… Type freely: a new occasion is created if it doesn’t exist, and gifts are grouped by occasion.',
+  },
+
   // Documents (fichiers du foyer, stockage propre)
   DOC_TITRE: { fr: '🗂️ Documents', en: '🗂️ Documents' },
   DOC_CHARGEMENT: { fr: 'Chargement des documents…', en: 'Loading documents…' },

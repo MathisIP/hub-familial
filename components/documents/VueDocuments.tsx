@@ -12,6 +12,7 @@ import {
   type Document,
   type DonneesDocuments,
 } from '@/lib/documents/schema';
+import Astuce from '@/components/Astuce';
 
 /**
  * Gestionnaire de documents (onglet dédié) : créer des dossiers (même vides),
@@ -117,6 +118,7 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
 
         <div className="vd-depot">
           <label className="vd-lbl" htmlFor="vd-cible">{tr('DOC_DEPOSER_DANS')}</label>
+          <Astuce texte={tr('AIDE_DOSSIER')} />
           <select
             id="vd-cible"
             className="champ"

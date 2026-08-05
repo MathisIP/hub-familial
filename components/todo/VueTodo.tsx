@@ -7,6 +7,7 @@ import { useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE } from '@/lib/i18n';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
 import { STATUT_FAIT } from '@/lib/todo/schema';
+import Astuce from '@/components/Astuce';
 
 /**
  * Écran To-Do complet (client). Reçoit un premier chargement rendu côté serveur
@@ -305,6 +306,7 @@ function OngletCourses({
           onChange={(e) => setQuantite(e.target.value)}
           aria-label={tr('CS_QTE')}
         />
+        <Astuce texte={tr('AIDE_QUANTITE')} />
         <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder={tr('TODO_RAYON')} ariaLabel={tr('TODO_RAYON')} />
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
           {tr('G_AJOUTER')}

@@ -12,6 +12,7 @@ import {
   type DonneesCadeaux,
   type Occasion,
 } from '@/lib/cadeaux/schema';
+import Astuce from '@/components/Astuce';
 
 /**
  * Écran Cadeaux (client) : cadeaux regroupés par occasion, avec budget prévu /
@@ -244,12 +245,14 @@ function CadeauForm({
         <input className="champ rf-nom" placeholder={tr('CAD_IDEE_PH')} value={idee} onChange={(e) => setIdee(e.target.value)} disabled={occupe} autoFocus />
         <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder={tr('CAD_POUR_QUI')} disabled={occupe} ariaLabel={tr('CAD_POUR_QUI')} />
         <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder={tr('CAD_OCCASION')} disabled={occupe} ariaLabel={tr('CAD_OCCASION')} />
+        <Astuce texte={tr('AIDE_OCCASION')} />
         <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
           {d.statuts.map((s) => <option key={s} value={s}>{tEnum(CLE_STATUT_CADEAU, s, langue)}</option>)}
         </select>
       </div>
       <div className="rf-ligne1">
         <input className="champ" inputMode="decimal" placeholder={tr('CAD_BUDGET_PH')} value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
+        <Astuce texte={tr('AIDE_BUDGET_PREVU')} />
         <input className="champ" inputMode="decimal" placeholder={partage ? tr('CAD_COUT_PH') : tr('CAD_PRIX_PH')} value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
         <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder={tr('CAD_OFFERT_PAR')} disabled={occupe} ariaLabel={tr('CAD_OFFERT_PAR')} />
         <input className="champ" placeholder={tr('CAD_OU_PH')} value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />

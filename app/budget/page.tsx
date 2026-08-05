@@ -1,6 +1,7 @@
 import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
-import { chargerBudget } from '@/lib/budget/service';
+import InitComptes from '@/components/budget/InitComptes';
+import { chargerBudget, comptesExistants } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
 import { ConfigManquante } from '@/lib/config';
 import { t } from '@/lib/i18n';
@@ -28,13 +29,19 @@ export default async function PageBudget({
 
   let contenu;
   try {
-    const d = await chargerBudget(selection);
-    contenu = (
-      <>
-        <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
-        <VueBudget d={d} langue={langue} />
-      </>
-    );
+    // Aucun compte déclaré : le tableau de bord n'aurait rien à calculer. On
+    // propose l'initialisation plutôt qu'un écran vide et incompréhensible.
+    if ((await comptesExistants()) === 0) {
+      contenu = <InitComptes />;
+    } else {
+      const d = await chargerBudget(selection);
+      contenu = (
+        <>
+          <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
+          <VueBudget d={d} langue={langue} />
+        </>
+      );
+    }
   } catch (e) {
     contenu =
       e instanceof ConfigManquante ? (

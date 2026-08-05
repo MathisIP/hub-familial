@@ -294,3 +294,62 @@ export async function ajouterTransaction(input: NouvelleTransaction): Promise<st
     .returning({ id: tTx.id });
   return row.id;
 }
+
+/* --------------------- INITIALISATION DES COMPTES --------------------- */
+
+export type NouveauCompte = { nom: string; solde: number };
+
+/**
+ * Le foyer a-t-il déjà déclaré ses comptes ?
+ * Sans compte, le Budget n'a rien à afficher : on propose alors l'initialisation.
+ */
+export async function comptesExistants(): Promise<number> {
+  const foyerId = await idFoyerCourant();
+  const lignes = await db()
+    .select({ id: tComptes.id })
+    .from(tComptes)
+    .where(eq(tComptes.foyerId, foyerId));
+  return lignes.length;
+}
+
+/**
+ * Crée des comptes avec leur solde ACTUEL.
+ *
+ * Ce solde est enregistré comme `solde_initial` : le module recalcule ensuite
+ * solde = solde_initial + Σ transactions. Saisir l'état réel du compte au moment
+ * du démarrage est donc ce qui rend tous les soldes justes par la suite.
+ */
+export async function creerComptes(entrees: NouveauCompte[]): Promise<number> {
+  const foyerId = await idFoyerCourant();
+
+  const propres = entrees
+    .map((c) => ({ nom: (c.nom ?? '').trim(), solde: Number(c.solde) }))
+    .filter((c) => c.nom !== '');
+
+  if (propres.length === 0) throw new ErreurValidation('Indique au moins un compte.');
+  if (propres.some((c) => !Number.isFinite(c.solde))) {
+    throw new ErreurValidation('Chaque solde doit être un nombre (0 si le compte est vide).');
+  }
+
+  const doublon = propres.find((c, i) =>
+    propres.some((a, j) => j < i && a.nom.toLowerCase() === c.nom.toLowerCase()),
+  );
+  if (doublon) throw new ErreurValidation(`Deux comptes portent le même nom : « ${doublon.nom} ».`);
+
+  // `ordre` reprend après les comptes déjà présents (ajout ultérieur possible).
+  const dejaLa = await db()
+    .select({ ordre: tComptes.ordre })
+    .from(tComptes)
+    .where(eq(tComptes.foyerId, foyerId));
+  const depart = dejaLa.reduce((m, x) => Math.max(m, x.ordre), 0) + 1;
+
+  await db().insert(tComptes).values(
+    propres.map((c, i) => ({
+      foyerId,
+      nom: c.nom,
+      soldeInitial: r2(c.solde),
+      ordre: depart + i,
+    })),
+  );
+  return propres.length;
+}

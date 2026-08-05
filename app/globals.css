@@ -2126,3 +2126,52 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .bouton-google:hover { background: #f7f8f8; box-shadow: 0 1px 3px rgba(60,64,67,.25); }
 .bouton-google:focus-visible { outline: 2px solid #4285F4; outline-offset: 2px; }
 .bouton-google-ic { display: inline-flex; flex: none; }
+
+/* ===================== INFO-BULLE D'AIDE ===================== */
+.astuce { position: relative; display: inline-flex; margin-left: .3rem; vertical-align: middle; }
+.astuce-btn {
+  width: 1.1rem; height: 1.1rem; border-radius: 50%; padding: 0;
+  font: inherit; font-size: .7rem; font-weight: 700; line-height: 1;
+  color: var(--muted); background: var(--soft);
+  border: 1px solid var(--line); cursor: help;
+}
+.astuce-btn:hover, .astuce-btn:focus-visible { color: var(--on-acc); background: var(--acc); border-color: var(--acc); }
+.astuce-bulle {
+  position: absolute; bottom: calc(100% + .45rem); left: 50%; transform: translateX(-50%);
+  z-index: 40; width: max-content; max-width: 17rem;
+  background: var(--ink); color: var(--page);
+  font-size: .8rem; font-weight: 400; line-height: 1.45; text-align: left;
+  padding: .55rem .7rem; border-radius: .5rem;
+  box-shadow: 0 8px 22px -8px rgba(0,0,0,.45);
+}
+/* Près du bord droit : on aligne la bulle à droite pour ne pas deborder. */
+.astuce-bulle.droite { left: auto; right: 0; transform: none; }
+
+/* ===================== INITIALISATION DES COMPTES ===================== */
+.init-comptes {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.5rem 1.6rem; max-width: 40rem;
+}
+.init-titre { font-family: var(--police-titre), Georgia, serif; font-size: 1.3rem; margin: 0 0 .5rem; }
+.init-sous { color: var(--muted); font-size: .95rem; line-height: 1.6; margin: 0 0 1.4rem; }
+.init-form { display: flex; flex-direction: column; gap: .6rem; }
+.init-entetes {
+  display: grid; grid-template-columns: 1fr 9rem 2rem; gap: .5rem;
+  font-size: .8rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.init-entetes span { display: inline-flex; align-items: center; }
+.init-ligne { display: grid; grid-template-columns: 1fr 9rem 2rem; gap: .5rem; align-items: center; }
+.init-solde { text-align: right; font-variant-numeric: tabular-nums; }
+.init-retirer {
+  font: inherit; color: var(--muted); background: none; border: 0;
+  cursor: pointer; padding: .3rem; border-radius: .4rem; line-height: 1;
+}
+.init-retirer:hover { color: var(--over-tx, #c0392b); background: var(--soft); }
+.init-ajout { align-self: flex-start; font-size: .9rem; }
+.init-actions { margin-top: .6rem; }
+.init-note { font-size: .85rem; color: var(--muted); line-height: 1.55; margin: 1rem 0 0; }
+@media (max-width: 30rem) {
+  .init-entetes { display: none; }
+  .init-ligne { grid-template-columns: 1fr 7rem 2rem; }
+}

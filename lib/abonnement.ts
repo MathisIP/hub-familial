@@ -7,6 +7,7 @@ import { foyers } from '@/lib/db/schema';
 import { foyerCourant, utilisateurCourant, SansFoyer } from '@/lib/foyer';
 import { stripe, stripeDisponible } from '@/lib/stripe';
 import { ErreurValidation } from '@/lib/erreurs';
+import type { IdOffre } from '@/lib/offres';
 
 /**
  * ABONNEMENT (serveur) — chaque foyer paie un abonnement Stripe pour utiliser le
@@ -84,10 +85,22 @@ export async function exigerAcces(): Promise<void> {
   if (!e.autorise) redirect('/abonnement');
 }
 
+/**
+ * Identifiant de prix Stripe pour une formule.
+ * ⚠ Deux prix distincts : la vitrine annonce mensuel ET annuel — un seul
+ * `STRIPE_PRICE_ID` ne permettrait pas d'honorer l'offre annoncée.
+ * `STRIPE_PRICE_ID` (sans suffixe) reste accepté comme repli pour le mensuel.
+ */
+function idPrix(formule: IdOffre): string {
+  const cle = formule === 'annuel' ? 'STRIPE_PRICE_ID_ANNUEL' : 'STRIPE_PRICE_ID_MENSUEL';
+  const id = process.env[cle] || (formule === 'mensuel' ? process.env.STRIPE_PRICE_ID : undefined);
+  if (!id) throw new ErreurValidation(`Tarif non configuré (${cle} absent).`);
+  return id;
+}
+
 /** Crée (ou réutilise) le client Stripe du foyer et renvoie l'URL de paiement. */
-export async function creerCheckout(origin: string): Promise<string> {
-  const priceId = process.env.STRIPE_PRICE_ID;
-  if (!priceId) throw new ErreurValidation('STRIPE_PRICE_ID non configuré.');
+export async function creerCheckout(origin: string, formule: IdOffre = 'mensuel'): Promise<string> {
+  const priceId = idPrix(formule);
 
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   const s = stripe();

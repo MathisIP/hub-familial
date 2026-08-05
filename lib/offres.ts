@@ -8,8 +8,11 @@
 
 export const ESSAI_JOURS = 14;
 
+/** Formule d'abonnement (sert aussi de clé pour le prix Stripe). */
+export type IdOffre = 'mensuel' | 'annuel';
+
 export type Offre = {
-  id: 'mensuel' | 'annuel';
+  id: IdOffre;
   nom: string;
   prix: number; // € TTC par période
   periode: string;

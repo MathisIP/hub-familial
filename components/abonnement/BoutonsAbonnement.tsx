@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useT } from '@/components/I18nProvider';
+import { OFFRES, formatPrix } from '@/lib/offres';
 import type { EtatAbonnement } from '@/lib/abonnement';
 
 /**
@@ -13,11 +14,15 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  async function aller(url: string) {
+  async function aller(url: string, corps?: unknown) {
     setOccupe(true);
     setErreur(null);
     try {
-      const r = await fetch(url, { method: 'POST' });
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: corps ? { 'Content-Type': 'application/json' } : undefined,
+        body: corps ? JSON.stringify(corps) : undefined,
+      });
       const data = await r.json();
       if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_ACTION'));
       window.location.href = data.url;
@@ -33,11 +38,20 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
 
   return (
     <div className="abo-actions">
-      {etat.statut !== 'actif' && (
-        <button className="bouton bouton-primaire" onClick={() => aller('/api/abonnement/checkout')} disabled={occupe}>
-          {occupe ? tr('ABO_REDIRECTION') : tr('ABO_SABONNER')}
-        </button>
-      )}
+      {/* Une formule = un prix Stripe distinct. On propose les deux, comme la vitrine. */}
+      {etat.statut !== 'actif' &&
+        OFFRES.map((o) => (
+          <button
+            key={o.id}
+            className={`bouton ${o.id === 'annuel' ? 'bouton-primaire' : ''}`}
+            onClick={() => aller('/api/abonnement/checkout', { formule: o.id })}
+            disabled={occupe}
+          >
+            {occupe
+              ? tr('ABO_REDIRECTION')
+              : `${tr('ABO_SABONNER')} — ${o.nom} ${formatPrix(o.prix)}${o.economie ? ` (${o.economie})` : ''}`}
+          </button>
+        ))}
       {etat.aDejaPaye && (
         <button className="bouton" onClick={() => aller('/api/abonnement/portail')} disabled={occupe}>
           {tr('ABO_GERER')}

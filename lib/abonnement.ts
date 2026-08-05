@@ -131,6 +131,31 @@ export async function creerCheckout(origin: string, formule: IdOffre = 'mensuel'
   return session.url;
 }
 
+/**
+ * Annule la résiliation programmée : l'abonnement repart normalement.
+ *
+ * On RÉACTIVE l'abonnement existant plutôt que d'en créer un nouveau — la
+ * personne n'a rien à repayer et conserve sa date d'échéance. Un nouveau
+ * paiement serait à la fois inutile et incompréhensible pour elle.
+ */
+export async function reactiverAbonnement(): Promise<void> {
+  const foyer = await foyerCourant();
+  if (!foyer.stripeCustomerId) throw new ErreurValidation('Aucun abonnement à réactiver.');
+
+  const s = stripe();
+  const subs = await s.subscriptions.list({ customer: foyer.stripeCustomerId, status: 'active', limit: 1 });
+  const sub = subs.data[0];
+  if (!sub) throw new ErreurValidation('Aucun abonnement en cours à réactiver.');
+
+  // On efface les DEUX formes de résiliation programmée (cf. appliquerAbonnement).
+  const maj = await s.subscriptions.update(sub.id, {
+    cancel_at: null,
+    cancel_at_period_end: false,
+  });
+  // Application immédiate : ne pas dépendre du délai d'arrivée du webhook.
+  await appliquerAbonnement(maj);
+}
+
 /** Ouvre le portail de facturation Stripe (gérer / annuler l'abonnement). */
 export async function creerPortail(origin: string): Promise<string> {
   const foyer = await foyerCourant();
@@ -169,7 +194,11 @@ async function appliquerAbonnement(sub: Stripe.Subscription): Promise<void> {
     abonnementFin: fin,
     stripeCustomerId: customerId,
     // Résiliation demandée : Stripe laisse le statut `active` jusqu'au terme.
-    annulationProgrammee: !!sub.cancel_at_period_end,
+    // ⚠ DEUX représentations selon la version d'API : les versions récentes
+    // posent `cancel_at` (horodatage d'arrêt) en laissant `cancel_at_period_end`
+    // à `false`. Ne surveiller que ce dernier fait manquer toutes les
+    // résiliations — constaté en conditions réelles.
+    annulationProgrammee: !!(sub.cancel_at || sub.cancel_at_period_end),
   };
   const d = db();
   if (foyerId) await d.update(foyers).set(set).where(eq(foyers.id, foyerId));

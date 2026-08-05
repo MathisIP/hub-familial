@@ -25,7 +25,10 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_ACTION'));
-      window.location.href = data.url;
+      // Checkout et portail renvoient une URL Stripe ; la réactivation, non :
+      // on recharge alors la page pour afficher le nouvel état.
+      if (data.url) window.location.href = data.url;
+      else window.location.reload();
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
       setOccupe(false);
@@ -38,6 +41,18 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
 
   return (
     <div className="abo-actions">
+      {/* Résiliation programmée : on RÉACTIVE l'abonnement en cours plutôt que
+          d'en vendre un nouveau — rien à repayer, échéance conservée. */}
+      {etat.annulationProgrammee && (
+        <button
+          className="bouton bouton-primaire"
+          onClick={() => aller('/api/abonnement/reactiver')}
+          disabled={occupe}
+        >
+          {occupe ? tr('ABO_REDIRECTION') : tr('ABO_REABONNER')}
+        </button>
+      )}
+
       {/* Une formule = un prix Stripe distinct. On propose les deux, comme la vitrine. */}
       {etat.statut !== 'actif' &&
         OFFRES.map((o) => (

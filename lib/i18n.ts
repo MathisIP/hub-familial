@@ -408,6 +408,7 @@ const UI = {
   ABO_NON_ACTIVE: { fr: 'La facturation n’est pas activée sur cette instance.', en: 'Billing is not enabled on this instance.' },
   ABO_REDIRECTION: { fr: 'Redirection…', en: 'Redirecting…' },
   ABO_SABONNER: { fr: 'S’abonner', en: 'Subscribe' },
+  ABO_REABONNER: { fr: 'Reprendre mon abonnement', en: 'Resume my subscription' },
   ABO_RESILIE_A: { fr: 'Résiliation enregistrée : ton accès reste ouvert jusqu’au', en: 'Cancellation registered: your access stays open until' },
   ABO_RESILIE_B: {
     fr: 'Aucun nouveau prélèvement ne sera effectué. Tu peux réactiver l’abonnement à tout moment depuis « Gérer mon abonnement ».',

@@ -2111,3 +2111,18 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   border-radius: 999px; padding: .05rem .4rem;
 }
 .ag-cal-tag.lecture { color: var(--warn-tx, var(--muted)); }
+
+/* Bouton « Se connecter avec Google » — conforme aux Branding Guidelines :
+   fond blanc, bordure #747775, texte #1f1f1f, hauteur 40 px, logo intact.
+   Volontairement FIXE (non theme) : Google impose ces couleurs. */
+.bouton-google {
+  display: inline-flex; align-items: center; justify-content: center; gap: .65rem;
+  min-height: 40px; padding: .6rem 1.1rem; width: 100%;
+  font-family: 'Roboto', var(--police-corps), system-ui, sans-serif;
+  font-size: .95rem; font-weight: 500; color: #1f1f1f;
+  background: #fff; border: 1px solid #747775; border-radius: 999px;
+  cursor: pointer; transition: background-color .15s ease, box-shadow .15s ease;
+}
+.bouton-google:hover { background: #f7f8f8; box-shadow: 0 1px 3px rgba(60,64,67,.25); }
+.bouton-google:focus-visible { outline: 2px solid #4285F4; outline-offset: 2px; }
+.bouton-google-ic { display: inline-flex; flex: none; }

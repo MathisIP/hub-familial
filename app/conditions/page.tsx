@@ -24,7 +24,7 @@ export default function PageConditions() {
     <article className="doc-legal">
       <Link className="lien-retour" href="/">← Retour</Link>
       <h1>Conditions générales de vente et d’utilisation</h1>
-      <p className="doc-maj">Dernière mise à jour : [À COMPLÉTER : date]</p>
+      <p className="doc-maj">Dernière mise à jour : 5 août 2026</p>
 
       <p className="doc-avertissement">
         ⚠ <strong>Modèle à finaliser.</strong> Renseignez les champs entre crochets et faites
@@ -34,15 +34,15 @@ export default function PageConditions() {
       <h2>1. Identification de l’éditeur</h2>
       <p>
         Le service <strong>Nestync</strong> (ci-après « le Service ») est édité par
-        [À COMPLÉTER : nom / raison sociale], [À COMPLÉTER : forme juridique et capital
-        le cas échéant], immatriculé sous le numéro [À COMPLÉTER : SIREN/SIRET], dont le
-        siège est situé [À COMPLÉTER : adresse].
+        Mathis INGRAND-PERIGNE, personne physique éditant le service à titre
+        individuel. [À COMPLÉTER lors de la création de la micro-entreprise : numéro
+        SIREN et adresse du siège].
       </p>
       <ul>
-        <li>Contact : [À COMPLÉTER : adresse e-mail]</li>
-        <li>Directeur de la publication : [À COMPLÉTER : nom]</li>
-        <li>Hébergement de l’application : [À COMPLÉTER : Vercel Inc. / autre]</li>
-        <li>Hébergement des données : [À COMPLÉTER : Neon, région Union européenne]</li>
+        <li>Contact : contact@nestync.app</li>
+        <li>Directeur de la publication : Mathis INGRAND-PERIGNE</li>
+        <li>Hébergement de l’application : Vercel Inc.</li>
+        <li>Hébergement des données : Neon, région Union européenne</li>
       </ul>
 
       <h2>2. Objet</h2>
@@ -117,7 +117,7 @@ export default function PageConditions() {
         s’applique dans les conditions de droit commun.
       </p>
       <p>
-        Pour exercer ce droit : écrire à [À COMPLÉTER : adresse e-mail] avec les nom, prénom et
+        Pour exercer ce droit : écrire à contact@nestync.app avec les nom, prénom et
         adresse e-mail du compte concerné. Le remboursement intervient sous 14 jours par le même
         moyen de paiement.
       </p>
@@ -174,7 +174,7 @@ export default function PageConditions() {
 
       <h2>15. Médiation et droit applicable</h2>
       <p>
-        En cas de litige, l’Utilisateur s’adresse d’abord à [À COMPLÉTER : adresse e-mail].
+        En cas de litige, l’Utilisateur s’adresse d’abord à contact@nestync.app.
         À défaut d’accord, il peut recourir gratuitement à un médiateur de la consommation :
         [À COMPLÉTER : nom et coordonnées du médiateur], ou à la plateforme européenne de
         règlement en ligne des litiges. Les présentes sont soumises au <strong>droit français</strong> ;

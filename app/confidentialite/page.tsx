@@ -6,9 +6,13 @@ export const metadata = { title: 'Politique de confidentialité — Nestync' };
 
 /**
  * Politique de confidentialité (RGPD). Page PUBLIQUE (exclue de l'authentification
- * dans middleware.ts). ⚠ GABARIT : les champs `[À COMPLÉTER]` doivent être
- * renseignés et le texte relu (idéalement par un juriste) avant mise en service
- * commerciale. Décrit les traitements réels de l'app.
+ * dans middleware.ts). Décrit les traitements réels de l'app.
+ *
+ * ⚠ COMPLÈTE et destinée à être lue telle quelle : elle est examinée par Google
+ * lors de la vérification des scopes Agenda (section 9 : finalité de chaque
+ * scope, engagements d'usage limité, conservation, révocation). Ne pas y
+ * réintroduire de mention « gabarit » ni de champ à compléter — ce serait un
+ * motif de rejet. Une relecture juridique reste recommandée avant la vente.
  */
 export default async function PageConfidentialite() {
   const langue = await langueCourante();
@@ -21,7 +25,6 @@ export default async function PageConfidentialite() {
       <h1>{t('CONF_TITRE', langue)}</h1>
       <p className="doc-maj">{t('CONF_MAJ', langue)}</p>
 
-      <p className="doc-avertissement">{t('CONF_AVERT', langue)}</p>
 
       <h2>{t('CONF_S1_T', langue)}</h2>
       <p>{t('CONF_S1_P', langue)}</p>

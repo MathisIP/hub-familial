@@ -420,8 +420,8 @@ const UI = {
   },
   CONF_S1_T: { fr: '1. Responsable du traitement', en: '1. Data controller' },
   CONF_S1_P: {
-    fr: 'Le responsable du traitement des données est [À COMPLÉTER : nom / raison sociale], joignable à l’adresse [À COMPLÉTER : email de contact]. Le service « Nestync » (ci-après « le Service ») est une application d’organisation familiale.',
-    en: 'The data controller is [TO COMPLETE: name / company], reachable at [TO COMPLETE: contact email]. The “Nestync” service (hereafter “the Service”) is a household-organization application.',
+    fr: 'Le responsable du traitement des données est Mathis INGRAND-PERIGNE, personne physique éditant le service à titre individuel, joignable à l’adresse contact@nestync.app. Le service « Nestync » (ci-après « le Service ») est une application d’organisation familiale.',
+    en: 'The data controller is Mathis INGRAND-PERIGNE, an individual publishing the service in a personal capacity, reachable at contact@nestync.app. The “Nestync” service (hereafter “the Service”) is a household-organization application.',
   },
   CONF_S2_T: { fr: '2. Données collectées', en: '2. Data collected' },
   CONF_S2_LI1: {
@@ -471,8 +471,8 @@ const UI = {
   CONF_S7_LI1: { fr: 'Portabilité / accès : « Exporter mes données » (fichier JSON complet).', en: 'Portability / access: “Export my data” (full JSON file).' },
   CONF_S7_LI2: { fr: 'Effacement : « Supprimer mon compte » (suppression définitive).', en: 'Erasure: “Delete my account” (permanent deletion).' },
   CONF_S7_P2: {
-    fr: 'Pour les autres demandes, écris à [À COMPLÉTER : email de contact]. Tu peux aussi introduire une réclamation auprès de la CNIL (www.cnil.fr).',
-    en: 'For other requests, write to [TO COMPLETE: contact email]. You may also lodge a complaint with your data protection authority (e.g. the CNIL, www.cnil.fr).',
+    fr: 'Pour les autres demandes, écris à contact@nestync.app. Tu peux aussi introduire une réclamation auprès de la CNIL (www.cnil.fr).',
+    en: 'For other requests, write to contact@nestync.app. You may also lodge a complaint with your data protection authority (e.g. the CNIL, www.cnil.fr).',
   },
   /* --- Section 9 : données Google. Exigée par Google pour la vérification des
      scopes sensibles (Google API Services User Data Policy / Limited Use). --- */

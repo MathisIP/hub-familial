@@ -31,6 +31,7 @@ export default async function PageConfidentialite() {
         <li>{t('CONF_S2_LI1', langue)}</li>
         <li>{t('CONF_S2_LI2', langue)}</li>
         <li>{t('CONF_S2_LI3', langue)}</li>
+        <li>{t('CONF_S2_LI4', langue)}</li>
       </ul>
 
       <h2>{t('CONF_S3_T', langue)}</h2>
@@ -67,6 +68,28 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S8_T', langue)}</h2>
       <p>{t('CONF_S8_P', langue)}</p>
+
+      {/* Section exigée par Google pour la vérification des scopes sensibles
+          (Google API Services User Data Policy — Limited Use). */}
+      <h2>{t('CONF_S9_T', langue)}</h2>
+      <p>{t('CONF_S9_INTRO', langue)}</p>
+      <ul>
+        <li>{t('CONF_S9_SCOPE1', langue)}</li>
+        <li>{t('CONF_S9_SCOPE2', langue)}</li>
+      </ul>
+      <p>{t('CONF_S9_USAGE', langue)}</p>
+      <p>
+        <strong>{t('CONF_S9_LIMITED', langue)}</strong>{' '}
+        <a
+          href="https://developers.google.com/terms/api-services-user-data-policy"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Google API Services User Data Policy ↗
+        </a>
+      </p>
+      <p>{t('CONF_S9_STOCKAGE', langue)}</p>
+      <p>{t('CONF_S9_REVOQUER', langue)}</p>
     </article>
   );
 }

@@ -54,7 +54,7 @@ const UI = {
   SUB_EVENEMENTS: { fr: 'Réceptions, invités, checklist et menu', en: 'Gatherings, guests, checklist and menu' },
   SUB_CADEAUX: { fr: 'Idées, budget et suivi des cadeaux par occasion', en: 'Ideas, budget and gift tracking by occasion' },
   SUB_AGENDA: { fr: 'Agenda familial partagé', en: 'Shared family calendar' },
-  SUB_DOCUMENTS: { fr: 'Les papiers du foyer, rangés et privés', en: 'Household paperwork, sorted and private' },
+  SUB_DOCUMENTS: { fr: 'Les papiers du foyer, rangés et totalement privés', en: 'Household paperwork, sorted and fully private' },
 
   // Navigation
   NAV_ACCUEIL: { fr: 'Accueil', en: 'Home' },

@@ -13,10 +13,20 @@ import { FAMILLES, THEMES, themeDeFamille, type IdFamille } from '@/lib/themes';
  * ⚠ On restaure les réglages d'origine en quittant la section (démontage) pour
  * ne pas imposer au visiteur un thème qu'il n'a pas choisi de garder.
  */
+/** Prénoms de l'aperçu : un visiteur ne doit pas croire que « Lou », c'est nous. */
+const PRENOMS = ['Lou', 'Camille', 'Sacha', 'Inès', 'Noah', 'Léa', 'Gabriel', 'Jade', 'Louis', 'Manon'];
+
 export default function DemoThemes() {
   const [famille, setFamille] = useState<IdFamille>('corail');
   const [sombre, setSombre] = useState(false);
   const [neon, setNeon] = useState(true);
+  const [prenom, setPrenom] = useState(PRENOMS[0]);
+
+  // Tiré au sort APRÈS le montage : un tirage au rendu donnerait une valeur
+  // différente côté serveur et côté client — erreur d'hydratation garantie.
+  useEffect(() => {
+    setPrenom(PRENOMS[Math.floor(Math.random() * PRENOMS.length)]);
+  }, []);
 
   // Applique le thème choisi au document (comme le fait l'app).
   useEffect(() => {
@@ -89,7 +99,7 @@ export default function DemoThemes() {
         <div className="vt-demo-apercu" aria-label="Aperçu de l’application">
           <div className="vt-demo-carte">
             <p className="vt-demo-jour">Mercredi 12 novembre</p>
-            <p className="vt-demo-titre">Bonsoir, Lou</p>
+            <p className="vt-demo-titre">Bonsoir, {prenom}</p>
 
             <div className="vt-demo-soldes">
               <div><span>Compte commun</span><strong>1 240,50 €</strong></div>

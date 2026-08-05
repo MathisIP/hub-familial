@@ -17,7 +17,7 @@ const MODULES = [
   { emoji: '🎉', nom: 'Événements', texte: 'Anniversaires, réceptions : budget, invités et checklist au même endroit.' },
   { emoji: '🎁', nom: 'Cadeaux', texte: 'Vos idées par occasion, le budget prévu et ce qui est déjà offert.' },
   { emoji: '📅', nom: 'Agenda', texte: 'La semaine de toute la famille en un coup d’œil, synchronisée avec Google Agenda.' },
-  { emoji: '🗂️', nom: 'Documents', texte: 'Bail, carnet de santé, assurances : rangés par dossier et vraiment privés.' },
+  { emoji: '🗂️', nom: 'Documents', texte: 'Bail, carnet de santé, assurances : rangés par dossier et totalement privés.' },
 ];
 
 const ETAPES = [
@@ -108,7 +108,7 @@ export default function Vitrine() {
       {/* ---------------- Confiance / vie privée ---------------- */}
       <section className="vt-section vt-prive">
         <div className="vt-prive-txt">
-          <h2 className="vt-h2">Vos papiers de famille méritent mieux qu’un cloud public</h2>
+          <h2 className="vt-h2">Vos documents importants méritent mieux qu’une clé USB</h2>
           <p>
             Un bail, un carnet de santé, un relevé : ce sont des documents intimes. Chez Nestync,
             ils sont stockés dans un espace <strong>privé</strong>, propre à votre foyer, sans

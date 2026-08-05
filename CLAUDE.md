@@ -176,7 +176,13 @@ Fichiers du foyer stockés **par nous**, plus aucun accès Google Drive. Route :
 
 Compte de service `claude-sheet-access@hub-familial-app.iam.gserviceaccount.com`, clé dans `credentials.json` (ou `GOOGLE_CREDENTIALS_JSON`). Utilisé désormais **uniquement** pour **Google Agenda** (module Agenda). Le partage historique avec les 5 classeurs Sheets n'est plus utilisé (voir « Ménage Sheets »), et l'accès **Google Drive a été entièrement retiré** (voir « Module Documents »). **Ne pas reconfigurer le compte de service.**
 
-⚠ **Périmètre OAuth utilisateur = `openid email profile`** (identité seule). C'est un **choix structurant** : tout scope « restreint » (Drive, Gmail…) déclencherait un audit de sécurité annuel payant à la mise en vente.
+⚠ **Périmètre OAuth de CONNEXION = `openid email profile`** (identité seule). C'est un **choix structurant** : tout scope « restreint » (Drive, Gmail…) déclencherait un audit de sécurité annuel payant à la mise en vente. Le scope Drive a été **retiré de la console** (04/08/2026).
+
+**Agenda multi-foyer (05/08/2026) — vérifié en conditions réelles.** Deux chantiers menés à la suite :
+1. **Isolation** (migration 0014, table `foyer_agendas`) : le module lisait `AGENDA_IDS`, variable **globale** → tous les foyers voyaient et pouvaient modifier les mêmes calendriers. Chaque requête est désormais scopée `idFoyerCourant()`. ⚠ Faille corrigée au passage : `supprimerEvenement()` ne vérifiait pas que le `calendarId` reçu du client appartenait au foyer.
+2. **OAuth par utilisateur** (migration 0015, table `comptes_google`) : chacun connecte **son** Google Agenda depuis `/agenda` et choisit les calendriers à partager. Flux **séparé d'Auth.js** (`/api/agenda/connexion` + `/api/agenda/callback`, `state` en cookie httpOnly anti-CSRF) pour que le périmètre de connexion reste minimal. **Jetons chiffrés au repos** (AES-256-GCM, clé dérivée d'`AUTH_SECRET` — [lib/crypto.ts](lib/crypto.ts)) : un `refresh_token` est un accès durable au calendrier d'une personne. Renouvellement auto ; autorisation révoquée = nettoyage + reconnexion proposée.
+- `clientPour()` choisit la source par calendrier : jeton de `ajoute_par`, sinon compte de service (mode historique). Un calendrier inaccessible est **ignoré**, sans casser l'agenda du foyer.
+- **Console Google** : URI `<origine>/api/agenda/callback` déclarée, scopes `calendar.readonly` + `calendar.events` ajoutés. ⚠ Scopes **sensibles** → **vérification Google requise avant l'ouverture publique** (formulaire + justification + souvent une vidéo, plusieurs semaines) — mais **PAS** d'audit CASA. Sans effet tant que l'app reste en mode « Test » (≤ 100 utilisateurs, qui doivent figurer dans « Utilisateurs test »).
 
 ## Fichiers sensibles
 

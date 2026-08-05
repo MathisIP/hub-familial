@@ -5,6 +5,7 @@ import {
   calendriersDisponibles,
   calendriersDuFoyer,
   monAgendaConnecte,
+  monEcritureAccordee,
 } from '@/lib/agenda/calendriers';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
@@ -34,8 +35,9 @@ export default async function PageAgenda({
 
   // La configuration ne doit jamais empêcher l'affichage : si Google répond mal,
   // on montre au moins l'écran de connexion.
-  const [connecte, disponibles, rattaches] = await Promise.all([
+  const [connecte, ecriture, disponibles, rattaches] = await Promise.all([
     monAgendaConnecte().catch(() => false),
+    monEcritureAccordee().catch(() => true),
     calendriersDisponibles().catch(() => []),
     calendriersDuFoyer().catch(() => []),
   ]);
@@ -73,7 +75,7 @@ export default async function PageAgenda({
         <p className={`message ${retour.erreur ? 'erreur' : 'info'}`}>{t(retour.cle, langue)}</p>
       )}
 
-      <ConfigAgendas connecte={connecte} disponibles={disponibles} rattaches={rattaches} />
+      <ConfigAgendas connecte={connecte} ecriture={ecriture} disponibles={disponibles} rattaches={rattaches} />
 
       {contenu}
     </>

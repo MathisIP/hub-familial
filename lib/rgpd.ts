@@ -1,6 +1,7 @@
 import 'server-only';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
+import { deconnecterAgenda } from '@/lib/agenda/oauth';
 import {
   foyers,
   utilisateurs,
@@ -87,6 +88,12 @@ export async function exporterDonneesFoyer(foyerId: string) {
  * et invitations) puis l'utilisateur. Après appel, la session doit être fermée.
  */
 export async function supprimerFoyerEtUtilisateur(foyerId: string, utilisateurId: string): Promise<void> {
+  // Révoquer l'autorisation Google AVANT d'effacer : la cascade SQL supprimerait
+  // nos jetons, mais l'autorisation resterait active côté Google et continuerait
+  // d'apparaître dans les applications connectées de la personne. Un effacement
+  // de compte doit vraiment tout retirer.
+  await deconnecterAgenda(utilisateurId);
+
   const d = db();
   await d.delete(foyers).where(eq(foyers.id, foyerId)); // cascade sur toutes les tables foyer_id
   await d.delete(utilisateurs).where(eq(utilisateurs.id, utilisateurId));

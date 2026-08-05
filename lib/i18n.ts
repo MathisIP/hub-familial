@@ -567,6 +567,10 @@ const UI = {
   AGC_RETIRER: { fr: 'Retirer', en: 'Remove' },
   AGC_PAR_AUTRES: { fr: 'Ajoutés par d’autres membres', en: 'Added by other members' },
   AGC_DECONNECTER: { fr: 'Déconnecter mon Google Agenda', en: 'Disconnect my Google Calendar' },
+  AGC_SANS_ECRITURE: {
+    fr: '⚠ Tu n’as accordé que la lecture : les événements s’affichent, mais tu ne peux pas en créer ni en supprimer depuis Nestync. Reconnecte ton agenda en acceptant toutes les autorisations pour débloquer cette fonction.',
+    en: '⚠ You only granted read access: events are displayed, but you cannot create or delete them from Nestync. Reconnect your calendar and accept all permissions to enable this.',
+  },
   // Retours après l'autorisation Google
   AGC_RET_OK: { fr: 'Google Agenda connecté. Choisis les calendriers à partager.', en: 'Google Calendar connected. Choose the calendars to share.' },
   AGC_RET_REFUS: { fr: 'Autorisation annulée : aucun agenda n’a été connecté.', en: 'Authorisation cancelled: no calendar was connected.' },

@@ -15,10 +15,13 @@ import { rattacherAction, detacherAction, deconnecterGoogleAction } from '@/app/
  */
 export default function ConfigAgendas({
   connecte,
+  ecriture,
   disponibles,
   rattaches,
 }: {
   connecte: boolean;
+  /** Permission d'écriture réellement accordée (elle a pu être décochée). */
+  ecriture: boolean;
   disponibles: CalendrierDispo[];
   rattaches: { id: string; nom: string; parMoi: boolean }[];
 }) {
@@ -59,6 +62,11 @@ export default function ConfigAgendas({
       </div>
 
       {erreur && <p className="message erreur">{erreur}</p>}
+
+      {/* Autorisation partielle : lecture accordée mais pas l'écriture. */}
+      {connecte && !ecriture && (
+        <p className="message erreur">{tr('AGC_SANS_ECRITURE')}</p>
+      )}
 
       {!connecte ? (
         <>

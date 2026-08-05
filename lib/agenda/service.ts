@@ -5,7 +5,7 @@ import { googleAuth } from '@/lib/google/auth';
 import { db } from '@/lib/db';
 import { foyerAgendas } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
-import { jetonAgenda } from '@/lib/agenda/oauth';
+import { jetonAgenda, peutEcrireEvenements } from '@/lib/agenda/oauth';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
   COULEURS_AGENDA,
@@ -246,6 +246,15 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
   // L'agenda demandé doit appartenir au foyer : `calendarId` vient du client.
   const cible = ids.find((a) => a.calendarId === calendarId);
   if (!cible) throw new ErreurValidation('Agenda inconnu.');
+
+  // Google autorise à n'accorder QU'UNE PARTIE des permissions demandées : la
+  // personne a pu décocher l'écriture. On le dit clairement plutôt que de
+  // laisser remonter une erreur 403 incompréhensible de l'API.
+  if (cible.ajoutePar && !(await peutEcrireEvenements(cible.ajoutePar))) {
+    throw new ErreurValidation(
+      'La permission de modifier les événements n’a pas été accordée pour cet agenda. Reconnecte-le en acceptant toutes les autorisations.',
+    );
+  }
   const cal = await clientPour(cible);
   if (!cal) {
     throw new ErreurValidation(

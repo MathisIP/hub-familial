@@ -179,7 +179,62 @@ export async function agendaConnecte(utilisateurId: string): Promise<boolean> {
   return !!c;
 }
 
-/** Retire l'autorisation stockée (la personne peut reconnecter quand elle veut). */
+/**
+ * Révoque une autorisation CHEZ GOOGLE (et pas seulement dans notre base).
+ *
+ * ⚠ Supprimer notre copie ne suffit pas : sans cet appel, l'autorisation reste
+ * active côté Google et continue d'apparaître dans les applications connectées
+ * de la personne. Les bonnes pratiques OAuth de Google demandent explicitement
+ * de « révoquer les jetons dès qu'ils ne sont plus nécessaires ».
+ * Révoquer le `refresh_token` invalide toute la chaîne de jetons associés.
+ */
+async function revoquerChezGoogle(jeton: string): Promise<void> {
+  try {
+    await fetch('https://oauth2.googleapis.com/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: jeton }),
+    });
+  } catch {
+    // Jeton déjà révoqué, ou Google injoignable : on efface quand même notre
+    // copie — ne jamais bloquer une demande de déconnexion sur un appel réseau.
+  }
+}
+
+/**
+ * Retire l'autorisation : révocation chez Google PUIS effacement de nos jetons.
+ * La personne peut reconnecter son agenda quand elle le souhaite.
+ */
 export async function deconnecterAgenda(utilisateurId: string): Promise<void> {
+  const [c] = await db()
+    .select()
+    .from(comptesGoogle)
+    .where(eq(comptesGoogle.utilisateurId, utilisateurId))
+    .limit(1);
+
+  if (c) {
+    // Le refresh_token de préférence : sa révocation invalide aussi les jetons d'accès.
+    const aRevoquer = dechiffrer(c.refreshTokenChiffre) ?? dechiffrer(c.accessTokenChiffre);
+    if (aRevoquer) await revoquerChezGoogle(aRevoquer);
+  }
+
   await db().delete(comptesGoogle).where(eq(comptesGoogle.utilisateurId, utilisateurId));
+}
+
+/** Périmètre réellement ACCORDÉ par la personne (peut être partiel : Google
+ *  autorise à décocher une case sur l'écran de consentement). */
+export async function scopesAccordes(utilisateurId: string): Promise<string[]> {
+  const [c] = await db()
+    .select({ scope: comptesGoogle.scope })
+    .from(comptesGoogle)
+    .where(eq(comptesGoogle.utilisateurId, utilisateurId))
+    .limit(1);
+  return (c?.scope ?? '').split(/\s+/).filter(Boolean);
+}
+
+/** La personne a-t-elle accordé le droit de CRÉER/SUPPRIMER des événements ? */
+export async function peutEcrireEvenements(utilisateurId: string): Promise<boolean> {
+  return (await scopesAccordes(utilisateurId)).includes(
+    'https://www.googleapis.com/auth/calendar.events',
+  );
 }

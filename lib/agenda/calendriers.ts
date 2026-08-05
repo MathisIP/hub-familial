@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { foyerAgendas } from '@/lib/db/schema';
 import { idFoyerCourant, utilisateurCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
-import { jetonAgenda, agendaConnecte } from '@/lib/agenda/oauth';
+import { jetonAgenda, agendaConnecte, peutEcrireEvenements } from '@/lib/agenda/oauth';
 
 /**
  * GESTION DES CALENDRIERS D'UN FOYER (serveur).
@@ -110,4 +110,14 @@ export async function calendriersDuFoyer(): Promise<{ id: string; nom: string; p
 export async function monAgendaConnecte(): Promise<boolean> {
   const user = await utilisateurCourant();
   return agendaConnecte(user.id);
+}
+
+/**
+ * A-t-il accordé la permission d'ÉCRIRE (créer/supprimer des événements) ?
+ * Google permet de n'accorder qu'une partie des permissions demandées.
+ */
+export async function monEcritureAccordee(): Promise<boolean> {
+  const user = await utilisateurCourant();
+  if (!(await agendaConnecte(user.id))) return true; // rien à signaler s'il n'a rien connecté
+  return peutEcrireEvenements(user.id);
 }

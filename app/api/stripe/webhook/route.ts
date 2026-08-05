@@ -13,8 +13,17 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   const signature = req.headers.get('stripe-signature');
-  if (!secret || !signature) {
-    return NextResponse.json({ erreur: 'Webhook non configuré.' }, { status: 400 });
+
+  // Deux causes DISTINCTES, deux réponses distinctes : confondues, on ne peut
+  // pas savoir à distance si le secret est déployé ou si l'appelant est mal formé.
+  if (!secret) {
+    return NextResponse.json(
+      { erreur: 'Webhook non configuré côté serveur (STRIPE_WEBHOOK_SECRET absent).' },
+      { status: 500 },
+    );
+  }
+  if (!signature) {
+    return NextResponse.json({ erreur: 'Signature Stripe manquante.' }, { status: 400 });
   }
 
   const brut = await req.text();

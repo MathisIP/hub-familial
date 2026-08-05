@@ -547,6 +547,32 @@ const UI = {
   RJ_INVITE_B: { fr: 'et à en partager toutes les données.', en: 'and share all its data.' },
   RJ_REJOINDRE: { fr: 'Rejoindre ce foyer', en: 'Join this household' },
 
+  // Agenda — configuration des calendriers du foyer
+  AGC_TITRE: { fr: 'Agendas du foyer', en: 'Household calendars' },
+  AGC_GERER: { fr: '⚙ Gérer les agendas du foyer', en: '⚙ Manage household calendars' },
+  AGC_FERMER: { fr: 'Fermer', en: 'Close' },
+  AGC_INTRO: {
+    fr: 'Connecte ton Google Agenda pour afficher tes calendriers ici. Nestync ne demande que l’accès à tes agendas — jamais à tes e-mails ni à tes fichiers, et tu peux retirer cet accès à tout moment.',
+    en: 'Connect your Google Calendar to show your calendars here. Nestync only requests access to your calendars — never to your emails or files, and you can revoke this access at any time.',
+  },
+  AGC_CONNECTER: { fr: 'Connecter mon Google Agenda', en: 'Connect my Google Calendar' },
+  AGC_AUCUN_CAL: { fr: 'Aucun calendrier trouvé sur ton compte Google.', en: 'No calendar found on your Google account.' },
+  AGC_CHOISIR: {
+    fr: 'Choisis les calendriers à partager avec ton foyer. Les autres membres verront leurs événements.',
+    en: 'Choose which calendars to share with your household. Other members will see their events.',
+  },
+  AGC_PRINCIPAL: { fr: 'principal', en: 'primary' },
+  AGC_LECTURE: { fr: 'lecture seule', en: 'read-only' },
+  AGC_AJOUTER: { fr: 'Ajouter', en: 'Add' },
+  AGC_RETIRER: { fr: 'Retirer', en: 'Remove' },
+  AGC_PAR_AUTRES: { fr: 'Ajoutés par d’autres membres', en: 'Added by other members' },
+  AGC_DECONNECTER: { fr: 'Déconnecter mon Google Agenda', en: 'Disconnect my Google Calendar' },
+  // Retours après l'autorisation Google
+  AGC_RET_OK: { fr: 'Google Agenda connecté. Choisis les calendriers à partager.', en: 'Google Calendar connected. Choose the calendars to share.' },
+  AGC_RET_REFUS: { fr: 'Autorisation annulée : aucun agenda n’a été connecté.', en: 'Authorisation cancelled: no calendar was connected.' },
+  AGC_RET_ETAT: { fr: 'Lien d’autorisation invalide ou expiré. Réessaie.', en: 'Invalid or expired authorisation link. Please try again.' },
+  AGC_RET_ECHEC: { fr: 'La connexion à Google Agenda a échoué. Réessaie.', en: 'Connecting to Google Calendar failed. Please try again.' },
+
   // Agenda — messages d'erreur / config
   AGD_INACCESSIBLE: { fr: 'Agenda inaccessible.', en: 'Calendar unavailable.' },
   AGD_ERR_API: { fr: '➡ Active l’API Google Calendar dans le projet GCP', en: '➡ Enable the Google Calendar API in the GCP project' },

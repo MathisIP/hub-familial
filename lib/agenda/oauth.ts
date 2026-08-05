@@ -46,8 +46,16 @@ export function uriRedirection(origine: string): string {
   return `${origine.replace(/\/$/, '')}/api/agenda/callback`;
 }
 
-/** URL de la page de consentement Google. */
-export function urlAutorisation(origine: string, etat: string): string {
+/**
+ * URL de la page de consentement Google.
+ *
+ * `hl` fixe la LANGUE de l'écran de consentement. Sans lui, Google suit la langue
+ * du compte Google, qui n'est pas forcément celle de l'app — un utilisateur qui
+ * lit Nestync en anglais recevrait un écran en français. Utile aussi pour la
+ * vérification Google, qui exige un écran de consentement en anglais dans la
+ * vidéo de démonstration : il suffit de passer l'app en anglais.
+ */
+export function urlAutorisation(origine: string, etat: string, langue = 'fr'): string {
   const p = new URLSearchParams({
     client_id: process.env.AUTH_GOOGLE_ID ?? '',
     redirect_uri: uriRedirection(origine),
@@ -57,6 +65,7 @@ export function urlAutorisation(origine: string, etat: string): string {
     prompt: 'consent', // force sa délivrance même si déjà autorisé
     include_granted_scopes: 'true',
     state: etat,
+    hl: langue,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${p}`;
 }

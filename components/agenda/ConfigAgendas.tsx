@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CalendrierDispo } from '@/lib/agenda/calendriers';
+import { useT } from '@/components/I18nProvider';
 import { rattacherAction, detacherAction, deconnecterGoogleAction } from '@/app/agenda/actions';
 
 /**
@@ -21,6 +22,7 @@ export default function ConfigAgendas({
   disponibles: CalendrierDispo[];
   rattaches: { id: string; nom: string; parMoi: boolean }[];
 }) {
+  const tr = useT();
   const router = useRouter();
   const [ouvert, setOuvert] = useState(rattaches.length === 0);
   const [enCours, demarrer] = useTransition();
@@ -39,7 +41,7 @@ export default function ConfigAgendas({
     return (
       <p className="ag-config-repli">
         <button type="button" className="bouton discret" onClick={() => setOuvert(true)}>
-          ⚙ Gérer les agendas du foyer
+          {tr('AGC_GERER')}
         </button>
       </p>
     );
@@ -48,10 +50,10 @@ export default function ConfigAgendas({
   return (
     <section className="ag-config">
       <div className="ag-config-tete">
-        <h2>Agendas du foyer</h2>
+        <h2>{tr('AGC_TITRE')}</h2>
         {rattaches.length > 0 && (
           <button type="button" className="bouton discret" onClick={() => setOuvert(false)}>
-            Fermer
+            {tr('AGC_FERMER')}
           </button>
         )}
       </div>
@@ -60,32 +62,25 @@ export default function ConfigAgendas({
 
       {!connecte ? (
         <>
-          <p className="ag-config-txt">
-            Connecte ton Google Agenda pour afficher tes calendriers ici. Nestync ne
-            demande que l’accès à tes agendas — jamais à tes e-mails ni à tes fichiers,
-            et tu peux retirer cet accès à tout moment.
-          </p>
+          <p className="ag-config-txt">{tr('AGC_INTRO')}</p>
           <a href="/api/agenda/connexion" className="bouton bouton-primaire">
-            Connecter mon Google Agenda
+            {tr('AGC_CONNECTER')}
           </a>
         </>
       ) : (
         <>
           {disponibles.length === 0 ? (
-            <p className="ag-config-txt">Aucun calendrier trouvé sur ton compte Google.</p>
+            <p className="ag-config-txt">{tr('AGC_AUCUN_CAL')}</p>
           ) : (
             <>
-              <p className="ag-config-txt">
-                Choisis les calendriers à partager avec ton foyer. Les autres membres
-                verront leurs événements.
-              </p>
+              <p className="ag-config-txt">{tr('AGC_CHOISIR')}</p>
               <ul className="ag-cals">
                 {disponibles.map((c) => (
                   <li key={c.id} className={c.rattache ? 'actif' : ''}>
                     <span className="ag-cal-nom">
                       {c.nom}
-                      {c.principal && <span className="ag-cal-tag">principal</span>}
-                      {!c.ecriture && <span className="ag-cal-tag lecture">lecture seule</span>}
+                      {c.principal && <span className="ag-cal-tag">{tr('AGC_PRINCIPAL')}</span>}
+                      {!c.ecriture && <span className="ag-cal-tag lecture">{tr('AGC_LECTURE')}</span>}
                     </span>
                     {c.rattache ? (
                       <button
@@ -94,7 +89,7 @@ export default function ConfigAgendas({
                         disabled={enCours}
                         onClick={() => agir(() => detacherAction(c.id))}
                       >
-                        Retirer
+                        {tr('AGC_RETIRER')}
                       </button>
                     ) : (
                       <button
@@ -103,7 +98,7 @@ export default function ConfigAgendas({
                         disabled={enCours}
                         onClick={() => agir(() => rattacherAction(c.id, c.nom))}
                       >
-                        Ajouter
+                        {tr('AGC_AJOUTER')}
                       </button>
                     )}
                   </li>
@@ -115,7 +110,7 @@ export default function ConfigAgendas({
           {/* Calendriers ajoutés par d'autres membres : visibles, non modifiables ici. */}
           {rattaches.some((r) => !r.parMoi) && (
             <>
-              <h3 className="ag-config-sous">Ajoutés par d’autres membres</h3>
+              <h3 className="ag-config-sous">{tr('AGC_PAR_AUTRES')}</h3>
               <ul className="ag-cals">
                 {rattaches
                   .filter((r) => !r.parMoi)
@@ -128,7 +123,7 @@ export default function ConfigAgendas({
                         disabled={enCours}
                         onClick={() => agir(() => detacherAction(r.id))}
                       >
-                        Retirer
+                        {tr('AGC_RETIRER')}
                       </button>
                     </li>
                   ))}
@@ -143,7 +138,7 @@ export default function ConfigAgendas({
               disabled={enCours}
               onClick={() => agir(deconnecterGoogleAction)}
             >
-              Déconnecter mon Google Agenda
+              {tr('AGC_DECONNECTER')}
             </button>
           </p>
         </>

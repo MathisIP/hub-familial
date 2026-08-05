@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { utilisateurCourant } from '@/lib/foyer';
+import { langueCourante } from '@/lib/langue';
 import { oauthDisponible, urlAutorisation } from '@/lib/agenda/oauth';
 
 /**
@@ -20,7 +21,10 @@ export async function GET(req: NextRequest) {
   }
 
   const etat = randomBytes(24).toString('base64url');
-  const rep = NextResponse.redirect(urlAutorisation(req.nextUrl.origin, etat));
+  // L'écran de consentement s'affiche dans la langue de l'app, pas dans celle
+  // du compte Google (cf. `urlAutorisation`).
+  const langue = await langueCourante();
+  const rep = NextResponse.redirect(urlAutorisation(req.nextUrl.origin, etat, langue));
   rep.cookies.set('agenda-oauth-etat', etat, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

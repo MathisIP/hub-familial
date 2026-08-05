@@ -9,18 +9,18 @@ import {
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
 import { exigerAcces } from '@/lib/abonnement';
-import { t } from '@/lib/i18n';
+import { t, type CleUI } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Agenda — Nestync' };
 
 /** Message affiché au retour de l'autorisation Google (`?agenda=…`). */
-const RETOURS: Record<string, { texte: string; erreur: boolean }> = {
-  ok: { texte: 'Google Agenda connecté. Choisis les calendriers à partager.', erreur: false },
-  refus: { texte: 'Autorisation annulée : aucun agenda n’a été connecté.', erreur: true },
-  etat: { texte: 'Lien d’autorisation invalide ou expiré. Réessaie.', erreur: true },
-  echec: { texte: 'La connexion à Google Agenda a échoué. Réessaie.', erreur: true },
+const RETOURS: Record<string, { cle: CleUI; erreur: boolean }> = {
+  ok: { cle: 'AGC_RET_OK', erreur: false },
+  refus: { cle: 'AGC_RET_REFUS', erreur: true },
+  etat: { cle: 'AGC_RET_ETAT', erreur: true },
+  echec: { cle: 'AGC_RET_ECHEC', erreur: true },
 };
 
 export default async function PageAgenda({
@@ -70,7 +70,7 @@ export default async function PageAgenda({
       </header>
 
       {retour && (
-        <p className={`message ${retour.erreur ? 'erreur' : 'info'}`}>{retour.texte}</p>
+        <p className={`message ${retour.erreur ? 'erreur' : 'info'}`}>{t(retour.cle, langue)}</p>
       )}
 
       <ConfigAgendas connecte={connecte} disponibles={disponibles} rattaches={rattaches} />

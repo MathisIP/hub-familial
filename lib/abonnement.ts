@@ -27,11 +27,12 @@ export type EtatAbonnement = {
   finEssai: string | null; // ISO, ou null
   gereParStripe: boolean;
   aDejaPaye: boolean; // possède un client Stripe (peut ouvrir le portail)
+  annulationProgrammee: boolean; // résilié, mais actif jusqu'à `finEssai`
 };
 
 export async function etatAbonnement(): Promise<EtatAbonnement> {
   if (!stripeDisponible()) {
-    return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false };
+    return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false, annulationProgrammee: false };
   }
   // Personne sans foyer : état neutre plutôt qu'une exception, pour que les pages
   // de réglages restent affichables. `exigerAcces` la renvoie vers /bienvenue.
@@ -40,7 +41,7 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
     foyer = await foyerCourant();
   } catch (err) {
     if (err instanceof SansFoyer) {
-      return { autorise: false, statut: 'sans_foyer', finEssai: null, gereParStripe: true, aDejaPaye: false };
+      return { autorise: false, statut: 'sans_foyer', finEssai: null, gereParStripe: true, aDejaPaye: false, annulationProgrammee: false };
     }
     throw err;
   }
@@ -53,6 +54,7 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
     finEssai: fin ? fin.toISOString() : null,
     gereParStripe: true,
     aDejaPaye: !!foyer.stripeCustomerId,
+    annulationProgrammee: foyer.annulationProgrammee,
   };
 }
 
@@ -166,6 +168,8 @@ async function appliquerAbonnement(sub: Stripe.Subscription): Promise<void> {
     statutAbonnement: mapStatut(sub.status),
     abonnementFin: fin,
     stripeCustomerId: customerId,
+    // Résiliation demandée : Stripe laisse le statut `active` jusqu'au terme.
+    annulationProgrammee: !!sub.cancel_at_period_end,
   };
   const d = db();
   if (foyerId) await d.update(foyers).set(set).where(eq(foyers.id, foyerId));

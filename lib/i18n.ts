@@ -408,6 +408,11 @@ const UI = {
   ABO_NON_ACTIVE: { fr: 'La facturation n’est pas activée sur cette instance.', en: 'Billing is not enabled on this instance.' },
   ABO_REDIRECTION: { fr: 'Redirection…', en: 'Redirecting…' },
   ABO_SABONNER: { fr: 'S’abonner', en: 'Subscribe' },
+  ABO_RESILIE_A: { fr: 'Résiliation enregistrée : ton accès reste ouvert jusqu’au', en: 'Cancellation registered: your access stays open until' },
+  ABO_RESILIE_B: {
+    fr: 'Aucun nouveau prélèvement ne sera effectué. Tu peux réactiver l’abonnement à tout moment depuis « Gérer mon abonnement ».',
+    en: 'No further payment will be taken. You can reactivate your subscription at any time from “Manage my subscription”.',
+  },
   ABO_GERER: { fr: 'Gérer mon abonnement', en: 'Manage my subscription' },
 
   // Politique de confidentialité (gabarit)

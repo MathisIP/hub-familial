@@ -40,6 +40,15 @@ export default async function PageAbonnement() {
               : t('ABO_ESSAI_OUVERT', langue)}
           </p>
         )}
+        {/* Résilié mais encore actif : sans ce message, la personne verrait
+            « Abonnement actif » sans savoir que l'accès s'arrête, ni quand. */}
+        {etat.annulationProgrammee && (
+          <p className="message info">
+            {t('ABO_RESILIE_A', langue)}
+            {fin ? ` ${fin.toLocaleDateString(locale(langue))}. ` : '. '}
+            {t('ABO_RESILIE_B', langue)}
+          </p>
+        )}
         {!etat.autorise && <p className="message erreur">{t('ABO_SUSPENDU', langue)}</p>}
         <BoutonsAbonnement etat={etat} />
       </section>

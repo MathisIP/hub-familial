@@ -1,0 +1,1 @@
+ALTER TABLE "foyers" ADD COLUMN "annulation_programmee" boolean DEFAULT false NOT NULL;

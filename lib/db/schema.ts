@@ -44,6 +44,13 @@ export const foyers = pgTable('foyers', {
   stripeCustomerId: text('stripe_customer_id'),
   abonnementFin: timestamp('abonnement_fin', { withTimezone: true }),
   /**
+   * Résiliation demandée, effective à la fin de la période payée.
+   * ⚠ Stripe garde le statut `active` jusqu'au terme : sans ce drapeau, l'app
+   * afficherait « abonnement actif » à quelqu'un qui vient de résilier, sans
+   * jamais l'informer de la date d'arrêt.
+   */
+  annulationProgrammee: boolean('annulation_programmee').notNull().default(false),
+  /**
    * Prise en main effectuée (nom du foyer choisi, proches invités) ?
    * ⚠ Défaut `true` À DESSEIN : les foyers déjà en service ne doivent pas se
    * voir imposer l'onboarding. Ce sont les foyers NOUVELLEMENT créés qui posent

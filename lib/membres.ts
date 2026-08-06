@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { foyers, membres, utilisateurs, invitations, demandesAdhesion } from '@/lib/db/schema';
 import { ErreurValidation } from '@/lib/erreurs';
+import { envoyerDemandeAdhesion, envoyerInvitation } from '@/lib/email/messages';
 
 /**
  * MEMBRES & INVITATIONS (serveur) — plusieurs personnes partagent un même foyer.
@@ -94,14 +95,27 @@ export async function inviterMembre(foyerId: string, appelantId: string, email: 
   }
 
   const d = db();
+  const jeton = randomBytes(24).toString('hex');
   await d.delete(invitations).where(and(eq(invitations.foyerId, foyerId), eq(invitations.email, e)));
   await d.insert(invitations).values({
     foyerId,
     email: e,
-    jeton: randomBytes(24).toString('hex'),
+    jeton,
     role: 'membre',
     expireLe: new Date(Date.now() + JOURS_INVITATION * 86400000),
   });
+
+  // Envoi du lien par courriel. ⚠ APRÈS l'écriture, et sans conséquence en cas
+  // d'échec (`envoyerEmail` n'excepte jamais) : si le service d'e-mail est en
+  // panne, l'invitation existe quand même et son lien reste copiable depuis
+  // « Mon foyer ». Une panne d'e-mail ne doit pas empêcher d'inviter quelqu'un.
+  const [foyer] = await d.select({ nom: foyers.nom }).from(foyers).where(eq(foyers.id, foyerId)).limit(1);
+  const [invitant] = await d
+    .select({ nom: utilisateurs.nom })
+    .from(utilisateurs)
+    .where(eq(utilisateurs.id, appelantId))
+    .limit(1);
+  await envoyerInvitation(e, foyer?.nom ?? 'un foyer', jeton, invitant?.nom ?? null);
 }
 
 export async function revoquerInvitation(foyerId: string, appelantId: string, invitationId: string): Promise<void> {
@@ -272,6 +286,16 @@ export async function demanderAdhesion(
       target: [demandesAdhesion.foyerId, demandesAdhesion.demandeurId],
       set: { statut: 'en_attente', message: S(message).slice(0, 500), creeLe: new Date() },
     });
+
+  // ⚠ Sans cet avertissement, une demande pouvait rester invisible indéfiniment :
+  // rien ne signalait au responsable qu'il avait quelque chose à accepter, et le
+  // demandeur attendait une réponse qui ne venait jamais.
+  await envoyerDemandeAdhesion(
+    email,
+    foyer.nom,
+    { email: demandeur.email, nom: demandeur.nom },
+    S(message).slice(0, 500),
+  );
 }
 
 /** Demandes en attente reçues par un foyer (réservé au propriétaire). */

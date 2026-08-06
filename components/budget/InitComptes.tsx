@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import Astuce from '@/components/Astuce';
 import { useT } from '@/components/I18nProvider';
 import { creerComptesAction } from '@/app/budget/actions';
@@ -15,9 +15,16 @@ type Ligne = { nom: string; solde: string };
  * « solde saisi ici + somme des opérations ». Une saisie juste au démarrage,
  * c'est un budget juste pour toujours.
  *
- * Sert aussi à AJOUTER des comptes plus tard (`ajout`), sans réécrire d'écran.
+ * Sert aussi à AJOUTER des comptes plus tard (`ajout`), sans réécrire d'écran ;
+ * `onSucces` permet alors à l'appelant de refermer son panneau.
  */
-export default function InitComptes({ ajout = false }: { ajout?: boolean }) {
+export default function InitComptes({
+  ajout = false,
+  onSucces,
+}: {
+  ajout?: boolean;
+  onSucces?: () => void;
+}) {
   const tr = useT();
   const [lignes, setLignes] = useState<Ligne[]>(
     ajout ? [{ nom: '', solde: '' }] : [
@@ -26,6 +33,10 @@ export default function InitComptes({ ajout = false }: { ajout?: boolean }) {
     ],
   );
   const [etat, action, enCours] = useActionState(creerComptesAction, null);
+
+  useEffect(() => {
+    if (etat?.ok) onSucces?.();
+  }, [etat, onSucces]);
 
   function maj(i: number, champ: keyof Ligne, v: string) {
     setLignes((l) => l.map((x, j) => (j === i ? { ...x, [champ]: v } : x)));

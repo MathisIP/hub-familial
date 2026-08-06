@@ -1,17 +1,51 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { creerComptes, type NouveauCompte } from '@/lib/budget/service';
+import {
+  creerComptes,
+  modifierCompte,
+  supprimerCompte,
+  type NouveauCompte,
+} from '@/lib/budget/service';
 
 /**
- * Création des comptes du foyer (initialisation du Budget, ou ajout ultérieur).
- * Les montants arrivent en texte : on accepte la virgule décimale et les espaces,
- * parce que c'est ainsi qu'on écrit un montant en français.
+ * « 1 240,50 » → 1240.50. Les montants arrivent en texte : on accepte la
+ * virgule décimale et les espaces, parce que c'est ainsi qu'on écrit un montant
+ * en français. Un champ vide vaut 0.
  */
+function versNombre(brut: unknown): number {
+  return Number(
+    String(brut ?? '')
+      .replace(/\s/g, '')
+      .replace(',', '.') || '0',
+  );
+}
+
+/**
+ * Résultat d'une action : `null` = pas encore lancée, `{ ok: true }` = réussie,
+ * `{ erreur }` = refusée.
+ *
+ * ⚠ Renvoyer `null` en cas de succès (ce que faisait la 1re version) rendrait
+ * « pas encore lancée » et « réussie » indiscernables : l'interface ne saurait
+ * jamais quand refermer un formulaire après enregistrement.
+ */
+export type ResultatAction = { ok?: true; erreur?: string };
+
+/** Les pages du budget ET l'accueil affichent des soldes : les deux à rafraîchir. */
+function rafraichir() {
+  revalidatePath('/budget');
+  revalidatePath('/');
+}
+
+function messageErreur(e: unknown, defaut: string): string {
+  return e instanceof Error ? e.message : defaut;
+}
+
+/** Création des comptes du foyer (initialisation du Budget, ou ajout ultérieur). */
 export async function creerComptesAction(
-  _precedent: { erreur?: string } | null,
+  _precedent: ResultatAction | null,
   formData: FormData,
-): Promise<{ erreur?: string } | null> {
+): Promise<ResultatAction | null> {
   try {
     const brut = JSON.parse(String(formData.get('lignes') ?? '[]')) as {
       nom: string;
@@ -20,17 +54,56 @@ export async function creerComptesAction(
 
     const entrees: NouveauCompte[] = brut
       .filter((l) => (l.nom ?? '').trim() !== '')
-      .map((l) => ({
-        nom: l.nom,
-        // « 1 240,50 » → 1240.50 ; un champ vide vaut 0.
-        solde: Number(String(l.solde ?? '').replace(/\s/g, '').replace(',', '.') || '0'),
-      }));
+      .map((l) => ({ nom: l.nom, solde: versNombre(l.solde) }));
 
     await creerComptes(entrees);
-    revalidatePath('/budget');
-    revalidatePath('/');
-    return null;
+    rafraichir();
+    return { ok: true };
   } catch (e) {
-    return { erreur: e instanceof Error ? e.message : 'Création impossible.' };
+    return { erreur: messageErreur(e, 'Création impossible.') };
+  }
+}
+
+/**
+ * Renomme un compte et/ou corrige son solde.
+ *
+ * Le solde saisi est le solde COURANT (celui du relevé bancaire) : le service
+ * en déduit le solde initial à rebours. La personne corrige donc ce qu'elle
+ * voit, sans avoir à raisonner sur le mode de calcul.
+ */
+export async function modifierCompteAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await modifierCompte({
+      id: String(formData.get('id') ?? ''),
+      nom: String(formData.get('nom') ?? ''),
+      soldeCourant: versNombre(formData.get('solde')),
+    });
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, 'Modification impossible.') };
+  }
+}
+
+/**
+ * Supprime un compte. `confirme` n'est transmis que si la personne a coché la
+ * case d'avertissement — sans quoi le service refuse dès qu'il y a un historique.
+ */
+export async function supprimerCompteAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await supprimerCompte({
+      id: String(formData.get('id') ?? ''),
+      confirme: formData.get('confirme') === 'oui',
+    });
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, 'Suppression impossible.') };
   }
 }

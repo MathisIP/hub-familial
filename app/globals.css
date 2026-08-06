@@ -2229,6 +2229,50 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .init-ajout { align-self: flex-start; font-size: .9rem; }
 .init-actions { margin-top: .6rem; }
 .init-note { font-size: .85rem; color: var(--muted); line-height: 1.55; margin: 1rem 0 0; }
+
+/* --- Gestion des comptes (components/budget/GestionComptes.tsx) ------------
+   Même carte que .init-comptes, en liste. Le panneau d'ajout réutilise
+   .init-comptes : on neutralise sa carte pour ne pas emboîter deux cadres. */
+.gc {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.4rem 1.5rem; margin-top: 2rem; max-width: 44rem;
+}
+.gc-titre { font-family: var(--police-titre), Georgia, serif; font-size: 1.15rem; margin: 0 0 1rem; }
+.gc-vide { color: var(--muted); font-size: .95rem; margin: 0 0 1rem; }
+.gc-liste { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.gc-item { border: 1px solid var(--line); border-radius: .8rem; padding: .7rem .9rem; }
+.gc-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+.gc-infos { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1 1 9rem; }
+.gc-nom { font-weight: 700; overflow-wrap: anywhere; }
+.gc-meta { font-size: .8rem; color: var(--muted); }
+.gc-solde { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.gc-solde.neg { color: var(--over-tx, #c0392b); }
+.gc-boutons { display: flex; flex-wrap: wrap; gap: .4rem; }
+.gc-boutons .bouton { font-size: .85rem; padding: .35rem .7rem; }
+.gc-danger { color: var(--over-tx, #c0392b); border-color: color-mix(in srgb, var(--over-tx, #c0392b) 40%, var(--line)); }
+.gc-ajouter { font-size: .9rem; }
+
+.gc-forme { display: flex; flex-direction: column; gap: .7rem; }
+.gc-champ { display: flex; flex-direction: column; gap: .25rem; }
+.gc-lbl {
+  display: inline-flex; align-items: center;
+  font-size: .78rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.gc-suppr-titre { margin: 0; font-size: .98rem; }
+.gc-suppr-txt { margin: 0; font-size: .88rem; color: var(--muted); line-height: 1.55; }
+/* Précision rassurante (les virements sont reportés), pas une alerte : elle ne
+   doit pas crier en rouge à côté du vrai avertissement de suppression. */
+.gc-suppr-note {
+  margin: 0; font-size: .85rem; line-height: 1.55; color: var(--muted);
+  border-left: 3px solid var(--acc); padding-left: .7rem;
+}
+.gc-case { display: flex; align-items: flex-start; gap: .5rem; font-size: .9rem; cursor: pointer; }
+.gc-case input { margin-top: .15rem; flex: 0 0 auto; }
+
+/* Le formulaire d'ajout est déjà dans la carte .gc : pas de carte dans la carte. */
+.gc-ajout { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+.gc-ajout .init-comptes { background: none; border: 0; padding: 0; max-width: none; width: 100%; }
 @media (max-width: 30rem) {
   .init-entetes { display: none; }
   .init-ligne { grid-template-columns: 1fr 7rem 2rem; }

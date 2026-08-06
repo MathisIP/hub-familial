@@ -130,6 +130,24 @@ export function aujourdhuiLabel(): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
+/**
+ * Un compte tel que l'écran de gestion en a besoin (types partagés client/serveur).
+ *
+ * `soldeCourant` est ce que la personne voit sur son relevé — c'est donc lui
+ * qu'on affiche et qu'on lui fait corriger, jamais `soldeInitial`, qui est un
+ * détail de calcul (`soldeCourant = soldeInitial + Σ opérations`).
+ *
+ * `nbOperations` / `nbVirements` servent à prévenir AVANT une suppression :
+ * effacer un compte efface son historique, et un virement touche deux comptes.
+ */
+export type CompteGere = {
+  id: string;
+  nom: string;
+  soldeCourant: number;
+  nbOperations: number;
+  nbVirements: number;
+};
+
 /** Nombre de jours entiers entre aujourd'hui et une date ISO (négatif = passé). */
 export function joursJusqua(iso: string): number {
   const [a, m, j] = iso.split('-').map(Number);

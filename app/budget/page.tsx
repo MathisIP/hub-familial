@@ -1,7 +1,8 @@
 import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
 import InitComptes from '@/components/budget/InitComptes';
-import { chargerBudget, comptesExistants } from '@/lib/budget/service';
+import GestionComptes from '@/components/budget/GestionComptes';
+import { chargerBudget, chargerComptesGestion, comptesExistants } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
 import { ConfigManquante } from '@/lib/config';
 import { t } from '@/lib/i18n';
@@ -34,11 +35,14 @@ export default async function PageBudget({
     if ((await comptesExistants()) === 0) {
       contenu = <InitComptes />;
     } else {
-      const d = await chargerBudget(selection);
+      // En parallèle : les deux lisent les mêmes tables, les enchaîner doublerait
+      // l'attente pour rien (cf. section « Performance » de CLAUDE.md).
+      const [d, comptes] = await Promise.all([chargerBudget(selection), chargerComptesGestion()]);
       contenu = (
         <>
           <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
           <VueBudget d={d} langue={langue} />
+          <GestionComptes comptes={comptes} />
         </>
       );
     }

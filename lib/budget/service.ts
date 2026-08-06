@@ -1,5 +1,5 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   comptes as tComptes,
@@ -22,6 +22,7 @@ import {
   formatEuro,
   joursJusqua,
   versISO,
+  type CompteGere,
   type DonneesBudget,
   type Echeance,
   type LigneCategorie,
@@ -338,9 +339,19 @@ export async function creerComptes(entrees: NouveauCompte[]): Promise<number> {
 
   // `ordre` reprend après les comptes déjà présents (ajout ultérieur possible).
   const dejaLa = await db()
-    .select({ ordre: tComptes.ordre })
+    .select({ nom: tComptes.nom, ordre: tComptes.ordre })
     .from(tComptes)
     .where(eq(tComptes.foyerId, foyerId));
+
+  // ⚠ Le doublon avec un compte DÉJÀ EN BASE est le plus dangereux : les soldes
+  // sont rapprochés par NOM, donc deux comptes homonymes se verraient attribuer
+  // les mêmes opérations — le même argent compté deux fois dans le patrimoine.
+  const existants = new Set(dejaLa.map((x) => x.nom.trim().toLowerCase()));
+  const collision = propres.find((c) => existants.has(c.nom.toLowerCase()));
+  if (collision) {
+    throw new ErreurValidation(`Un compte « ${collision.nom} » existe déjà. Choisis un autre nom.`);
+  }
+
   const depart = dejaLa.reduce((m, x) => Math.max(m, x.ordre), 0) + 1;
 
   await db().insert(tComptes).values(
@@ -352,4 +363,186 @@ export async function creerComptes(entrees: NouveauCompte[]): Promise<number> {
     })),
   );
   return propres.length;
+}
+
+/* ---------------------------------------------------------------------------
+ * GESTION DES COMPTES (renommer / corriger le solde / supprimer)
+ *
+ * ⚠ Contrainte structurante : une transaction désigne son compte par son NOM
+ * (`transactions.compte` / `transactions.dest` sont du texte, pas des clés
+ * étrangères). Deux conséquences dont tout ce bloc découle :
+ *   · RENOMMER un compte doit réécrire ses transactions dans le même geste,
+ *     sinon elles deviennent orphelines : le compte repart de son solde initial
+ *     et l'argent disparaît du patrimoine, sans la moindre erreur visible.
+ *   · SUPPRIMER un compte laisserait ces mêmes orphelines derrière lui.
+ * ------------------------------------------------------------------------- */
+
+/** Les comptes du foyer avec leur solde réel et de quoi avertir avant suppression. */
+export async function chargerComptesGestion(): Promise<CompteGere[]> {
+  const foyerId = await idFoyerCourant();
+  const d = db();
+  const [comptesRows, txRows] = await Promise.all([
+    d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
+    d.select().from(tTx).where(eq(tTx.foyerId, foyerId)),
+  ]);
+  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+
+  const deltas = calculerDeltas(txRows);
+  return comptesRows.map((c) => {
+    const lien = txRows.filter((t) => t.compte === c.nom || t.dest === c.nom);
+    return {
+      id: c.id,
+      nom: c.nom,
+      soldeCourant: r2(c.soldeInitial + (deltas.get(c.nom) ?? 0)),
+      nbOperations: lien.length,
+      nbVirements: lien.filter((t) => t.type === TYPE_VIREMENT).length,
+    };
+  });
+}
+
+/** Le compte demandé, s'il appartient bien au foyer courant. */
+async function compteDuFoyer(id: string): Promise<LigneCompte> {
+  const foyerId = await idFoyerCourant();
+  const [c] = await db()
+    .select()
+    .from(tComptes)
+    .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, id)))
+    .limit(1);
+  // Même message qu'un compte inexistant : ne pas révéler qu'il existe ailleurs.
+  if (!c) throw new ErreurValidation('Compte introuvable.');
+  return c;
+}
+
+/**
+ * Renomme un compte et/ou corrige son solde.
+ *
+ * `soldeCourant` = ce que la personne lit sur son relevé. On en déduit le
+ * `solde_initial` à rebours (`voulu − Σ opérations`) pour que la correction
+ * porte sur ce qu'elle voit, sans avoir à comprendre le modèle de calcul.
+ */
+export async function modifierCompte(input: {
+  id: string;
+  nom: string;
+  soldeCourant: number;
+}): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const compte = await compteDuFoyer(input.id);
+
+  const nom = (input.nom ?? '').trim();
+  if (nom === '') throw new ErreurValidation('Le nom du compte ne peut pas être vide.');
+  if (!Number.isFinite(input.soldeCourant)) {
+    throw new ErreurValidation('Le solde doit être un nombre (0 si le compte est vide).');
+  }
+
+  const d = db();
+  const autres = await d
+    .select({ id: tComptes.id, nom: tComptes.nom })
+    .from(tComptes)
+    .where(eq(tComptes.foyerId, foyerId));
+  if (autres.some((a) => a.id !== compte.id && a.nom.trim().toLowerCase() === nom.toLowerCase())) {
+    throw new ErreurValidation(`Un autre compte s'appelle déjà « ${nom} ».`);
+  }
+
+  // Le delta est celui du nom ACTUEL : on le calcule avant de renommer quoi que ce soit.
+  const txRows = await d.select().from(tTx).where(eq(tTx.foyerId, foyerId));
+  const delta = calculerDeltas(txRows).get(compte.nom) ?? 0;
+  const soldeInitial = r2(input.soldeCourant - delta);
+
+  await d.transaction(async (tx) => {
+    if (nom !== compte.nom) {
+      // Les deux colonnes, sinon un virement garderait l'ancien nom d'un côté.
+      await tx
+        .update(tTx)
+        .set({ compte: nom })
+        .where(and(eq(tTx.foyerId, foyerId), eq(tTx.compte, compte.nom)));
+      await tx
+        .update(tTx)
+        .set({ dest: nom })
+        .where(and(eq(tTx.foyerId, foyerId), eq(tTx.dest, compte.nom)));
+    }
+    await tx
+      .update(tComptes)
+      .set({ nom, soldeInitial })
+      .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, compte.id)));
+  });
+}
+
+/**
+ * Supprime un compte et les opérations qui le désignent.
+ *
+ * Les garder produirait des orphelines : invisibles dans les soldes (plus aucun
+ * compte ne porte ce nom) mais toujours comptées dans les dépenses par
+ * catégorie — un tableau de bord qui ne tombe plus juste.
+ *
+ * ⚠ LES VIREMENTS SONT CONVERTIS, PAS SUPPRIMÉS. Un virement relie DEUX comptes :
+ * l'effacer purement et simplement ferait remonter le solde du compte survivant
+ * du montant transféré, comme si l'argent n'en était jamais sorti. (Vérifié :
+ * supprimer un compte ayant reçu 300 € gonflait l'émetteur de 300 €.) On les
+ * retombe donc sur le compte qui survit — un virement sortant devient un revenu
+ * pour son destinataire, un virement entrant devient une dépense pour sa source.
+ * **Le solde des autres comptes est ainsi rigoureusement préservé**, ce qui est
+ * la seule attente raisonnable quand on ferme un compte.
+ *
+ * `confirme` reste exigé dès qu'il y a un historique : les opérations propres au
+ * compte, elles, disparaissent bel et bien. L'appelant doit avoir montré les
+ * compteurs de `chargerComptesGestion()` avant de demander cette confirmation.
+ */
+export async function supprimerCompte(input: { id: string; confirme?: boolean }): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const compte = await compteDuFoyer(input.id);
+  const d = db();
+  const nom = compte.nom;
+
+  const txRows = await d.select().from(tTx).where(eq(tTx.foyerId, foyerId));
+  const liees = txRows.filter((t) => t.compte === nom || t.dest === nom);
+
+  if (liees.length > 0 && !input.confirme) {
+    throw new ErreurValidation(
+      `« ${nom} » porte ${liees.length} opération(s). Les supprimer avec le compte demande une confirmation.`,
+    );
+  }
+
+  await d.transaction(async (tx) => {
+    if (liees.length > 0) {
+      // Virement SORTANT du compte supprimé → le destinataire a bien reçu :
+      // devient un revenu chez lui. (`ne(dest, '')` : sans destinataire réel,
+      // il n'y a personne à préserver, la ligne sera supprimée plus bas.)
+      // ⚠ `compte = dest` et `dest = ''` dans le MÊME update : Postgres évalue
+      // toutes les expressions SET sur l'ANCIENNE ligne, `compte` reçoit donc
+      // bien l'ancien destinataire et non une chaîne vide. Ne pas « corriger »
+      // en scindant en deux requêtes, ce serait faux.
+      await tx
+        .update(tTx)
+        .set({ type: TYPE_REVENU, compte: sql`${tTx.dest}`, dest: '' })
+        .where(
+          and(
+            eq(tTx.foyerId, foyerId),
+            eq(tTx.type, TYPE_VIREMENT),
+            eq(tTx.compte, nom),
+            ne(tTx.dest, ''),
+          ),
+        );
+
+      // Virement ENTRANT vers le compte supprimé → l'argent est bien sorti de la
+      // source : devient une dépense chez elle. Le champ `compte` ne bouge pas.
+      await tx
+        .update(tTx)
+        .set({ type: TYPE_DEPENSE, dest: '' })
+        .where(
+          and(
+            eq(tTx.foyerId, foyerId),
+            eq(tTx.type, TYPE_VIREMENT),
+            eq(tTx.dest, nom),
+            ne(tTx.compte, ''),
+          ),
+        );
+
+      // Ce qui désigne encore le compte lui appartient en propre : on l'efface.
+      await tx.delete(tTx).where(and(eq(tTx.foyerId, foyerId), eq(tTx.compte, nom)));
+      await tx.delete(tTx).where(and(eq(tTx.foyerId, foyerId), eq(tTx.dest, nom)));
+    }
+    await tx
+      .delete(tComptes)
+      .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, compte.id)));
+  });
 }

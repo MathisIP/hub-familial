@@ -172,6 +172,37 @@ const UI = {
     fr: '💡 Tu pourras ajouter, renommer ou retirer des comptes plus tard. Rien n’est figé — et aucune information bancaire ne t’est demandée, seulement un montant.',
     en: '💡 You can add, rename or remove accounts later. Nothing is set in stone — and no banking details are requested, only an amount.',
   },
+  /* --- Budget : gestion des comptes --- */
+  GC_TITRE: { fr: 'Mes comptes', en: 'My accounts' },
+  GC_MODIFIER: { fr: 'Modifier', en: 'Edit' },
+  GC_SUPPRIMER: { fr: 'Supprimer', en: 'Delete' },
+  GC_ENREGISTRER: { fr: 'Enregistrer', en: 'Save' },
+  GC_ANNULER: { fr: 'Annuler', en: 'Cancel' },
+  GC_AJOUTER: { fr: '＋ Ajouter un compte', en: '＋ Add an account' },
+  GC_FERMER_AJOUT: { fr: 'Annuler l’ajout', en: 'Cancel adding' },
+  GC_OPERATIONS: { fr: 'opérations', en: 'transactions' },
+  GC_OPERATION: { fr: 'opération', en: 'transaction' },
+  GC_AUCUNE_OP: { fr: 'aucune opération', en: 'no transactions' },
+  GC_SUPPR_TITRE: { fr: 'Supprimer ce compte ?', en: 'Delete this account?' },
+  GC_SUPPR_VIDE: {
+    fr: 'Ce compte n’a aucune opération : le supprimer n’efface aucun historique.',
+    en: 'This account has no transactions: deleting it erases no history.',
+  },
+  GC_SUPPR_OPS_A: { fr: 'Supprimer ce compte effacera aussi ses', en: 'Deleting this account will also erase its' },
+  GC_SUPPR_OPS_B: {
+    fr: '. C’est définitif : sans elles, le tableau de bord ne compterait plus juste.',
+    en: '. This is permanent: without them the dashboard would no longer add up.',
+  },
+  GC_SUPPR_VIREMENTS: {
+    fr: 'Les virements liés à un autre compte seront reportés sur celui-ci (en revenu ou en dépense) : le solde de tes autres comptes ne bougera pas.',
+    en: 'Transfers involving another account are carried over to it (as income or an expense): the balance of your other accounts will not change.',
+  },
+  GC_SUPPR_CASE: { fr: 'J’ai compris, supprimer quand même', en: 'I understand, delete anyway' },
+  GC_VIDE: {
+    fr: 'Aucun compte pour l’instant.',
+    en: 'No accounts yet.',
+  },
+
   AIDE_NOM_COMPTE: {
     fr: 'Le nom que TU utilises au quotidien : « Compte commun », « Livret A », « Compte de Lou »… Il apparaîtra tel quel dans l’app.',
     en: 'The name YOU use day to day: “Joint account”, “Savings”, “Lou’s account”… It appears exactly as typed in the app.',

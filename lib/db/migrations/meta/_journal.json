@@ -141,6 +141,13 @@
       "when": 1786023554705,
       "tag": "0019_bumpy_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786027964578,
+      "tag": "0020_smooth_bishop",
+      "breakpoints": true
     }
   ]
 }

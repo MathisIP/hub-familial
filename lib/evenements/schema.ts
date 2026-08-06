@@ -37,6 +37,8 @@ export type Evenement = {
   menuItems: number;
   menuCoutNum: number;
   menuAchetes: number;
+  /** Détail des sous-listes, pour l'écran de gestion de l'événement. */
+  sousListes: SousListes;
 };
 
 export type DonneesEvenements = {
@@ -60,13 +62,81 @@ export function estDansAgenda(ev: Evenement): boolean {
   return parseAgendaLien(ev.agendaLien) !== null;
 }
 
-/** Récaps à zéro (sous-listes non encore en base). */
+/** Récaps à zéro — point de départ de l'agrégation des sous-listes. */
 export function rollupVide() {
   return {
     invitesOui: 0, invitesTotal: 0, personnesOui: 0,
     checklistFait: 0, checklistTotal: 0,
     menuItems: 0, menuCoutNum: 0, menuAchetes: 0,
   };
+}
+
+/* --- Sous-listes d'un événement (invités, checklist, menu & courses) ------- */
+
+/** Réponses possibles d'un invité. `Oui` est la seule qui compte un confirmé. */
+export const RSVP_VALEURS = ['Sans réponse', 'Oui', 'Non', 'Peut-être'] as const;
+export type Rsvp = (typeof RSVP_VALEURS)[number];
+
+export type Invite = {
+  id: string;
+  nom: string;
+  contact: string;
+  rsvp: string;
+  nbPersonnes: number;
+  note: string;
+};
+
+export type TacheEvenement = {
+  id: string;
+  tache: string;
+  responsable: string;
+  echeance: string;
+  fait: boolean;
+};
+
+export type PlatEvenement = {
+  id: string;
+  libelle: string;
+  quantite: string;
+  cout: string;
+  coutNum: number;
+  achete: boolean;
+};
+
+export type SousListes = {
+  invites: Invite[];
+  checklist: TacheEvenement[];
+  menu: PlatEvenement[];
+};
+
+/**
+ * Agrège les sous-listes d'UN événement en récapitulatif.
+ *
+ * Fonction **pure** : c'est elle qui définit ce que « 3 confirmés / 8 invités »
+ * veut dire, et elle est testable sans base. `personnesOui` compte les
+ * **personnes** et non les réponses — un « oui » pour une famille de quatre
+ * pèse quatre couverts, ce qui est précisément le chiffre utile pour un traiteur.
+ */
+export function agregerSousListes(s: SousListes) {
+  const r = rollupVide();
+  for (const i of s.invites) {
+    r.invitesTotal += 1;
+    if (i.rsvp === 'Oui') {
+      r.invitesOui += 1;
+      r.personnesOui += Number.isFinite(i.nbPersonnes) && i.nbPersonnes > 0 ? i.nbPersonnes : 1;
+    }
+  }
+  for (const t of s.checklist) {
+    r.checklistTotal += 1;
+    if (t.fait) r.checklistFait += 1;
+  }
+  for (const p of s.menu) {
+    r.menuItems += 1;
+    r.menuCoutNum += p.coutNum;
+    if (p.achete) r.menuAchetes += 1;
+  }
+  r.menuCoutNum = Math.round(r.menuCoutNum * 100) / 100;
+  return r;
 }
 
 /** Construit un Evenement (dates + montants) depuis une ligne de base. */
@@ -100,6 +170,10 @@ export function construireEvenement(r: {
     note: r.note,
     joursRestants: dateISO ? joursJusqua(dateISO) : null,
     agendaLien: r.agendaLien,
+    // Récaps et détail vides : l'appelant les remplace par l'agrégation réelle
+    // (`agregerSousListes`). Les valeurs par défaut évitent qu'un oubli produise
+    // un `undefined` traversant jusqu'à l'affichage.
     ...rollupVide(),
+    sousListes: { invites: [], checklist: [], menu: [] },
   };
 }

@@ -2230,6 +2230,53 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .init-actions { margin-top: .6rem; }
 .init-note { font-size: .85rem; color: var(--muted); line-height: 1.55; margin: 1rem 0 0; }
 
+/* --- Sous-listes d'un événement (invités / checklist / menu) ---------------
+   Repliées par défaut : on consulte ses événements bien plus souvent qu'on
+   n'en modifie les invités. Les onglets restent visibles avec leur compteur. */
+.sl { margin-top: .8rem; border-top: 1px solid var(--line); padding-top: .7rem; }
+.sl-onglets { display: flex; flex-wrap: wrap; gap: .4rem; }
+.sl-onglet {
+  font: inherit; font-size: .85rem; cursor: pointer;
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  padding: .3rem .7rem; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: .4rem;
+}
+.sl-onglet:hover { background: var(--soft); }
+.sl-onglet.actif { background: var(--soft); color: var(--tx); border-color: var(--acc); }
+.sl-compteur {
+  background: var(--head); color: var(--on-acc, #fff);
+  border-radius: 999px; padding: 0 .4rem; font-size: .75rem; font-variant-numeric: tabular-nums;
+}
+.sl-corps { margin-top: .7rem; display: flex; flex-direction: column; gap: .4rem; }
+.sl-vide { margin: 0; font-size: .88rem; color: var(--muted); }
+.sl-ligne {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  padding: .4rem .55rem; border: 1px solid var(--line); border-radius: .6rem;
+}
+.sl-nom { font-weight: 600; flex: 1 1 7rem; overflow-wrap: anywhere; }
+.sl-case { display: flex; align-items: center; gap: .5rem; flex: 1 1 8rem; cursor: pointer; }
+.sl-fait { text-decoration: line-through; color: var(--muted); }
+.sl-meta { font-size: .82rem; color: var(--muted); white-space: nowrap; }
+.sl-cout { font-variant-numeric: tabular-nums; }
+.sl-rsvp { flex: 0 0 auto; font-size: .85rem; padding: .25rem .4rem; }
+.sl-nb { flex: 0 0 4rem; text-align: right; font-variant-numeric: tabular-nums; }
+.sl-retirer {
+  font: inherit; color: var(--muted); background: none; border: 0; cursor: pointer;
+  padding: .25rem .35rem; border-radius: .4rem; line-height: 1; margin-left: auto;
+}
+.sl-retirer:hover { color: var(--over-tx, #c0392b); background: var(--soft); }
+.sl-ajout {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem;
+  margin-top: .3rem; padding: .55rem; background: var(--soft); border-radius: .6rem;
+}
+.sl-champ { display: flex; flex-direction: column; gap: .2rem; flex: 1 1 8rem; }
+.sl-lbl {
+  display: inline-flex; align-items: center;
+  font-size: .74rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.sl-ajout .bouton { font-size: .85rem; padding: .4rem .8rem; }
+
 /* --- Abonnement : informations précontractuelles + renonciation ------------
    Ce bloc précède les boutons d'achat : reconduction, sortie, tarif, puis la
    case de renonciation au droit de rétractation. Il doit se lire, pas se

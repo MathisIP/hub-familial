@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import SousListes from '@/components/evenements/SousListes';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { t, tEnum, CLE_STATUT_EVT, type IdLangue } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
@@ -147,6 +148,8 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                   )}
                 </div>
                 {ev.note && <p className="ev-note">{ev.note}</p>}
+
+                <SousListes ev={ev} occupe={occupe} action={action} />
 
                 {ev.dateISO && d.agendas.length > 0 && (
                   <SyncAgenda ev={ev} agendas={d.agendas} occupe={occupe} action={action} />

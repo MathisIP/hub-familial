@@ -428,6 +428,89 @@ export const evenements = pgTable(
   (t) => [index('evenements_foyer_idx').on(t.foyerId)],
 );
 
+/**
+ * SOUS-LISTES D'UN ÉVÉNEMENT — invités, checklist, menu & courses.
+ * ===============================================================
+ * Reprennent les trois sous-onglets du classeur d'origine, qui référençaient
+ * l'événement par son **nom** (deux événements homonymes mélangeaient donc leurs
+ * invités, et renommer un événement orphelinait ses listes). Ici, le lien est un
+ * `evenement_id` avec cascade : plus d'ambiguïté, et supprimer un événement
+ * emporte ses listes.
+ *
+ * ⚠ `foyer_id` est porté **en plus** de `evenement_id`, alors qu'il serait
+ * déductible par jointure. C'est délibéré : la règle d'isolation impose un
+ * `where foyer_id = …` sur CHAQUE requête, et l'oublier ici — sur une table
+ * atteinte par un identifiant venant du client — laisserait lire les invités
+ * d'un autre foyer. Une colonne redondante vaut mieux qu'une fuite.
+ */
+
+/** Réponse d'un invité. Liste fermée : sert au décompte des confirmés. */
+export const RSVP = ['Oui', 'Non', 'Peut-être', 'Sans réponse'] as const;
+
+export const evInvites = pgTable(
+  'ev_invites',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    evenementId: uuid('evenement_id')
+      .notNull()
+      .references(() => evenements.id, { onDelete: 'cascade' }),
+    nom: text('nom').notNull(),
+    contact: text('contact').notNull().default(''), // e-mail ou téléphone, saisie libre
+    rsvp: text('rsvp').notNull().default('Sans réponse'),
+    /** Nombre de personnes que cette réponse couvre (un couple, une famille…). */
+    nbPersonnes: integer('nb_personnes').notNull().default(1),
+    note: text('note').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('ev_invites_evenement_idx').on(t.evenementId)],
+);
+
+export const evChecklist = pgTable(
+  'ev_checklist',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    evenementId: uuid('evenement_id')
+      .notNull()
+      .references(() => evenements.id, { onDelete: 'cascade' }),
+    tache: text('tache').notNull(),
+    responsable: text('responsable').notNull().default(''),
+    echeance: text('echeance').notNull().default(''), // jj/mm/aaaa, comme le reste du module
+    fait: boolean('fait').notNull().default(false),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('ev_checklist_evenement_idx').on(t.evenementId)],
+);
+
+export const evMenu = pgTable(
+  'ev_menu',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    evenementId: uuid('evenement_id')
+      .notNull()
+      .references(() => evenements.id, { onDelete: 'cascade' }),
+    libelle: text('libelle').notNull(),
+    quantite: text('quantite').notNull().default(''),
+    /** Coût estimé, en texte comme partout dans ce module (saisie libre). */
+    cout: text('cout').notNull().default(''),
+    achete: boolean('achete').notNull().default(false),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('ev_menu_evenement_idx').on(t.evenementId)],
+);
+
+export type LigneEvInvite = typeof evInvites.$inferSelect;
+export type LigneEvChecklist = typeof evChecklist.$inferSelect;
+export type LigneEvMenu = typeof evMenu.$inferSelect;
+
 export type LigneEvenement = typeof evenements.$inferSelect;
 
 /* ============================ MODULE BUDGET ============================ */

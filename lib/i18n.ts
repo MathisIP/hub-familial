@@ -65,6 +65,7 @@ const UI = {
   NAV_ABONNEMENT: { fr: 'Abonnement', en: 'Subscription' },
   NAV_MON_COMPTE: { fr: 'Mon compte', en: 'My account' },
   NAV_CONFIDENTIALITE: { fr: 'Confidentialité', en: 'Privacy' },
+  NAV_MENTIONS: { fr: 'Mentions légales', en: 'Legal notice' },
   NAV_DECONNEXION: { fr: 'Se déconnecter', en: 'Sign out' },
   A_CHOISIR_ONGLET: { fr: 'Choisir un onglet', en: 'Choose a tab' },
   A_MODE_CLAIR: { fr: 'Passer en mode clair', en: 'Switch to light mode' },
@@ -494,6 +495,34 @@ const UI = {
   ABO_REDIRECTION: { fr: 'Redirection…', en: 'Redirecting…' },
   ABO_SABONNER: { fr: 'S’abonner', en: 'Subscribe' },
   ABO_REABONNER: { fr: 'Reprendre mon abonnement', en: 'Resume my subscription' },
+  /* --- Abonnement : informations précontractuelles + rétractation + résiliation --- */
+  ABO_AVANT_TITRE: { fr: 'Avant de t’abonner', en: 'Before you subscribe' },
+  ABO_AVANT_RENOUV: {
+    fr: 'L’abonnement se renouvelle automatiquement à chaque échéance, au même tarif, jusqu’à résiliation.',
+    en: 'The subscription renews automatically at each term, at the same price, until cancelled.',
+  },
+  ABO_AVANT_RESIL: {
+    fr: 'Tu peux résilier à tout moment depuis cette page. L’accès reste ouvert jusqu’à la fin de la période déjà payée, sans frais.',
+    en: 'You can cancel at any time from this page. Access stays open until the end of the period already paid for, at no cost.',
+  },
+  ABO_AVANT_TVA: { fr: 'Prix TTC, sans engagement de durée.', en: 'Price incl. tax, no minimum term.' },
+  /**
+   * ⚠ Formulation juridique — art. L221-25 du code de la consommation, reprise à
+   * l'article 8 des CGV. Ne pas l'adoucir : c'est elle qui rend la renonciation
+   * opposable. Toute reformulation doit être relue avec les CGV.
+   */
+  ABO_RENONCIATION: {
+    fr: 'Je demande l’exécution immédiate de l’abonnement et je reconnais qu’une fois le service pleinement exécuté, je perdrai mon droit de rétractation de 14 jours.',
+    en: 'I request immediate performance of the subscription and acknowledge that, once the service has been fully performed, I will lose my 14-day right of withdrawal.',
+  },
+  ABO_RENONCIATION_REQUISE: {
+    fr: 'Coche la case ci-dessus pour démarrer l’abonnement immédiatement.',
+    en: 'Tick the box above to start the subscription immediately.',
+  },
+  ABO_CGV_A: { fr: 'En t’abonnant, tu acceptes les', en: 'By subscribing you accept the' },
+  ABO_CGV_LIEN: { fr: 'conditions générales', en: 'terms and conditions' },
+  ABO_RESILIER: { fr: 'Résilier mon abonnement', en: 'Cancel my subscription' },
+  ABO_GERER_FACT: { fr: 'Factures et moyen de paiement', en: 'Invoices and payment method' },
   ABO_RESILIE_A: { fr: 'Résiliation enregistrée : ton accès reste ouvert jusqu’au', en: 'Cancellation registered: your access stays open until' },
   ABO_RESILIE_B: {
     fr: 'Aucun nouveau prélèvement ne sera effectué. Tu peux réactiver l’abonnement à tout moment depuis « Gérer mon abonnement ».',

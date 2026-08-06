@@ -1,0 +1,1 @@
+ALTER TABLE "foyers" ADD COLUMN "retractation_renoncee_le" timestamp with time zone;

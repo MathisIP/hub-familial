@@ -101,11 +101,36 @@ function idPrix(formule: IdOffre): string {
 }
 
 /** Crée (ou réutilise) le client Stripe du foyer et renvoie l'URL de paiement. */
-export async function creerCheckout(origin: string, formule: IdOffre = 'mensuel'): Promise<string> {
+/**
+ * Ouvre le paiement Stripe.
+ *
+ * ⚠ `renonciation` n'est pas une formalité : pour un service numérique dont
+ * l'accès est immédiat, la loi (art. L221-25 du code de la consommation) exige
+ * que le consommateur ait EXPRESSÉMENT demandé l'exécution immédiate et reconnu
+ * perdre son droit de rétractation. Sans cette reconnaissance recueillie AVANT
+ * le paiement, le délai de 14 jours s'applique et l'abonnement est annulable
+ * avec remboursement. On refuse donc de créer la session, et on horodate le
+ * consentement pour pouvoir en faire la preuve.
+ */
+export async function creerCheckout(
+  origin: string,
+  formule: IdOffre = 'mensuel',
+  renonciation = false,
+): Promise<string> {
+  if (!renonciation) {
+    throw new ErreurValidation(
+      'Pour démarrer l’abonnement immédiatement, coche la case de demande d’exécution immédiate.',
+    );
+  }
   const priceId = idPrix(formule);
 
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   const s = stripe();
+
+  await db()
+    .update(foyers)
+    .set({ retractationRenonceeLe: new Date() })
+    .where(eq(foyers.id, foyer.id));
 
   let customerId = foyer.stripeCustomerId;
   if (!customerId) {
@@ -165,6 +190,44 @@ export async function creerPortail(origin: string): Promise<string> {
   const session = await stripe().billingPortal.sessions.create({
     customer: foyer.stripeCustomerId,
     return_url: `${origin}/abonnement`,
+  });
+  return session.url;
+}
+
+/**
+ * Portail Stripe ouvert DIRECTEMENT sur l'écran de résiliation.
+ *
+ * ⚠ Obligation « résiliation en trois clics » (art. L215-1-1, en vigueur depuis
+ * juin 2023) : un contrat souscrit en ligne doit pouvoir être résilié par une
+ * fonction accessible en trois clics au plus. Le portail Stripe générique n'y
+ * suffit pas — il faut encore y chercher l'abonnement puis le bouton. Avec
+ * `flow_data`, le parcours devient : « Abonnement » → « Résilier » → confirmer.
+ */
+export async function creerPortailResiliation(origin: string): Promise<string> {
+  const foyer = await foyerCourant();
+  if (!foyer.stripeCustomerId) throw new ErreurValidation('Aucun abonnement à résilier.');
+  const s = stripe();
+
+  // Le flux de résiliation vise UN abonnement : il faut donc le retrouver.
+  // `status: 'active'` seul manquerait un abonnement en période d'essai ou en
+  // retard de paiement, qui reste tout aussi résiliable.
+  const abos = await s.subscriptions.list({
+    customer: foyer.stripeCustomerId,
+    status: 'all',
+    limit: 10,
+  });
+  const vivant = abos.data.find((a) =>
+    ['active', 'trialing', 'past_due', 'unpaid'].includes(a.status),
+  );
+  if (!vivant) throw new ErreurValidation('Aucun abonnement en cours à résilier.');
+
+  const session = await s.billingPortal.sessions.create({
+    customer: foyer.stripeCustomerId,
+    return_url: `${origin}/abonnement`,
+    flow_data: {
+      type: 'subscription_cancel',
+      subscription_cancel: { subscription: vivant.id },
+    },
   });
   return session.url;
 }

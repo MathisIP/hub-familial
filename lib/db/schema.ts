@@ -57,6 +57,17 @@ export const foyers = pgTable('foyers', {
    * explicitement `false` (cf. `foyerCourant`).
    */
   onboardingFait: boolean('onboarding_fait').notNull().default(true),
+  /**
+   * Date à laquelle l'abonné a demandé l'exécution immédiate du service et
+   * reconnu perdre son droit de rétractation (art. L221-25 du code de la
+   * consommation, repris à l'article 8 des CGV).
+   *
+   * ⚠ C'est une PREUVE, pas un confort : sans cette reconnaissance recueillie
+   * AVANT le paiement, le délai de rétractation de 14 jours court normalement
+   * et l'abonnement peut être annulé avec remboursement. On horodate donc le
+   * consentement au moment où il est donné.
+   */
+  retractationRenonceeLe: timestamp('retractation_renoncee_le', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -2230,6 +2230,26 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .init-actions { margin-top: .6rem; }
 .init-note { font-size: .85rem; color: var(--muted); line-height: 1.55; margin: 1rem 0 0; }
 
+/* --- Abonnement : informations précontractuelles + renonciation ------------
+   Ce bloc précède les boutons d'achat : reconduction, sortie, tarif, puis la
+   case de renonciation au droit de rétractation. Il doit se lire, pas se
+   survoler — d'où le fond distinct et l'interligne aéré. */
+.abo-avant {
+  background: var(--soft); border: 1px solid var(--line);
+  border-radius: .9rem; padding: 1rem 1.1rem; margin-bottom: .3rem;
+}
+.abo-avant-titre { font-size: .95rem; margin: 0 0 .6rem; }
+.abo-avant-liste { margin: 0 0 .9rem; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .35rem; }
+.abo-avant-liste li { font-size: .88rem; line-height: 1.55; color: var(--muted); }
+.abo-renonc {
+  display: flex; align-items: flex-start; gap: .6rem;
+  font-size: .88rem; line-height: 1.5; cursor: pointer;
+  padding: .6rem .7rem; border-radius: .6rem; background: var(--cell);
+  border: 1px solid var(--line);
+}
+.abo-renonc input { margin-top: .2rem; flex: 0 0 auto; }
+.abo-cgv { font-size: .82rem; color: var(--muted); margin: .7rem 0 0; }
+
 /* --- Gestion des comptes (components/budget/GestionComptes.tsx) ------------
    Même carte que .init-comptes, en liste. Le panneau d'ajout réutilise
    .init-comptes : on neutralise sa carte pour ne pas emboîter deux cadres. */

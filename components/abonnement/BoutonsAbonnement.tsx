@@ -13,6 +13,9 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
   const tr = useT();
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  // Renonciation au droit de rétractation : jamais pré-cochée — un consentement
+  // pré-coché n'en est pas un, et la loi l'exige « exprès ».
+  const [renonce, setRenonce] = useState(false);
 
   async function aller(url: string, corps?: unknown) {
     setOccupe(true);
@@ -39,6 +42,8 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
     return <p className="compte-note">{tr('ABO_NON_ACTIVE')}</p>;
   }
 
+  const peutAcheter = etat.statut !== 'actif';
+
   return (
     <div className="abo-actions">
       {/* Résiliation programmée : on RÉACTIVE l'abonnement en cours plutôt que
@@ -53,23 +58,73 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
         </button>
       )}
 
-      {/* Une formule = un prix Stripe distinct. On propose les deux, comme la vitrine. */}
-      {etat.statut !== 'actif' &&
-        OFFRES.map((o) => (
-          <button
-            key={o.id}
-            className={`bouton ${o.id === 'annuel' ? 'bouton-primaire' : ''}`}
-            onClick={() => aller('/api/abonnement/checkout', { formule: o.id })}
-            disabled={occupe}
-          >
-            {occupe
-              ? tr('ABO_REDIRECTION')
-              : `${tr('ABO_SABONNER')} — ${o.nom} ${formatPrix(o.prix)}${o.economie ? ` (${o.economie})` : ''}`}
-          </button>
-        ))}
+      {peutAcheter && (
+        <>
+          {/* Informations dues AVANT la commande : reconduction, tarif, sortie.
+              Les afficher après le paiement n'aurait aucune valeur. */}
+          <div className="abo-avant">
+            <h3 className="abo-avant-titre">{tr('ABO_AVANT_TITRE')}</h3>
+            <ul className="abo-avant-liste">
+              <li>{tr('ABO_AVANT_RENOUV')}</li>
+              <li>{tr('ABO_AVANT_RESIL')}</li>
+              <li>{tr('ABO_AVANT_TVA')}</li>
+            </ul>
+            <label className="abo-renonc">
+              <input
+                type="checkbox"
+                checked={renonce}
+                onChange={(e) => {
+                  setRenonce(e.target.checked);
+                  setErreur(null);
+                }}
+              />
+              <span>{tr('ABO_RENONCIATION')}</span>
+            </label>
+            <p className="abo-cgv">
+              {tr('ABO_CGV_A')}{' '}
+              <a href="/conditions" target="_blank" rel="noreferrer">
+                {tr('ABO_CGV_LIEN')}
+              </a>
+              .
+            </p>
+          </div>
+
+          {/* Une formule = un prix Stripe distinct. On propose les deux, comme la vitrine. */}
+          {OFFRES.map((o) => (
+            <button
+              key={o.id}
+              className={`bouton ${o.id === 'annuel' ? 'bouton-primaire' : ''}`}
+              onClick={() => {
+                // Message explicite plutôt qu'un bouton grisé sans raison : on
+                // dit CE QUI manque au lieu de laisser deviner.
+                if (!renonce) return setErreur(tr('ABO_RENONCIATION_REQUISE'));
+                aller('/api/abonnement/checkout', { formule: o.id, renonciation: true });
+              }}
+              disabled={occupe}
+            >
+              {occupe
+                ? tr('ABO_REDIRECTION')
+                : `${tr('ABO_SABONNER')} — ${o.nom} ${formatPrix(o.prix)}${o.economie ? ` (${o.economie})` : ''}`}
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* Résiliation en trois clics : « Abonnement » → ce bouton → confirmer.
+          Distinct du portail de facturation, où il faudrait encore la chercher. */}
+      {etat.statut === 'actif' && !etat.annulationProgrammee && (
+        <button
+          className="bouton"
+          onClick={() => aller('/api/abonnement/resiliation')}
+          disabled={occupe}
+        >
+          {tr('ABO_RESILIER')}
+        </button>
+      )}
+
       {etat.aDejaPaye && (
         <button className="bouton" onClick={() => aller('/api/abonnement/portail')} disabled={occupe}>
-          {tr('ABO_GERER')}
+          {tr('ABO_GERER_FACT')}
         </button>
       )}
       {erreur && <p className="message erreur">{erreur}</p>}

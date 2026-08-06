@@ -175,6 +175,7 @@ export default function Vitrine() {
           <span>Nestync</span>
         </div>
         <nav className="vt-pied-liens">
+          <Link href="/mentions-legales">Mentions légales</Link>
           <Link href="/conditions">Conditions générales</Link>
           <Link href="/confidentialite">Confidentialité</Link>
           <Link href="/rejoindre-foyer">Rejoindre un foyer</Link>

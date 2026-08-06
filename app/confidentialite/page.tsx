@@ -54,6 +54,7 @@ export default async function PageConfidentialite() {
         {t('CONF_S5_A', langue)} <Link href="/compte">{t('NAV_MON_COMPTE', langue)}</Link>{' '}
         {t('CONF_S5_B', langue)}
       </p>
+      <p>{t('CONF_S5_C', langue)}</p>
 
       <h2>{t('CONF_S6_T', langue)}</h2>
       <p>{t('CONF_S6_P', langue)}</p>

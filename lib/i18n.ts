@@ -574,6 +574,16 @@ const UI = {
   CONF_S5_T: { fr: '5. Durée de conservation', en: '5. Retention period' },
   CONF_S5_A: { fr: 'Tes données sont conservées tant que ton compte est actif. Tu peux les supprimer à tout moment depuis', en: 'Your data is kept as long as your account is active. You can delete it at any time from' },
   CONF_S5_B: { fr: ': la suppression efface définitivement ton foyer et toutes ses données.', en: ': deletion permanently erases your household and all its data.' },
+  /**
+   * ⚠ Exactitude juridique : sans cette précision, la phrase précédente serait
+   * FAUSSE pour un abonné. Les factures déjà émises relèvent d'une obligation
+   * comptable de 10 ans (art. L123-22 du code de commerce) qui survit à la
+   * suppression du compte — annoncer un effacement total serait trompeur.
+   */
+  CONF_S5_C: {
+    fr: 'Une exception : si tu as été abonné, les factures déjà émises sont conservées 10 ans par notre prestataire de paiement, comme la loi comptable l’exige. Elles ne contiennent aucune donnée de tes modules.',
+    en: 'One exception: if you have been a subscriber, invoices already issued are kept for 10 years by our payment provider, as accounting law requires. They contain no data from your modules.',
+  },
   CONF_S6_T: { fr: '6. Cookies et mesure d’audience', en: '6. Cookies and audience measurement' },
   CONF_S6_P: {
     fr: 'Le Service n’utilise qu’un cookie de session strictement nécessaire à l’authentification, plus deux préférences stockées sur ton appareil (thème, langue). Aucun traceur publicitaire n’est déposé et aucune donnée n’est revendue.',

@@ -92,6 +92,15 @@ export const utilisateurs = pgTable('utilisateurs', {
    * dont on n'a simplement pas encore la trace.
    */
   derniereConnexion: timestamp('derniere_connexion', { withTimezone: true }),
+  /**
+   * Date d'envoi de la relance annonçant la suppression du compte inactif.
+   *
+   * ⚠ **Remise à `null` dès que la personne revient** (cf. `marquerPassage`) :
+   * sans cela, quelqu'un qui reviendrait puis redeviendrait inactif des années
+   * plus tard serait supprimé **immédiatement**, sans nouvelle relance — le
+   * préavis n'aurait servi qu'une fois dans la vie du compte.
+   */
+  relanceInactiviteLe: timestamp('relance_inactivite_le', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -134,6 +134,13 @@
       "when": 1786018511786,
       "tag": "0018_yummy_retro_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786023554705,
+      "tag": "0019_bumpy_kingpin",
+      "breakpoints": true
     }
   ]
 }

@@ -72,7 +72,10 @@ async function marquerPassage(u: { id: string; derniereConnexion: Date | null })
   try {
     await db()
       .update(utilisateurs)
-      .set({ derniereConnexion: new Date() })
+      // `relanceInactiviteLe: null` : la personne est revenue, le préavis de
+      // suppression est caduc. L'oublier reviendrait à supprimer sans préavis
+      // quelqu'un qui redeviendrait inactif bien plus tard.
+      .set({ derniereConnexion: new Date(), relanceInactiviteLe: null })
       .where(eq(utilisateurs.id, u.id));
   } catch {
     /* sans conséquence : on retentera au prochain passage */

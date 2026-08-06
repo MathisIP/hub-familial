@@ -1,0 +1,1 @@
+ALTER TABLE "utilisateurs" ADD COLUMN "relance_inactivite_le" timestamp with time zone;

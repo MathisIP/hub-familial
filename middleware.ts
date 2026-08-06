@@ -5,7 +5,10 @@ export { auth as middleware } from '@/auth';
  *  - `/` exactement (le `$` en tête du lookahead) — c'est la VITRINE publique
  *    pour un visiteur non connecté, et le tableau de bord une fois connecté
  *    (l'arbitrage se fait dans `app/page.tsx`) ;
- *  - les routes Auth.js (/api/auth) et le webhook Stripe (/api/stripe) ;
+ *  - les routes Auth.js (/api/auth), le webhook Stripe (/api/stripe) et la tâche
+ *    planifiée (/api/maintenance) — aucune session ne peut exister pour un appel
+ *    déclenché par une machine ; ces trois routes portent leur propre garde-fou
+ *    (signature Stripe, `CRON_SECRET`) ;
  *  - les pages publiques : /connexion, /conditions (CGV-CGU), /confidentialite,
  *    /mentions-legales, /hors-ligne ;
  *  - le service worker (/sw.js), les fichiers statiques Next et les assets
@@ -18,5 +21,5 @@ export { auth as middleware } from '@/auth';
  * l'obligation d'information de son sens.
  */
 export const config = {
-  matcher: ['/((?!$|api/auth|api/stripe|connexion|conditions|confidentialite|mentions-legales|hors-ligne|sw.js|_next/static|_next/image|.*\\.(?:png|ico|svg|webmanifest)).*)'],
+  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|hors-ligne|sw.js|_next/static|_next/image|.*\\.(?:png|ico|svg|webmanifest)).*)'],
 };

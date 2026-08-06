@@ -49,6 +49,37 @@ function nomFoyerParDefaut(nom?: string | null): string {
 }
 
 /**
+ * Fraîcheur tolérée sur `derniere_connexion`. On ne réécrit la date que si celle
+ * en base a plus d'un jour.
+ *
+ * ⚠ C'est tout l'enjeu : cette fonction est appelée à chaque page et à chaque
+ * route d'API. Horodater sans condition ajouterait une ÉCRITURE partout, ce qui
+ * défait l'optimisation qui a ramené la résolution du foyer à une seule requête.
+ * Une précision d'un jour est amplement suffisante pour une politique qui se
+ * compte en années.
+ */
+const SEUIL_CONNEXION = 86_400_000; // 1 jour, en ms
+
+/**
+ * Note le passage de la personne, si la date connue a vieilli.
+ *
+ * Volontairement **silencieuse** : c'est une donnée d'hygiène, jamais une raison
+ * de faire échouer l'affichage d'une page. Si l'écriture échoue, on l'oublie.
+ */
+async function marquerPassage(u: { id: string; derniereConnexion: Date | null }): Promise<void> {
+  const vue = u.derniereConnexion?.getTime() ?? 0;
+  if (Date.now() - vue < SEUIL_CONNEXION) return;
+  try {
+    await db()
+      .update(utilisateurs)
+      .set({ derniereConnexion: new Date() })
+      .where(eq(utilisateurs.id, u.id));
+  } catch {
+    /* sans conséquence : on retentera au prochain passage */
+  }
+}
+
+/**
  * Foyer de l'utilisateur connecté (création à la volée si première venue).
  * Mémoïsé par requête (`cache`) : un seul aller-retour base par rendu.
  *
@@ -84,7 +115,10 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
     .orderBy(membres.creeLe)
     .limit(1);
 
-  if (ligne?.foyer) return ligne.foyer;
+  if (ligne?.foyer) {
+    await marquerPassage(ligne.utilisateur);
+    return ligne.foyer;
+  }
 
   // 2) Rare : personne connue mais sans foyer, ou toute première connexion.
   //    On paie ici les écritures — une fois par personne, pas à chaque page.
@@ -170,7 +204,12 @@ export const utilisateurCourant = cache(async () => {
   // écriture inutile à chaque page coûtait un aller-retour de plus.
   const d = db();
   const [connu] = await d.select().from(utilisateurs).where(eq(utilisateurs.email, email)).limit(1);
-  if (connu) return connu;
+  if (connu) {
+    // Une personne sans foyer (arrivée en cours de rattachement) passe par ici et
+    // pas par `foyerCourant` : sans cet appel, elle n'aurait jamais de trace.
+    await marquerPassage(connu);
+    return connu;
+  }
 
   await d
     .insert(utilisateurs)

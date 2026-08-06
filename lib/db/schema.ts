@@ -77,6 +77,21 @@ export const utilisateurs = pgTable('utilisateurs', {
   email: text('email').notNull().unique(),
   nom: text('nom'),
   image: text('image'),
+  /**
+   * Dernière venue observée. Sert à repérer les comptes abandonnés : le RGPD
+   * demande une durée de conservation bornée, ce qui suppose de savoir qui est
+   * inactif — impossible sans cette colonne.
+   *
+   * ⚠ Écrite au plus une fois par jour et par personne (`SEUIL_CONNEXION` dans
+   * [lib/foyer.ts]) : la résolution de l'utilisateur est sur le chemin critique
+   * de CHAQUE page et de CHAQUE route d'API. Une écriture à chaque requête
+   * annulerait le travail d'optimisation fait sur `foyerCourant()`.
+   *
+   * `null` = jamais observée depuis l'ajout de la colonne. Ne PAS traiter un
+   * `null` comme « inactif depuis toujours » : ce sont des comptes bien vivants
+   * dont on n'a simplement pas encore la trace.
+   */
+  derniereConnexion: timestamp('derniere_connexion', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

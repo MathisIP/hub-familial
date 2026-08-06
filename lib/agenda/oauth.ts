@@ -169,14 +169,32 @@ export async function jetonAgenda(utilisateurId: string): Promise<string | null>
   return j.access_token;
 }
 
-/** Cet utilisateur a-t-il connecté son agenda ? */
+/**
+ * Cet utilisateur a-t-il un agenda connecté **et réellement utilisable** ?
+ *
+ * ⚠ Ne pas se contenter de vérifier que la ligne existe. Les jetons sont chiffrés
+ * avec une clé dérivée d'`AUTH_SECRET` ([lib/crypto.ts]) : si ce secret change —
+ * une rotation après incident, par exemple — les jetons stockés deviennent
+ * indéchiffrables. Or `dechiffrer()` renvoie `null` au lieu de lever, et un
+ * calendrier inaccessible est simplement ignoré : l'app afficherait donc
+ * « agenda connecté » avec des calendriers **silencieusement vides**, sans jamais
+ * proposer de reconnecter. Une panne muette est pire qu'une erreur franche.
+ *
+ * On teste donc le déchiffrement. Le `refresh_token` prime : c'est lui qui rend
+ * l'accès durable. À défaut (Google ne le renvoie qu'à la 1re autorisation), un
+ * `access_token` lisible suffit à considérer la connexion vivante.
+ */
 export async function agendaConnecte(utilisateurId: string): Promise<boolean> {
   const [c] = await db()
-    .select({ id: comptesGoogle.id })
+    .select({
+      accessTokenChiffre: comptesGoogle.accessTokenChiffre,
+      refreshTokenChiffre: comptesGoogle.refreshTokenChiffre,
+    })
     .from(comptesGoogle)
     .where(eq(comptesGoogle.utilisateurId, utilisateurId))
     .limit(1);
-  return !!c;
+  if (!c) return false;
+  return !!(dechiffrer(c.refreshTokenChiffre) ?? dechiffrer(c.accessTokenChiffre));
 }
 
 /**

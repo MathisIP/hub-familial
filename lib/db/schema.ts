@@ -185,9 +185,17 @@ export const demandesAdhesion = pgTable(
  * LES MÊMES agendas à tous les foyers — une fuite de données dès le 2ᵉ foyer.
  * Chaque foyer ne voit désormais que les calendriers qui lui sont rattachés.
  *
- * `ajoutePar` : l'utilisateur dont le jeton Google donne accès au calendrier
- * (étape 2, OAuth par utilisateur). `null` = accès par le compte de service
- * (mode historique, calendriers partagés manuellement avec lui).
+ * `ajoutePar` : l'utilisateur dont le jeton Google donne accès au calendrier.
+ *
+ * ⚠ **Obligatoire depuis le 06/08/2026** (migration 0021). La colonne acceptait
+ * `null`, ce qui signifiait « accès par le compte de service ». Ce dernier ayant
+ * été retiré — il imposait le scope `auth/calendar`, le plus large de l'API,
+ * intenable face au principe de moindre privilège exigé à la vérification
+ * Google — un rattachement sans `ajoute_par` ne mène plus nulle part.
+ *
+ * `onDelete: 'cascade'` et non `set null` : le rattachement ne vaut que tant que
+ * la personne dont il porte le jeton existe. La mettre à `null` fabriquerait
+ * exactement le genre de ligne morte que cette migration supprime.
  */
 export const foyerAgendas = pgTable(
   'foyer_agendas',
@@ -198,7 +206,9 @@ export const foyerAgendas = pgTable(
       .references(() => foyers.id, { onDelete: 'cascade' }),
     calendarId: text('calendar_id').notNull(),
     nom: text('nom').notNull().default(''),
-    ajoutePar: uuid('ajoute_par').references(() => utilisateurs.id, { onDelete: 'set null' }),
+    ajoutePar: uuid('ajoute_par')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

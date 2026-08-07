@@ -1,7 +1,6 @@
 import 'server-only';
 import { google, type calendar_v3 } from 'googleapis';
 import { and, eq } from 'drizzle-orm';
-import { googleAuth } from '@/lib/google/auth';
 import { db } from '@/lib/db';
 import { foyerAgendas } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
@@ -24,19 +23,19 @@ import {
  * les mêmes agendas à tous les foyers — une fuite de données dès le 2ᵉ foyer.
  * Chaque requête est donc scopée par `idFoyerCourant()`.
  *
- * L'accès passe encore par le compte de service : chaque calendrier doit lui être
- * partagé (« modifier les événements »), et l'API Calendar activée. Étape suivante
- * prévue : jeton OAuth de l'utilisateur (colonne `ajoute_par`), pour que chaque
- * foyer connecte ses propres agendas sans partage manuel.
+ * ⚠ ACCÈS EXCLUSIVEMENT PAR JETON OAUTH DE L'UTILISATEUR (06/08/2026).
+ * Le compte de service a été **entièrement retiré**. Il ouvrait l'accès avec le
+ * scope `auth/calendar` — le plus large qui existe sur Calendar — alors que la
+ * vérification Google repose sur le principe du moindre privilège : conserver
+ * dans le code un périmètre aussi vaste, pour un usage devenu marginal, était
+ * intenable à justifier. Le projet ne détient plus aucune clé de compte de
+ * service.
+ *
+ * Conséquence assumée : un calendrier rattaché sans `ajoute_par` (mode
+ * historique, partagé à la main avec le compte de service) n'est plus
+ * accessible. Ces rattachements ont été supprimés par la migration 0021 ; on les
+ * reconnecte depuis `/agenda`, en OAuth, en quelques secondes.
  */
-
-let cache: calendar_v3.Calendar | null = null;
-function clientCalendar(): calendar_v3.Calendar {
-  if (cache) return cache;
-  const auth = googleAuth(['https://www.googleapis.com/auth/calendar']);
-  cache = google.calendar({ version: 'v3', auth });
-  return cache;
-}
 
 type AgendaFoyer = { calendarId: string; nom: string; ajoutePar: string | null };
 
@@ -65,14 +64,16 @@ async function exigerAgendas(): Promise<AgendaFoyer[]> {
 }
 
 /**
- * Client Google pour un calendrier donné.
- *  · `ajoutePar` renseigné → jeton OAuth de la personne qui l'a rattaché ;
- *  · sinon → compte de service (calendriers partagés manuellement avec lui).
- * Renvoie `null` si l'autorisation a été révoquée : le calendrier est alors
- * simplement ignoré, plutôt que de faire échouer tout l'agenda du foyer.
+ * Client Google pour un calendrier donné — **jeton OAuth de `ajoutePar`, et rien
+ * d'autre**. Renvoie `null` si l'autorisation a été révoquée ou n'existe pas :
+ * le calendrier est alors simplement ignoré, plutôt que de faire échouer tout
+ * l'agenda du foyer.
  */
 async function clientPour(a: AgendaFoyer): Promise<calendar_v3.Calendar | null> {
-  if (!a.ajoutePar) return clientCalendar();
+  // Sans jeton utilisateur, plus aucun accès possible : le calendrier est ignoré
+  // (l'agenda du foyer continue de s'afficher avec les autres) plutôt que de
+  // faire échouer toute la page.
+  if (!a.ajoutePar) return null;
   const jeton = await jetonAgenda(a.ajoutePar);
   if (!jeton) return null;
   const oauth = new google.auth.OAuth2();
@@ -119,39 +120,21 @@ function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur:
 }
 
 /**
- * Nom d'un agenda, en DERNIER RECOURS seulement.
+ * Liste des agendas du foyer (id + nom + couleur), sans charger les événements.
  *
- * ⚠ `calendars.get` exige `calendar.readonly`, que nous ne demandons plus
- * (périmètre volontairement étroit — cf. SCOPES_AGENDA). Cet appel échoue donc
- * pour les calendriers connectés en OAuth, et retombe sur l'identifiant.
- * Ce n'est pas un problème : le nom est mémorisé dans `foyer_agendas.nom` au
- * moment du rattachement (lu depuis `calendarList`, lui accessible). Cette
- * fonction ne sert qu'aux calendriers historiques du compte de service, dont le
- * nom n'a pas été enregistré.
+ * ⚠ Le nom vient de `foyer_agendas.nom`, mémorisé au rattachement (lu alors
+ * depuis `calendarList`, seul point où il nous est accessible). On n'interroge
+ * plus Google ici : `calendars.get` exigerait `calendar.readonly`, un périmètre
+ * bien plus large que ce que nous demandons — et cette liste n'a de toute façon
+ * pas besoin d'un aller-retour réseau par agenda.
  */
-async function nomAgenda(cal: calendar_v3.Calendar, id: string): Promise<string> {
-  try {
-    const meta = await cal.calendars.get({ calendarId: id });
-    return S(meta.data.summary) || id;
-  } catch {
-    return id;
-  }
-}
-
-/** Liste des agendas configurés (id + nom + couleur), sans charger les événements. */
 export async function listerAgendas(): Promise<Agenda[]> {
   const ids = await agendasDuFoyer();
-  return Promise.all(
-    ids.map(async (a, i): Promise<Agenda> => {
-      const cal = await clientPour(a);
-      return {
-        id: a.calendarId,
-        // Nom mémorisé au rattachement : évite un aller-retour réseau par agenda.
-        nom: a.nom || (cal ? await nomAgenda(cal, a.calendarId) : a.calendarId),
-        couleur: COULEURS_AGENDA[i % COULEURS_AGENDA.length],
-      };
-    }),
-  );
+  return ids.map((a, i) => ({
+    id: a.calendarId,
+    nom: a.nom || a.calendarId,
+    couleur: COULEURS_AGENDA[i % COULEURS_AGENDA.length],
+  }));
 }
 
 /** Événements de la semaine EN COURS (lundi → dimanche), tous agendas fusionnés. */
@@ -183,7 +166,7 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { ...agenda, nom: a.nom || (await nomAgenda(cal, id)) }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || id }, evenements };
     }),
   );
 
@@ -223,7 +206,7 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { ...agenda, nom: a.nom || (await nomAgenda(cal, id)) }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || id }, evenements };
     }),
   );
 

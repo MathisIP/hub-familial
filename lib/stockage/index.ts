@@ -7,6 +7,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { chiffrerFichier, dechiffrerFichier } from '@/lib/stockage/chiffrement';
 
 /**
  * COUCHE DE STOCKAGE DE FICHIERS (serveur uniquement).
@@ -82,37 +83,54 @@ export type FichierStocke = { cle: string; taille: number };
  * Téléverse un fichier et renvoie sa **clé** (chemin interne), mémorisée en base.
  *
  * Le chemin est préfixé par le foyer : le cloisonnement existe donc aussi dans
- * l'arborescence du stockage, pas seulement dans nos requêtes SQL. Un suffixe
- * aléatoire évite qu'un second fichier de même nom n'écrase le premier.
+ * l'arborescence du stockage, pas seulement dans nos requêtes SQL.
+ *
+ * ⚠ Cette couche ne reçoit QUE des octets — ni nom, ni type. Ce n'est pas un
+ * oubli : ce sont précisément les métadonnées qu'on refuse d'exposer à
+ * l'hébergeur (voir plus bas). Elles vivent en base, où elles sont utiles.
  */
-export async function televerser(
-  foyerId: string,
-  nomFichier: string,
-  donnees: Buffer,
-  type: string,
-): Promise<FichierStocke> {
+export async function televerser(foyerId: string, donnees: Buffer): Promise<FichierStocke> {
   const ovh = configOvh();
 
+  /**
+   * ⚠ RIEN DE LISIBLE NE PART VERS LE STOCKAGE.
+   *
+   *  · le CONTENU est chiffré (cf. lib/stockage/chiffrement.ts) ;
+   *  · la CLÉ est opaque — un UUID, **sans le nom du fichier**. Chiffrer le
+   *    contenu en laissant « Ordonnance_Dr_Martin.pdf » dans le chemin annulerait
+   *    une bonne part du bénéfice : le nom d'un document médical en dit déjà
+   *    beaucoup. Le vrai nom vit en base (`documents.nom`), et c'est lui que la
+   *    route de téléchargement renvoie ;
+   *  · le type MIME déclaré est neutre, pour la même raison. Le vrai type vit
+   *    aussi en base (`documents.type`).
+   *
+   * Vu depuis la console de l'hébergeur : des identifiants sans signification,
+   * contenant des octets illisibles. `nomFichier` et `type` ne servent donc plus
+   * qu'à la base — on les garde en paramètres pour ne pas casser les appelants
+   * et pour le repli Vercel Blob.
+   */
+  const contenu = chiffrerFichier(donnees);
+  const taille = donnees.byteLength; // taille RÉELLE, celle qu'on affiche
+
   if (ovh) {
-    const cle = `foyers/${foyerId}/${randomUUID()}-${nomFichier}`;
+    const cle = `foyers/${foyerId}/${randomUUID()}`;
     await s3(ovh).send(
       new PutObjectCommand({
         Bucket: ovh.bucket,
         Key: cle,
-        Body: donnees,
-        ContentType: type || 'application/octet-stream',
+        Body: contenu,
+        ContentType: 'application/octet-stream',
       }),
     );
-    return { cle, taille: donnees.byteLength };
+    return { cle, taille };
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) throw new StockageNonConfigure();
-  const res = await put(`foyers/${foyerId}/${nomFichier}`, donnees, {
+  const res = await put(`foyers/${foyerId}/${randomUUID()}`, contenu, {
     access: 'private',
-    contentType: type || 'application/octet-stream',
-    addRandomSuffix: true,
+    contentType: 'application/octet-stream',
   });
-  return { cle: res.pathname, taille: donnees.byteLength };
+  return { cle: res.pathname, taille };
 }
 
 /**
@@ -148,23 +166,41 @@ export async function lireFichier(
 ): Promise<{ flux: ReadableStream; type: string } | null> {
   const ovh = configOvh();
 
+  /**
+   * ⚠ On rapatrie le fichier ENTIER avant de le rendre, au lieu de le diffuser
+   * au fil de l'eau. AES-GCM authentifie : le marqueur d'intégrité se trouve en
+   * tête, mais il ne peut être vérifié qu'une fois tout le corps lu. Diffuser
+   * avant vérification reviendrait à servir des octets qu'on n'a pas encore
+   * validés — exactement ce que l'authentification est censée empêcher.
+   * Acceptable ici : un document est plafonné à 25 Mo (`TAILLE_MAX`).
+   */
+  let brut: Buffer | null = null;
+  let typeStocke = 'application/octet-stream';
+
   if (ovh) {
     try {
-      const res = await s3(ovh).send(
-        new GetObjectCommand({ Bucket: ovh.bucket, Key: cle }),
-      );
+      const res = await s3(ovh).send(new GetObjectCommand({ Bucket: ovh.bucket, Key: cle }));
       if (!res.Body) return null;
-      return {
-        flux: res.Body.transformToWebStream(),
-        type: res.ContentType || 'application/octet-stream',
-      };
+      brut = Buffer.from(await res.Body.transformToByteArray());
+      typeStocke = res.ContentType || typeStocke;
     } catch {
-      return null; // clé inconnue, ou droits insuffisants : indiscernable côté API
+      return null; // clé inconnue ou droits insuffisants : indiscernable côté API
     }
+  } else {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) throw new StockageNonConfigure();
+    const res = await get(cle, { access: 'private' });
+    if (!res || res.statusCode !== 200) return null;
+    brut = Buffer.from(await new Response(res.stream).arrayBuffer());
+    typeStocke = res.blob.contentType || typeStocke;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new StockageNonConfigure();
-  const res = await get(cle, { access: 'private' });
-  if (!res || res.statusCode !== 200) return null;
-  return { flux: res.stream, type: res.blob.contentType || 'application/octet-stream' };
+  const clair = dechiffrerFichier(brut);
+  // `null` = chiffré mais illisible (clé changée, fichier altéré). On préfère un
+  // 404 à un document corrompu servi comme s'il était valide.
+  if (!clair) return null;
+
+  return {
+    flux: new Blob([new Uint8Array(clair)]).stream(),
+    type: typeStocke,
+  };
 }

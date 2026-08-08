@@ -130,7 +130,7 @@ export async function ajouterDocument(
 
   // Sans dossier précisé (ex. ajout depuis l'accueil) → boîte d'arrivée.
   const cible = normaliserDossier(dossier) || DOSSIER_DEFAUT;
-  const { cle, taille } = await televerser(foyerId, nomPropre, donnees, type);
+  const { cle, taille } = await televerser(foyerId, donnees);
   await assurerDossier(foyerId, cible);
 
   const [ligne] = await db()

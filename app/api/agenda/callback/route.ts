@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await enregistrerAutorisation(user.id, code, req.nextUrl.origin);
+    await enregistrerAutorisation(user.id, code);
     return versAgenda(req, { agenda: 'ok' });
   } catch {
     // Le détail (message Google) n'apporte rien à l'utilisateur et pourrait

@@ -1,4 +1,5 @@
 import 'server-only';
+import { urlSite } from '@/lib/config';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { comptesGoogle } from '@/lib/db/schema';
@@ -42,8 +43,24 @@ export function oauthDisponible(): boolean {
   return !!process.env.AUTH_GOOGLE_ID && !!process.env.AUTH_GOOGLE_SECRET;
 }
 
-export function uriRedirection(origine: string): string {
-  return `${origine.replace(/\/$/, '')}/api/agenda/callback`;
+/**
+ * URI de redirection OAuth — **déterminée par la configuration, jamais par la
+ * requête**.
+ *
+ * ⚠ Elle était auparavant déduite de `req.nextUrl.origin`. Sur Vercel, cette
+ * origine peut être le domaine de DÉPLOIEMENT (`…vercel.app`) et non le domaine
+ * du site : il fallait alors déclarer ce domaine technique dans la console
+ * Google pour que la connexion fonctionne — une URI parasite dans un dossier de
+ * vérification qui annonce `www.nestync.app` comme site officiel.
+ *
+ * Deux raisons de la figer :
+ *  1. Google exige que le `redirect_uri` de la demande d'autorisation et celui
+ *     de l'échange du code soient **identiques au caractère près**. Les déduire
+ *     de deux requêtes différentes, c'est accepter qu'ils divergent un jour.
+ *  2. Une seule URI à déclarer dans la console, et elle ne bouge plus.
+ */
+export function uriRedirection(): string {
+  return `${urlSite()}/api/agenda/callback`;
 }
 
 /**
@@ -55,10 +72,10 @@ export function uriRedirection(origine: string): string {
  * vérification Google, qui exige un écran de consentement en anglais dans la
  * vidéo de démonstration : il suffit de passer l'app en anglais.
  */
-export function urlAutorisation(origine: string, etat: string, langue = 'fr'): string {
+export function urlAutorisation(etat: string, langue = 'fr'): string {
   const p = new URLSearchParams({
     client_id: process.env.AUTH_GOOGLE_ID ?? '',
-    redirect_uri: uriRedirection(origine),
+    redirect_uri: uriRedirection(),
     response_type: 'code',
     scope: SCOPES_AGENDA,
     access_type: 'offline', // délivre un refresh_token
@@ -92,14 +109,13 @@ async function appelerToken(corps: Record<string, string>): Promise<JetonsGoogle
 export async function enregistrerAutorisation(
   utilisateurId: string,
   code: string,
-  origine: string,
 ): Promise<void> {
   const j = await appelerToken({
     client_id: process.env.AUTH_GOOGLE_ID ?? '',
     client_secret: process.env.AUTH_GOOGLE_SECRET ?? '',
     grant_type: 'authorization_code',
     code,
-    redirect_uri: uriRedirection(origine),
+    redirect_uri: uriRedirection(),
   });
   if (!j.access_token) {
     throw new Error(j.error_description || j.error || 'Autorisation Google refusée.');

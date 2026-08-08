@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { utilisateurCourant } from '@/lib/foyer';
 import { langueCourante } from '@/lib/langue';
 import { oauthDisponible, urlAutorisation } from '@/lib/agenda/oauth';
@@ -14,7 +14,9 @@ import { oauthDisponible, urlAutorisation } from '@/lib/agenda/oauth';
  */
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+// Plus de paramètre : l’URI de redirection vient désormais de la configuration
+// (urlSite), plus de la requête — voir uriRedirection().
+export async function GET() {
   await utilisateurCourant(); // exige une session
   if (!oauthDisponible()) {
     return NextResponse.json({ erreur: 'OAuth Google non configuré.' }, { status: 503 });
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest) {
   // L'écran de consentement s'affiche dans la langue de l'app, pas dans celle
   // du compte Google (cf. `urlAutorisation`).
   const langue = await langueCourante();
-  const rep = NextResponse.redirect(urlAutorisation(req.nextUrl.origin, etat, langue));
+  const rep = NextResponse.redirect(urlAutorisation(etat, langue));
   rep.cookies.set('agenda-oauth-etat', etat, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -1,18 +1,36 @@
 /*
  * Service worker de Nestync — coquille hors ligne.
  * =====================================================
- * L'app reste « connectée par nature » (les données viennent des API Google au
- * moment de la requête) : ce worker ne rend PAS les données disponibles hors ligne,
- * mais il permet à l'app de S'OUVRIR sans réseau et d'afficher les dernières pages
- * consultées, sinon une page « hors ligne » soignée au lieu de l'erreur du navigateur.
+ * Ce worker permet à l'app de S'OUVRIR sans réseau et d'afficher une page
+ * « hors ligne » soignée au lieu de l'erreur du navigateur.
  *
  * Stratégies :
  *   · écritures (POST/…) et /api/*         → réseau direct, jamais de cache ;
  *   · fichiers statiques (hashés)          → cache d'abord (sûr, noms versionnés) ;
- *   · navigations (pages)                  → réseau d'abord, repli sur la copie en
- *                                            cache, sinon la page /hors-ligne.
+ *   · navigations (pages)                  → réseau d'abord, **sans jamais garder
+ *                                            de copie**, repli sur /hors-ligne.
+ *
+ * ⚠ POURQUOI LES PAGES NE SONT PLUS MISES EN CACHE (08/08/2026).
+ * Ce worker conservait le HTML de **toutes** les pages visitées, y compris
+ * authentifiées : soldes bancaires, liste des documents, noms des agendas.
+ * Trois conséquences, la deuxième étant la plus grave :
+ *   1. après déconnexion, ces pages restaient lisibles sur l'appareil ;
+ *   2. sur un appareil PARTAGÉ — le cas d'usage même d'une app de foyer — un
+ *      membre pouvait retrouver les pages d'un autre ;
+ *   3. des données périmées s'affichaient après un changement côté serveur
+ *      (c'est ce symptôme qui a mis la puce à l'oreille : des agendas listés
+ *      alors qu'ils n'étaient plus rattachés).
+ * Le bénéfice, lui, était largement illusoire : les données viennent des API,
+ * jamais mises en cache — une page rouverte hors ligne n'aurait montré qu'une
+ * coquille vide. On échangeait donc un vrai risque de confidentialité contre
+ * presque rien.
+ *
+ * ⚠ Le nom du cache DOIT être incrémenté à chaque changement de stratégie :
+ * `activate` supprime tous les caches dont le nom diffère, ce qui purge les
+ * pages déjà stockées sur les appareils. Sans ce bump, les copies existantes
+ * survivraient au correctif.
  */
-const CACHE = 'nestync-v1';
+const CACHE = 'nestync-v2';
 const PRECACHE = ['/hors-ligne', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -37,17 +55,11 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return; // ressources tierces : réseau direct
   if (url.pathname.startsWith('/api/')) return; // données dynamiques / auth : réseau direct
 
-  // Navigations (pages) : réseau d'abord ; on garde une copie pour le hors-ligne.
+  // Navigations (pages) : réseau, et RIEN d'autre. Aucune copie n'est conservée
+  // (voir l'avertissement en tête de fichier) ; sans réseau, on sert la page
+  // hors-ligne, qui est publique et ne contient aucune donnée de foyer.
   if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req)
-        .then((rep) => {
-          const copie = rep.clone();
-          caches.open(CACHE).then((c) => c.put(req, copie));
-          return rep;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('/hors-ligne'))),
-    );
+    e.respondWith(fetch(req).catch(() => caches.match('/hors-ligne')));
     return;
   }
 

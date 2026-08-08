@@ -29,6 +29,21 @@ export async function GET(req: NextRequest) {
   const etat = params.get('state');
   const etatAttendu = req.cookies.get('agenda-oauth-etat')?.value;
   if (!code || !etat || !etatAttendu || etat !== etatAttendu) {
+    /**
+     * Ces quatre conditions donnaient le MÊME message à l'écran, ce qui ne
+     * disait rien de la cause. La plus fréquente et la plus déroutante est le
+     * cookie absent : il est déposé par l'hôte qui répond, et un retour de
+     * Google sur un autre domaine ne l'emporte pas. On journalise donc laquelle
+     * a joué, et sur quel hôte on a atterri.
+     */
+    const cause = !code
+      ? 'code absent'
+      : !etat
+        ? 'state absent de la réponse Google'
+        : !etatAttendu
+          ? `cookie d'état absent (hôte : ${req.headers.get('host') ?? '?'})`
+          : 'state différent du cookie';
+    console.warn('[agenda] autorisation rejetée —', cause);
     return versAgenda(req, { agenda: 'etat' });
   }
 

@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { utilisateurCourant } from '@/lib/foyer';
 import { langueCourante } from '@/lib/langue';
+import { urlSite } from '@/lib/config';
 import { oauthDisponible, urlAutorisation } from '@/lib/agenda/oauth';
 
 /**
@@ -14,10 +15,29 @@ import { oauthDisponible, urlAutorisation } from '@/lib/agenda/oauth';
  */
 export const dynamic = 'force-dynamic';
 
-// Plus de paramètre : l’URI de redirection vient désormais de la configuration
-// (urlSite), plus de la requête — voir uriRedirection().
-export async function GET() {
+export async function GET(req: NextRequest) {
   await utilisateurCourant(); // exige une session
+
+  /**
+   * ⚠ RAMENER SUR L'HÔTE CANONIQUE AVANT DE POSER LE COOKIE.
+   *
+   * Un cookie appartient à l'hôte qui l'a déposé. Si la personne arrive par un
+   * autre domaine que celui de `SITE_URL` — l'ancienne adresse `*.vercel.app`
+   * gardée en favori, l'apex sans `www`, une PWA installée depuis l'une d'elles —
+   * le cookie d'état est déposé LÀ, tandis que Google revient toujours sur
+   * `SITE_URL`. Le cookie n'est alors pas envoyé et l'autorisation échoue avec
+   * « lien invalide ou expiré », sans rien qui explique pourquoi.
+   *
+   * On lit l'en-tête `Host` (ce que le navigateur a réellement demandé) et non
+   * `nextUrl`, qui peut porter l'hôte interne de déploiement — s'y fier ferait
+   * boucler la redirection.
+   */
+  const canonique = new URL(urlSite());
+  const demande = req.headers.get('host');
+  if (demande && demande !== canonique.host) {
+    return NextResponse.redirect(new URL('/api/agenda/connexion', canonique));
+  }
+
   if (!oauthDisponible()) {
     return NextResponse.json({ erreur: 'OAuth Google non configuré.' }, { status: 503 });
   }

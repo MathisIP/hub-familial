@@ -169,8 +169,25 @@ export async function jetonAgenda(utilisateurId: string): Promise<string | null>
     refresh_token: refresh,
   });
   if (!j.access_token) {
-    // Autorisation révoquée côté Google : on nettoie pour proposer de reconnecter.
-    await db().delete(comptesGoogle).where(eq(comptesGoogle.utilisateurId, utilisateurId));
+    /**
+     * ⚠ On n'efface QUE si Google déclare l'autorisation morte.
+     *
+     * La version précédente supprimait dès qu'aucun jeton ne revenait — donc
+     * aussi sur une panne passagère de Google, une limite de débit ou une
+     * réponse malformée. **Une seule défaillance transitoire détruisait
+     * définitivement la connexion**, sans que personne ne comprenne pourquoi :
+     * l'agenda cessait simplement de se charger, et il fallait tout reconnecter.
+     *
+     * `invalid_grant` est le seul code qui signifie « ce refresh_token ne vaut
+     * plus rien » (autorisation retirée par la personne, mot de passe changé,
+     * jeton expiré pour inactivité). Dans tous les autres cas on garde la ligne
+     * et on retentera au prochain passage.
+     */
+    if (j.error === 'invalid_grant') {
+      await db().delete(comptesGoogle).where(eq(comptesGoogle.utilisateurId, utilisateurId));
+    } else {
+      console.warn('[agenda] renouvellement du jeton impossible (conservé) :', j.error ?? 'sans code');
+    }
     return null;
   }
 

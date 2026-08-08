@@ -148,12 +148,12 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
   if (ids.length === 0) return { evenements: [], agendas: [], lundiISO };
 
   const parAgenda = await Promise.all(
-    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
+    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[]; lisible: boolean }> => {
       const couleur = COULEURS_AGENDA[i % COULEURS_AGENDA.length];
       const id = a.calendarId;
       const cal = await clientPour(a);
       const agenda = { id, nom: a.nom || id, couleur };
-      if (!cal) return { agenda, evenements: [] }; // autorisation révoquée
+      if (!cal) return { agenda, evenements: [], lisible: false }; // jeton absent ou révoqué
 
       const rep = await cal.events.list({
         calendarId: id,
@@ -166,11 +166,15 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { ...agenda, nom: a.nom || id }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || id }, evenements, lisible: true };
     }),
   );
 
-  const agendas = parAgenda.map((p) => p.agenda);
+  // ⚠ On n'annonce que les agendas RÉELLEMENT lisibles. Afficher dans la
+  // légende un calendrier dont on n'a plus le jeton laisse croire qu'il est
+  // connecté alors qu'il ne se remplira jamais — c'est ce symptôme qui avait
+  // fait soupçonner une fuite de cache, alors que la donnée venait de la base.
+  const agendas = parAgenda.filter((p) => p.lisible).map((p) => p.agenda);
   const evenements = parAgenda
     .flatMap((p) => p.evenements)
     .sort((a, b) => `${a.dateISO} ${a.heureDebut || '00:00'}`.localeCompare(`${b.dateISO} ${b.heureDebut || '00:00'}`));
@@ -188,12 +192,12 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
   const fin = new Date(maintenant.getTime() + jours * 86400000);
 
   const parAgenda = await Promise.all(
-    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[] }> => {
+    ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[]; lisible: boolean }> => {
       const couleur = COULEURS_AGENDA[i % COULEURS_AGENDA.length];
       const id = a.calendarId;
       const cal = await clientPour(a);
       const agenda = { id, nom: a.nom || id, couleur };
-      if (!cal) return { agenda, evenements: [] }; // autorisation révoquée
+      if (!cal) return { agenda, evenements: [], lisible: false }; // jeton absent ou révoqué
 
       const rep = await cal.events.list({
         calendarId: id,
@@ -206,11 +210,15 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))
         .filter((e) => e.dateISO !== '');
-      return { agenda: { ...agenda, nom: a.nom || id }, evenements };
+      return { agenda: { ...agenda, nom: a.nom || id }, evenements, lisible: true };
     }),
   );
 
-  const agendas = parAgenda.map((p) => p.agenda);
+  // ⚠ On n'annonce que les agendas RÉELLEMENT lisibles. Afficher dans la
+  // légende un calendrier dont on n'a plus le jeton laisse croire qu'il est
+  // connecté alors qu'il ne se remplira jamais — c'est ce symptôme qui avait
+  // fait soupçonner une fuite de cache, alors que la donnée venait de la base.
+  const agendas = parAgenda.filter((p) => p.lisible).map((p) => p.agenda);
   const evenements = parAgenda
     .flatMap((p) => p.evenements)
     .sort((a, b) => {

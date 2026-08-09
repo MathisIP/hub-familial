@@ -199,6 +199,7 @@ export default function SideBar() {
                 <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_ABONNEMENT')}</Link>
                 <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_COMPTE')}</Link>
                 <Link href="/confidentialite" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_CONFIDENTIALITE')}</Link>
+                <Link href="/aide" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_AIDE')}</Link>
                 <Link href="/mentions-legales" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MENTIONS')}</Link>
                 <div className="menu-sep" />
                 <form action={deconnexion}>

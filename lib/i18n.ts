@@ -65,6 +65,7 @@ const UI = {
   NAV_ABONNEMENT: { fr: 'Abonnement', en: 'Subscription' },
   NAV_MON_COMPTE: { fr: 'Mon compte', en: 'My account' },
   NAV_CONFIDENTIALITE: { fr: 'Confidentialité', en: 'Privacy' },
+  NAV_AIDE: { fr: 'Aide et contact', en: 'Help and contact' },
   NAV_MENTIONS: { fr: 'Mentions légales', en: 'Legal notice' },
   NAV_DECONNEXION: { fr: 'Se déconnecter', en: 'Sign out' },
   A_CHOISIR_ONGLET: { fr: 'Choisir un onglet', en: 'Choose a tab' },

@@ -2230,6 +2230,43 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .init-actions { margin-top: .6rem; }
 .init-note { font-size: .85rem; color: var(--muted); line-height: 1.55; margin: 1rem 0 0; }
 
+/* --- Aide et contact (app/aide) --------------------------------------------
+   Les questions sont repliées : une page d'aide qui déballe tout d'un coup se
+   parcourt moins bien qu'une liste de titres où l'on repère la sienne. */
+.aide-faq { display: flex; flex-direction: column; gap: .5rem; margin: 1rem 0 2rem; }
+.aide-item { border: 1px solid var(--line); border-radius: .8rem; background: var(--cell); }
+.aide-item summary {
+  cursor: pointer; padding: .85rem 1rem; font-weight: 600; list-style: none;
+  display: flex; align-items: center; gap: .6rem;
+}
+.aide-item summary::-webkit-details-marker { display: none; }
+.aide-item summary::before { content: '＋'; color: var(--acc); font-weight: 700; flex: 0 0 auto; }
+.aide-item[open] summary::before { content: '－'; }
+.aide-item summary:hover { background: var(--soft); border-radius: .8rem; }
+.aide-reponse { padding: 0 1rem 1rem 2.2rem; line-height: 1.65; color: var(--muted); }
+.aide-reponse a { color: var(--acc); }
+
+.aide-form { display: flex; flex-direction: column; gap: .9rem; margin: 1.2rem 0; }
+.aide-duo { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+@media (max-width: 34rem) { .aide-duo { grid-template-columns: 1fr; } }
+.aide-champ { display: flex; flex-direction: column; gap: .3rem; }
+.aide-lbl {
+  font-size: .78rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.aide-message { min-height: 8rem; resize: vertical; font: inherit; line-height: 1.55; }
+.aide-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.aide-rgpd { flex: 1 1 14rem; margin: 0; font-size: .8rem; color: var(--muted); line-height: 1.5; }
+/* Piège à robots : hors écran plutôt que display:none, que certains robots
+   détectent. Jamais atteignable au clavier (tabIndex -1) ni annoncé. */
+.aide-piege { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.aide-envoye {
+  background: var(--soft); border: 1px solid var(--acc);
+  border-radius: .9rem; padding: 1.2rem 1.3rem; margin: 1.2rem 0; line-height: 1.6;
+}
+.aide-envoye-titre { margin: 0 0 .4rem; font-weight: 700; font-size: 1.05rem; }
+.aide-envoye p:last-child { margin: 0; color: var(--muted); }
+
 /* --- Sous-listes d'un événement (invités / checklist / menu) ---------------
    Repliées par défaut : on consulte ses événements bien plus souvent qu'on
    n'en modifie les invités. Les onglets restent visibles avec leur compteur. */

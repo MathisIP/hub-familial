@@ -517,6 +517,44 @@ export const evMenu = pgTable(
   (t) => [index('ev_menu_evenement_idx').on(t.evenementId)],
 );
 
+/**
+ * MESSAGES REÇUS VIA LA PAGE D'AIDE.
+ * =================================
+ * ⚠ Enregistrés EN BASE, et pas seulement expédiés par courriel. Les mentions
+ * légales et la politique de confidentialité promettent une réponse sous 30 jours
+ * pour les demandes relatives aux données : un courriel égaré ou classé en
+ * indésirable, et le délai court sans qu'on le sache. La base sert de preuve
+ * horodatée — de ce qui a été demandé, et de quand.
+ *
+ * `foyerId` est **nullable** à dessein : quelqu'un qui n'arrive pas à se
+ * connecter, ou qui n'a pas encore de compte, doit pouvoir écrire. C'est même le
+ * cas où l'aide est la plus nécessaire.
+ *
+ * ⚠ Contient des données personnelles fournies librement (nom, e-mail, et un
+ * message dont on ne maîtrise pas le contenu). Durée de conservation bornée :
+ * voir la purge dans [lib/maintenance.ts].
+ */
+export const SUJETS_CONTACT = ['question', 'probleme', 'donnees', 'facturation', 'autre'] as const;
+
+export const messagesContact = pgTable(
+  'messages_contact',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** Foyer de l'expéditeur s'il était connecté ; `null` sinon. */
+    foyerId: uuid('foyer_id').references(() => foyers.id, { onDelete: 'set null' }),
+    email: text('email').notNull(),
+    nom: text('nom').notNull().default(''),
+    sujet: text('sujet').notNull().default('question'),
+    message: text('message').notNull(),
+    /** Marqué à la main quand la demande a été traitée (suivi des délais). */
+    traite: boolean('traite').notNull().default(false),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('messages_contact_cree_idx').on(t.creeLe)],
+);
+
+export type LigneMessageContact = typeof messagesContact.$inferSelect;
+
 export type LigneEvInvite = typeof evInvites.$inferSelect;
 export type LigneEvChecklist = typeof evChecklist.$inferSelect;
 export type LigneEvMenu = typeof evMenu.$inferSelect;

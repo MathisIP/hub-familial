@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, eq, isNull, lt, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { invitations, membres, utilisateurs } from '@/lib/db/schema';
+import { invitations, membres, messagesContact, utilisateurs } from '@/lib/db/schema';
 import { envoyerRelanceInactivite } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
 
@@ -29,8 +29,20 @@ export const PREAVIS_SUPPRESSION = 30 * JOUR;
 /** Nombre maximal de relances par exécution — voir `relancerComptesInactifs`. */
 const RELANCES_PAR_PASSAGE = 50;
 
+/**
+ * Conservation des messages reçus via la page d'aide.
+ *
+ * ⚠ Bornée à **un an** : ils contiennent un nom, une adresse et un texte libre
+ * dont on ne maîtrise pas le contenu — quelqu'un peut très bien y détailler sa
+ * situation médicale en demandant de l'aide. Un an couvre largement le suivi
+ * d'une demande et une éventuelle contestation sur le délai de réponse ; au-delà,
+ * les garder n'a plus de justification.
+ */
+export const RETENTION_MESSAGES = 365 * JOUR;
+
 export type RapportMenage = {
   invitationsPurgees: number;
+  messagesPurges: number;
   relancesEnvoyees: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
@@ -61,6 +73,16 @@ export async function purgerInvitationsExpirees(): Promise<number> {
     .where(lt(invitations.expireLe, limite))
     .returning({ id: invitations.id });
   return supprimees.length;
+}
+
+/** Supprime les messages de contact au-delà de leur durée de conservation. */
+export async function purgerMessagesContact(): Promise<number> {
+  const limite = new Date(Date.now() - RETENTION_MESSAGES);
+  const supprimes = await db()
+    .delete(messagesContact)
+    .where(lt(messagesContact.creeLe, limite))
+    .returning({ id: messagesContact.id });
+  return supprimes.length;
 }
 
 /**
@@ -172,10 +194,12 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   // Séquentiel à dessein : la suppression doit voir les tampons de relance déjà
   // posés, et l'ordre rend le journal lisible en cas d'incident.
   const invitationsPurgees = await purgerInvitationsExpirees();
+  const messagesPurges = await purgerMessagesContact();
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
   return {
     invitationsPurgees,
+    messagesPurges,
     relancesEnvoyees,
     comptesSupprimes: supprimes,
     suppressionsIgnorees: ignores,

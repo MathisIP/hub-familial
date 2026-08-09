@@ -16,6 +16,7 @@ const SANS_NAVIGATION = [
   '/conditions',
   '/confidentialite',
   '/mentions-legales',
+  '/aide',
   '/hors-ligne',
   '/rejoindre',
   '/rejoindre-foyer',

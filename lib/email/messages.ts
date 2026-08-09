@@ -118,6 +118,45 @@ export async function envoyerDemandeAdhesion(
 }
 
 /**
+ * Message reçu via la page d'aide, transmis à l'adresse de contact.
+ *
+ * ⚠ `replyTo` n'existe pas dans notre couche d'envoi : l'adresse de l'expéditeur
+ * est donc placée **en évidence dans le corps**, pour qu'une réponse ne parte pas
+ * à l'expéditeur technique (contact@nestync.app) par réflexe de « Répondre ».
+ */
+export async function envoyerMessageContact(m: {
+  email: string;
+  nom: string;
+  sujet: string;
+  message: string;
+}): Promise<boolean> {
+  const destination = process.env.EMAIL_EXPEDITEUR;
+  if (!destination) return false;
+
+  const qui = m.nom || m.email;
+  const texte =
+    `Nouveau message depuis la page d'aide.\n\n` +
+    `De      : ${qui}\n` +
+    `Répondre à : ${m.email}\n` +
+    `Sujet   : ${m.sujet}\n\n` +
+    `${m.message}\n`;
+
+  return envoyerEmail({
+    a: destination,
+    sujet: `[Nestync – ${m.sujet}] message de ${qui}`,
+    texte,
+    html: gabarit(
+      `Message de ${qui}`,
+      `<p style="margin:0 0 6px;font-size:15px">Répondre à : <strong><a href="mailto:${m.email}">${m.email}</a></strong></p>
+       <p style="margin:0 0 14px;font-size:14px;color:#7a6f78">Sujet : ${m.sujet}</p>
+       <p style="margin:0;padding:14px;background:#faf7f5;border-radius:8px;font-size:15px;line-height:1.6;white-space:pre-wrap">${m.message
+         .replace(/&/g, '&amp;')
+         .replace(/</g, '&lt;')}</p>`,
+    ),
+  });
+}
+
+/**
  * Relance avant suppression d'un compte inactif.
  *
  * ⚠ C'est la pièce qui rend la politique de conservation applicable : supprimer

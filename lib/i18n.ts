@@ -1,3 +1,7 @@
+import { ES } from '@/lib/i18n/es';
+import { DE } from '@/lib/i18n/de';
+import { IT } from '@/lib/i18n/it';
+
 /**
  * CADRE MULTILINGUE (UI).
  * =======================
@@ -786,8 +790,36 @@ export function tEnum(table: Record<string, CleUI>, valeur: string, langue: IdLa
 
 export type CleUI = keyof typeof UI;
 
-/** Libellé d'interface dans la langue voulue, repli sur le français. */
+/**
+ * Traductions tenues dans un fichier PAR LANGUE, en surcouche du dictionnaire.
+ *
+ * Pourquoi pas directement dans `UI` : à 467 clés, ajouter `es`/`de`/`it` sur
+ * chaque ligne rendrait ce fichier illisible et transformerait la moindre
+ * relecture du français en fouille. Ici, ajouter une langue = ajouter un
+ * fichier, et une relecture par un locuteur natif porte sur un seul fichier
+ * qu'on peut lui envoyer tel quel.
+ *
+ * Les surcouches sont **partielles** à dessein : une clé non traduite retombe
+ * sur l'anglais s'il existe, puis sur le français. Une traduction incomplète
+ * dégrade donc l'affichage, elle ne le casse pas.
+ */
+const SURCOUCHES: Partial<Record<IdLangue, Partial<Record<CleUI, string>>>> = {
+  es: ES,
+  de: DE,
+  it: IT,
+};
+
+/**
+ * Libellé d'interface dans la langue voulue.
+ *
+ * Ordre de repli : surcouche de la langue → entrée du dictionnaire → anglais →
+ * français. L'étape « anglais » compte : entre une interface entièrement
+ * française et une phrase anglaise isolée, un lecteur hispanophone s'en sort
+ * mieux avec la seconde.
+ */
 export function t(cle: CleUI, langue: IdLangue = LANGUE_DEFAUT): string {
+  const surcouche = SURCOUCHES[langue]?.[cle];
+  if (surcouche) return surcouche;
   const e = UI[cle] as Trad;
-  return e[langue] ?? e.fr;
+  return e[langue] ?? e.en ?? e.fr;
 }

@@ -173,6 +173,17 @@ Fichiers du foyer stockés **par nous**, plus aucun accès Google Drive. Route :
 - **Suppression** : DELETE en base **puis** suppression du fichier stocké — et seulement si une ligne du **bon foyer** a été supprimée (garde-fou d'isolation).
 - ⚠ **`BLOB_READ_WRITE_TOKEN` requis** (créer un store Blob sur Vercel → variable injectée automatiquement ; en local, la coller dans `.env`). Sans elle, le module répond **503** avec un message clair, le reste de l'app fonctionne.
 - **Changer de fournisseur** (Cloudflare R2, S3…) = réécrire **le seul** [lib/stockage/index.ts](lib/stockage/index.ts) (`televerser`/`supprimerFichier`/`lireFichier`). Le reste du code ne connaît pas le fournisseur.
+- **⚡ MIGRÉ CHEZ OVHCLOUD + CHIFFRÉ (08/08/2026).** Les fichiers sont désormais sur **OVHcloud Object Storage**, région **Paris**, conteneur **3-AZ** (ISO 27001/27017/27018/27701 + **HDS**, sortie de données gratuite). Vercel Blob reste en **repli automatique** si `OVH_S3_*` est absent — la bascule est une affaire de **configuration, pas de déploiement**.
+  - **Trois choses ne partent plus en clair** vers l'hébergeur : le **contenu** (AES-256-GCM, [lib/stockage/chiffrement.ts](lib/stockage/chiffrement.ts)), le **nom du fichier** (la clé de stockage est un UUID opaque) et le **type MIME** (déclaré neutre). Nom et type vivent en base, d'où la route de téléchargement les tire. `televerser()` ne reçoit donc plus que des octets — ce n'est pas un oubli.
+  - ⚠ **`DOCUMENTS_SECRET` est une clé DÉDIÉE, jamais `AUTH_SECRET`** : une clé à double usage forcerait à choisir entre faire tourner un secret compromis et détruire les données de l'autre (leçon des jetons Google). **La perdre = perdre tous les documents.** Ne jamais la changer sans re-chiffrer.
+  - En-tête magique `NSY1` : le format est auto-descriptif, un fichier déposé avant le chiffrement se relit sans qu'on ait à deviner.
+  - ⚠ Limite assumée : le serveur doit déchiffrer pour servir un document au foyer. Ce n'est **pas** du bout-en-bout — c'est « seule l'application peut lire, l'hébergeur non ». Un vrai bout-en-bout est hors d'atteinte (authentification Google, donc aucun mot de passe dont dériver une clé ; et le partage entre membres imposerait un échange de clés).
+  - `lireFichier` **rapatrie le fichier entier** avant de le rendre : AES-GCM ne peut vérifier son marqueur d'intégrité qu'une fois tout le corps lu. Acceptable, les documents étant plafonnés à 25 Mo.
+
+**Aide et contact : fait (08/08/2026).** Page **publique** `/aide` ([app/aide/page.tsx](app/aide/page.tsx)) : FAQ repliable + formulaire. Publique à dessein — celui qui n'arrive pas à se connecter est celui qui a besoin d'écrire.
+- Les messages sont **enregistrés en base** (`messages_contact`, migration 0022) **avant** d'être expédiés par Brevo : un courriel égaré ferait courir en silence le délai de 30 jours promis par les mentions légales. `foyer_id` nullable (un visiteur sans compte doit pouvoir écrire).
+- Anti-robots par **champ piège** hors écran (pas `display:none`, que certains robots détectent) plutôt que captcha — lequel ferait entrer un tiers et son traçage. Anti-inondation plafonné **par adresse e-mail, pas par IP** : une IP serait une donnée personnelle de plus à justifier.
+- Conservation **1 an**, purgée par le ménage quotidien : le champ message est du **texte libre non maîtrisé**.
 
 ## Accès Google (vérifié 21/07/2026)
 

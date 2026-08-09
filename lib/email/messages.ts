@@ -157,6 +157,88 @@ export async function envoyerMessageContact(m: {
 }
 
 /**
+ * Bulletin de santé quotidien, envoyé à l'adresse de contact.
+ *
+ * ⚠ Il part **tous les jours**, même sans alerte. Un bulletin qui n'arriverait
+ * qu'en cas de problème ne se distinguerait pas d'un bulletin qui n'arrive plus
+ * du tout — panne du service d'e-mail, tâche planifiée qui ne s'exécute plus,
+ * clé expirée. Le silence quotidien devient alors lui-même le signal.
+ */
+export async function envoyerBulletinSante(b: {
+  foyers: number;
+  utilisateurs: number;
+  nouveauxFoyers24h: number;
+  nouveauxUtilisateurs24h: number;
+  messages24h: number;
+  documents: number;
+  agendasConnectes: number;
+  latenceBaseMs: number;
+  alertes: string[];
+  invitationsPurgees: number;
+  messagesPurges: number;
+  relancesEnvoyees: number;
+  comptesSupprimes: number;
+  suppressionsIgnorees: number;
+}): Promise<boolean> {
+  const destination = process.env.EMAIL_EXPEDITEUR;
+  if (!destination) return false;
+
+  const alerte = b.alertes.length > 0;
+  const jour = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+
+  const lignes = [
+    ['Foyers', `${b.foyers} (+${b.nouveauxFoyers24h} en 24 h)`],
+    ['Utilisateurs', `${b.utilisateurs} (+${b.nouveauxUtilisateurs24h} en 24 h)`],
+    ['Documents stockés', String(b.documents)],
+    ['Agendas connectés', String(b.agendasConnectes)],
+    ['Messages reçus (24 h)', String(b.messages24h)],
+    ['Réponse de la base', `${b.latenceBaseMs} ms`],
+  ];
+  const menage = [
+    ['Invitations purgées', String(b.invitationsPurgees)],
+    ['Messages purgés', String(b.messagesPurges)],
+    ['Relances d’inactivité', String(b.relancesEnvoyees)],
+    ['Comptes supprimés', String(b.comptesSupprimes)],
+    ['Suppressions écartées', String(b.suppressionsIgnorees)],
+  ];
+
+  const texte =
+    `Nestync — bulletin du ${jour}\n\n` +
+    (alerte ? `⚠ ALERTES\n${b.alertes.map((a) => `  · ${a}`).join('\n')}\n\n` : 'Aucune alerte.\n\n') +
+    lignes.map(([k, v]) => `${k.padEnd(24)} ${v}`).join('\n') +
+    `\n\nMénage\n` +
+    menage.map(([k, v]) => `${k.padEnd(24)} ${v}`).join('\n');
+
+  const tableau = (rows: string[][]) =>
+    rows
+      .map(
+        ([k, v]) =>
+          `<tr><td style="padding:5px 12px 5px 0;color:#7a6f78;font-size:14px">${k}</td><td style="padding:5px 0;font-weight:600;font-size:14px">${v}</td></tr>`,
+      )
+      .join('');
+
+  return envoyerEmail({
+    a: destination,
+    sujet: `${alerte ? '⚠ ' : ''}Nestync — bulletin du ${jour}`,
+    texte,
+    html: gabarit(
+      `Bulletin du ${jour}`,
+      `${
+        alerte
+          ? `<div style="margin:0 0 18px;padding:12px 14px;background:#fdf0ec;border-radius:8px;border-left:4px solid #c0392b">
+               <p style="margin:0 0 6px;font-weight:700;color:#b3543f">À regarder</p>
+               ${b.alertes.map((a) => `<p style="margin:0;font-size:14px;line-height:1.5">${a}</p>`).join('')}
+             </div>`
+          : '<p style="margin:0 0 18px;font-size:14px;color:#7a6f78">Aucune alerte.</p>'
+      }
+       <table style="border-collapse:collapse;width:100%">${tableau(lignes)}</table>
+       <p style="margin:20px 0 6px;font-size:12px;font-weight:700;color:#9b8f96;text-transform:uppercase;letter-spacing:.05em">Ménage</p>
+       <table style="border-collapse:collapse;width:100%">${tableau(menage)}</table>`,
+    ),
+  });
+}
+
+/**
  * Relance avant suppression d'un compte inactif.
  *
  * ⚠ C'est la pièce qui rend la politique de conservation applicable : supprimer

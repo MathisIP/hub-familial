@@ -1,8 +1,17 @@
 import 'server-only';
-import { and, eq, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { invitations, membres, messagesContact, utilisateurs } from '@/lib/db/schema';
-import { envoyerRelanceInactivite } from '@/lib/email/messages';
+import {
+  invitations,
+  membres,
+  messagesContact,
+  utilisateurs,
+  utilisateurs as utilisateurs_,
+  foyers as tFoyers,
+  documents as tDocuments,
+  comptesGoogle,
+} from '@/lib/db/schema';
+import { envoyerRelanceInactivite, envoyerBulletinSante } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
 
 /**
@@ -46,6 +55,7 @@ export type RapportMenage = {
   relancesEnvoyees: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
+  sante?: BulletinSante;
 };
 
 /**
@@ -189,6 +199,95 @@ export async function supprimerComptesSansRetour(): Promise<{ supprimes: number;
   return { supprimes, ignores };
 }
 
+/* ------------------------------ BULLETIN DE SANTÉ --------------------------
+ *
+ * ⚠ POURQUOI CE BULLETIN EXISTE. Le délai de 72 h pour notifier une violation à
+ * la CNIL court depuis la **connaissance** des faits. Or rien, jusqu'ici, ne
+ * nous aurait informés de quoi que ce soit : ni un afflux d'inscriptions
+ * anormal, ni une base qui ralentit, ni une purge qui s'emballe. Un incident
+ * pouvait passer inaperçu des semaines.
+ *
+ * Ce n'est pas de la supervision au sens industriel — pas de collecte de
+ * requêtes, pas de métriques temps réel, rien qui exigerait de conserver des
+ * adresses IP. C'est un relevé quotidien de quelques compteurs, envoyé par
+ * courriel. Assez pour qu'une dérive saute aux yeux, assez sobre pour ne rien
+ * ajouter au registre.
+ * -------------------------------------------------------------------------- */
+
+/** Seuils au-delà desquels une journée mérite qu'on la regarde. */
+const SEUILS = {
+  /** Beaucoup de foyers créés d'un coup : promotion réussie… ou création en boucle. */
+  foyersParJour: 20,
+  /** Beaucoup de messages : campagne de spam ayant contourné le champ piège. */
+  messagesParJour: 20,
+  /** Base qui répond lentement : dégradation de service. */
+  latenceBaseMs: 500,
+};
+
+export type BulletinSante = {
+  foyers: number;
+  utilisateurs: number;
+  nouveauxFoyers24h: number;
+  nouveauxUtilisateurs24h: number;
+  messages24h: number;
+  documents: number;
+  agendasConnectes: number;
+  latenceBaseMs: number;
+  alertes: string[];
+};
+
+/**
+ * Relevé de l'état du service. **Lecture seule** : ce bulletin observe, il ne
+ * corrige rien.
+ */
+export async function bulletinSante(): Promise<BulletinSante> {
+  const d = db();
+  const hier = new Date(Date.now() - JOUR);
+
+  const debut = Date.now();
+  const [
+    foyers,
+    utilisateurs,
+    nouveauxFoyers,
+    nouveauxUtilisateurs,
+    messages,
+    documents,
+    agendas,
+  ] = await Promise.all([
+    d.select({ n: sql<number>`count(*)::int` }).from(tFoyers),
+    d.select({ n: sql<number>`count(*)::int` }).from(utilisateurs_),
+    d.select({ n: sql<number>`count(*)::int` }).from(tFoyers).where(gt(tFoyers.creeLe, hier)),
+    d.select({ n: sql<number>`count(*)::int` }).from(utilisateurs_).where(gt(utilisateurs_.creeLe, hier)),
+    d.select({ n: sql<number>`count(*)::int` }).from(messagesContact).where(gt(messagesContact.creeLe, hier)),
+    d.select({ n: sql<number>`count(*)::int` }).from(tDocuments),
+    d.select({ n: sql<number>`count(*)::int` }).from(comptesGoogle),
+  ]);
+  const latenceBaseMs = Date.now() - debut;
+
+  const b: BulletinSante = {
+    foyers: foyers[0].n,
+    utilisateurs: utilisateurs[0].n,
+    nouveauxFoyers24h: nouveauxFoyers[0].n,
+    nouveauxUtilisateurs24h: nouveauxUtilisateurs[0].n,
+    messages24h: messages[0].n,
+    documents: documents[0].n,
+    agendasConnectes: agendas[0].n,
+    latenceBaseMs,
+    alertes: [],
+  };
+
+  if (b.nouveauxFoyers24h > SEUILS.foyersParJour) {
+    b.alertes.push(`${b.nouveauxFoyers24h} foyers créés en 24 h (seuil : ${SEUILS.foyersParJour})`);
+  }
+  if (b.messages24h > SEUILS.messagesParJour) {
+    b.alertes.push(`${b.messages24h} messages reçus en 24 h (seuil : ${SEUILS.messagesParJour})`);
+  }
+  if (b.latenceBaseMs > SEUILS.latenceBaseMs) {
+    b.alertes.push(`base lente : ${b.latenceBaseMs} ms pour 7 comptages (seuil : ${SEUILS.latenceBaseMs} ms)`);
+  }
+  return b;
+}
+
 /** Le ménage complet, tel que la tâche planifiée l'exécute. */
 export async function menagePeriodique(): Promise<RapportMenage> {
   // Séquentiel à dessein : la suppression doit voir les tampons de relance déjà
@@ -197,11 +296,21 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   const messagesPurges = await purgerMessagesContact();
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
+  const sante = await bulletinSante();
+  await envoyerBulletinSante({
+    ...sante,
+    invitationsPurgees,
+    messagesPurges,
+    relancesEnvoyees,
+    comptesSupprimes: supprimes,
+    suppressionsIgnorees: ignores,
+  });
   return {
     invitationsPurgees,
     messagesPurges,
     relancesEnvoyees,
     comptesSupprimes: supprimes,
     suppressionsIgnorees: ignores,
+    sante,
   };
 }

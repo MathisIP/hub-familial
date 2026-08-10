@@ -484,4 +484,13 @@ export const DE: Partial<Record<CleUI, string>> = {
     'Der Betrag, der heute auf diesem Konto ist. Schau in deiner Banking-App nach und übertrage ihn. Ein Minus schreibst du mit Minuszeichen (z. B. -120,50).',
   AIDE_NB_PERSONNES:
     'Für wie viele Personen diese Antwort gilt. Ein „Ja“ einer vierköpfigen Familie zählt als vier Gedecke – genau diese Zahl braucht ein Caterer.',
+
+  // Historique
+  HIST_TITRE: 'Buchungsverlauf ansehen',
+  HIST_ANNEE: 'Ganzes Jahr',
+  HIST_CHARGEMENT: 'Wird geladen…',
+  HIST_OP: 'Buchung',
+  HIST_OPS: 'Buchungen',
+  HIST_VIDE: 'Keine Buchungen in diesem Zeitraum.',
+  HIST_TRONQUE: 'Liste gekürzt (zu viele Buchungen)',
 };

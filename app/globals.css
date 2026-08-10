@@ -2381,3 +2381,33 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   .init-entetes { display: none; }
   .init-ligne { grid-template-columns: 1fr 7rem 2rem; }
 }
+
+/* --- Historique des opérations (components/budget/Historique.tsx) ----------
+   Volontairement DISCRET : un lien replié en bas de page, pas une carte de
+   plus. Le tableau de bord répond à « où en suis-je ce mois-ci », question
+   posée neuf fois sur dix ; l'historique répond à « qu'ai-je dépensé en mars »,
+   qu'on pose rarement mais qu'il faut pouvoir poser. Une fois déplié, il
+   reprend le style des blocs existants pour ne pas dépayser. */
+.hist { margin-top: 1.5rem; }
+.hist-bascule {
+  font: inherit; font-size: .9rem; color: var(--muted);
+  background: none; border: 0; cursor: pointer; padding: .4rem 0;
+  display: inline-flex; align-items: center; gap: .5rem;
+  border-bottom: 1px solid transparent;
+}
+.hist-bascule:hover { color: var(--tx); border-bottom-color: var(--line); }
+.hist-corps {
+  margin-top: .9rem; background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1rem; padding: 1.1rem 1.2rem; box-shadow: var(--shadow-soft);
+}
+.hist-periodes { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+.hist-onglet {
+  font: inherit; font-size: .85rem; cursor: pointer;
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  padding: .3rem .8rem; border-radius: 999px;
+}
+.hist-onglet:hover { background: var(--soft); }
+.hist-onglet.actif { background: var(--soft); color: var(--tx); border-color: var(--acc); }
+.hist-onglet:disabled { opacity: .55; cursor: default; }
+.hist-info { margin: 0 0 .7rem; font-size: .85rem; color: var(--muted); }
+.hist-corps .tx-liste { margin: 0; }

@@ -482,4 +482,13 @@ export const IT: Partial<Record<CleUI, string>> = {
     'L’importo che c’è oggi su quel conto. Guarda la tua app bancaria e ricopialo. Uno scoperto si scrive con il segno meno (es. -120,50).',
   AIDE_NB_PERSONNES:
     'Quante persone copre questa risposta. Un «sì» di una famiglia di quattro vale quattro coperti: è la cifra che serve a un catering.',
+
+  // Historique
+  HIST_TITRE: 'Vedi lo storico dei movimenti',
+  HIST_ANNEE: 'Tutto l’anno',
+  HIST_CHARGEMENT: 'Caricamento…',
+  HIST_OP: 'movimento',
+  HIST_OPS: 'movimenti',
+  HIST_VIDE: 'Nessun movimento in questo periodo.',
+  HIST_TRONQUE: 'elenco troncato (troppi movimenti)',
 };

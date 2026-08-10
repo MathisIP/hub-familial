@@ -2,6 +2,7 @@ import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
 import InitComptes from '@/components/budget/InitComptes';
 import GestionComptes from '@/components/budget/GestionComptes';
+import Historique from '@/components/budget/Historique';
 import { chargerBudget, chargerComptesGestion, comptesExistants } from '@/lib/budget/service';
 import { exigerAcces } from '@/lib/abonnement';
 import { ConfigManquante } from '@/lib/config';
@@ -43,6 +44,7 @@ export default async function PageBudget({
           <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
           <VueBudget d={d} langue={langue} />
           <GestionComptes comptes={comptes} />
+          <Historique selection={d.selection} periodeLibelle={d.periode} />
         </>
       );
     }

@@ -487,4 +487,13 @@ export const ES: Partial<Record<CleUI, string>> = {
     'El importe que hay hoy en esa cuenta. Míralo en tu app bancaria y cópialo. Un descubierto se escribe con signo menos (p. ej. -120,50).',
   AIDE_NB_PERSONNES:
     'A cuántas personas cubre esta respuesta. Un «sí» de una familia de cuatro cuenta como cuatro cubiertos: es la cifra que necesita un catering.',
+
+  // Historique
+  HIST_TITRE: 'Ver el historial de movimientos',
+  HIST_ANNEE: 'Todo el año',
+  HIST_CHARGEMENT: 'Cargando…',
+  HIST_OP: 'movimiento',
+  HIST_OPS: 'movimientos',
+  HIST_VIDE: 'Ningún movimiento en este periodo.',
+  HIST_TRONQUE: 'lista truncada (demasiados movimientos)',
 };

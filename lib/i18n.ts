@@ -302,6 +302,17 @@ const UI = {
   BUD_SOLDES: { fr: 'Soldes des comptes', en: 'Account balances' },
   BUD_PAR_CAT: { fr: 'Dépenses par catégorie', en: 'Spending by category' },
   BUD_MOIS_COURANT: { fr: 'mois en cours', en: 'current month' },
+  /* --- Budget : historique des opérations (replié, bas de page) --- */
+  HIST_TITRE: { fr: 'Voir l’historique des opérations', en: 'View transaction history' },
+  HIST_ANNEE: { fr: 'Toute l’année', en: 'Full year' },
+  HIST_CHARGEMENT: { fr: 'Chargement…', en: 'Loading…' },
+  HIST_OP: { fr: 'opération', en: 'transaction' },
+  HIST_OPS: { fr: 'opérations', en: 'transactions' },
+  HIST_VIDE: { fr: 'Aucune opération sur cette période.', en: 'No transactions in this period.' },
+  HIST_TRONQUE: {
+    fr: 'liste tronquée (trop d’opérations)',
+    en: 'list truncated (too many transactions)',
+  },
   BUD_DERNIERES_TX: { fr: 'Dernières transactions', en: 'Recent transactions' },
   BUD_SANS_LIBELLE: { fr: '(sans libellé)', en: '(no label)' },
   BUD_ECHEANCES: { fr: 'Échéances à venir', en: 'Upcoming due dates' },

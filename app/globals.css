@@ -925,6 +925,13 @@ a { color: var(--link-tx); }
 .ag-checkbox input { width: 1.1rem; height: 1.1rem; accent-color: var(--link-tx); }
 .ag-erreur-detail { font-size: .78rem; opacity: .8; margin-top: .4rem; }
 
+/* Portée de suppression d'un événement récurrent (« cette date » / « la série ») */
+.ag-portee { display: flex; flex-direction: column; gap: .4rem; margin-top: .5rem; }
+.ag-portee-q { font-size: .8rem; color: var(--muted); }
+.ag-portee-choix { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ag-portee-choix .bouton { font-size: .8rem; padding: .25rem .6rem; }
+.ag-portee-non { color: var(--muted); }
+
 /* ===================== ACCUEIL : MARQUE & MENU ===================== */
 .brand { display: flex; align-items: center; gap: .8rem; }
 .brand-logo { border-radius: .6rem; flex: none; }

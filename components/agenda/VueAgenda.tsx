@@ -8,6 +8,7 @@ import {
   type Agenda,
   type DonneesAgenda,
   type EvenementAgenda,
+  type PorteeSuppression,
 } from '@/lib/agenda/schema';
 
 /** Date ISO (yyyy-mm-dd) → « lundi 4 août » dans la langue courante. */
@@ -38,6 +39,8 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [ajout, setAjout] = useState(false);
+  /** id de l'occurrence dont on demande la portée de suppression (récurrent). */
+  const [aSupprimer, setASupprimer] = useState<string | null>(null);
 
   const rafraichir = useCallback(async () => {
     const r = await fetch('/api/agenda', { cache: 'no-store' });
@@ -60,6 +63,20 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
       }
     },
     [rafraichir],
+  );
+
+  const supprimer = useCallback(
+    (e: EvenementAgenda, portee: PorteeSuppression) => {
+      setASupprimer(null);
+      action(() =>
+        fetch('/api/agenda', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ calendarId: e.calendarId, id: e.id, portee }),
+        }),
+      );
+    },
+    [action],
   );
 
   const aujourd = aujourdhuiISO();
@@ -132,19 +149,49 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                           {e.description}
                         </span>
                       )}
+                      {/* Récurrent : on demande la portée au lieu de deviner. */}
+                      {aSupprimer === e.id && (
+                        <span className="ag-portee">
+                          <span className="ag-portee-q">{tr('AGD_RECUR_Q')}</span>
+                          <span className="ag-portee-choix">
+                            <button
+                              type="button"
+                              className="bouton discret"
+                              onClick={() => supprimer(e, 'occurrence')}
+                              disabled={occupe}
+                            >
+                              {tr('AGD_RECUR_UNE')}
+                            </button>
+                            <button
+                              type="button"
+                              className="bouton discret"
+                              onClick={() => supprimer(e, 'serie')}
+                              disabled={occupe}
+                            >
+                              {tr('AGD_RECUR_SERIE')}
+                            </button>
+                            <button
+                              type="button"
+                              className="bouton discret ag-portee-non"
+                              onClick={() => setASupprimer(null)}
+                              disabled={occupe}
+                            >
+                              {tr('G_ANNULER')}
+                            </button>
+                          </span>
+                        </span>
+                      )}
                     </span>
                     <button
                       className="bouton discret ag-suppr"
                       onClick={() => {
-                        if (confirm(`${tr('G_SUPPRIMER')} « ${e.titre} » ?`)) {
-                          action(() =>
-                            fetch('/api/agenda', {
-                              method: 'DELETE',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ calendarId: e.calendarId, id: e.id }),
-                            }),
-                          );
+                        // Événement récurrent : « supprimer » est ambigu tant
+                        // qu'on n'a pas dit *quoi*. On ouvre le choix.
+                        if (e.serieId) {
+                          setASupprimer(aSupprimer === e.id ? null : e.id);
+                          return;
                         }
+                        if (confirm(`${tr('G_SUPPRIMER')} « ${e.titre} » ?`)) supprimer(e, 'occurrence');
                       }}
                       disabled={occupe}
                       aria-label={`${tr('G_SUPPRIMER')} ${e.titre}`}

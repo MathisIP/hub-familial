@@ -12,10 +12,29 @@ export const COULEURS_AGENDA = ['#7fb0e0', '#6cc39a', '#e6a3b3', '#e6c07f', '#b0
 
 export type Agenda = { id: string; nom: string; couleur: string };
 
+/**
+ * Portée d'une suppression. N'a de sens que pour un événement récurrent :
+ * Google raisonne en occurrences, l'utilisateur en « ce rendez-vous » ou
+ * « ce rendez-vous chaque semaine ».
+ */
+export type PorteeSuppression = 'occurrence' | 'serie';
+
 export type EvenementAgenda = {
   id: string;
   calendarId: string; // agenda d'origine (nécessaire à la suppression)
   couleur: string; // couleur de l'agenda d'origine
+  /**
+   * Identifiant de la SÉRIE si cette ligne est une occurrence d'un événement
+   * récurrent ; '' sinon.
+   *
+   * ⚠ On liste avec `singleEvents: true` : un rendez-vous hebdomadaire arrive
+   * donc en autant de lignes qu'il a d'occurrences, chacune avec son propre id
+   * (« abc_20260812 »). Supprimer une de ces lignes n'annule QUE cette
+   * date-là — les autres restent dans Google Agenda. Sans ce champ, l'app
+   * répondait « supprimé » pendant que l'événement continuait d'exister, ce
+   * qui la faisait passer pour cassée.
+   */
+  serieId: string;
   titre: string;
   journeeEntiere: boolean;
   dateISO: string; // aaaa-mm-jj du début (pour grouper par jour)

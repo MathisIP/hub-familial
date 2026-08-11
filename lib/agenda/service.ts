@@ -13,6 +13,7 @@ import {
   type DonneesAgenda,
   type EvenementAgenda,
   type NouvelEvenement,
+  type PorteeSuppression,
 } from '@/lib/agenda/schema';
 
 /**
@@ -108,6 +109,7 @@ function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur:
     id: S(e.id),
     calendarId,
     couleur,
+    serieId: S(e.recurringEventId),
     titre: S(e.summary) || '(sans titre)',
     journeeEntiere,
     dateISO: debut.slice(0, 10),
@@ -289,10 +291,29 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
  * ⚠ `calendarId` vient du client : sans vérification, on pourrait supprimer un
  * événement dans l'agenda d'un AUTRE foyer en devinant son identifiant.
  */
-export async function supprimerEvenement(calendarId: string, id: string): Promise<void> {
+export async function supprimerEvenement(
+  calendarId: string,
+  id: string,
+  portee: PorteeSuppression = 'occurrence',
+): Promise<void> {
   if (!S(calendarId) || !S(id)) throw new ErreurValidation('Agenda et identifiant requis.');
   const cible = await exigerAgendaDuFoyer(calendarId);
   const cal = await clientPour(cible);
   if (!cal) throw new ErreurValidation('L’accès à cet agenda a expiré.');
-  await cal.events.delete({ calendarId, eventId: id });
+
+  /**
+   * ⚠ « Toute la série » ne se supprime pas en supprimant une occurrence.
+   *
+   * Les ids que l'app manipule sont ceux des occurrences (`singleEvents: true`),
+   * et `events.delete` sur une occurrence n'annule que cette date. Pour effacer
+   * le rendez-vous récurrent entier, il faut viser l'événement PARENT — dont on
+   * demande l'id à Google plutôt que de le faire calculer par le navigateur :
+   * une donnée d'affichage périmée ne doit pas décider ce qu'on efface.
+   */
+  let eventId = id;
+  if (portee === 'serie') {
+    const { data } = await cal.events.get({ calendarId, eventId: id });
+    eventId = S(data.recurringEventId) || id;
+  }
+  await cal.events.delete({ calendarId, eventId });
 }

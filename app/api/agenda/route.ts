@@ -29,12 +29,19 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** DELETE /api/agenda — supprime un événement { calendarId, id }. */
+/**
+ * DELETE /api/agenda — supprime un événement { calendarId, id, portee? }.
+ * `portee: 'serie'` efface tout un rendez-vous récurrent ; sinon la seule date.
+ */
 export async function DELETE(req: NextRequest) {
   try {
-    const { calendarId, id } = (await req.json()) as { calendarId?: string; id?: string };
+    const { calendarId, id, portee } = (await req.json()) as {
+      calendarId?: string;
+      id?: string;
+      portee?: string;
+    };
     if (!id || !calendarId) return NextResponse.json({ erreur: 'calendarId et id requis.' }, { status: 400 });
-    await supprimerEvenement(calendarId, id);
+    await supprimerEvenement(calendarId, id, portee === 'serie' ? 'serie' : 'occurrence');
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

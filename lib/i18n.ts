@@ -449,6 +449,9 @@ const UI = {
   AGD_DEBUT: { fr: 'Début', en: 'Start' },
   AGD_FIN: { fr: 'Fin', en: 'End' },
   AGD_DESC_PH: { fr: 'Note / description', en: 'Note / description' },
+  AGD_RECUR_Q: { fr: 'Rendez-vous récurrent — que supprimer ?', en: 'Recurring event — what should be deleted?' },
+  AGD_RECUR_UNE: { fr: 'Cette date', en: 'This date' },
+  AGD_RECUR_SERIE: { fr: 'Toute la série', en: 'The whole series' },
 
   // Statuts Événements
   EVS_APLANIFIER: { fr: 'À planifier', en: 'To plan' },

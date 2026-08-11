@@ -59,14 +59,28 @@ export type RapportMenage = {
 };
 
 /**
- * Dernier contact connu : la dernière venue, ou à défaut la création du compte.
+ * « Dernier contact antérieur à `limite` » — la dernière venue, ou à défaut la
+ * création du compte.
  *
  * ⚠ Le repli sur `cree_le` n'est pas un détail. Sans lui, quelqu'un qui se serait
  * inscrit puis n'aurait **jamais** reparu resterait `derniere_connexion = null`
  * pour toujours, donc éternellement conservé — précisément le cas que la durée
  * de conservation doit couvrir.
+ *
+ * ⚠ La date DOIT être passée en chaîne ISO, avec un transtypage explicite.
+ *
+ * Comparer une **colonne** Drizzle (`lt(utilisateurs.creeLe, date)`) fonctionne :
+ * Drizzle connaît son type et convertit l'objet `Date` avant l'envoi. Dans une
+ * expression `sql` brute, il n'a **aucune information de type** et transmet la
+ * `Date` telle quelle — que le pilote ne sait pas sérialiser. La requête échoue
+ * alors sur « The "string" argument must be of type string… Received an instance
+ * of Date », message qui ne désigne ni la date, ni le `coalesce`, ni cette ligne.
+ *
+ * C'est exactement ce qui faisait échouer le ménage quotidien en 500.
  */
-const dernierContact = sql`coalesce(${utilisateurs.derniereConnexion}, ${utilisateurs.creeLe})`;
+function avantLe(limite: Date) {
+  return sql`coalesce(${utilisateurs.derniereConnexion}, ${utilisateurs.creeLe}) < ${limite.toISOString()}::timestamptz`;
+}
 
 /**
  * Supprime les invitations expirées de longue date.
@@ -113,7 +127,7 @@ export async function relancerComptesInactifs(): Promise<number> {
   const aRelancer = await d
     .select({ id: utilisateurs.id, email: utilisateurs.email, nom: utilisateurs.nom })
     .from(utilisateurs)
-    .where(and(lt(dernierContact, limite), isNull(utilisateurs.relanceInactiviteLe)))
+    .where(and(avantLe(limite), isNull(utilisateurs.relanceInactiviteLe)))
     .limit(RELANCES_PAR_PASSAGE);
 
   let envoyees = 0;
@@ -153,7 +167,7 @@ export async function supprimerComptesSansRetour(): Promise<{ supprimes: number;
     .from(utilisateurs)
     .where(
       and(
-        lt(dernierContact, limiteInactivite), // toujours inactif : un retour aurait remis le compteur à zéro
+        avantLe(limiteInactivite), // toujours inactif : un retour aurait remis le compteur à zéro
         lt(utilisateurs.relanceInactiviteLe, limitePreavis),
       ),
     )

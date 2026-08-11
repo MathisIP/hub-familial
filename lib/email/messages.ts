@@ -21,7 +21,27 @@ import { envoyerEmail } from '@/lib/email';
 
 const MARQUE = '#E8735A'; // corail de la marque — en dur ici car un e-mail n'a pas accès aux variables CSS
 
-function gabarit(titre: string, corps: string, bouton?: { texte: string; url: string }): string {
+const PIED_UTILISATEUR =
+  "Tu reçois ce message parce qu'une action te concernant a eu lieu sur Nestync. " +
+  "Si tu n'en es pas à l'origine, ignore-le simplement.";
+
+/** Pied de page d'un relevé d'exploitation — destiné à nous, pas à un utilisateur. */
+const PIED_INTERNE =
+  'Relevé automatique de Nestync, envoyé chaque jour à l’adresse de contact du service.';
+
+/**
+ * `pied` : le texte du bas. Par défaut celui destiné aux UTILISATEURS.
+ *
+ * ⚠ Un relevé qu'on s'envoie à soi-même doit en avoir un autre : sinon il
+ * explique à son propre destinataire qu'« une action le concernant a eu lieu »,
+ * ce qui n'a aucun sens — et induirait en erreur s'il était transféré.
+ */
+function gabarit(
+  titre: string,
+  corps: string,
+  bouton?: { texte: string; url: string },
+  pied: string = PIED_UTILISATEUR,
+): string {
   return `<!doctype html>
 <html lang="fr"><body style="margin:0;padding:24px;background:#faf7f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2c2430">
   <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:32px">
@@ -36,10 +56,7 @@ function gabarit(titre: string, corps: string, bouton?: { texte: string; url: st
         : ''
     }
     <hr style="border:0;border-top:1px solid #ece5e8;margin:28px 0">
-    <p style="margin:0;font-size:12px;color:#9b8f96">
-      Tu reçois ce message parce qu'une action te concernant a eu lieu sur Nestync.
-      Si tu n'en es pas à l'origine, ignore-le simplement.
-    </p>
+    <p style="margin:0;font-size:12px;color:#9b8f96">${pied}</p>
   </div>
 </body></html>`;
 }
@@ -172,6 +189,7 @@ export async function envoyerBulletinSante(b: {
   messages24h: number;
   documents: number;
   agendasConnectes: number;
+  calendriersPartages: number;
   latenceBaseMs: number;
   alertes: string[];
   invitationsPurgees: number;
@@ -190,7 +208,12 @@ export async function envoyerBulletinSante(b: {
     ['Foyers', `${b.foyers} (+${b.nouveauxFoyers24h} en 24 h)`],
     ['Utilisateurs', `${b.utilisateurs} (+${b.nouveauxUtilisateurs24h} en 24 h)`],
     ['Documents stockés', String(b.documents)],
-    ['Agendas connectés', String(b.agendasConnectes)],
+    // ⚠ Deux chiffres distincts, longtemps confondus sous « Agendas connectés » :
+    // une personne relie SON compte Google (une autorisation), puis choisit
+    // PLUSIEURS calendriers à partager. Afficher l'un en le nommant l'autre
+    // donnait un compteur qui ne mesurait pas ce qu'il annonçait.
+    ['Comptes Google reliés', String(b.agendasConnectes)],
+    ['Calendriers partagés', String(b.calendriersPartages)],
     ['Messages reçus (24 h)', String(b.messages24h)],
     ['Réponse de la base', `${b.latenceBaseMs} ms`],
   ];
@@ -234,6 +257,8 @@ export async function envoyerBulletinSante(b: {
        <table style="border-collapse:collapse;width:100%">${tableau(lignes)}</table>
        <p style="margin:20px 0 6px;font-size:12px;font-weight:700;color:#9b8f96;text-transform:uppercase;letter-spacing:.05em">Ménage</p>
        <table style="border-collapse:collapse;width:100%">${tableau(menage)}</table>`,
+      undefined, // pas de bouton : ce relevé ne mène nulle part
+      PIED_INTERNE,
     ),
   });
 }

@@ -10,6 +10,7 @@ import {
   foyers as tFoyers,
   documents as tDocuments,
   comptesGoogle,
+  foyerAgendas,
 } from '@/lib/db/schema';
 import { envoyerRelanceInactivite, envoyerBulletinSante } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
@@ -246,6 +247,7 @@ export type BulletinSante = {
   messages24h: number;
   documents: number;
   agendasConnectes: number;
+  calendriersPartages: number;
   latenceBaseMs: number;
   alertes: string[];
 };
@@ -267,6 +269,7 @@ export async function bulletinSante(): Promise<BulletinSante> {
     messages,
     documents,
     agendas,
+    calendriers,
   ] = await Promise.all([
     d.select({ n: sql<number>`count(*)::int` }).from(tFoyers),
     d.select({ n: sql<number>`count(*)::int` }).from(utilisateurs_),
@@ -275,6 +278,7 @@ export async function bulletinSante(): Promise<BulletinSante> {
     d.select({ n: sql<number>`count(*)::int` }).from(messagesContact).where(gt(messagesContact.creeLe, hier)),
     d.select({ n: sql<number>`count(*)::int` }).from(tDocuments),
     d.select({ n: sql<number>`count(*)::int` }).from(comptesGoogle),
+    d.select({ n: sql<number>`count(*)::int` }).from(foyerAgendas),
   ]);
   const latenceBaseMs = Date.now() - debut;
 
@@ -286,6 +290,7 @@ export async function bulletinSante(): Promise<BulletinSante> {
     messages24h: messages[0].n,
     documents: documents[0].n,
     agendasConnectes: agendas[0].n,
+    calendriersPartages: calendriers[0].n,
     latenceBaseMs,
     alertes: [],
   };

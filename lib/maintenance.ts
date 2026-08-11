@@ -296,15 +296,28 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   const messagesPurges = await purgerMessagesContact();
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
-  const sante = await bulletinSante();
-  await envoyerBulletinSante({
-    ...sante,
-    invitationsPurgees,
-    messagesPurges,
-    relancesEnvoyees,
-    comptesSupprimes: supprimes,
-    suppressionsIgnorees: ignores,
-  });
+  /**
+   * ⚠ Le bulletin ne doit JAMAIS faire échouer le ménage.
+   *
+   * Les purges sont le vrai travail de cette tâche ; le bulletin n'est qu'un
+   * compte rendu. Si l'envoi échoue, l'exécution était pourtant utile — la
+   * signaler en échec ferait croire que rien n'a été nettoyé, et masquerait le
+   * résultat des purges dans un code d'erreur.
+   */
+  let sante: BulletinSante | undefined;
+  try {
+    sante = await bulletinSante();
+    await envoyerBulletinSante({
+      ...sante,
+      invitationsPurgees,
+      messagesPurges,
+      relancesEnvoyees,
+      comptesSupprimes: supprimes,
+      suppressionsIgnorees: ignores,
+    });
+  } catch (e) {
+    console.error('[maintenance] bulletin impossible', e instanceof Error ? e.stack : e);
+  }
   return {
     invitationsPurgees,
     messagesPurges,

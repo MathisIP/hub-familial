@@ -162,6 +162,13 @@
       "when": 1786234388782,
       "tag": "0022_married_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786482042800,
+      "tag": "0023_bitter_screwball",
+      "breakpoints": true
     }
   ]
 }

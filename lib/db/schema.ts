@@ -689,3 +689,33 @@ export const dossiers = pgTable(
 
 export type LigneDocument = typeof documents.$inferSelect;
 export type LigneDossier = typeof dossiers.$inferSelect;
+
+/**
+ * Comptes du PROJET (dépenses engagées, recettes à venir).
+ *
+ * ⚠ **Volontairement SANS `foyer_id`** — et c'est la seule table dans ce cas.
+ * Ce ne sont pas des données de foyer mais la comptabilité du porteur de projet :
+ * les autres membres de son propre foyer n'ont aucune raison de la voir. La
+ * règle d'isolation par foyer ne s'applique donc pas ici ; l'accès est gardé
+ * autrement, par l'adresse déclarée dans `EMAIL_ADMIN` ([lib/comptes/service.ts]).
+ *
+ * ⚠ La **source de vérité reste le fichier** `comptes.json` tenu hors dépôt ;
+ * cette table n'en est qu'une copie, remplacée intégralement à chaque
+ * `npm run comptes`. Ne jamais écrire ici depuis l'application.
+ *
+ * `montant` est en **centimes** (entier) : un flottant qui traîne finit toujours
+ * par afficher 20,999999 €. `null` = montant pas encore renseigné.
+ */
+export const mouvementsProjet = pgTable('mouvements_projet', {
+  id: text('id').primaryKey(), // l'identifiant lisible du fichier, pas un UUID
+  date: text('date').notNull(), // aaaa-mm-jj — premier paiement si récurrent
+  libelle: text('libelle').notNull(),
+  categorie: text('categorie').notNull().default(''),
+  sens: text('sens').notNull(), // 'depense' | 'recette'
+  montantCentimes: integer('montant_centimes'), // null = à compléter
+  recurrence: text('recurrence'), // null | 'mensuel' | 'annuel'
+  fin: text('fin'), // aaaa-mm-jj ou null (toujours actif)
+  note: text('note').notNull().default(''),
+});
+
+export type LigneMouvementProjet = typeof mouvementsProjet.$inferSelect;

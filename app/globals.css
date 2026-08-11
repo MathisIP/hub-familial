@@ -2418,3 +2418,58 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .hist-onglet:disabled { opacity: .55; cursor: default; }
 .hist-info { margin: 0 0 .7rem; font-size: .85rem; color: var(--muted); }
 .hist-corps .tx-liste { margin: 0; }
+
+/* ===================== COMPTES DU PROJET (page privée) ===================== */
+.cp-tuiles {
+  display: grid; gap: .8rem; margin-bottom: 1.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+.cp-tuile {
+  background: var(--cell); border-radius: 1rem; padding: .9rem 1rem;
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.cp-tuile-titre { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cp-tuile-valeur { font-size: 1.5rem; font-family: var(--police-titre); font-variant-numeric: tabular-nums; }
+.cp-tuile-detail { font-size: .78rem; color: var(--muted); }
+.cp-tuile-alerte .cp-tuile-valeur { color: var(--over-tx, var(--acc)); }
+
+.cp-bloc { background: var(--cell); border-radius: 1rem; padding: 1rem 1.1rem; margin-bottom: 1.4rem; }
+.cp-titre { font-size: 1rem; margin: 0 0 .2rem; }
+.cp-sous { font-size: .85rem; color: var(--muted); margin: 0 0 .9rem; }
+
+.cp-cats { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
+.cp-cat { display: grid; grid-template-columns: minmax(6rem, 9rem) 1fr auto; gap: .7rem; align-items: center; font-size: .88rem; }
+.cp-jauge { background: var(--soft); border-radius: 999px; height: .5rem; overflow: hidden; }
+.cp-jauge-part { display: block; height: 100%; background: var(--acc); border-radius: 999px; }
+.cp-cat-val { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cp-cat-val small { color: var(--muted); margin-left: .3rem; }
+
+.cp-pm { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .8rem; }
+.cp-pm-item {
+  background: var(--soft); border-radius: .8rem; padding: .6rem .9rem;
+  display: flex; align-items: baseline; gap: .45rem;
+}
+.cp-pm-prix { font-size: .8rem; color: var(--muted); }
+.cp-pm-nb { font-size: 1.25rem; font-family: var(--police-titre); font-variant-numeric: tabular-nums; }
+.cp-pm-lib { font-size: .8rem; color: var(--muted); }
+
+.cp-table-cadre { overflow-x: auto; margin-top: .8rem; }
+.cp-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.cp-table th {
+  text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); font-weight: 600; padding: 0 .6rem .5rem; white-space: nowrap;
+}
+.cp-table td { padding: .6rem; border-top: 1px solid var(--line); vertical-align: top; }
+.cp-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cp-total { font-weight: 600; }
+.cp-date { color: var(--muted); white-space: nowrap; }
+.cp-libelle { display: block; }
+.cp-etiquette {
+  display: inline-block; margin-top: .25rem; font-size: .72rem;
+  background: var(--soft); color: var(--muted); border-radius: 999px; padding: .1rem .5rem;
+}
+.cp-note { display: block; margin-top: .3rem; font-size: .78rem; color: var(--muted); }
+.cp-manque { color: var(--muted); font-style: italic; font-size: .82rem; }
+.cp-arrete { margin-left: .4rem; font-size: .72rem; color: var(--muted); }
+.cp-recette .cp-total { color: var(--acc-deep, var(--acc)); }
+.cp-pied { font-size: .8rem; color: var(--muted); }

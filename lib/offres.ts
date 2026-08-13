@@ -46,9 +46,13 @@ export const OFFRES: Offre[] = [
   {
     id: 'annuel',
     nom: 'Annuel',
-    prix: 47.9,
+    // ⚠ 49,90 = exactement 4,99 × 10, soit les « 2 mois offerts » annoncés
+    // juste en dessous. Le tarif était à 47,90 € (13/08/2026) : l'étiquette
+    // promettait alors moins que ce qu'on donnait réellement (2,4 mois). Prix et
+    // argument de vente doivent tomber juste, sinon l'un des deux ment.
+    prix: 49.9,
     periode: 'par an',
-    parMois: 47.9 / 12,
+    parMois: 49.9 / 12,
     economie: '2 mois offerts',
   },
 ];

@@ -6,6 +6,7 @@ import { auth } from '@/auth';
 import { db, baseDisponible } from '@/lib/db';
 import { foyers, membres, utilisateurs, type Foyer } from '@/lib/db/schema';
 import { peutCreerFoyer } from '@/lib/acces';
+import { ESSAI_JOURS } from '@/lib/offres';
 
 /**
  * RÉSOLUTION DU FOYER COURANT (serveur uniquement, runtime Node).
@@ -141,8 +142,12 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
   //    qui la redirige vers /bienvenue.
   if (!peutCreerFoyer(u.email)) throw new SansFoyer();
 
-  //    Provisionnement : foyer + essai de 14 jours, l'utilisateur en est propriétaire.
-  const finEssai = new Date(Date.now() + 14 * 86400000);
+  //    Provisionnement : foyer + essai gratuit, l'utilisateur en est propriétaire.
+  //    ⚠ La durée vient de `ESSAI_JOURS`, elle n'est PAS recopiée ici. Elle
+  //    l'était : la vitrine et le code pouvaient donc diverger, et annoncer une
+  //    durée qui n'était pas celle accordée. Une promesse commerciale et son
+  //    application doivent lire la même constante.
+  const finEssai = new Date(Date.now() + ESSAI_JOURS * 86400000);
   const utilisateurId = u.id;
   const nomUtilisateur = u.nom;
   return d.transaction(async (tx) => {

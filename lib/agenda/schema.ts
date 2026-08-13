@@ -63,25 +63,12 @@ export type NouvelEvenement = {
   description?: string;
 };
 
-const JOURS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-const MOIS_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-
-/** « 2026-08-15 » → « samedi 15 août 2026 ». */
-export function libelleJourComplet(iso: string): string {
-  const [a, m, j] = iso.split('-').map(Number);
-  if (!a || !m || !j) return iso;
-  const d = new Date(a, m - 1, j);
-  return `${JOURS_FR[d.getDay()]} ${j} ${MOIS_FR[m - 1]} ${a}`;
-}
-
-/** Étiquette relative courte : Aujourd'hui / Demain / sinon vide. */
-export function libelleRelatif(iso: string, aujourdISO: string): string {
-  if (iso === aujourdISO) return "Aujourd'hui";
-  const [a, m, j] = aujourdISO.split('-').map(Number);
-  const demain = new Date(a, m - 1, j + 1);
-  const dISO = `${demain.getFullYear()}-${String(demain.getMonth() + 1).padStart(2, '0')}-${String(demain.getDate()).padStart(2, '0')}`;
-  return iso === dISO ? 'Demain' : '';
-}
+/*
+ * `libelleJourComplet` et `libelleRelatif` ont ete retires le 13/08/2026 :
+ * ils formataient en francais en dur, alors que VueAgenda formate desormais
+ * dans la langue choisie via Intl. Deux facons de nommer un jour valaient une
+ * de trop.
+ */
 
 export function aujourdhuiISO(): string {
   const d = new Date();

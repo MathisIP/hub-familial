@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { utilisateurCourant, foyerCourant } from '@/lib/foyer';
 import { maDemande } from '@/lib/membres';
 import { inscriptionOuverte } from '@/lib/acces';
+import { ESSAI_JOURS } from '@/lib/offres';
 import { membres } from '@/lib/db/schema';
 import { db } from '@/lib/db';
 import { eq } from 'drizzle-orm';
@@ -78,7 +79,7 @@ export default async function PageBienvenue() {
               <h2>Créer mon foyer</h2>
               <p>
                 Tu es le premier de ta famille sur Nestync ? Crée ton foyer et invite
-                tes proches. L’essai est gratuit pendant 14 jours.
+                tes proches. L’essai est gratuit pendant {ESSAI_JOURS} jours.
               </p>
               <form
                 action={async () => {

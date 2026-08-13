@@ -39,11 +39,6 @@ function cle(): Buffer | null {
   return cleCache;
 }
 
-/** Le chiffrement des documents est-il configuré ? */
-export function chiffrementDisponible(): boolean {
-  return !!process.env.DOCUMENTS_SECRET;
-}
-
 /**
  * Chiffre le contenu d'un fichier. Sans clé configurée, renvoie les données
  * telles quelles : le module continue de fonctionner, en clair, plutôt que de

@@ -51,7 +51,7 @@ STRIPE_WEBHOOK_SECRET=whsec_…
 
 ## Comment marche l'accès
 
-- **Essai** : à sa création, un foyer a 14 jours d'essai (`abonnement_fin`). Les
+- **Essai** : à sa création, un foyer a 30 jours d'essai (`ESSAI_JOURS`) (`abonnement_fin`). Les
   foyers créés AVANT cette logique (dont le tien) ont un essai « ouvert » (accès
   tant que le statut reste `essai`) — abonne-toi quand tu veux, tu n'es pas bloqué.
 - `exigerAcces()` (en tête de l'accueil et des modules) redirige vers **/abonnement**

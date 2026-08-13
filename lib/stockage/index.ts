@@ -65,11 +65,6 @@ function s3(c: NonNullable<ReturnType<typeof configOvh>>): S3Client {
 
 /* -------------------------------- Interface -------------------------------- */
 
-/** Un stockage est-il configuré ? (OVH en priorité, Vercel Blob en repli.) */
-export function stockageDisponible(): boolean {
-  return !!configOvh() || !!process.env.BLOB_READ_WRITE_TOKEN;
-}
-
 export class StockageNonConfigure extends Error {
   constructor() {
     super('Stockage de fichiers non configuré (ni OVH_S3_*, ni BLOB_READ_WRITE_TOKEN).');

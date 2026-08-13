@@ -30,10 +30,6 @@ export type Message = {
 };
 
 /** L'envoi est-il configuré ? Permet de dégrader proprement dans l'UI. */
-export function emailDisponible(): boolean {
-  return !!process.env.BREVO_API_KEY && !!process.env.EMAIL_EXPEDITEUR;
-}
-
 /**
  * Envoie un message. Renvoie `true` si Brevo l'a accepté.
  *

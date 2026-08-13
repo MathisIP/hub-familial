@@ -6,7 +6,22 @@
  * configuré dans Stripe (`STRIPE_PRICE_ID`) — ils ne le pilotent pas.
  */
 
-export const ESSAI_JOURS = 14;
+/**
+ * Durée de l'essai gratuit, en jours.
+ *
+ * ⚠ **30, et pas 14, à dessein** (13/08/2026). Le module Budget ne montre sa
+ * valeur qu'après **une clôture de mois** : échéances tombées, soldes qui
+ * bougent, dépenses par catégorie remplies. Un essai de 14 jours se terminait
+ * avant que la personne ait vu la seule chose qui distingue vraiment Nestync de
+ * ses concurrents. FamilyWall en offre 30.
+ *
+ * ⚠ **À ne pas confondre avec les 14 jours du droit de rétractation**, qui sont
+ * fixés par la loi (art. L221-18 du code de la consommation) et n'ont rien à
+ * voir avec cette durée commerciale. Les mentions de « 14 jours » dans
+ * [app/conditions](../app/conditions/page.tsx), [lib/abonnement.ts] et le
+ * dictionnaire i18n relèvent de ce droit : **ne pas les aligner sur celle-ci**.
+ */
+export const ESSAI_JOURS = 30;
 
 /** Formule d'abonnement (sert aussi de clé pour le prix Stripe). */
 export type IdOffre = 'mensuel' | 'annuel';

@@ -42,8 +42,7 @@ body {
   max-width: 100%;
   overscroll-behavior: none;
 }
-.enveloppe { flex: 1 0 auto; width: 100%; min-width: 0; }
-.barre-haut, .pied { flex: none; }
+.enveloppe { flex: 1 0 auto; width: 100%; min-width: 0; }.pied { flex: none; }
 
 a { color: var(--link-tx); }
 
@@ -152,8 +151,7 @@ a { color: var(--link-tx); }
 @media (prefers-reduced-motion: reduce) {
   /* Pas de balayage : on garde un aplat statique, toujours lisible comme « en cours ». */
   .sk::after { animation: none; opacity: 0; }
-}
-.semaine, .courses-semaine, .documents, .resume-comptes, .compte-bloc {
+}.semaine, .courses-semaine, .documents, .compte-bloc {
   box-shadow: var(--shadow-soft);
 }
 
@@ -241,16 +239,6 @@ a { color: var(--link-tx); }
   min-height: 6.5rem;
 }
 
-.module-lien {
-  display: flex;
-  flex-direction: column;
-  gap: .35rem;
-  height: 100%;
-  text-decoration: none;
-  color: inherit;
-}
-.module:has(.module-lien):hover { border-color: var(--link-tx); }
-
 .module .titre {
   font-weight: 600;
   font-size: 1.05rem;
@@ -259,18 +247,6 @@ a { color: var(--link-tx); }
 .module .note {
   color: var(--muted);
   font-size: .85rem;
-}
-
-.module .bientot {
-  align-self: flex-start;
-  margin-top: auto;
-  font-size: .72rem;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  padding: .15rem .5rem;
-  border-radius: 999px;
-  background: var(--soft);
-  color: var(--ink2);
 }
 
 /* --- Bandeau d'état de connexion --- */
@@ -328,7 +304,6 @@ a { color: var(--link-tx); }
   text-decoration: none;
 }
 .lien-retour:hover span:last-child { text-decoration: underline; }
-.lien-retour-logo { border-radius: .35rem; flex: none; }
 
 .bouton {
   font: inherit;
@@ -520,17 +495,9 @@ a { color: var(--link-tx); }
 }
 .mois-fleche:hover:not(:disabled) { border-color: var(--link-tx); }
 .mois-fleche:disabled { opacity: .4; cursor: default; }
-.mois-etat { color: var(--muted); font-size: .9rem; }
 
 /* --- Saisie d'une transaction --- */
 .saisie-barre { display: flex; align-items: center; gap: .8rem; margin-bottom: .5rem; }
-.saisie-panel {
-  border: 1px solid var(--line);
-  background: var(--cell);
-  border-radius: .875rem;
-  padding: 1rem 1.1rem;
-  margin-bottom: .5rem;
-}
 .type-choix { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .9rem; }
 .type-btn {
   font: inherit;
@@ -562,7 +529,6 @@ a { color: var(--link-tx); }
   justify-content: flex-end;
   gap: .5rem;
 }
-
 
 .bloc-titre {
   font-size: .82rem;
@@ -597,7 +563,6 @@ a { color: var(--link-tx); }
   font-variant-numeric: tabular-nums;
 }
 .kpi .k-note { font-size: .76rem; color: var(--muted); margin-top: .15rem; }
-.kpi.k-reste .k-valeur.negatif { color: var(--over-tx); }
 .kpi.k-reste .k-valeur.positif { color: var(--ok-tx); }
 
 /* --- Tuiles de comptes --- */
@@ -614,7 +579,6 @@ a { color: var(--link-tx); }
 }
 .compte .c-nom { font-size: .82rem; color: var(--ink2); }
 .compte .c-solde { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.compte .c-solde.negatif { color: var(--over-tx); }
 
 /* --- Jauges Réel / Budget par catégorie --- */
 .jauges { display: flex; flex-direction: column; gap: .7rem; }
@@ -709,7 +673,6 @@ a { color: var(--link-tx); }
 }
 .jr-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
 .jr-jour { font-weight: 700; color: var(--ink); width: 5.5rem; }
-.jr-diner { flex: 1 1 12rem; min-width: 0; }
 .jr-pers { display: flex; align-items: center; gap: .3rem; }
 .jr-pers input { width: 4.2rem; }
 .jr-pers span { font-size: .82rem; color: var(--muted); }
@@ -717,16 +680,6 @@ a { color: var(--link-tx); }
 .jr-ingredients ul, .rc-ingredients ul { margin: 0; }
 .jr-ingredients ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .9rem; }
 .jr-ingredients li { font-size: .85rem; }
-.jr-echelle {
-  display: inline-block;
-  font-size: .74rem;
-  color: var(--over-tx);
-  background: var(--over-bg);
-  padding: .1rem .5rem;
-  border-radius: 999px;
-  margin-bottom: .35rem;
-}
-.jr-vide { font-size: .82rem; color: var(--muted); padding-left: 6rem; margin: 0; }
 
 /* --- Aperçu des courses --- */
 .apercu-courses {
@@ -863,11 +816,6 @@ a { color: var(--link-tx); }
 }
 .ev-agenda .champ { font-size: .84rem; padding: .3rem .45rem; }
 
-/* ========================== CONNEXION / COMPTE ========================== */
-.entete-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
-.comptes-indispo { margin: 1rem 0; }
-.bouton-deconnexion { font-size: .82rem; }
-
 .connexion {
   min-height: 70vh;
   display: flex;
@@ -932,49 +880,9 @@ a { color: var(--link-tx); }
 .ag-portee-choix .bouton { font-size: .8rem; padding: .25rem .6rem; }
 .ag-portee-non { color: var(--muted); }
 
-/* ===================== ACCUEIL : MARQUE & MENU ===================== */
-.brand { display: flex; align-items: center; gap: .8rem; }
-.brand-logo { border-radius: .6rem; flex: none; }
-.brand-titre {
-  font-family: var(--police-titre), Georgia, "Times New Roman", serif;
-  font-weight: 600; letter-spacing: -.01em;
-}
-
 /* --- Menu déroulant (haut-droite) --- */
 .menu { position: relative; }
-.menu-btn {
-  display: inline-flex; align-items: center; gap: .5rem;
-  font: inherit; font-size: .9rem; color: var(--ink);
-  background: var(--cell); border: 1px solid var(--line2);
-  padding: .5rem .85rem; border-radius: 999px; cursor: pointer;
-}
-.menu-btn:hover { border-color: var(--link-tx); }
-.menu-lignes { display: inline-flex; flex-direction: column; gap: 3px; }
-.menu-lignes span { display: block; width: 16px; height: 2px; border-radius: 2px; background: currentColor; }
-
-.menu-panel {
-  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 40;
-  min-width: 15rem;
-  background: var(--cell); border: 1px solid var(--line);
-  border-radius: .8rem; padding: .6rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
-}
-.menu-titre {
-  margin: .2rem .4rem .4rem; font-size: .7rem; font-weight: 700;
-  letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
-}
-.menu-modules { display: flex; flex-direction: column; }
-.menu-item {
-  display: block; width: 100%; text-align: left;
-  font: inherit; font-size: .92rem; color: var(--ink);
-  background: none; border: none; cursor: pointer; text-decoration: none;
-  padding: .5rem .55rem; border-radius: .5rem;
-}
-.menu-item:hover { background: var(--link-bg); }
 .menu-sep { height: 1px; background: var(--line); margin: .5rem .2rem; }
-.menu-reglage { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .2rem .55rem; }
-.menu-reglage-lbl { font-size: .9rem; color: var(--ink2); }
-.menu-deco { color: var(--over-tx); font-weight: 600; }
 
 /* ===================== ACCUEIL : AGENDA DE LA SEMAINE ===================== */
 .semaine {
@@ -990,26 +898,6 @@ a { color: var(--link-tx); }
 .semaine-leg-item { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--ink2); }
 .pastille-cal { width: .7rem; height: .7rem; border-radius: 999px; }
 
-.semaine-grille {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: .5rem; margin-top: .9rem;
-}
-.jour-col {
-  background: var(--page); border: 1px solid var(--line); border-radius: .6rem;
-  padding: .5rem .45rem; min-height: 6.5rem; display: flex; flex-direction: column; gap: .35rem;
-}
-.jour-col.aujourdhui { border-color: var(--link-tx); box-shadow: inset 0 0 0 1px var(--link-tx); }
-.jour-col.vide { opacity: .7; }
-.jour-entete { display: flex; align-items: baseline; justify-content: space-between; }
-.jour-nom { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.jour-num { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.jour-col.aujourdhui .jour-num { color: var(--link-tx); }
-.jour-events { display: flex; flex-direction: column; gap: .3rem; }
-.jour-rien { color: var(--line2); font-size: .85rem; }
-.mini-event { display: flex; align-items: center; gap: .3rem; font-size: .76rem; line-height: 1.25; }
-.mini-dot { width: .45rem; height: .45rem; border-radius: 999px; flex: none; }
-.mini-heure { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
-.mini-titre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 @media (max-width: 720px) {
   .semaine-grille { grid-template-columns: 1fr; gap: .4rem; }
   .jour-col { min-height: 0; flex-direction: row; align-items: center; gap: .7rem; }
@@ -1017,29 +905,12 @@ a { color: var(--link-tx); }
   .jour-events { flex: 1; }
   .mini-titre { white-space: normal; }
 }
-
-/* ===================== ACCUEIL : RÉSUMÉ COMPTES & ACTIONS ===================== */
-/* Comptes encadrés comme les sections Documents / Agenda / Courses (cohérence). */
-.resume-comptes {
-  margin-top: 1.5rem;
-  background: var(--cell);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  padding: 1.2rem 1.35rem;
-}
 .rc-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .rc-entete .bloc-titre { margin: 0 0 .75rem; }
 .rc-lien { font-size: .85rem; color: var(--link-tx); text-decoration: none; white-space: nowrap; }
 .rc-lien:hover { text-decoration: underline; }
 .compte-lien { text-decoration: none; display: flex; flex-direction: column; gap: .1rem; }
 .compte-lien:hover { outline: 2px solid var(--link-tx); outline-offset: 1px; }
-
-.actions-rapides {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .6rem;
-  margin: 1.25rem 0 .5rem;
-}
 .bouton-action { font-size: .95rem; padding: .6rem 1rem; text-decoration: none; display: inline-flex; align-items: center; }
 
 /* --- Modale (ajout d'opération) --- */
@@ -1082,23 +953,6 @@ a { color: var(--link-tx); }
 }
 .cs-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
 .cs-tete h2 { margin: 0; font-size: 1.05rem; }
-.cs-compteur { font-size: .82rem; color: var(--ink2); white-space: nowrap; }
-.cs-vide { color: var(--muted); font-size: .88rem; margin: .8rem 0 0; }
-.cs-reessayer { padding: .1rem .5rem; margin-left: .3rem; }
-
-/* Articles groupés par rayon (design maquette) */
-.cs-rayon-groupe { margin-top: .2rem; }
-.cs-rayon {
-  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); margin: 1rem 0 .45rem;
-}
-.cs-arts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem .9rem; }
-.cs-arts li { font-size: .9rem; }
-.cs-q {
-  font-variant-numeric: tabular-nums; color: var(--ink2);
-  background: color-mix(in srgb, var(--head) 32%, var(--cell));
-  padding: .05rem .45rem; border-radius: 999px; font-size: .8rem; margin-left: .3rem;
-}
 .cs-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1.1rem; }
 
 /* Bouton d'action principal (CTA plein corail + halo doux) */
@@ -1123,24 +977,10 @@ a { color: var(--link-tx); }
   justify-content: space-between; gap: .6rem;
 }
 .doc-tete h2 { margin: 0; font-size: 1.05rem; }
-.doc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.doc-dossier { width: 11rem; max-width: 100%; }
 .doc-btn { white-space: nowrap; }
 
 .doc-info { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
 .doc-msg { margin: .8rem 0 0; }
-
-/* Groupes par dossier */
-.doc-groupes { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 1rem; }
-.doc-gtitre {
-  display: flex; align-items: center; gap: .5rem;
-  margin: 0 0 .45rem; font-size: .85rem; font-weight: 700;
-  color: var(--head); text-transform: uppercase; letter-spacing: .04em;
-}
-.doc-gcount {
-  font-size: .75rem; font-weight: 700; color: var(--muted);
-  background: var(--soft); border-radius: 999px; padding: .05rem .45rem;
-}
 
 /* Liste des fichiers */
 .doc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
@@ -1295,41 +1135,26 @@ a { color: var(--link-tx); }
   background: var(--soft); color: var(--ink2);
   border: 1px solid var(--line2); border-radius: .6rem;
   padding: .7rem .9rem; font-size: .88rem; margin: 1rem 0 1.5rem;
-}
-
-/* ============================================================================
+}/* ============================================================================
  * REFONTE CORAIL (socle) — titres Fraunces, arrondis généreux, halos doux.
  * Recolore via les jetons (thème Corail clair/sombre). Les écrans seront affinés
  * un à un ensuite (accueil, budget, modules).
  * ========================================================================== */
-h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
+h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   font-family: var(--police-titre), Georgia, "Times New Roman", serif;
   letter-spacing: -.01em;
-}
-/* Les intertitres « étiquette » restent en sans (petites capitales espacées). */
-.bloc-titre, .eyebrow, .rayon-titre, .cs-rayon, .kpi .k-label, .k-label {
+}/* Les intertitres « étiquette » restent en sans (petites capitales espacées). */
+.bloc-titre, .rayon-titre, .kpi .k-label, .k-label {
   font-family: var(--police-corps), system-ui, sans-serif;
-}
-
-/* Arrondis plus doux, cohérents avec la maquette. */
-.semaine, .courses-semaine, .documents, .resume-comptes, .compte-bloc,
-.apercu-courses, .saisie-panel, .connexion-carte, .modale, .menu-panel,
-.recette-form, .etat {
+}/* Arrondis plus doux, cohérents avec la maquette. */
+.semaine, .courses-semaine, .documents, .compte-bloc, .apercu-courses, .connexion-carte, .modale, .recette-form, .etat {
   border-radius: 1.4rem;
-}
-.module, .kpi, .tache, .course, .tx, .ech, .recette-carte, .cadeau, .ev-carte,
-.jour-repas, .compte, .de-item, .jour-col, .foyer-membre, .install-ios {
+}.module, .kpi, .tache, .course, .tx, .ech, .recette-carte, .cadeau, .ev-carte, .jour-repas, .compte, .de-item, .foyer-membre, .install-ios {
   border-radius: 1.1rem;
-}
-.champ, .tache select.statut, .cadeau select.statut, .ev-tete select.statut,
-.mois-fleche, .type-btn, .menu-btn { border-radius: .8rem; }
+}.champ, .tache select.statut, .cadeau select.statut, .ev-tete select.statut, .mois-fleche, .type-btn { border-radius: .8rem; }
 
 /* Accent corail : liens et pastilles actives profitent du halo. */
 .type-btn.actif { box-shadow: 0 0 12px -4px var(--glow); }
-.jour-col.aujourdhui { box-shadow: inset 0 0 0 1px var(--acc), 0 0 14px -6px var(--glow); }
-
-/* ===================== ACCUEIL REFONDU (Corail) ===================== */
-.brand-nom { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
 
 .hero-accueil { margin: .2rem 0 1.4rem; }
 .hero-date {
@@ -1482,35 +1307,14 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   padding: .5rem .6rem; border: 0; background: none; color: var(--ink);
   border-radius: .55rem; cursor: pointer;
 }
-.combo-item:hover { background: var(--link-bg); }
-
-/* ===================== CHROME GLOBAL : BARRE + PIED ===================== */
-/* Barre supérieure collante, présente sur toutes les pages authentifiées. */
-.barre-haut {
+.combo-item:hover { background: var(--link-bg); }/* ===================== CHROME GLOBAL : BARRE + PIED ===================== */
+/* Barre supérieure collante {
   position: sticky; top: 0; z-index: 45;
   background: color-mix(in srgb, var(--page) 86%, transparent);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--line);
 }
-.barre-inner {
-  max-width: 68rem; margin: 0 auto;
-  padding: .6rem clamp(1.25rem, 4vw, 2.5rem);
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-}
-.barre-marque {
-  display: inline-flex; align-items: center; gap: .6rem;
-  text-decoration: none; color: inherit;
-}
-.barre-marque .brand-logo {
-  border-radius: .55rem;
-  box-shadow: 0 2px 8px -3px var(--glow);
-}
-.barre-marque .brand-nom {
-  font-family: var(--police-titre), Georgia, serif;
-  font-weight: 600; font-size: 1.1rem; letter-spacing: -.01em;
-}
-.barre-marque:hover .brand-nom { color: var(--acc-deep); }
 
 /* --- Side bar (tiroir droit) + bouton d'ouverture --- */
 .sb-toggle {
@@ -1732,10 +1536,6 @@ h1, h2, h3, .brand-titre, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cs-ajout { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .3rem 0 1rem; }
 .cs-ajout .champ { flex: 1 1 12rem; min-width: 0; }
 .cs-ajout .cs-ajout-qte { flex: 0 1 6rem; }
-.cs-sous-titre {
-  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); margin: .9rem 0 .3rem;
-}
 
 /* Repas : menu du jour en 3 services (entrée / plat / dessert). */
 .jr-services {

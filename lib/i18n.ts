@@ -122,7 +122,6 @@ const UI = {
   ABO_ANNULE: { fr: 'Abonnement annulé', en: 'Subscription cancelled' },
 
   // Divers (page connexion, sélecteurs — secondaire)
-  APP_SOUS_TITRE: { fr: "L'organisation du foyer, en un seul endroit", en: 'Your household, all in one place' },
   THEME: { fr: '🎨 Thème', en: '🎨 Theme' },
   LANGUE: { fr: '🌍 Langue', en: '🌍 Language' },
   BIENTOT: { fr: 'À venir', en: 'Coming soon' },
@@ -575,10 +574,6 @@ const UI = {
   CONF_RETOUR: { fr: 'Retour', en: 'Back' },
   CONF_TITRE: { fr: 'Politique de confidentialité', en: 'Privacy policy' },
   CONF_MAJ: { fr: 'Dernière mise à jour : 5 août 2026', en: 'Last updated: 5 August 2026' },
-  CONF_AVERT: {
-    fr: '⚠ Modèle à finaliser : renseigne les champs entre crochets et fais relire ce document avant toute mise à disposition à d’autres foyers.',
-    en: '⚠ Template to finalize: fill in the bracketed fields and have this document reviewed before making it available to other households.',
-  },
   CONF_S1_T: { fr: '1. Responsable du traitement', en: '1. Data controller' },
   CONF_S1_P: {
     fr: 'Le responsable du traitement des données est Mathis INGRAND-PERIGNE, personne physique éditant le service à titre individuel, joignable à l’adresse contact@nestync.app. Le service « Nestync » (ci-après « le Service ») est une application d’organisation familiale.',

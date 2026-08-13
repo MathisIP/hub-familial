@@ -16,14 +16,14 @@
  * Mise à l'échelle : quantité affichée = quantité_base × personnesJour / personnesBase.
  */
 
-export const COL_RECETTE = {
-  NOM: 1, INGREDIENTS: 2, TYPE: 3, CHAUD_FROID: 4, NOTE: 5, PERSONNES: 6,
-} as const;
-export const LIGNE_DONNEES_RECETTES = 2;
-
-export const COL_SEM = { JOUR: 2, DINER: 3, NOTE: 4, PERSONNES: 5 } as const;
-export const LIGNE_ENTETE_SEMAINE = 7;
-export const JOUR_LIGNE_DEBUT = 8;
+/*
+ * ⚠ Les constantes de géométrie du tableur (COL_RECETTE, COL_SEM,
+ * LIGNE_DONNEES_RECETTES, LIGNE_ENTETE_SEMAINE, JOUR_LIGNE_DEBUT) ont été
+ * retirées le 13/08/2026. Elles décrivaient l'emplacement des cellules dans
+ * l'onglet Google Sheets, abandonné à la migration en base : une recette est
+ * désormais un UUID et un jour se désigne par son nom. Plus aucun numéro de
+ * ligne ni de colonne ne circule dans le code.
+ */
 export const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
 
 export const UNITES = [
@@ -35,9 +35,6 @@ export const CHAUD_FROID = ['Chaud', 'Froid'] as const;
 
 /** Catégories d'une recette selon le service. */
 export const CATEGORIES_PLAT = ['Entrée', 'Plat', 'Dessert'] as const;
-/** Correspondance service (clé) → catégorie de recette proposée dans ce créneau. */
-export const CATEGORIE_PAR_SERVICE = { entree: 'Entrée', plat: 'Plat', dessert: 'Dessert' } as const;
-
 /** Nombre de personnes par défaut du foyer (Lou & Mati) si rien n'est renseigné. */
 export const PERSONNES_DEFAUT = 2;
 
@@ -129,23 +126,17 @@ export function parseIngredient(ligne: string): Ingredient | null {
   return { article: f[0], quantite: null, unite: '', rayon: '' };
 }
 
-/** Parse le bloc d'ingrédients (une ligne par ingrédient). */
-export function parseIngredients(bloc: unknown): Ingredient[] {
-  return S(bloc)
-    .split(/\r?\n/)
-    .map(parseIngredient)
-    .filter((x): x is Ingredient => x !== null && x.article !== '');
-}
-
 /** Sérialise un ingrédient en ligne « article | quantité | unité | rayon » (toujours 4 champs). */
 export function ingredientVersLigne(i: Ingredient): string {
   return [i.article, formatQuantite(i.quantite), i.unite, i.rayon].join(' | ');
 }
 
-/** Sérialise le bloc d'ingrédients pour la cellule B. */
-export function ingredientsVersBloc(ings: Ingredient[]): string {
-  return ings.filter((i) => i.article.trim() !== '').map(ingredientVersLigne).join('\n');
-}
+/*
+ * `parseIngredients` et `ingredientsVersBloc` ont été retirés le 13/08/2026 :
+ * ils lisaient et écrivaient les ingrédients sous forme de **bloc de texte**
+ * dans une cellule du tableur. Ils sont stockés en JSONB depuis la migration en
+ * base ; `parseIngredient` (au singulier) survit, lui, pour la saisie libre.
+ */
 
 /**
  * Met les ingrédients à l'échelle : quantité × personnesJour / personnesBase.

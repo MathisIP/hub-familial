@@ -29,7 +29,8 @@ export default function PageConditions() {
     <article className="doc-legal">
       <Link className="lien-retour" href="/">← Retour</Link>
       <h1>Conditions générales de vente et d’utilisation</h1>
-      <p className="doc-maj">Dernière mise à jour : 5 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
+      <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <p className="doc-avertissement">
         ℹ Le Service est actuellement en <strong>phase de lancement</strong> : l’accès se

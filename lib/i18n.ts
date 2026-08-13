@@ -571,45 +571,48 @@ const UI = {
   ABO_GERER: { fr: 'Gérer mon abonnement', en: 'Manage my subscription' },
 
   // Politique de confidentialité (gabarit)
-  CONF_RETOUR: { fr: 'Retour', en: 'Back' },
-  CONF_TITRE: { fr: 'Politique de confidentialité', en: 'Privacy policy' },
-  CONF_MAJ: { fr: 'Dernière mise à jour : 5 août 2026', en: 'Last updated: 5 August 2026' },
-  CONF_S1_T: { fr: '1. Responsable du traitement', en: '1. Data controller' },
+  CONF_RETOUR: { fr: 'Retour' },
+  CONF_TITRE: { fr: 'Politique de confidentialité' },
+  CONF_MAJ: { fr: 'Dernière mise à jour : 13 août 2026' },
+  CONF_LANGUE: { fr: 'Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.' },
+  CONF_S1_T: { fr: '1. Responsable du traitement' },
   CONF_S1_P: {
     fr: 'Le responsable du traitement des données est Mathis INGRAND-PERIGNE, personne physique éditant le service à titre individuel, joignable à l’adresse contact@nestync.app. Le service « Nestync » (ci-après « le Service ») est une application d’organisation familiale.',
-    en: 'The data controller is Mathis INGRAND-PERIGNE, an individual publishing the service in a personal capacity, reachable at contact@nestync.app. The “Nestync” service (hereafter “the Service”) is a household-organization application.',
   },
-  CONF_S2_T: { fr: '2. Données collectées', en: '2. Data collected' },
+  CONF_S2_T: { fr: '2. Données collectées' },
   CONF_S2_LI1: {
     fr: 'Identité de connexion (via Google) : adresse e-mail, nom et photo de profil, pour l’authentification et l’accès restreint au Service.',
-    en: 'Login identity (via Google): email address, name and profile picture, for authentication and restricted access to the Service.',
   },
   CONF_S2_LI2: {
     fr: 'Données saisies dans le foyer : budget (comptes, transactions, catégories, échéances), tâches et listes de courses, recettes et planning des repas, événements, cadeaux et occasions.',
-    en: 'Data entered in the household: budget (accounts, transactions, categories, due dates), tasks and shopping lists, recipes and meal planning, events, gifts and occasions.',
   },
   CONF_S2_LI3: {
     fr: 'Documents : les fichiers que tu téléverses dans le module Documents sont hébergés par le Service, dans un espace privé propre à ton foyer. Ils ne sont accessibles qu’aux membres de ton foyer, via une adresse authentifiée (aucun lien public).',
-    en: 'Documents: the files you upload to the Documents module are hosted by the Service, in a private space belonging to your household. They are only accessible to your household’s members, through an authenticated address (no public link).',
   },
   CONF_S2_LI4: {
     fr: 'Google Agenda (facultatif) : si tu connectes ton agenda, Nestync lit les calendriers que tu as choisi de partager avec ton foyer et peut y créer des événements à ta demande. Détail complet en section 9.',
-    en: 'Google Calendar (optional): if you connect your calendar, Nestync reads the calendars you chose to share with your household and can create events there at your request. Full details in section 9.',
   },
-  CONF_S3_T: { fr: '3. Finalités et base légale', en: '3. Purposes and legal basis' },
+  CONF_S3_T: { fr: '3. Finalités et base légale' },
   CONF_S3_P: {
     fr: 'Ces données sont traitées uniquement pour fournir le Service (organiser la vie du foyer). La base légale est l’exécution du contrat qui te lie au Service, et ton consentement pour l’accès facultatif à Google Agenda (révocable à tout moment). La connexion Google sert à t’identifier ; le Service ne demande jamais accès à tes fichiers ni à tes e-mails.',
-    en: 'This data is processed solely to provide the Service (organizing household life). The legal basis is the performance of the contract between you and the Service, plus your consent for the optional Google Calendar access (revocable at any time). Signing in with Google identifies you; the Service never requests access to your files or emails.',
   },
-  CONF_S4_T: { fr: '4. Hébergement et sous-traitants', en: '4. Hosting and sub-processors' },
-  CONF_S4_LI1: { fr: 'Base de données : Neon, région Union européenne.', en: 'Database: Neon, European Union region.' },
-  CONF_S4_LI2: { fr: 'Hébergement de l’application et mesure d’audience sans cookie : Vercel Inc.', en: 'Application hosting and cookieless audience measurement: Vercel Inc.' },
-  CONF_S4_LI3: { fr: 'Google LLC : authentification (identité) et, si tu l’actives, Google Agenda — voir la section 9.', en: 'Google LLC: authentication (identity) and, if you enable it, Google Calendar — see section 9.' },
-  CONF_S4_LI5: { fr: 'Hébergement des fichiers du module Documents : Vercel Blob, en accès privé (aucun lien public).', en: 'File hosting for the Documents module: Vercel Blob, private access (no public link).' },
-  CONF_S4_LI4: { fr: 'Stripe Payments Europe : paiement de l’abonnement, dès l’activation de la facturation. Aucune coordonnée bancaire n’est conservée par Nestync.', en: 'Stripe Payments Europe: subscription payment, once billing is enabled. Nestync never stores any card details.' },
-  CONF_S5_T: { fr: '5. Durée de conservation', en: '5. Retention period' },
-  CONF_S5_A: { fr: 'Tes données sont conservées tant que ton compte est actif. Tu peux les supprimer à tout moment depuis', en: 'Your data is kept as long as your account is active. You can delete it at any time from' },
-  CONF_S5_B: { fr: ': la suppression efface définitivement ton foyer et toutes ses données.', en: ': deletion permanently erases your household and all its data.' },
+  CONF_S4_T: { fr: '4. Hébergement et sous-traitants' },
+  CONF_S4_LI1: { fr: 'Base de données : Neon, région Union européenne.' },
+  CONF_S4_LI2: { fr: 'Hébergement de l’application et mesure d’audience sans cookie : Vercel Inc.' },
+  CONF_S4_LI3: { fr: 'Google LLC : authentification (identité) et, si tu l’actives, Google Agenda — voir la section 9.' },
+  /**
+   * ⚠ Cette ligne annonçait « Vercel Blob » jusqu'au 13/08/2026, alors que les
+   * fichiers étaient partis chez OVHcloud le 08/08. Une politique de
+   * confidentialité qui nomme le mauvais sous-traitant n'est pas une imprécision
+   * de rédaction : c'est une information obligatoire (art. 13 RGPD) qui devient
+   * fausse. Elle sous-estimait en plus la protection réelle.
+   */
+  CONF_S4_LI5: { fr: 'Fichiers du module Documents : OVHcloud, région Paris, en conteneur privé et redondé sur trois zones. Le contenu est chiffré par Nestync avant l’envoi : ni l’hébergeur ni son personnel ne peuvent le lire.' },
+  CONF_S4_LI6: { fr: 'Brevo (Sendinblue SAS, France) : envoi des courriels du service — invitation, relance, réponse à un message. Seules l’adresse et le contenu du courriel lui sont transmis.' },
+  CONF_S4_LI4: { fr: 'Stripe Payments Europe : paiement de l’abonnement, dès l’activation de la facturation. Aucune coordonnée bancaire n’est conservée par Nestync.' },
+  CONF_S5_T: { fr: '5. Durée de conservation' },
+  CONF_S5_A: { fr: 'Tes données sont conservées tant que ton compte est actif. Tu peux les supprimer à tout moment depuis' },
+  CONF_S5_B: { fr: ': la suppression efface définitivement ton foyer et toutes ses données.' },
   /**
    * ⚠ Exactitude juridique : sans cette précision, la phrase précédente serait
    * FAUSSE pour un abonné. Les factures déjà émises relèvent d'une obligation
@@ -618,68 +621,70 @@ const UI = {
    */
   CONF_S5_C: {
     fr: 'Une exception : si tu as été abonné, les factures déjà émises sont conservées 10 ans par notre prestataire de paiement, comme la loi comptable l’exige. Elles ne contiennent aucune donnée de tes modules.',
-    en: 'One exception: if you have been a subscriber, invoices already issued are kept for 10 years by our payment provider, as accounting law requires. They contain no data from your modules.',
   },
-  CONF_S6_T: { fr: '6. Cookies et mesure d’audience', en: '6. Cookies and audience measurement' },
+  /**
+   * ⚠ Ces trois durées sont APPLIQUÉES chaque nuit par le ménage automatique
+   * (`lib/maintenance.ts`) depuis le 07/08/2026, mais n'étaient annoncées nulle
+   * part. L'article 13 du RGPD impose d'indiquer la durée de conservation :
+   * purger sans le dire ne suffit pas, il faut aussi l'écrire.
+   */
+  CONF_S5_D: { fr: 'Trois durées s’appliquent automatiquement, sans intervention de notre part :' },
+  CONF_S5_LI1: { fr: 'Compte inactif : après 3 ans sans connexion, un courriel de préavis est envoyé ; sans retour dans les 30 jours, le compte et ses données sont supprimés.' },
+  CONF_S5_LI2: { fr: 'Message envoyé depuis la page d’aide : conservé 1 an, puis effacé.' },
+  CONF_S5_LI3: { fr: 'Invitation non acceptée : effacée au bout de 90 jours.' },
+  CONF_S6_T: { fr: '6. Cookies et mesure d’audience' },
   CONF_S6_P: {
     fr: 'Le Service n’utilise qu’un cookie de session strictement nécessaire à l’authentification, plus deux préférences stockées sur ton appareil (thème, langue). Aucun traceur publicitaire n’est déposé et aucune donnée n’est revendue.',
-    en: 'The Service uses only a strictly necessary session cookie for authentication, plus two preferences stored on your device (theme, language). No advertising tracker is set and no data is ever sold.',
   },
   CONF_S6_P2: {
     fr: 'Une mesure d’audience (Vercel Web Analytics) compte les pages vues afin d’améliorer le Service. Elle ne dépose AUCUN cookie, ne crée aucun profil et ne permet pas de te suivre d’un site à l’autre. Les adresses de pages sont en outre anonymisées avant envoi : les paramètres d’URL sont supprimés et les identifiants remplacés, de sorte qu’aucun contenu de ton foyer n’est transmis.',
-    en: 'Audience measurement (Vercel Web Analytics) counts page views to improve the Service. It sets NO cookie, builds no profile and cannot track you across sites. Page addresses are also anonymised before being sent: URL parameters are stripped and identifiers replaced, so no household content is ever transmitted.',
   },
-  CONF_S7_T: { fr: '7. Tes droits', en: '7. Your rights' },
+  CONF_S7_T: { fr: '7. Tes droits' },
   CONF_S7_A: {
     fr: 'Conformément au RGPD, tu disposes des droits d’accès, de rectification, d’effacement, de portabilité, de limitation et d’opposition. Deux de ces droits sont directement exerçables dans',
-    en: 'Under the GDPR, you have the rights of access, rectification, erasure, portability, restriction and objection. Two of these rights can be exercised directly in',
   },
-  CONF_S7_LI1: { fr: 'Portabilité / accès : « Exporter mes données » (fichier JSON complet).', en: 'Portability / access: “Export my data” (full JSON file).' },
-  CONF_S7_LI2: { fr: 'Effacement : « Supprimer mon compte » (suppression définitive).', en: 'Erasure: “Delete my account” (permanent deletion).' },
+  CONF_S7_LI1: { fr: 'Portabilité / accès : « Exporter mes données » (fichier JSON complet).' },
+  CONF_S7_LI2: { fr: 'Effacement : « Supprimer mon compte » (suppression définitive).' },
   CONF_S7_P2: {
     fr: 'Pour les autres demandes, écris à contact@nestync.app. Tu peux aussi introduire une réclamation auprès de la CNIL (www.cnil.fr).',
-    en: 'For other requests, write to contact@nestync.app. You may also lodge a complaint with your data protection authority (e.g. the CNIL, www.cnil.fr).',
   },
   /* --- Section 9 : données Google. Exigée par Google pour la vérification des
      scopes sensibles (Google API Services User Data Policy / Limited Use). --- */
-  CONF_S9_T: { fr: '9. Données Google Agenda', en: '9. Google Calendar data' },
+  CONF_S9_T: { fr: '9. Données Google Agenda' },
   CONF_S9_INTRO: {
     fr: 'Connecter ton Google Agenda est entièrement facultatif : Nestync fonctionne sans. Si tu l’actives, voici précisément ce que nous demandons et pourquoi.',
-    en: 'Connecting your Google Calendar is entirely optional: Nestync works without it. If you enable it, here is exactly what we request and why.',
   },
   CONF_S9_SCOPE1: {
     fr: 'Lister tes agendas (calendar.calendarlist.readonly) : afficher le NOM de tes calendriers, uniquement pour que tu choisisses ceux à partager avec ton foyer. Ce niveau d’accès ne donne aucun accès au contenu de tes événements.',
-    en: 'List your calendars (calendar.calendarlist.readonly): display the NAMES of your calendars, solely so you can choose which ones to share with your household. This scope gives no access to the content of your events.',
   },
   CONF_S9_SCOPE2: {
     fr: 'Gérer les événements des calendriers que tu as choisis (calendar.events) : afficher leurs événements à venir dans l’agenda du foyer, créer un événement depuis Nestync, et supprimer un événement affiché dans Nestync.',
-    en: 'Manage events on the calendars you selected (calendar.events): display their upcoming events in the household calendar, create an event from Nestync, and delete an event shown in Nestync.',
   },
   CONF_S9_MINIMAL: {
     fr: 'Nous demandons volontairement le périmètre le plus étroit possible : Nestync ne demande PAS l’accès en lecture à l’ensemble de tes agendas, seulement la liste de leurs noms et les événements des calendriers que tu as toi-même sélectionnés.',
-    en: 'We deliberately request the narrowest possible scope: Nestync does NOT request read access to all your calendars — only the list of their names, and the events of the calendars you selected yourself.',
   },
   CONF_S9_USAGE: {
     fr: 'Ces données servent EXCLUSIVEMENT à faire fonctionner l’agenda partagé de ton foyer, à ta demande. Elles ne sont jamais utilisées à des fins publicitaires, jamais vendues ni transmises à des tiers, jamais exploitées pour entraîner des modèles d’intelligence artificielle, et aucun humain ne les consulte — sauf accord explicite de ta part pour résoudre un problème technique, ou obligation légale.',
-    en: 'This data is used EXCLUSIVELY to power your household’s shared calendar, at your request. It is never used for advertising, never sold or shared with third parties, never used to train artificial-intelligence models, and no human reads it — except with your explicit permission to resolve a technical issue, or where legally required.',
   },
   CONF_S9_LIMITED: {
     fr: 'L’usage que Nestync fait des informations reçues des API Google respecte la Google API Services User Data Policy, y compris ses exigences d’usage limité (Limited Use).',
-    en: 'Nestync’s use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.',
   },
   CONF_S9_STOCKAGE: {
     fr: 'Conservation : nous ne copions PAS le contenu de tes agendas. Les événements sont lus à la volée à chaque affichage et ne sont pas enregistrés dans notre base. Seuls sont conservés : les identifiants des calendriers que tu as choisi de partager, et les jetons d’accès Google — ces derniers étant chiffrés (AES-256-GCM) dans notre base, hébergée dans l’Union européenne.',
-    en: 'Retention: we do NOT copy your calendar contents. Events are read on the fly each time they are displayed and are not stored in our database. We only keep: the identifiers of the calendars you chose to share, and the Google access tokens — the latter encrypted (AES-256-GCM) in our database, hosted in the European Union.',
   },
   CONF_S9_REVOQUER: {
     fr: 'Retirer l’accès à tout moment, de deux façons : depuis la page Agenda de Nestync (« Déconnecter mon Google Agenda »), ce qui efface immédiatement les jetons conservés ; ou depuis ton compte Google, sur la page des applications tierces autorisées (myaccount.google.com/permissions). Supprimer ton compte Nestync efface également ces jetons.',
-    en: 'Revoke access at any time, in two ways: from Nestync’s Calendar page (“Disconnect my Google Calendar”), which immediately erases the stored tokens; or from your Google account, on the third-party apps page (myaccount.google.com/permissions). Deleting your Nestync account also erases these tokens.',
   },
 
-  CONF_S8_T: { fr: '8. Sécurité', en: '8. Security' },
+  CONF_S8_T: { fr: '8. Sécurité' },
+  /**
+   * ⚠ Disait « restreint aux comptes autorisés » jusqu'au 13/08/2026 : c'était
+   * vrai du temps de la liste blanche, abandonnée le 01/08. Se connecter est
+   * ouvert à tous depuis ; ce qui est contrôlé, c'est la création d'un foyer.
+   * Décrire une restriction qui n'existe plus induit le lecteur en erreur.
+   */
   CONF_S8_P: {
-    fr: 'L’accès au Service est protégé par authentification Google et restreint aux comptes autorisés. Les échanges sont chiffrés (HTTPS) et la base est hébergée dans l’Union européenne.',
-    en: 'Access to the Service is protected by Google authentication and restricted to authorized accounts. Exchanges are encrypted (HTTPS) and the database is hosted in the European Union.',
+    fr: 'L’accès au Service passe par une authentification Google : Nestync ne détient aucun mot de passe. Les échanges sont chiffrés (HTTPS) et la base est hébergée dans l’Union européenne. Les fichiers du module Documents et les jetons d’accès à Google Agenda sont en outre chiffrés au repos (AES-256-GCM), avec des clés que l’hébergeur ne détient pas.',
   },
 
   // Erreur générique de chargement d'une page module

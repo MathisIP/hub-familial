@@ -23,7 +23,8 @@ export default function PageMentionsLegales() {
     <article className="doc-legal">
       <Link className="lien-retour" href="/">← Retour</Link>
       <h1>Mentions légales</h1>
-      <p className="doc-maj">Dernière mise à jour : 6 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
+      <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <h2>1. Éditeur du service</h2>
       <p>

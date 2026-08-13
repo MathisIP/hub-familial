@@ -2273,3 +2273,5 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cp-arrete { margin-left: .4rem; font-size: .72rem; color: var(--muted); }
 .cp-recette .cp-total { color: var(--acc-deep, var(--acc)); }
 .cp-pied { font-size: .8rem; color: var(--muted); }
+
+.doc-langue { font-size: .82rem; color: var(--muted); font-style: italic; margin-top: -.4rem; }

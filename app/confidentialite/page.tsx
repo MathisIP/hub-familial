@@ -24,6 +24,7 @@ export default async function PageConfidentialite() {
 
       <h1>{t('CONF_TITRE', langue)}</h1>
       <p className="doc-maj">{t('CONF_MAJ', langue)}</p>
+      <p className="doc-langue">{t('CONF_LANGUE', langue)}</p>
 
 
       <h2>{t('CONF_S1_T', langue)}</h2>
@@ -47,6 +48,7 @@ export default async function PageConfidentialite() {
         <li>{t('CONF_S4_LI3', langue)}</li>
         <li>{t('CONF_S4_LI5', langue)}</li>
         <li>{t('CONF_S4_LI4', langue)}</li>
+        <li>{t('CONF_S4_LI6', langue)}</li>
       </ul>
 
       <h2>{t('CONF_S5_T', langue)}</h2>
@@ -55,6 +57,12 @@ export default async function PageConfidentialite() {
         {t('CONF_S5_B', langue)}
       </p>
       <p>{t('CONF_S5_C', langue)}</p>
+      <p>{t('CONF_S5_D', langue)}</p>
+      <ul>
+        <li>{t('CONF_S5_LI1', langue)}</li>
+        <li>{t('CONF_S5_LI2', langue)}</li>
+        <li>{t('CONF_S5_LI3', langue)}</li>
+      </ul>
 
       <h2>{t('CONF_S6_T', langue)}</h2>
       <p>{t('CONF_S6_P', langue)}</p>

@@ -169,6 +169,13 @@
       "when": 1786482042800,
       "tag": "0023_bitter_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786737070279,
+      "tag": "0024_fast_leo",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import {
   creerComptes,
+  definirPartageCompte,
   modifierCompte,
   supprimerCompte,
   type NouveauCompte,
@@ -105,5 +106,31 @@ export async function supprimerCompteAction(
     return { ok: true };
   } catch (e) {
     return { erreur: messageErreur(e, 'Suppression impossible.') };
+  }
+}
+
+/**
+ * Règle qui voit un compte (propriétaire du foyer uniquement — le service
+ * revérifie le rôle, une action serveur reste une porte ouverte sur le réseau).
+ *
+ * ⚠ `rafraichir()` ne suffit pas : restreindre un compte change ce que voient
+ * les AUTRES membres, dont les pages sont rendues côté serveur à leur prochaine
+ * visite. Rien à invalider pour eux ici, mais l'auteur du réglage doit voir
+ * l'effet immédiatement sur /budget comme sur l'accueil.
+ */
+export async function definirPartageAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await definirPartageCompte({
+      compteId: String(formData.get('compteId') ?? ''),
+      restreint: formData.get('restreint') === 'oui',
+      utilisateurIds: formData.getAll('utilisateurs').map(String).filter(Boolean),
+    });
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, 'Réglage impossible.') };
   }
 }

@@ -80,6 +80,12 @@ export type Echeance = {
 export type DonneesBudget = {
   periode: string; // ex. « Juillet 2026 »
   selection: SelectionMois; // mois/année affichés
+  /**
+   * Des comptes du foyer sont masqués pour cette personne (cf. [lib/budget/acces.ts]).
+   * ⚠ Les jauges réel/budget deviennent alors trompeuses — elles compareraient
+   * MES dépenses au budget du FOYER : la vue masque la comparaison.
+   */
+  vuePartielle: boolean;
   anneesDisponibles: number[]; // pour le sélecteur de mois
   kpis: Kpis;
   categories: LigneCategorie[];
@@ -146,6 +152,8 @@ export type CompteGere = {
   soldeCourant: number;
   nbOperations: number;
   nbVirements: number;
+  /** Compte à visibilité restreinte (badge). Le réglage se fait ailleurs. */
+  restreint: boolean;
 };
 
 /** Nombre de jours entiers entre aujourd'hui et une date ISO (négatif = passé). */

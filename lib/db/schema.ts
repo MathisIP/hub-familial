@@ -580,9 +580,55 @@ export const comptes = pgTable(
     nom: text('nom').notNull(),
     soldeInitial: doublePrecision('solde_initial').notNull().default(0),
     ordre: integer('ordre').notNull().default(0),
+    /**
+     * Qui voit ce compte : `foyer` (tous les membres) ou `restreint` (seulement
+     * les personnes listées dans `comptes_acces`).
+     *
+     * ⚠ Le défaut `foyer` est délibéré : les comptes déjà en service, et ceux
+     * créés sans se poser la question, restent visibles de tout le foyer. Un
+     * défaut `restreint` aurait fait disparaître leur budget aux yeux de tous
+     * les foyers existants le jour de la migration.
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('comptes_foyer_idx').on(t.foyerId)],
+);
+
+/**
+ * Qui a accès à un compte `restreint`. Une ligne = une personne autorisée.
+ *
+ * Le besoin : dans une famille, les parents voient tout et chaque enfant ne voit
+ * que son compte ; en colocation, chacun ne voit que le sien plus le compte
+ * commun. Un simple rôle ne suffisait pas (deux parents, un seul propriétaire).
+ *
+ * ⚠ `foyer_id` est porté EN PLUS de `compte_id`, redondant par jointure : la
+ * règle d'isolation impose un `where foyer_id` sur chaque requête, et les
+ * routes de réglage reçoivent un identifiant venu du client.
+ *
+ * ⚠ Aucun privilège implicite : le propriétaire du foyer ne voit PAS les comptes
+ * restreints dont il n'est pas membre. Il peut seulement en régler le partage —
+ * administrer n'est pas lire. Sans cela, le cas colocation serait vide de sens.
+ */
+export const comptesAcces = pgTable(
+  'comptes_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    compteId: uuid('compte_id')
+      .notNull()
+      .references(() => comptes.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('comptes_acces_compte_utilisateur').on(t.compteId, t.utilisateurId),
+    index('comptes_acces_foyer_idx').on(t.foyerId),
+  ],
 );
 
 export const budgetCategories = pgTable(

@@ -19,6 +19,11 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
   const resteNum = parseEuro(d.kpis.reste);
   return (
     <>
+      {/* ⚠ Vue partielle : dire d'emblée que ces chiffres ne couvrent pas tout le
+          foyer. Sans cette phrase, un membre lirait « Patrimoine » comme le
+          patrimoine du foyer alors que c'est le total de SES comptes. */}
+      {d.vuePartielle && <p className="bg-partielle">{t('PART_VUE_PARTIELLE', langue)}</p>}
+
       <div className="bg-kpis">
         <div className="bg-kpi hero">
           <div className="k-l">{t('BUD_RESTE', langue)}</div>
@@ -50,7 +55,7 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
           <h2 className="section-titre">{t('BUD_PAR_CAT', langue)} — {d.periode || t('BUD_MOIS_COURANT', langue)}</h2>
           <div className="jauges">
             {d.categories.map((c) => (
-              <Jauge key={c.categorie} c={c} />
+              <Jauge key={c.categorie} c={c} partielle={d.vuePartielle} />
             ))}
           </div>
         </section>
@@ -117,7 +122,24 @@ function Kpi({ l, v, n }: { l: string; v: string; n: string }) {
   );
 }
 
-function Jauge({ c }: { c: LigneCategorie }) {
+/**
+ * Jauge Réel/Budget d'une catégorie.
+ *
+ * ⚠ `partielle` supprime la comparaison au budget. Quand des comptes sont
+ * masqués, le réel ne compte QUE les dépenses visibles alors que le budget
+ * mensuel reste celui du FOYER : la jauge annoncerait « 50 € sur 400 € » à
+ * quelqu'un dont le foyer a déjà dépensé 380 €. Mieux vaut ne rien comparer que
+ * comparer deux grandeurs qui n'ont pas le même périmètre.
+ */
+function Jauge({ c, partielle = false }: { c: LigneCategorie; partielle?: boolean }) {
+  if (partielle) {
+    return (
+      <div className="jauge">
+        <span className="j-cat">{c.categorie}</span>
+        <span className="j-chiffres">{c.reel}</span>
+      </div>
+    );
+  }
   const base = Math.max(c.budgetNum, c.reelNum, 0);
   const dansBudget = Math.min(c.reelNum, c.budgetNum > 0 ? c.budgetNum : c.reelNum);
   const depassement = Math.max(c.reelNum - c.budgetNum, 0);

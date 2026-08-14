@@ -207,6 +207,35 @@ const UI = {
     fr: 'Aucun compte pour l’instant.',
     en: 'No accounts yet.',
   },
+  GC_RESTREINT: { fr: 'Visibilité restreinte', en: 'Restricted visibility' },
+
+  /* --- Budget : qui voit quels comptes --- */
+  PART_TITRE: { fr: 'Qui voit quels comptes', en: 'Who sees which accounts' },
+  PART_SOUS: {
+    fr: 'Par défaut, chaque compte est visible de tout le foyer. Restreins-en un pour qu’il n’apparaisse qu’aux personnes que tu choisis — dans leurs soldes, leurs opérations et leurs totaux.',
+    en: 'By default every account is visible to the whole household. Restrict one so it only appears to the people you pick — in their balances, transactions and totals.',
+  },
+  PART_TOUS: { fr: 'Tout le foyer', en: 'Whole household' },
+  PART_RESTREINT: { fr: 'Personnes choisies', en: 'Selected people' },
+  PART_ENREGISTRER: { fr: 'Enregistrer', en: 'Save' },
+  PART_MODIFIER: { fr: 'Modifier', en: 'Change' },
+  PART_ANNULER: { fr: 'Annuler', en: 'Cancel' },
+  PART_VISIBLE_TOUS: { fr: 'Visible de tout le foyer', en: 'Visible to the whole household' },
+  PART_VISIBLE_N: { fr: 'Visible de', en: 'Visible to' },
+  PART_PERSONNES: { fr: 'personnes', en: 'people' },
+  PART_PERSONNE_1: { fr: 'personne', en: 'person' },
+  PART_AUCUN: {
+    fr: 'Aucun compte à régler pour l’instant.',
+    en: 'No accounts to configure yet.',
+  },
+  PART_AIDE: {
+    fr: 'Cet écran ne montre aucun montant : régler le partage d’un compte ne donne pas le droit de le lire. Pour le consulter, il faut y figurer comme les autres.',
+    en: 'This screen shows no amounts: setting an account’s sharing does not grant the right to read it. To see it, you must be listed like everyone else.',
+  },
+  PART_VUE_PARTIELLE: {
+    fr: 'Certains comptes du foyer ne te sont pas partagés : ces chiffres ne portent que sur les tiens.',
+    en: 'Some household accounts are not shared with you: these figures cover only yours.',
+  },
 
   AIDE_NOM_COMPTE: {
     fr: 'Le nom que TU utilises au quotidien : « Compte commun », « Livret A », « Compte de Lou »… Il apparaîtra tel quel dans l’app.',
@@ -492,6 +521,21 @@ const UI = {
   },
   CPT_SUPPR_BTN: { fr: 'Supprimer définitivement mon compte', en: 'Permanently delete my account' },
   CPT_CONF_LIEN: { fr: 'Politique de confidentialité →', en: 'Privacy policy →' },
+  // Variantes pour un MEMBRE non propriétaire : il quitte le foyer, il ne le
+  // supprime pas. Annoncer le contraire ferait renoncer quelqu'un à son droit à
+  // l'effacement par peur d'emporter les données des autres.
+  CPT_SUPPR_DESC_MEMBRE: {
+    fr: 'Efface définitivement ton compte et te retire de ce foyer. Les données du foyer (comptes, tâches, documents…) restent en place pour les autres membres. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',
+    en: 'Permanently deletes your account and removes you from this household. The household’s data (accounts, tasks, documents…) stays in place for the other members. This action is irreversible (right to erasure). Remember to export your data first if you want to keep a copy.',
+  },
+  CPT_CHECK_MEMBRE: {
+    fr: 'Je comprends que la suppression est définitive et que je quitte ce foyer.',
+    en: 'I understand that deletion is permanent and that I am leaving this household.',
+  },
+  CPT_EXPORT_DESC_PARTIEL: {
+    fr: 'Ton export contient les données du foyer que tu peux consulter. Les comptes bancaires qui ne te sont pas partagés n’y figurent pas.',
+    en: 'Your export contains the household data you can see. Bank accounts not shared with you are not included.',
+  },
 
   // Mon foyer
   FOY_SOUS_A: { fr: 'Les personnes qui partagent les données de', en: 'The people who share the data of' },

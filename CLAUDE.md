@@ -27,6 +27,36 @@ npm run db:migrate   # Applique les migrations à la base (Neon)
 npm run db:studio    # Explorateur Drizzle Studio (base du foyer)
 ```
 
+## ⚠ PUBLICATION — préversion obligatoire avant la production (15/08/2026)
+
+**Nestync a des clients réels. Plus rien ne part directement en production.**
+
+Cycle imposé, sans exception : branche de travail → **préversion** (Vercel Preview, accès
+restreint à Mathis) → il teste → **il décide** → promotion en production.
+
+| Interdit de sa propre initiative | À faire à la place |
+|---|---|
+| `git push origin main` | pousser sur la branche de travail |
+| `npm run db:migrate` sur la base de prod | migrer d'abord la branche Neon de préversion |
+| Annoncer « c'est en ligne » | donner l'URL de préversion + le protocole de test |
+
+- **Un protocole de test accompagne chaque livraison** : quoi ouvrir, quoi cliquer, quoi
+  observer, et surtout **ce qui doit échouer**. Les contrôles d'isolation se vérifient en
+  direct sur les API — un filtre d'interface ne prouve rien.
+- ⚠ **`npm run build` n'applique PAS les migrations** (`drizzle-kit migrate` est manuel).
+  C'est une protection : aucun déploiement ne peut modifier le schéma tout seul. C'est
+  aussi une responsabilité : c'est à moi de ne pas me tromper de base.
+- ⚠ **Une préversion sur la base de production n'est pas un bac à sable, c'est une seconde
+  porte sur les données réelles.** Elle exige sa **propre branche Neon**, son **propre
+  stockage de documents** et les **clés Stripe de test**. Sans stockage séparé, le module
+  Documents devient destructeur : la branche Neon contient les mêmes lignes pointant sur
+  les mêmes clés de stockage, donc supprimer un document en préversion efface le **vrai**
+  fichier.
+- Contrôle des secrets avant chaque commit : `.env`, `credentials.json`, `*.b64`,
+  `gserviceaccount` ne doivent jamais être indexés.
+
+Mise en place et checklist : [docs/PUBLICATION.md](docs/PUBLICATION.md).
+
 ## Règles d'architecture (non négociables)
 
 Ces trois règles viennent des échecs de la version précédente et de la contrainte de revente. Les enfreindre casse silencieusement.

@@ -15,32 +15,50 @@
  *
  * Cible : DEMO_EMAIL dans .env, sinon mip@nestync.app.
  */
-import postgres from 'postgres';
-import { readFileSync } from 'node:fs';
+import { connexion, exigerBacASable, chargerEnv } from './_env.mjs';
 
-for (const l of readFileSync('.env', 'utf8').split(/\r?\n/)) {
-  const m = l.match(/^([A-Z0-9_]+)=(.*)$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-}
-const u = new URL(process.env.DATABASE_URL);
-const [ep, ...r] = u.hostname.split('.');
-if (!u.hostname.includes('-pooler')) u.hostname = [`${ep}-pooler`, ...r].join('.');
-const sql = postgres(u.toString(), { prepare: false, max: 3 });
+chargerEnv();
+const { sql, hote } = connexion({ max: 3 });
 const CIBLE = (process.env.DEMO_EMAIL || 'mip@nestync.app').toLowerCase();
 
-// --- Le foyer cible, resolu par l'e-mail : jamais un id en dur ---------------
-const [f] = await sql`
+console.log(`  base : ${hote}`);
+
+/*
+ * ⚠ GARDE-FOU CENTRAL : ce script ne s'execute QUE sur un bac a sable marque.
+ * Le test porte sur une ligne presente dans la base, pas sur l'URL — une chaine
+ * de connexion se recopie de travers, et c'est justement l'erreur qu'on veut
+ * rendre impossible. Voir scripts/_env.mjs.
+ */
+await exigerBacASable(sql, hote);
+
+/*
+ * Le foyer de demonstration, cree s'il n'existe pas encore : sur une base de
+ * developpement neuve il n'y a rien. C'est ce qui permet de repartir d'une base
+ * vide (`npm run bac:reset`) sans aucune etape manuelle.
+ */
+let [f] = await sql`
   select f.id, f.nom from foyers f
   join membres m on m.foyer_id = f.id
   join utilisateurs u on u.id = m.utilisateur_id
-  where u.email = ${CIBLE}`;
-if (!f) { console.log('  foyer de demonstration introuvable'); await sql.end(); process.exit(1); }
+  where lower(u.email) = ${CIBLE}`;
+
+if (!f) {
+  console.log(`  foyer de demonstration absent : creation pour ${CIBLE}`);
+  const [u] = await sql`
+    insert into utilisateurs (email, nom) values (${CIBLE}, 'Clara Lambert')
+    on conflict (email) do update set nom = excluded.nom
+    returning id`;
+  const fin = new Date(Date.now() + 365 * 86400000);
+  const [nf] = await sql`
+    insert into foyers (nom, statut_abonnement, abonnement_fin, onboarding_fait)
+    values ('Foyer Lambert', 'essai', ${fin}, true) returning id, nom`;
+  await sql`insert into membres (foyer_id, utilisateur_id, role)
+    values (${nf.id}, ${u.id}, 'proprietaire')`;
+  f = nf;
+}
+
 const F = f.id;
 console.log(`  foyer cible : « ${f.nom} »`);
-
-// Garde-fou : on refuse de toucher au foyer reel.
-const [reel] = await sql`select id from foyers where nom = 'Foyer de Mathis'`;
-if (reel && reel.id === F) { console.log('  !! ARRET : cible = foyer reel'); await sql.end(); process.exit(1); }
 
 await sql`update foyers set nom = 'Foyer Lambert' where id = ${F}`;
 
@@ -294,9 +312,8 @@ let total = 0;
 for (const s of soldes) { total += Number(s.solde); console.log(`     ${s.nom.padEnd(18)} ${Number(s.solde).toFixed(2).padStart(9)} EUR`); }
 console.log(`     ${'TOTAL'.padEnd(18)} ${total.toFixed(2).padStart(9)} EUR`);
 
-// Controle : le foyer reel n'a pas bouge.
-const [{ n: nReel }] = await sql`
-  select count(*)::int as n from transactions t join foyers f on f.id = t.foyer_id
-  where f.nom = 'Foyer de Mathis'`;
-console.log(`\n  controle — transactions du foyer reel : ${nReel} (inchange)`);
+// Controle : sur un bac a sable dedie, il ne doit exister aucun AUTRE foyer.
+// Si ce compteur n'est pas nul, on n'est pas la ou l'on croit.
+const [{ n: autres }] = await sql`select count(*)::int as n from foyers where id <> ${F}`;
+console.log(`\n  controle — autres foyers sur cette base : ${autres} (attendu 0)`);
 await sql.end();

@@ -3,11 +3,10 @@
  *
  *   npm run verif:isolation
  *
- * ⚠ À LANCER SUR LA BASE DE PRÉVERSION, jamais sur la production (cf.
- * docs/PUBLICATION.md). Le script est non destructif — il crée un foyer jetable,
- * vérifie les règles, puis efface tout ce qu'il a créé — mais il exige le schéma
- * de la migration 0025, qui ne doit pas être appliqué à la production sans
- * validation préalable.
+ * ⚠ À LANCER SUR LE BAC À SABLE, jamais sur la production. Le script refuse de
+ * démarrer si la base ne porte pas le marqueur (cf. scripts/_env.mjs) : il crée
+ * un foyer jetable à trois membres, rejoue les règles, puis efface tout — mais
+ * on ne fait pas ça au milieu des données d'un client.
  *
  * Pourquoi ce script existe : les règles de visibilité sont des règles SQL. Un
  * test d'interface ne prouve rien — l'interface peut cacher ce que l'API sert
@@ -15,25 +14,11 @@
  * une vraie base, avec des données croisées (virements entre comptes masqués,
  * cadeaux masqués, dossiers restreints, agendas partagés).
  *
- * Surcharge possible : DATABASE_URL_PREVIEW prend le pas sur DATABASE_URL.
+ * Lit .env.local en priorite, sinon .env (convention Next.js).
  */
-import postgres from 'postgres';
-import { readFileSync } from 'node:fs';
+import { connexion, exigerBacASable } from './_env.mjs';
 
-for (const l of readFileSync('.env', 'utf8').split(/\r?\n/)) {
-  const m = l.match(/^([A-Z0-9_]+)=(.*)$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-}
-
-const brut = process.env.DATABASE_URL_PREVIEW || process.env.DATABASE_URL;
-if (!brut) {
-  console.error('DATABASE_URL absent (ni DATABASE_URL_PREVIEW).');
-  process.exit(1);
-}
-const u = new URL(brut);
-const [ep, ...reste] = u.hostname.split('.');
-if (!u.hostname.includes('-pooler')) u.hostname = [`${ep}-pooler`, ...reste].join('.');
-const sql = postgres(u.toString(), { prepare: false, max: 1 });
+const { sql, hote } = connexion({ max: 1 });
 
 console.log(`  base : ${u.hostname.split('.')[0]}\n`);
 
@@ -49,6 +34,9 @@ let foyerId = null;
 const users = {};
 
 try {
+  // Ce script crée puis efface un foyer complet : jamais ailleurs qu'en bac à sable.
+  await exigerBacASable(sql, hote);
+
   // Le schéma 0025 doit être en place, sinon les vérifications n'ont pas de sens.
   const [{ present }] = await sql`
     select count(*)::int as present from information_schema.columns

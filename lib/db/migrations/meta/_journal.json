@@ -183,6 +183,13 @@
       "when": 1786826571748,
       "tag": "0025_empty_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786828031594,
+      "tag": "0026_numerous_gateway",
+      "breakpoints": true
     }
   ]
 }

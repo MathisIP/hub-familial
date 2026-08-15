@@ -1,5 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { put, del, get } from '@vercel/blob';
 import {
   S3Client,
@@ -51,6 +53,28 @@ function configOvh() {
   return { bucket, endpoint, region, accessKeyId, secretAccessKey };
 }
 
+/* ------------------------------ DISQUE LOCAL ------------------------------
+ * Bac à sable de développement : les fichiers atterrissent dans un dossier du
+ * projet au lieu du conteneur OVH.
+ *
+ * ⚠ POURQUOI CE TROISIÈME FOURNISSEUR EXISTE. Sans lui, tester le module
+ * Documents en local imposait de viser le VRAI conteneur — donc de risquer d'y
+ * écrire, et surtout d'en SUPPRIMER un fichier appartenant à un foyer client.
+ * C'est le seul module où une manipulation de développement pouvait détruire
+ * une donnée réelle irrécupérable.
+ *
+ * ⚠ NE S'ACTIVE JAMAIS EN PRODUCTION : la double condition (variable posée ET
+ * `NODE_ENV !== 'production'`) est délibérée. Une variable oubliée dans
+ * l'environnement Vercel ne suffirait pas à faire basculer la production sur un
+ * disque éphémère — les fichiers y disparaîtraient au redéploiement suivant.
+ * ------------------------------------------------------------------------- */
+
+function dossierLocal(): string | null {
+  const chemin = process.env.STOCKAGE_LOCAL;
+  if (!chemin || process.env.NODE_ENV === 'production') return null;
+  return chemin;
+}
+
 let clientS3: S3Client | null = null;
 function s3(c: NonNullable<ReturnType<typeof configOvh>>): S3Client {
   if (clientS3) return clientS3;
@@ -67,7 +91,9 @@ function s3(c: NonNullable<ReturnType<typeof configOvh>>): S3Client {
 
 export class StockageNonConfigure extends Error {
   constructor() {
-    super('Stockage de fichiers non configuré (ni OVH_S3_*, ni BLOB_READ_WRITE_TOKEN).');
+    super(
+      'Stockage de fichiers non configuré (ni OVH_S3_*, ni BLOB_READ_WRITE_TOKEN, ni STOCKAGE_LOCAL en développement).',
+    );
     this.name = 'StockageNonConfigure';
   }
 }
@@ -107,6 +133,15 @@ export async function televerser(foyerId: string, donnees: Buffer): Promise<Fich
   const contenu = chiffrerFichier(donnees);
   const taille = donnees.byteLength; // taille RÉELLE, celle qu'on affiche
 
+  const local = dossierLocal();
+  if (local) {
+    const cle = `foyers/${foyerId}/${randomUUID()}`;
+    const chemin = join(local, cle);
+    await mkdir(dirname(chemin), { recursive: true });
+    await writeFile(chemin, contenu);
+    return { cle, taille };
+  }
+
   if (ovh) {
     const cle = `foyers/${foyerId}/${randomUUID()}`;
     await s3(ovh).send(
@@ -134,6 +169,16 @@ export async function televerser(foyerId: string, donnees: Buffer): Promise<Fich
  * signaler à l'utilisateur.
  */
 export async function supprimerFichier(cle: string): Promise<void> {
+  const local = dossierLocal();
+  if (local) {
+    try {
+      await rm(join(local, cle));
+    } catch {
+      /* déjà absent */
+    }
+    return;
+  }
+
   const ovh = configOvh();
   if (ovh) {
     try {
@@ -172,7 +217,14 @@ export async function lireFichier(
   let brut: Buffer | null = null;
   let typeStocke = 'application/octet-stream';
 
-  if (ovh) {
+  const local = dossierLocal();
+  if (local) {
+    try {
+      brut = await readFile(join(local, cle));
+    } catch {
+      return null; // fichier absent : indiscernable côté API
+    }
+  } else if (ovh) {
     try {
       const res = await s3(ovh).send(new GetObjectCommand({ Bucket: ovh.bucket, Key: cle }));
       if (!res.Body) return null;

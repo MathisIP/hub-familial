@@ -12,8 +12,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "comptes": "node scripts/comptes-sync.mjs",
-    "demo": "node scripts/demo-seed.mjs",
-    "verif:isolation": "node scripts/verif-isolation.mjs"
+    "verif:isolation": "node scripts/verif-isolation.mjs",
+    "bac:init": "node scripts/bac-init.mjs",
+    "bac:garnir": "node scripts/demo-seed.mjs",
+    "bac:reset": "npm run db:migrate && npm run bac:garnir"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

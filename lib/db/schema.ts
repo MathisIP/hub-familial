@@ -104,6 +104,25 @@ export const utilisateurs = pgTable('utilisateurs', {
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * MARQUEUR DE BAC À SABLE — une seule ligne, jamais présente en production.
+ *
+ * ⚠ C'est un garde-fou d'exécution, pas de la documentation. Les scripts qui
+ * écrivent des données FICTIVES (`npm run bac:garnir`) refusent de s'exécuter si
+ * cette ligne est absente : impossible, même en collant la mauvaise chaîne de
+ * connexion, de déverser un foyer de démonstration sur les données d'un client.
+ *
+ * Poser le marqueur est un geste explicite (`npm run bac:init`) qu'on ne fait
+ * que sur sa base de développement. La production ne l'a pas, et ne doit jamais
+ * l'avoir — c'est la seule chose qui distingue les deux bases de façon fiable,
+ * une URL pouvant toujours être recopiée de travers.
+ */
+export const bacASable = pgTable('bac_a_sable', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  note: text('note').notNull().default(''),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Appartenance d'un utilisateur à un foyer, avec son rôle. Un user ↔ un foyer unique. */
 export const membres = pgTable(
   'membres',

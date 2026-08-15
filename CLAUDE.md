@@ -25,35 +25,57 @@ npm run lint         # ESLint (next lint)
 npm run db:generate  # Génère une migration Drizzle depuis lib/db/schema.ts
 npm run db:migrate   # Applique les migrations à la base (Neon)
 npm run db:studio    # Explorateur Drizzle Studio (base du foyer)
+
+# --- Bac à sable local (voir la section PUBLICATION juste en dessous) ---
+npm run bac:init     # Arme une base de dev (pose le marqueur bac_a_sable)
+npm run bac:garnir   # Remplit le foyer fictif « Foyer Lambert »
+npm run bac:reset    # db:migrate + bac:garnir
+npm run verif:isolation  # Contrôles « qui voit quoi » (refuse hors bac à sable)
 ```
 
-## ⚠ PUBLICATION — préversion obligatoire avant la production (15/08/2026)
+## ⚠ PUBLICATION — bac à sable local avant la production (15/08/2026)
 
 **Nestync a des clients réels. Plus rien ne part directement en production.**
 
-Cycle imposé, sans exception : branche de travail → **préversion** (Vercel Preview, accès
-restreint à Mathis) → il teste → **il décide** → promotion en production.
+Cycle imposé : **bac à sable local** (`npm run dev`, base séparée, données fictives) →
+Mathis teste → **il décide** → promotion en production.
 
 | Interdit de sa propre initiative | À faire à la place |
 |---|---|
 | `git push origin main` | pousser sur la branche de travail |
-| `npm run db:migrate` sur la base de prod | migrer d'abord la branche Neon de préversion |
-| Annoncer « c'est en ligne » | donner l'URL de préversion + le protocole de test |
+| `npm run db:migrate` sur la base de prod | migrer le bac à sable |
+| Annoncer « c'est en ligne » | donner le protocole de test |
 
-- **Un protocole de test accompagne chaque livraison** : quoi ouvrir, quoi cliquer, quoi
-  observer, et surtout **ce qui doit échouer**. Les contrôles d'isolation se vérifient en
-  direct sur les API — un filtre d'interface ne prouve rien.
-- ⚠ **`npm run build` n'applique PAS les migrations** (`drizzle-kit migrate` est manuel).
-  C'est une protection : aucun déploiement ne peut modifier le schéma tout seul. C'est
-  aussi une responsabilité : c'est à moi de ne pas me tromper de base.
-- ⚠ **Une préversion sur la base de production n'est pas un bac à sable, c'est une seconde
-  porte sur les données réelles.** Elle exige sa **propre branche Neon**, son **propre
-  stockage de documents** et les **clés Stripe de test**. Sans stockage séparé, le module
-  Documents devient destructeur : la branche Neon contient les mêmes lignes pointant sur
-  les mêmes clés de stockage, donc supprimer un document en préversion efface le **vrai**
-  fichier.
-- Contrôle des secrets avant chaque commit : `.env`, `credentials.json`, `*.b64`,
-  `gserviceaccount` ne doivent jamais être indexés.
+⚠ **Le piège d'origine** : `.env` ne contenait qu'un seul `DATABASE_URL`, celui de la
+**production**. `npm run dev` en local travaillait donc sur les données des clients, sans
+que rien ne le signale. Trois protections, par ordre d'importance :
+
+1. **Marqueur en base** — table `bac_a_sable`. `bac:garnir` et `verif:isolation` refusent
+   de démarrer sans lui. Le test ne porte **pas sur l'URL** : une chaîne de connexion se
+   recopie de travers, et c'est justement l'erreur à rendre impossible.
+2. **Bandeau permanent** en développement ([BandeauBacASable.tsx](components/BandeauBacASable.tsx)) :
+   vert « bac à sable », rouge « BASE DE PRODUCTION ».
+3. **`.env.local` prioritaire sur `.env`** — pour l'app (Next.js), les scripts
+   ([scripts/_env.mjs](scripts/_env.mjs)) **et** drizzle-kit. Sans ça, `dev` viserait le
+   bac à sable pendant que `db:migrate` modifierait la production.
+
+Commandes : `bac:init` (arme la base), `bac:garnir` (foyer fictif « Foyer Lambert »),
+`bac:reset` (migre + garnit), `verif:isolation` (contrôles « qui voit quoi »).
+
+⚠ **`STOCKAGE_LOCAL`** met les fichiers du module Documents sur le disque
+([lib/stockage/index.ts](lib/stockage/index.ts)). Sans lui, tester Documents en local
+viserait le **vrai** conteneur OVH — et une suppression y détruirait le fichier d'un client.
+Ne s'active jamais en production (double condition avec `NODE_ENV`).
+
+⚠ **`npm run build` n'applique PAS les migrations** (`drizzle-kit migrate` est manuel).
+C'est une protection : aucun déploiement ne change le schéma tout seul. C'est aussi une
+responsabilité : ne pas se tromper de base.
+
+- **Un protocole de test accompagne chaque livraison** : quoi ouvrir, quoi observer, et
+  surtout **ce qui doit échouer**. Les contrôles d'isolation se vérifient en direct sur les
+  API — un filtre d'interface ne prouve rien.
+- Contrôle des secrets avant chaque commit : `.env`, `.env.local`, `credentials.json`,
+  `*.b64`, `gserviceaccount` ne doivent jamais être indexés.
 
 Mise en place et checklist : [docs/PUBLICATION.md](docs/PUBLICATION.md).
 

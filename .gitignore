@@ -21,3 +21,6 @@ credentials.b64.txt
 Contexte/
 docs/
 maquettes/
+
+# Bac à sable local : fichiers du module Documents en développement
+.donnees-locales/

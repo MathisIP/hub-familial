@@ -2357,3 +2357,14 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .ag-partage-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .ag-partage-tete .ag-cal-nom { flex: 1 1 auto; }
 .ag-partage-corps { display: flex; flex-direction: column; gap: .5rem; padding-left: .2rem; }
+
+/* Bandeau d'environnement (développement uniquement, cf. BandeauBacASable).
+   Le mode « production » est délibérément agressif : c'est le seul avertissement
+   entre une manipulation de test et les données réelles d'un client. */
+.bandeau-env {
+  position: sticky; top: 0; z-index: 999;
+  padding: .35rem .8rem; text-align: center;
+  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+}
+.bandeau-env.bac { background: #1f6f52; color: #eafaf2; }
+.bandeau-env.prod { background: #b3261e; color: #fff; text-transform: uppercase; }

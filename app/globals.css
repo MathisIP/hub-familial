@@ -2310,3 +2310,50 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cp-pied { font-size: .8rem; color: var(--muted); }
 
 .doc-langue { font-size: .82rem; color: var(--muted); font-style: italic; margin-top: -.4rem; }
+
+/* Cadeaux : rappel de surprise. Volontairement voyant — si l'on ne montre pas
+   à qui le cadeau est caché, on risque d'en parler devant la personne. */
+.puce.cad-cache {
+  background: color-mix(in srgb, var(--acc) 16%, transparent);
+  color: var(--acc-deep);
+  border: 1px solid color-mix(in srgb, var(--acc) 34%, transparent);
+}
+.cad-masque { display: flex; align-items: center; gap: .5rem; flex: 1 1 18rem; min-width: 0; }
+.cad-masque-lbl { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.cad-masque .champ { flex: 1 1 auto; min-width: 0; }
+
+/* --- Budget : gestion des échéances ---------------------------------------
+   Même carte que .gc : c'est la suite de la gestion du budget, deux styles
+   différents feraient croire à deux écrans sans rapport. */
+.ge {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.2rem; padding: 1.4rem 1.5rem; margin-top: 2rem; max-width: 44rem;
+}
+.ge-titre { font-family: var(--police-titre), Georgia, serif; font-size: 1.15rem; margin: 0 0 1rem; }
+.ge-vide { color: var(--muted); font-size: .95rem; margin: 0 0 1rem; }
+.ge-liste { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.ge-item { border: 1px solid var(--line); border-radius: .8rem; padding: .7rem .9rem; }
+.ge-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+.ge-infos { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1 1 9rem; }
+.ge-lib { font-weight: 700; overflow-wrap: anywhere; }
+.ge-meta { font-size: .8rem; color: var(--muted); }
+.ge-quand { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.ge-quand.proche { color: var(--acc-deep); font-weight: 700; }
+.ge-ligne .bouton { font-size: .85rem; padding: .35rem .7rem; }
+.ge-forme-bloc { display: flex; flex-direction: column; gap: .6rem; }
+.ge-forme { display: flex; flex-direction: column; gap: .7rem; }
+.ge-champs { display: flex; flex-wrap: wrap; gap: .6rem; }
+.ge-champ { display: flex; flex-direction: column; gap: .25rem; flex: 1 1 10rem; min-width: 0; }
+.ge-lbl { font-size: .8rem; color: var(--muted); }
+.ge-erreur { margin: 0; font-size: .88rem; color: var(--over-tx, #c0392b); }
+.ge-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ge-actions .bouton, .ge-suppr .bouton { font-size: .85rem; padding: .35rem .7rem; }
+.ge-danger { color: var(--over-tx, #c0392b); border-color: color-mix(in srgb, var(--over-tx, #c0392b) 40%, var(--line)); }
+.ge-ajouter { font-size: .9rem; }
+
+/* Documents / agendas : cadenas et panneau de partage réutilisé (.pc). */
+.vd-cadenas { font-size: .85em; }
+.ag-partage { flex-direction: column; align-items: stretch; gap: .5rem; }
+.ag-partage-tete { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.ag-partage-tete .ag-cal-nom { flex: 1 1 auto; }
+.ag-partage-corps { display: flex; flex-direction: column; gap: .5rem; padding-left: .2rem; }

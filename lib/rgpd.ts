@@ -3,6 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { deconnecterAgenda } from '@/lib/agenda/oauth';
 import { comptesAutorises, filtrerComptes } from '@/lib/budget/acces';
+import { filtrerRestreints } from '@/lib/visibilite';
 import { idFoyerCourant, utilisateurCourant } from '@/lib/foyer';
 import {
   foyers,
@@ -19,6 +20,9 @@ import {
   recettes,
   semaine,
   evenements,
+  documents,
+  dossiers,
+  dossiersAcces,
 } from '@/lib/db/schema';
 
 /**
@@ -72,6 +76,9 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
     recettesRows,
     semaineRows,
     evRows,
+    documentsRows,
+    dossiersRows,
+    dossiersAccesRows,
   ] = await Promise.all([
     d.select().from(membres).where(eq(membres.foyerId, foyerId)),
     d.select().from(comptes).where(eq(comptes.foyerId, foyerId)),
@@ -85,7 +92,53 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
     d.select().from(recettes).where(eq(recettes.foyerId, foyerId)),
     d.select().from(semaine).where(eq(semaine.foyerId, foyerId)),
     d.select().from(evenements).where(eq(evenements.foyerId, foyerId)),
+    d.select().from(documents).where(eq(documents.foyerId, foyerId)),
+    d.select().from(dossiers).where(eq(dossiers.foyerId, foyerId)),
+    d
+      .select({ dossierId: dossiersAcces.dossierId })
+      .from(dossiersAcces)
+      .where(
+        and(eq(dossiersAcces.foyerId, foyerId), eq(dossiersAcces.utilisateurId, utilisateurId)),
+      ),
   ]);
+
+  /*
+   * DOCUMENTS — l'export les ignorait complètement, ce qui était une lacune de
+   * portabilité : les fichiers du foyer sont des données personnelles comme les
+   * autres, et souvent les plus sensibles (bail, carnet de santé).
+   *
+   * ⚠ On exporte les MÉTADONNÉES, pas les octets : un JSON contenant 25 Mo de
+   * pièces jointes en base64 par fichier serait ingérable, et le contenu reste
+   * téléchargeable un par un depuis l'app. Chaque entrée porte donc son lien.
+   *
+   * ⚠ Filtré comme le reste : seuls les documents des dossiers accessibles. Un
+   * dossier restreint ne doit pas fuir par la porte de l'export.
+   */
+  const dossiersAutorises = new Set(dossiersAccesRows.map((a) => a.dossierId));
+  const { visibles: dossiersVisibles, complet: dossiersComplet } = filtrerRestreints(
+    dossiersRows,
+    dossiersAutorises,
+  );
+  const nomsDossiersVisibles = new Set(dossiersVisibles.map((x) => x.nom));
+  const nomsDossiersConnus = new Set(dossiersRows.map((x) => x.nom));
+  const documentsVisibles = documentsRows
+    .filter((doc) => {
+      const nom = (doc.dossier ?? '').trim();
+      // Sans dossier, ou dossier jamais déclaré : commun au foyer.
+      if (!nom || !nomsDossiersConnus.has(nom)) return true;
+      return dossiersComplet || nomsDossiersVisibles.has(nom);
+    })
+    .map((doc) => ({
+      id: doc.id,
+      nom: doc.nom,
+      dossier: doc.dossier,
+      type: doc.type,
+      taille: doc.taille,
+      creeLe: doc.creeLe,
+      // Le contenu se télécharge ici (session requise). La `cle` de stockage
+      // n'est jamais exposée : c'est un détail interne du fournisseur.
+      telechargement: `/api/documents/${doc.id}?dl=1`,
+    }));
 
   const utilisateursRows = membresRows.length
     ? await d
@@ -104,10 +157,22 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
     ? txRows
     : txRows.filter((t) => nomsVisibles.has(t.compte) || nomsVisibles.has(t.dest));
 
+  // Échéances : une échéance rattachée à un compte hérite de SA visibilité.
+  // Sans compte, elle est commune au foyer. Sans ce filtre, « prêt auto » et sa
+  // date racontent un compte qu'on masque par ailleurs.
+  const idsComptesVisibles = new Set(comptesVisibles.map((c) => c.id));
+  const echVisibles = complet
+    ? echRows
+    : echRows.filter((e) => !e.compteId || idsComptesVisibles.has(e.compteId));
+
+  // Cadeaux : LISTE NOIRE. On retire ceux qui sont masqués à cette personne —
+  // l'export serait sinon le moyen le plus simple de gâcher sa propre surprise.
+  const cadeauxVisibles = cadeauxRows.filter((c) => c.masqueA !== utilisateurId);
+
   return {
     exporteLe: new Date().toISOString(),
     // Signale que l'export ne couvre pas tout le foyer : sans cette mention,
-    // la personne croirait son budget incomplet plutôt que filtré.
+    // la personne croirait ses données incomplètes plutôt que filtrées.
     budgetPartiel: !complet,
     foyer: foyer ?? null,
     utilisateurs: utilisateursRows,
@@ -116,9 +181,10 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
       comptes: comptesVisibles,
       categories: catsRows,
       transactions: txVisibles,
-      echeances: echRows,
+      echeances: echVisibles,
     },
-    cadeaux: cadeauxRows,
+    documents: documentsVisibles,
+    cadeaux: cadeauxVisibles,
     occasions: occasionsRows,
     taches: tachesRows,
     courses: coursesRows,

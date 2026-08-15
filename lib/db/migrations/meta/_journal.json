@@ -176,6 +176,13 @@
       "when": 1786737070279,
       "tag": "0024_fast_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786826571748,
+      "tag": "0025_empty_domino",
+      "breakpoints": true
     }
   ]
 }

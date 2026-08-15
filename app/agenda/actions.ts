@@ -1,7 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { rattacherCalendrier, detacherCalendrier } from '@/lib/agenda/calendriers';
+import {
+  rattacherCalendrier,
+  detacherCalendrier,
+  definirPartageAgenda,
+} from '@/lib/agenda/calendriers';
 import { deconnecterAgenda } from '@/lib/agenda/oauth';
 import { utilisateurCourant } from '@/lib/foyer';
 
@@ -40,5 +44,27 @@ export async function deconnecterGoogleAction(): Promise<{ erreur?: string }> {
     return {};
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Déconnexion impossible.' };
+  }
+}
+
+/**
+ * Règle qui voit un agenda rattaché. Le service revérifie que la personne est
+ * bien celle qui l'a rattaché — une action serveur reste une porte sur le réseau.
+ *
+ * ⚠ `revalidatePath('/')` en plus : la carte agenda de l'accueil affiche les
+ * mêmes événements, elle doit refléter la restriction immédiatement.
+ */
+export async function definirPartageAgendaAction(
+  agendaId: string,
+  restreint: boolean,
+  utilisateurIds: string[],
+): Promise<{ erreur?: string }> {
+  try {
+    await definirPartageAgenda({ agendaId, restreint, utilisateurIds });
+    revalidatePath('/agenda');
+    revalidatePath('/');
+    return {};
+  } catch (e) {
+    return { erreur: e instanceof Error ? e.message : 'Réglage impossible.' };
   }
 }

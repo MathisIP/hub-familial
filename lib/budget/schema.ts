@@ -69,13 +69,39 @@ export type Transaction = {
 };
 
 export type Echeance = {
+  id: string;
   libelle: string;
   date: string;
   dateISO: string | null;
   recurrence: string;
   note: string;
   joursRestants: number | null; // null si pas de date
+  /**
+   * Compte rattaché — l'échéance hérite de sa visibilité. Chaîne vide = échéance
+   * commune, visible de tout le foyer.
+   */
+  compteId: string;
+  /** Nom du compte rattaché, pour l'affichage (vide si aucun). */
+  compte: string;
 };
+
+/** Champs éditables d'une échéance (payload d'ajout/modification). */
+export type ChampsEcheance = {
+  libelle: string;
+  dateLabel?: string; // jj/mm/aaaa ; vide = sans date
+  recurrence?: string;
+  note?: string;
+  compteId?: string | null;
+};
+
+/** Récurrences proposées. Constante : rien à dériver des données. */
+export const RECURRENCES_ECHEANCE = [
+  'Aucune',
+  'Mensuelle',
+  'Trimestrielle',
+  'Semestrielle',
+  'Annuelle',
+] as const;
 
 export type DonneesBudget = {
   periode: string; // ex. « Juillet 2026 »

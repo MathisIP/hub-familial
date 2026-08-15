@@ -2,10 +2,11 @@ import 'server-only';
 import { and, eq } from 'drizzle-orm';
 import { google } from 'googleapis';
 import { db } from '@/lib/db';
-import { foyerAgendas } from '@/lib/db/schema';
+import { foyerAgendas, agendasAcces, membres as tMembres, utilisateurs as tUtilisateurs } from '@/lib/db/schema';
 import { idFoyerCourant, utilisateurCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
 import { jetonAgenda, agendaConnecte, peutEcrireEvenements } from '@/lib/agenda/oauth';
+import { PARTAGE_FOYER, PARTAGE_RESTREINT, retenirMembres } from '@/lib/visibilite';
 
 /**
  * GESTION DES CALENDRIERS D'UN FOYER (serveur).
@@ -84,26 +85,78 @@ export async function rattacherCalendrier(calendarId: string, nom: string): Prom
     .onConflictDoNothing({ target: [foyerAgendas.foyerId, foyerAgendas.calendarId] });
 }
 
-/** Détache un calendrier du foyer (le calendrier Google n'est pas touché). */
+/**
+ * Détache un calendrier du foyer (le calendrier Google n'est pas touché).
+ *
+ * ⚠ RÉSERVÉ À CELUI QUI L'A RATTACHÉ. Cette fonction ne vérifiait que le foyer :
+ * n'importe quel membre pouvait donc détacher l'agenda de n'importe qui, et
+ * l'écran de configuration lui en offrait le bouton. C'est le pendant logique de
+ * la règle de partage — si c'est lui qui décide qui voit son agenda, c'est lui
+ * qui décide de le retirer.
+ */
 export async function detacherCalendrier(calendarId: string): Promise<void> {
-  const foyerId = await idFoyerCourant();
-  await db()
+  const [foyerId, user] = await Promise.all([idFoyerCourant(), utilisateurCourant()]);
+  const res = await db()
     .delete(foyerAgendas)
-    .where(and(eq(foyerAgendas.foyerId, foyerId), eq(foyerAgendas.calendarId, calendarId)));
+    .where(
+      and(
+        eq(foyerAgendas.foyerId, foyerId),
+        eq(foyerAgendas.calendarId, calendarId),
+        eq(foyerAgendas.ajoutePar, user.id),
+      ),
+    )
+    .returning({ id: foyerAgendas.id });
+  if (res.length === 0) {
+    throw new ErreurValidation(
+      'Seule la personne qui a rattaché cet agenda peut le retirer du foyer.',
+    );
+  }
 }
 
-/** Calendriers rattachés au foyer (pour l'écran de configuration). */
-export async function calendriersDuFoyer(): Promise<{ id: string; nom: string; parMoi: boolean }[]> {
-  const [foyerId, user] = [await idFoyerCourant(), await utilisateurCourant()];
-  const lignes = await db()
-    .select()
-    .from(foyerAgendas)
-    .where(eq(foyerAgendas.foyerId, foyerId));
-  return lignes.map((l) => ({
-    id: l.calendarId,
-    nom: l.nom || l.calendarId,
-    parMoi: l.ajoutePar === user.id,
-  }));
+/**
+ * Calendriers rattachés au foyer, **filtrés sur ce que la personne peut voir**
+ * (pour l'écran de configuration).
+ *
+ * ⚠ TROISIÈME CHEMIN DE LECTURE. Celui-ci court-circuite `lib/agenda/service.ts` :
+ * filtrer les deux points de passage du service ne suffisait pas, l'écran de
+ * configuration aurait continué d'afficher le nom et l'identifiant de tous les
+ * agendas du foyer.
+ *
+ * `agendaId` (l'uuid de la ligne, pas le calendarId Google) sert au réglage du
+ * partage ; `restreint` et `personnes` alimentent le panneau.
+ */
+export async function calendriersDuFoyer(): Promise<
+  { id: string; agendaId: string; nom: string; parMoi: boolean; restreint: boolean; personnes: string[] }[]
+> {
+  const [foyerId, user] = await Promise.all([idFoyerCourant(), utilisateurCourant()]);
+  const [lignes, acces] = await Promise.all([
+    db().select().from(foyerAgendas).where(eq(foyerAgendas.foyerId, foyerId)),
+    db()
+      .select({ agendaId: agendasAcces.agendaId, utilisateurId: agendasAcces.utilisateurId })
+      .from(agendasAcces)
+      .where(eq(agendasAcces.foyerId, foyerId)),
+  ]);
+
+  const parAgenda = new Map<string, string[]>();
+  for (const a of acces) {
+    parAgenda.set(a.agendaId, [...(parAgenda.get(a.agendaId) ?? []), a.utilisateurId]);
+  }
+
+  return lignes
+    .filter(
+      (l) =>
+        l.partage !== PARTAGE_RESTREINT ||
+        l.ajoutePar === user.id ||
+        (parAgenda.get(l.id) ?? []).includes(user.id),
+    )
+    .map((l) => ({
+      id: l.calendarId,
+      agendaId: l.id,
+      nom: l.nom || l.calendarId,
+      parMoi: l.ajoutePar === user.id,
+      restreint: l.partage === PARTAGE_RESTREINT,
+      personnes: parAgenda.get(l.id) ?? [],
+    }));
 }
 
 /** L'utilisateur connecté a-t-il autorisé son agenda ? */
@@ -120,4 +173,80 @@ export async function monEcritureAccordee(): Promise<boolean> {
   const user = await utilisateurCourant();
   if (!(await agendaConnecte(user.id))) return true; // rien à signaler s'il n'a rien connecté
   return peutEcrireEvenements(user.id);
+}
+
+/**
+ * Règle qui voit un agenda rattaché.
+ *
+ * ⚠ RÉSERVÉ À CELUI QUI L'A RATTACHÉ (`ajoute_par`), et non au propriétaire du
+ * foyer : c'est son compte Google et ses événements. Laisser le propriétaire
+ * ouvrir à tous l'agenda professionnel d'un colocataire serait plus intrusif que
+ * tout ce que le module protège par ailleurs.
+ *
+ * Il reste toujours visible pour lui-même (cf. `visibleParMoi` dans le service) :
+ * sans cela, se retirer de sa propre liste rendrait le réglage irrattrapable.
+ */
+export async function definirPartageAgenda(input: {
+  agendaId: string;
+  restreint: boolean;
+  utilisateurIds: string[];
+}): Promise<void> {
+  const [foyerId, user] = await Promise.all([idFoyerCourant(), utilisateurCourant()]);
+  const d = db();
+
+  const [agenda] = await d
+    .select({ id: foyerAgendas.id })
+    .from(foyerAgendas)
+    .where(
+      and(
+        eq(foyerAgendas.foyerId, foyerId),
+        eq(foyerAgendas.id, input.agendaId),
+        eq(foyerAgendas.ajoutePar, user.id),
+      ),
+    )
+    .limit(1);
+  if (!agenda) {
+    throw new ErreurValidation(
+      'Seule la personne qui a rattaché cet agenda peut en régler le partage.',
+    );
+  }
+
+  // Les identifiants viennent du client : on n'accepte que de vrais membres.
+  const membresRows = await d
+    .select({ utilisateurId: tMembres.utilisateurId })
+    .from(tMembres)
+    .where(eq(tMembres.foyerId, foyerId));
+  const retenus = retenirMembres(
+    input.utilisateurIds,
+    new Set(membresRows.map((m) => m.utilisateurId)),
+    input.restreint,
+  );
+
+  await d.transaction(async (tx) => {
+    await tx
+      .update(foyerAgendas)
+      .set({ partage: input.restreint ? PARTAGE_RESTREINT : PARTAGE_FOYER })
+      .where(and(eq(foyerAgendas.foyerId, foyerId), eq(foyerAgendas.id, agenda.id)));
+    await tx
+      .delete(agendasAcces)
+      .where(and(eq(agendasAcces.foyerId, foyerId), eq(agendasAcces.agendaId, agenda.id)));
+    if (input.restreint && retenus.length > 0) {
+      await tx
+        .insert(agendasAcces)
+        .values(retenus.map((utilisateurId) => ({ foyerId, agendaId: agenda.id, utilisateurId })));
+    }
+  });
+}
+
+/** Membres du foyer (pour le panneau de partage des agendas). */
+export async function membresDuFoyerPourPartage(): Promise<{ utilisateurId: string; nom: string }[]> {
+  const foyerId = await idFoyerCourant();
+  const lignes = await db()
+    .select({ utilisateurId: tMembres.utilisateurId, nom: tUtilisateurs.nom, email: tUtilisateurs.email })
+    .from(tMembres)
+    .innerJoin(tUtilisateurs, eq(tUtilisateurs.id, tMembres.utilisateurId))
+    .where(eq(tMembres.foyerId, foyerId));
+  return lignes
+    .map((m) => ({ utilisateurId: m.utilisateurId, nom: m.nom || m.email }))
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 }

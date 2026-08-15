@@ -2,12 +2,16 @@
 
 import { revalidatePath } from 'next/cache';
 import {
+  ajouterEcheance,
   creerComptes,
   definirPartageCompte,
   modifierCompte,
+  modifierEcheance,
   supprimerCompte,
+  supprimerEcheance,
   type NouveauCompte,
 } from '@/lib/budget/service';
+import type { ChampsEcheance } from '@/lib/budget/schema';
 
 /**
  * « 1 240,50 » → 1240.50. Les montants arrivent en texte : on accepte la
@@ -124,7 +128,7 @@ export async function definirPartageAction(
 ): Promise<ResultatAction | null> {
   try {
     await definirPartageCompte({
-      compteId: String(formData.get('compteId') ?? ''),
+      compteId: String(formData.get('id') ?? ''),
       restreint: formData.get('restreint') === 'oui',
       utilisateurIds: formData.getAll('utilisateurs').map(String).filter(Boolean),
     });
@@ -132,5 +136,61 @@ export async function definirPartageAction(
     return { ok: true };
   } catch (e) {
     return { erreur: messageErreur(e, 'Réglage impossible.') };
+  }
+}
+
+/* --------------------------- ÉCHÉANCES ---------------------------
+ * Le module affichait des échéances sans qu'aucun écran ne permette d'en créer.
+ * Ces trois actions comblent ce manque ; le compte rattaché (facultatif) porte
+ * la visibilité de l'échéance. Le service revérifie tout : une action serveur
+ * reste une porte ouverte sur le réseau.
+ * ---------------------------------------------------------------- */
+
+function champsEcheanceDepuis(formData: FormData): ChampsEcheance {
+  return {
+    libelle: String(formData.get('libelle') ?? ''),
+    dateLabel: String(formData.get('date') ?? ''),
+    recurrence: String(formData.get('recurrence') ?? 'Aucune'),
+    note: String(formData.get('note') ?? ''),
+    compteId: String(formData.get('compteId') ?? ''),
+  };
+}
+
+export async function ajouterEcheanceAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await ajouterEcheance(champsEcheanceDepuis(formData));
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, "Ajout impossible.") };
+  }
+}
+
+export async function modifierEcheanceAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await modifierEcheance(String(formData.get('id') ?? ''), champsEcheanceDepuis(formData));
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, 'Modification impossible.') };
+  }
+}
+
+export async function supprimerEcheanceAction(
+  _precedent: ResultatAction | null,
+  formData: FormData,
+): Promise<ResultatAction | null> {
+  try {
+    await supprimerEcheance(String(formData.get('id') ?? ''));
+    rafraichir();
+    return { ok: true };
+  } catch (e) {
+    return { erreur: messageErreur(e, 'Suppression impossible.') };
   }
 }

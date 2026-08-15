@@ -89,25 +89,9 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
         </section>
       )}
 
-      {d.echeances.length > 0 && (
-        <section className="card-bloc">
-          <h2 className="section-titre">{t('BUD_ECHEANCES', langue)}</h2>
-          <ul className="ech-liste">
-            {d.echeances.map((e, i) => (
-              <li className="ech" key={`${e.libelle}-${i}`}>
-                <span className="e-lib">{e.libelle}</span>
-                {e.recurrence !== 'Aucune' && <span className="e-date">↻ {e.recurrence}</span>}
-                <span className="e-date">{e.date}</span>
-                {e.joursRestants !== null && (
-                  <span className={`e-quand ${e.joursRestants <= 30 ? 'proche' : ''}`}>
-                    {libelleJours(e.joursRestants, langue)}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* Les échéances vivent désormais dans GestionEcheances (éditable), juste
+          en dessous : les répéter ici en lecture seule ferait deux listes
+          identiques sur le même écran. */}
     </>
   );
 }
@@ -164,8 +148,3 @@ function Jauge({ c, partielle = false }: { c: LigneCategorie; partielle?: boolea
   );
 }
 
-function libelleJours(j: number, langue: IdLangue): string {
-  if (j === 0) return t('REL_AUJOURDHUI', langue);
-  if (j === 1) return t('REL_DEMAIN', langue);
-  return `${t('REL_DANS', langue)} ${j} ${t('REL_J', langue)}`;
-}

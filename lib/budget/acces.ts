@@ -2,8 +2,17 @@ import 'server-only';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { comptes as tComptes, comptesAcces as tAcces, type LigneCompte } from '@/lib/db/schema';
-import { idFoyerCourant, utilisateurCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
+import {
+  contexteAcces,
+  filtrerRestreints,
+  PARTAGE_FOYER,
+  PARTAGE_RESTREINT,
+} from '@/lib/visibilite';
+
+// Réexports : le module Budget est le premier client du socle, beaucoup de code
+// importe encore ces symboles depuis ici.
+export { contexteAcces, PARTAGE_FOYER, PARTAGE_RESTREINT };
 
 /**
  * VISIBILITÉ DES COMPTES (serveur uniquement)
@@ -27,9 +36,6 @@ import { ErreurValidation } from '@/lib/erreurs';
  * pousse jusque dans ses requêtes SQL.
  */
 
-export const PARTAGE_FOYER = 'foyer';
-export const PARTAGE_RESTREINT = 'restreint';
-
 /**
  * Ce qu'une personne a le droit de voir du budget de son foyer.
  *
@@ -45,12 +51,6 @@ export type AccesComptes = {
   noms: string[];
   complet: boolean;
 };
-
-/** Foyer + utilisateur courants. Les deux sont mémoïsés par requête (`cache()`). */
-export async function contexteAcces(): Promise<{ foyerId: string; utilisateurId: string }> {
-  const [foyerId, user] = await Promise.all([idFoyerCourant(), utilisateurCourant()]);
-  return { foyerId, utilisateurId: user.id };
-}
 
 /**
  * Identifiants des comptes restreints auxquels cette personne a accès.
@@ -75,14 +75,14 @@ export async function comptesAutorises(
 /**
  * Croise les comptes du foyer et les autorisations : fonction PURE, aucun accès
  * base. Les appelants ont déjà chargé les comptes, on ne les relit pas.
+ *
+ * Ajoute `noms` à ce que renvoie le socle : les transactions désignent leur
+ * compte par son NOM, pas par une clé étrangère — c'est la particularité du
+ * module Budget (cf. l'avertissement de [lib/budget/service.ts]).
  */
 export function filtrerComptes(rows: LigneCompte[], autorises: Set<string>): AccesComptes {
-  const visibles = rows.filter((c) => c.partage !== PARTAGE_RESTREINT || autorises.has(c.id));
-  return {
-    comptes: visibles,
-    noms: visibles.map((c) => c.nom),
-    complet: visibles.length === rows.length,
-  };
+  const { visibles, complet } = filtrerRestreints(rows, autorises);
+  return { comptes: visibles, noms: visibles.map((c) => c.nom), complet };
 }
 
 /**

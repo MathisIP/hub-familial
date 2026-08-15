@@ -222,8 +222,17 @@ export async function delierAgenda(id: string): Promise<void> {
   if (lien) {
     try {
       await supprimerEventAgenda(lien.calendarId, lien.eventId);
-    } catch {
-      // événement d'agenda déjà supprimé côté Google : on nettoie quand même le lien
+    } catch (e) {
+      // ⚠ Ce `catch` était muet, et c'est devenu dangereux : depuis que les
+      // agendas ont une visibilité par personne, `supprimerEventAgenda` peut
+      // refuser légitimement (« cet agenda ne t'appartient pas »). L'avaler
+      // viderait le lien SANS supprimer l'événement dans Google — l'app dirait
+      // « retiré de l'agenda » pendant qu'il y reste, exactement le mensonge
+      // qu'on a déjà corrigé sur les événements récurrents.
+      //
+      // On ne tolère donc QUE le cas légitime : l'événement n'existe plus côté
+      // Google (déjà supprimé à la main). Un refus d'autorisation remonte.
+      if (e instanceof ErreurValidation) throw e;
     }
   }
   await db()

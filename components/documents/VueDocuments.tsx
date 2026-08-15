@@ -190,7 +190,14 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
                 />
               ) : (
                 <h2 className="vd-gtitre">
-                  <span className="vd-gnom">📁 {g.dossier}</span>
+                  <span className="vd-gnom">
+                    📁 {g.dossier}
+                    {/* Cadenas : savoir qu'un dossier est restreint évite d'y
+                        déposer un fichier que les autres devaient voir. */}
+                    {initial.dossiersRestreints.includes(g.dossier) && (
+                      <span className="vd-cadenas" title={tr('DOC_DOSSIER_PRIVE')}> 🔒</span>
+                    )}
+                  </span>
                   <span className="vd-gcount">{g.documents.length}</span>
                   {g.dossier !== DOSSIER_DEFAUT && (
                     <button

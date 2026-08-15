@@ -16,8 +16,16 @@ export type Document = {
 
 export type DonneesDocuments = {
   documents: Document[];
-  /** Tous les dossiers du foyer, y compris les dossiers VIDES. */
+  /**
+   * Les dossiers du foyer **que cette personne peut voir**, y compris les
+   * dossiers VIDES. Ceux qui lui sont masqués n'y figurent pas du tout.
+   */
   dossiers: string[];
+  /**
+   * Parmi eux, ceux à visibilité restreinte : sert uniquement à afficher un
+   * cadenas. Un dossier qu'on ne voit pas n'apparaît nulle part.
+   */
+  dossiersRestreints: string[];
 };
 
 export type ChampsDocument = {

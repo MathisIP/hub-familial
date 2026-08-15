@@ -2,6 +2,7 @@ import VueBudget from '@/components/budget/VueBudget';
 import SelecteurMois from '@/components/budget/SelecteurMois';
 import InitComptes from '@/components/budget/InitComptes';
 import GestionComptes from '@/components/budget/GestionComptes';
+import GestionEcheances from '@/components/budget/GestionEcheances';
 import Historique from '@/components/budget/Historique';
 import PartageComptes, { type MembrePartage } from '@/components/budget/PartageComptes';
 import {
@@ -83,6 +84,12 @@ export default async function PageBudget({
           <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
           <VueBudget d={d} langue={langue} />
           <GestionComptes comptes={comptes} />
+          {/* Les échéances ne proposent que les comptes VISIBLES : on ne peut
+              pas rattacher une échéance à un compte qu'on ne voit pas. */}
+          <GestionEcheances
+            echeances={d.echeances}
+            comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
+          />
           {partage && <PartageComptes comptes={partage.comptes} membres={partage.membres} />}
           <Historique selection={d.selection} periodeLibelle={d.periode} />
         </>

@@ -34,6 +34,7 @@ import {
   formatEuro,
   joursJusqua,
   versISO,
+  type ChampsEcheance,
   type CompteGere,
   type DonneesBudget,
   type Echeance,
@@ -318,15 +319,25 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
   const transactions: Transaction[] = txRecentes.map((t) => versTransaction(t, acces));
 
   // Échéances à venir (ou sans date), plus proche d'abord.
+  //
+  // ⚠ Une échéance rattachée à un compte hérite de SA visibilité : « prêt auto »
+  // sur un compte masqué n'a pas à apparaître, sinon le libellé et la date
+  // racontent le compte qu'on cache. Sans compte (`compteId` vide), elle est
+  // commune au foyer et reste visible de tous.
+  const nomParCompte = new Map(comptesRows.map((c) => [c.id, c.nom]));
   const auj = aujourdhuiISO();
   const echeances: Echeance[] = echRows
+    .filter((e) => !e.compteId || nomParCompte.has(e.compteId))
     .map((e): Echeance => ({
+      id: e.id,
       libelle: e.libelle,
       date: e.date,
       dateISO: e.dateIso,
       recurrence: e.recurrence || 'Aucune',
       note: e.note,
       joursRestants: e.dateIso ? joursJusqua(e.dateIso) : null,
+      compteId: e.compteId ?? '',
+      compte: e.compteId ? (nomParCompte.get(e.compteId) ?? '') : '',
     }))
     .filter((e) => e.dateISO === null || e.dateISO >= auj)
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
@@ -809,6 +820,95 @@ export async function chargerTransactions(
     transactions: lignes.slice(0, limite).map((t) => versTransaction(t, acces)),
     tronque: lignes.length > limite,
   };
+}
+
+/* ---------------------------------------------------------------------------
+ * ÉCHÉANCES — ajouter / modifier / supprimer
+ *
+ * ⚠ Ce CRUD n'existait pas : les échéances s'affichaient sans qu'aucun écran ne
+ * permette d'en créer une. Elles ne pouvaient venir que d'une écriture SQL
+ * directe — autant dire de nulle part pour un vrai foyer, qui voyait une section
+ * vide sans comprendre pourquoi.
+ *
+ * La visibilité est HÉRITÉE du compte rattaché : pas de réglage propre, pas
+ * d'écran de plus. Sans compte, l'échéance est commune au foyer.
+ * ------------------------------------------------------------------------- */
+
+/** Le compte rattaché doit exister ET être accessible, sinon on refuse. */
+async function compteRattacheValide(brut: string | null | undefined): Promise<string | null> {
+  const v = (brut ?? '').trim();
+  if (!v) return null;
+  const acces = await accesComptes();
+  const cible = acces.comptes.find((c) => c.id === v);
+  // Même message qu'un compte inexistant : ne pas révéler un compte masqué.
+  if (!cible) throw new ErreurValidation('Compte introuvable.');
+  return cible.id;
+}
+
+function champsEcheance(c: ChampsEcheance, compteId: string | null) {
+  const libelle = (c.libelle ?? '').trim();
+  if (!libelle) throw new ErreurValidation("Le libellé de l'échéance est requis.");
+  const dateLabel = (c.dateLabel ?? '').trim();
+  const dateIso = dateLabel ? versISO(dateLabel) : null;
+  if (dateLabel && !dateIso) {
+    throw new ErreurValidation('La date doit être au format jj/mm/aaaa.');
+  }
+  return {
+    libelle,
+    date: dateLabel,
+    dateIso,
+    recurrence: (c.recurrence ?? 'Aucune').trim() || 'Aucune',
+    note: (c.note ?? '').trim(),
+    compteId,
+  };
+}
+
+export async function ajouterEcheance(c: ChampsEcheance): Promise<string> {
+  const { foyerId } = await contexteAcces();
+  const compteId = await compteRattacheValide(c.compteId);
+  const [row] = await db()
+    .insert(tEch)
+    .values({ foyerId, ...champsEcheance(c, compteId) })
+    .returning({ id: tEch.id });
+  return row.id;
+}
+
+/**
+ * L'échéance demandée, si elle appartient au foyer ET que son compte rattaché
+ * est accessible — sinon modifier une échéance invisible en révélerait le
+ * contenu par la réponse du serveur.
+ */
+async function echeanceAccessible(id: string): Promise<{ id: string }> {
+  const { foyerId } = await contexteAcces();
+  const [e] = await db()
+    .select({ id: tEch.id, compteId: tEch.compteId })
+    .from(tEch)
+    .where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)))
+    .limit(1);
+  if (!e) throw new ErreurValidation('Échéance introuvable.');
+  if (e.compteId) {
+    const acces = await accesComptes();
+    if (!acces.comptes.some((c) => c.id === e.compteId)) {
+      throw new ErreurValidation('Échéance introuvable.');
+    }
+  }
+  return { id: e.id };
+}
+
+export async function modifierEcheance(id: string, c: ChampsEcheance): Promise<void> {
+  await echeanceAccessible(id);
+  const { foyerId } = await contexteAcces();
+  const compteId = await compteRattacheValide(c.compteId);
+  await db()
+    .update(tEch)
+    .set(champsEcheance(c, compteId))
+    .where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)));
+}
+
+export async function supprimerEcheance(id: string): Promise<void> {
+  await echeanceAccessible(id);
+  const { foyerId } = await contexteAcces();
+  await db().delete(tEch).where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)));
 }
 
 /* ---------------------------------------------------------------------------

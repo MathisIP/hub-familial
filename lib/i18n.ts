@@ -237,6 +237,57 @@ const UI = {
     en: 'Some household accounts are not shared with you: these figures cover only yours.',
   },
 
+  /* --- Documents : qui voit quels dossiers --- */
+  DOSS_PART_TITRE: { fr: 'Qui voit quels dossiers', en: 'Who sees which folders' },
+  DOSS_PART_SOUS: {
+    fr: 'Par défaut, chaque dossier est visible de tout le foyer. Restreins-en un pour que ses fichiers n’apparaissent qu’aux personnes que tu choisis.',
+    en: 'By default every folder is visible to the whole household. Restrict one so its files only appear to the people you pick.',
+  },
+  DOSS_PART_AUCUN: {
+    fr: 'Aucun dossier à régler pour l’instant. Crée un dossier depuis la liste des documents.',
+    en: 'No folders to configure yet. Create one from the documents list.',
+  },
+  DOSS_PART_AIDE: {
+    fr: 'Un dossier restreint disparaît complètement pour les autres : ses fichiers ne sortent ni dans la liste, ni dans la recherche de l’accueil, ni au téléchargement direct, ni dans l’export de leurs données. La boîte d’arrivée, elle, reste toujours commune.',
+    en: 'A restricted folder disappears entirely for others: its files show up in no list, no home search, no direct download, and no data export of theirs. The inbox always stays shared.',
+  },
+  DOC_DOSSIER_PRIVE: { fr: 'dossier restreint', en: 'restricted folder' },
+
+  /* --- Agenda : qui voit quel calendrier --- */
+  AGC_QUI_VOIT: { fr: 'Qui voit mes agendas', en: 'Who sees my calendars' },
+  AGC_AUTRE_PROPRIO: {
+    fr: 'réglé par la personne qui l’a ajouté',
+    en: 'managed by the person who added it',
+  },
+
+  /* --- Budget : échéances --- */
+  ECH_TITRE: { fr: 'Mes échéances', en: 'My upcoming payments' },
+  ECH_VIDE: {
+    fr: 'Aucune échéance pour l’instant. Ajoute un loyer, une assurance, une cantine…',
+    en: 'No upcoming payments yet. Add rent, insurance, school meals…',
+  },
+  ECH_AJOUTER: { fr: '＋ Ajouter une échéance', en: '＋ Add an upcoming payment' },
+  ECH_LIBELLE: { fr: 'Intitulé', en: 'Label' },
+  ECH_LIBELLE_PH: { fr: 'Loyer, assurance…', en: 'Rent, insurance…' },
+  ECH_DATE: { fr: 'Date', en: 'Date' },
+  ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
+  ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
+  ECH_COMPTE: { fr: 'Compte', en: 'Account' },
+  ECH_COMPTE_AUCUN: { fr: 'Aucun — visible de tout le foyer', en: 'None — visible to the whole household' },
+  AIDE_ECHEANCE_COMPTE: {
+    fr: 'Rattacher une échéance à un compte lui donne la visibilité de ce compte : si le compte est restreint, l’échéance ne sera visible que des mêmes personnes. Sans compte, elle reste visible de tout le foyer.',
+    en: 'Linking a payment to an account gives it that account’s visibility: if the account is restricted, so is the payment. With no account, it stays visible to the whole household.',
+  },
+
+  /* --- Cadeaux : garder la surprise --- */
+  CAD_MASQUER: { fr: 'Ne pas montrer à', en: 'Hide from' },
+  CAD_MASQUER_PERSONNE: { fr: 'Personne — visible de tout le foyer', en: 'No one — visible to the whole household' },
+  CAD_CACHE_A: { fr: 'caché à', en: 'hidden from' },
+  AIDE_MASQUER: {
+    fr: 'La personne choisie ne verra pas ce cadeau : ni dans la liste, ni dans le budget de l’occasion. Tous les autres membres du foyer le voient normalement, y compris ceux qui rejoindront le foyer plus tard.',
+    en: 'The chosen person won’t see this gift: not in the list, not in the occasion’s budget. Everyone else in the household sees it normally, including people who join later.',
+  },
+
   AIDE_NOM_COMPTE: {
     fr: 'Le nom que TU utilises au quotidien : « Compte commun », « Livret A », « Compte de Lou »… Il apparaîtra tel quel dans l’app.',
     en: 'The name YOU use day to day: “Joint account”, “Savings”, “Lou’s account”… It appears exactly as typed in the app.',

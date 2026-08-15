@@ -209,11 +209,40 @@ export const foyerAgendas = pgTable(
     ajoutePar: uuid('ajoute_par')
       .notNull()
       .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    /**
+     * `foyer` (défaut) ou `restreint` — cf. [lib/visibilite.ts].
+     * ⚠ Réglé par CELUI QUI A RATTACHÉ (`ajoute_par`), pas par le propriétaire du
+     * foyer : c'est son compte Google et ses événements. Personne d'autre n'a à
+     * décider qui lit l'agenda professionnel de quelqu'un.
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index('foyer_agendas_foyer_idx').on(t.foyerId),
     unique('foyer_agendas_foyer_cal').on(t.foyerId, t.calendarId),
+  ],
+);
+
+/** Qui a accès à un agenda `restreint`. Voir `comptesAcces` pour le motif. */
+export const agendasAcces = pgTable(
+  'agendas_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    agendaId: uuid('agenda_id')
+      .notNull()
+      .references(() => foyerAgendas.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('agendas_acces_agenda_utilisateur').on(t.agendaId, t.utilisateurId),
+    index('agendas_acces_foyer_idx').on(t.foyerId),
   ],
 );
 
@@ -287,6 +316,22 @@ export const cadeaux = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     pourQui: text('pour_qui').notNull().default(''),
+    /**
+     * LISTE NOIRE : la personne à qui ce cadeau est destiné ne doit pas le voir.
+     * `null` = visible de tout le foyer.
+     *
+     * ⚠ Pourquoi pas une liste blanche comme ailleurs : un cadeau doit rester
+     * visible du foyer ENTIER, y compris de quelqu'un qui le rejoint après la
+     * saisie. Une liste blanche le lui masquerait — contresens exact de ce qu'on
+     * veut. La surprise doit survivre à l'arrivée d'un nouveau membre.
+     *
+     * ⚠ `set null` et non `cascade` : si la personne quitte le foyer, le cadeau
+     * réapparaît simplement pour tous au lieu de disparaître.
+     *
+     * `pour_qui` (texte libre) reste à côté : beaucoup de cadeaux visent des gens
+     * hors du foyer (« Mamie »), qui n'ont pas de compte utilisateur.
+     */
+    masqueA: uuid('masque_a').references(() => utilisateurs.id, { onDelete: 'set null' }),
     occasion: text('occasion').notNull().default(''),
     idee: text('idee').notNull(),
     statut: text('statut').notNull().default('Idée'),
@@ -680,6 +725,14 @@ export const echeances = pgTable(
     dateIso: text('date_iso'),
     recurrence: text('recurrence').notNull().default('Aucune'),
     note: text('note').notNull().default(''),
+    /**
+     * Compte rattaché — l'échéance hérite alors de SA visibilité. `null` (défaut)
+     * = échéance commune, visible de tout le foyer.
+     *
+     * ⚠ `set null` et non `cascade` : fermer un compte ne doit pas effacer
+     * « assurance habitation », qui reste due. L'échéance redevient commune.
+     */
+    compteId: uuid('compte_id').references(() => comptes.id, { onDelete: 'set null' }),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('echeances_foyer_idx').on(t.foyerId)],
@@ -728,9 +781,43 @@ export const dossiers = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     nom: text('nom').notNull(),
+    /**
+     * `foyer` (défaut) ou `restreint` — cf. [lib/visibilite.ts]. Réglé par le
+     * propriétaire du foyer (les dossiers n'ont pas de créateur enregistré).
+     *
+     * ⚠ Le lien vers les fichiers est `documents.dossier`, du **TEXTE**, pas une
+     * clé étrangère (voir le commentaire de `documents`). Restreindre un dossier
+     * n'a donc de sens que si l'on garde fermées les deux portes latérales :
+     * déplacer un fichier HORS d'un dossier restreint, et en faire entrer un
+     * DEDANS en tapant son nom. Les deux sont contrôlées dans
+     * [lib/documents/service.ts].
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('dossiers_foyer_idx').on(t.foyerId), unique('dossiers_foyer_nom').on(t.foyerId, t.nom)],
+);
+
+/** Qui a accès à un dossier `restreint`. Voir `comptesAcces` pour le motif. */
+export const dossiersAcces = pgTable(
+  'dossiers_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    dossierId: uuid('dossier_id')
+      .notNull()
+      .references(() => dossiers.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('dossiers_acces_dossier_utilisateur').on(t.dossierId, t.utilisateurId),
+    index('dossiers_acces_foyer_idx').on(t.foyerId),
+  ],
 );
 
 export type LigneDocument = typeof documents.$inferSelect;

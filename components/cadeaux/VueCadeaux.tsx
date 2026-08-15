@@ -109,6 +109,13 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                     <span className="cad-idee">{c.idee}</span>
                     <span className="cad-meta">
                       {c.pourQui && <span className="puce assigne">{tr('CAD_POUR')} {c.pourQui}</span>}
+                      {/* Rappel de la surprise : si on ne montre pas à qui le
+                          cadeau est caché, on risque d'en parler devant elle. */}
+                      {c.masqueA && (
+                        <span className="puce cad-cache">
+                          🤫 {tr('CAD_CACHE_A')} {d.membres.find((m) => m.utilisateurId === c.masqueA)?.nom ?? '…'}
+                        </span>
+                      )}
                       {c.offertPar && <span className="puce categorie">{tr('CAD_PAR')} {c.offertPar}</span>}
                       {c.partage && <span className="puce categorie">🎁 {tr('CAD_BADGE_PARTAGE')}</span>}
                       {c.partage ? (
@@ -224,6 +231,7 @@ function CadeauForm({
   const langue = useLangue();
   const [idee, setIdee] = useState(cadeau?.idee ?? '');
   const [pourQui, setPourQui] = useState(cadeau?.pourQui ?? '');
+  const [masqueA, setMasqueA] = useState(cadeau?.masqueA ?? '');
   const [occasion, setOccasion] = useState(cadeau?.occasion ?? '');
   const [statut, setStatut] = useState(cadeau?.statut ?? d.statuts[0] ?? 'Idée');
   const [budgetPrevu, setBudgetPrevu] = useState(cadeau?.budgetPrevu ?? '');
@@ -236,7 +244,7 @@ function CadeauForm({
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
-    onEnregistrerAction({ idee, pourQui, occasion, statut, budgetPrevu, prixPaye, partage, participation, offertPar, ou, note });
+    onEnregistrerAction({ idee, pourQui, masqueA, occasion, statut, budgetPrevu, prixPaye, partage, participation, offertPar, ou, note });
   }
 
   return (
@@ -266,6 +274,28 @@ function CadeauForm({
           <input className="champ" inputMode="decimal" placeholder={tr('CAD_PARTICIPATION_PH')} value={participation} onChange={(e) => setParticipation(e.target.value)} disabled={occupe} />
         )}
       </div>
+      {/* Surprise : le cadeau reste visible de tout le foyer SAUF de cette
+          personne. Masqué si le foyer n'a qu'un membre — rien à cacher. */}
+      {d.membres.length > 0 && (
+        <div className="rf-ligne1">
+          <label className="cad-masque">
+            <span className="cad-masque-lbl">{tr('CAD_MASQUER')}</span>
+            <select
+              className="champ"
+              value={masqueA}
+              onChange={(e) => setMasqueA(e.target.value)}
+              disabled={occupe}
+              aria-label={tr('CAD_MASQUER')}
+            >
+              <option value="">{tr('CAD_MASQUER_PERSONNE')}</option>
+              {d.membres.map((m) => (
+                <option key={m.utilisateurId} value={m.utilisateurId}>{m.nom}</option>
+              ))}
+            </select>
+          </label>
+          <Astuce texte={tr('AIDE_MASQUER')} />
+        </div>
+      )}
       <input className="champ" placeholder={tr('G_NOTE')} value={note} onChange={(e) => setNote(e.target.value)} disabled={occupe} />
       <div className="rf-actions">
         {onSupprimerAction && (

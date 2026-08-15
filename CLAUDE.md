@@ -77,7 +77,14 @@ responsabilité : ne pas se tromper de base.
 - Contrôle des secrets avant chaque commit : `.env`, `.env.local`, `credentials.json`,
   `*.b64`, `gserviceaccount` ne doivent jamais être indexés.
 
-Mise en place et checklist : [docs/PUBLICATION.md](docs/PUBLICATION.md).
+⚠ **`DOCUMENTS_SECRET` est OBLIGATOIRE (15/08/2026).** `chiffrerFichier()` renvoyait
+auparavant les données en clair quand la clé manquait : un bail ou un carnet de santé
+partait non chiffré chez l'hébergeur **sans que rien ne le signale**. C'est désormais un
+refus (503). La lecture reste tolérante, pour que les fichiers déposés avant cette règle
+restent lisibles. ⚠ Ne jamais changer la clé sans re-chiffrer.
+
+Mise en place : [docs/PUBLICATION.md](docs/PUBLICATION.md) ·
+base locale : [docs/POSTGRES_LOCAL.md](docs/POSTGRES_LOCAL.md).
 
 ## Règles d'architecture (non négociables)
 

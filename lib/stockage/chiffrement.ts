@@ -27,6 +27,20 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:
  * sans erreur, puisqu'on peut le reconnaître au lieu de le deviner.
  */
 
+/**
+ * Levée quand on tente de stocker un document sans clé de chiffrement.
+ * Traduite en 503 par [lib/api.ts] — c'est un défaut de configuration, pas une
+ * panne ni une faute de l'utilisateur.
+ */
+export class ChiffrementNonConfigure extends Error {
+  constructor() {
+    super(
+      'DOCUMENTS_SECRET n’est pas configuré : le dépôt de documents est bloqué pour ne pas les stocker en clair.',
+    );
+    this.name = 'ChiffrementNonConfigure';
+  }
+}
+
 const MAGIE = Buffer.from('NSY1', 'ascii');
 const SEL = 'nestync-documents-v1'; // fixe : la clé doit être reproductible
 
@@ -39,14 +53,31 @@ function cle(): Buffer | null {
   return cleCache;
 }
 
+/** Une clé de chiffrement est-elle configurée ? */
+export function chiffrementDisponible(): boolean {
+  return cle() !== null;
+}
+
 /**
- * Chiffre le contenu d'un fichier. Sans clé configurée, renvoie les données
- * telles quelles : le module continue de fonctionner, en clair, plutôt que de
- * refuser tout téléversement. L'en-tête magique permettra de distinguer les deux.
+ * Chiffre le contenu d'un fichier.
+ *
+ * ⚠ REFUSE DE STOCKER EN CLAIR (15/08/2026). Cette fonction renvoyait auparavant
+ * les données telles quelles quand `DOCUMENTS_SECRET` était absent : le module
+ * « continuait de fonctionner », mais un bail ou un carnet de santé partait en
+ * clair chez l'hébergeur **sans que rien ne le signale**. Une variable oubliée
+ * dans un environnement suffisait donc à annuler la garantie que le produit
+ * affiche — et on ne s'en apercevait qu'en inspectant le stockage.
+ *
+ * Le bon mode d'échec est le refus visible : un téléversement qui échoue avec un
+ * message clair se corrige en une minute, un document en clair peut rester des
+ * années sans qu'on le sache. La lecture, elle, reste tolérante (cf.
+ * `dechiffrerFichier`) : les fichiers déposés avant cette règle restent lisibles.
  */
 export function chiffrerFichier(donnees: Buffer): Buffer {
   const k = cle();
-  if (!k) return donnees;
+  if (!k) {
+    throw new ChiffrementNonConfigure();
+  }
   const iv = randomBytes(12); // 96 bits, taille recommandée pour GCM
   const c = createCipheriv('aes-256-gcm', k, iv);
   const corps = Buffer.concat([c.update(donnees), c.final()]);

@@ -20,7 +20,7 @@ import { connexion, exigerBacASable } from './_env.mjs';
 
 const { sql, hote } = connexion({ max: 1 });
 
-console.log(`  base : ${u.hostname.split('.')[0]}\n`);
+console.log(`  base : ${hote}\n`);
 
 let echecs = 0;
 const verifier = (ok, msg) => {

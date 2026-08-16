@@ -50,17 +50,53 @@ export function clePubliqueVapid(): string {
   return process.env.VAPID_PUBLIC_KEY ?? '';
 }
 
+/**
+ * ⚠ LE « SUJET » VAPID EST UNE URL, PAS UNE ADRESSE E-MAIL. `web-push` refuse
+ * `contact@nestync.app` et n'accepte que `mailto:contact@nestync.app` (ou une
+ * URL https).
+ *
+ * Le piège est réel : la variable s'appelle « subject » et demande un contact,
+ * donc y taper l'adresse seule est le geste naturel — et rien ne le signale.
+ * L'application démarre, la page Réglages affiche les notifications comme
+ * disponibles, l'abonnement du téléphone s'enregistre. L'erreur ne sort qu'au
+ * **premier envoi réel**, en production, sur un téléphone. On complète donc le
+ * préfixe manquant plutôt que de laisser une saisie naturelle casser la
+ * fonctionnalité.
+ */
+function sujetVapid(): string {
+  const brut = (process.env.VAPID_SUBJECT || '').trim();
+  if (!brut) return 'mailto:contact@nestync.app';
+  if (/^(mailto:|https?:)/i.test(brut)) return brut;
+  return brut.includes('@') ? `mailto:${brut}` : `https://${brut}`;
+}
+
 let vapidPret = false;
-function preparerVapid(): void {
-  if (vapidPret) return;
-  // `mailto:` est ce que le standard attend comme contact du service : c'est
-  // l'adresse que le fournisseur de push utilise s'il doit signaler un problème.
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:contact@nestync.app',
-    process.env.VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
-  );
-  vapidPret = true;
+/**
+ * Renvoie `false` si la configuration est inutilisable, au lieu de lever.
+ *
+ * ⚠ `setVapidDetails` VALIDE ET LÈVE. Appelée nue, elle faisait échouer
+ * `envoyer()` — donc l'action qui l'avait déclenchée — alors que la promesse
+ * juste en dessous est qu'une notification perdue ne casse jamais rien. Valider
+ * une liste de courses est une opération légitime même si aucun téléphone ne
+ * peut être prévenu ; c'est arrivé en production le 16/08/2026, où un sujet mal
+ * formé a fait remonter un message de bibliothèque à l'écran d'un client.
+ */
+function preparerVapid(): boolean {
+  if (vapidPret) return true;
+  try {
+    webpush.setVapidDetails(
+      sujetVapid(),
+      process.env.VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!,
+    );
+    vapidPret = true;
+    return true;
+  } catch (e) {
+    // Erreur d'exploitation, pas d'utilisation : elle doit être lisible dans les
+    // journaux du serveur, et invisible pour la personne qui a cliqué.
+    console.error('[push] configuration VAPID inutilisable —', (e as Error).message);
+    return false;
+  }
 }
 
 /* ------------------------------- Abonnements ------------------------------ */
@@ -181,7 +217,7 @@ export async function envoyer(
   const abos = await d.select().from(tAbos).where(inArray(tAbos.utilisateurId, retenus));
   if (abos.length === 0) return 0;
 
-  preparerVapid();
+  if (!preparerVapid()) return 0;
   const corps = JSON.stringify(charge);
   let envoyes = 0;
   const perimes: string[] = [];

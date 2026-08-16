@@ -1,6 +1,12 @@
 # Secrets — ne JAMAIS versionner
+# ⚠ Le motif large est volontaire : lister `.env` et `.env.local` nommément
+# laissait passer toute variante (.env.sauvegarde, .env.production, .env.bak).
+# Une copie de secours faite à la hâte avant une manipulation se retrouvait
+# alors indexable par un simple `git add -A` — c'est exactement le geste qu'on
+# fait quand on est pressé.
 .env
-.env.local
+.env.*
+!.env.example
 credentials.json
 *.iam.gserviceaccount.com.json
 

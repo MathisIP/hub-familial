@@ -143,6 +143,71 @@ export const membres = pgTable(
   ],
 );
 
+/* ========================== NOTIFICATIONS PUSH ========================== */
+/**
+ * Un appareil abonné aux notifications. Une personne peut en avoir plusieurs
+ * (téléphone, tablette, PC), d'où la clé sur `endpoint` et non sur l'utilisateur.
+ *
+ * ⚠ `endpoint` est unique GLOBALEMENT, pas par foyer : c'est une URL fournie par
+ * le navigateur, déjà unique au monde. La contrainte protège du doublon quand un
+ * même appareil se réabonne — cas courant, le navigateur pouvant renouveler
+ * l'abonnement sans prévenir.
+ *
+ * ⚠ Ces lignes sont des données personnelles (elles identifient un appareil) :
+ * cascade sur l'utilisateur, pour qu'un compte supprimé n'en laisse aucune.
+ */
+export const abonnementsPush = pgTable(
+  'abonnements_push',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull().unique(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    /** Libellé indicatif de l'appareil, pour que la personne s'y retrouve. */
+    appareil: text('appareil').notNull().default(''),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('abonnements_push_utilisateur_idx').on(t.utilisateurId)],
+);
+
+/**
+ * Ce que chaque personne accepte de recevoir.
+ *
+ * ⚠ `echeances` est à **false** par défaut, contrairement aux deux autres. Une
+ * notification financière s'affiche sur un écran verrouillé, visible de
+ * quiconque tient le téléphone : on ne l'active que si la personne le demande
+ * explicitement. Les rappels d'anniversaire n'ont pas cette sensibilité.
+ */
+export const preferencesNotif = pgTable(
+  'preferences_notif',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    /** « La liste de courses est prête » — envoyé à la demande, pas automatique. */
+    courses: boolean('courses').notNull().default(true),
+    /** Rappel la veille d'une occasion ou d'un événement. */
+    evenements: boolean('evenements').notNull().default(true),
+    /** Rappel la veille d'une échéance financière. Opt-in explicite. */
+    echeances: boolean('echeances').notNull().default(false),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('preferences_notif_foyer_utilisateur').on(t.foyerId, t.utilisateurId)],
+);
+
+export type LigneAbonnementPush = typeof abonnementsPush.$inferSelect;
+export type LignePreferencesNotif = typeof preferencesNotif.$inferSelect;
+
 /** Invitation d'un email à rejoindre un foyer (jeton à usage unique, expirable). */
 export const invitations = pgTable(
   'invitations',

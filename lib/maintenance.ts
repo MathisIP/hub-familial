@@ -14,6 +14,7 @@ import {
 } from '@/lib/db/schema';
 import { envoyerRelanceInactivite, envoyerBulletinSante } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
+import { envoyerRappelsQuotidiens } from '@/lib/notifications/rappels';
 
 /**
  * MÉNAGE PÉRIODIQUE (serveur, déclenché par la tâche planifiée Vercel).
@@ -53,6 +54,8 @@ export const RETENTION_MESSAGES = 365 * JOUR;
 export type RapportMenage = {
   invitationsPurgees: number;
   messagesPurges: number;
+  /** Rappels de la veille envoyés (appareils touchés). */
+  rappelsEnvoyes: number;
   relancesEnvoyees: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
@@ -313,6 +316,21 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   // posés, et l'ordre rend le journal lisible en cas d'incident.
   const invitationsPurgees = await purgerInvitationsExpirees();
   const messagesPurges = await purgerMessagesContact();
+
+  /*
+   * Rappels de la veille. Greffés ici parce qu'une tâche planifiée quotidienne
+   * est ce dont on dispose — et que ça suffit : savoir la veille qu'un
+   * anniversaire arrive laisse le temps d'agir.
+   *
+   * ⚠ Une notification qui ne part pas ne doit pas faire échouer le ménage :
+   * les purges sont le vrai travail de cette tâche.
+   */
+  let rappels = { foyers: 0, envois: 0 };
+  try {
+    rappels = await envoyerRappelsQuotidiens();
+  } catch (e) {
+    console.error('[maintenance] rappels échoués', e instanceof Error ? e.message : e);
+  }
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
   /**
@@ -340,6 +358,7 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   return {
     invitationsPurgees,
     messagesPurges,
+    rappelsEnvoyes: rappels.envois,
     relancesEnvoyees,
     comptesSupprimes: supprimes,
     suppressionsIgnorees: ignores,

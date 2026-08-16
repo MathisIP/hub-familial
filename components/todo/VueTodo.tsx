@@ -18,7 +18,17 @@ import Astuce from '@/components/Astuce';
 export default function VueTodo({ initial }: { initial: DonneesTodo }) {
   const tr = useT();
   const [donnees, setDonnees] = useState<DonneesTodo>(initial);
-  const [onglet, setOnglet] = useState<'taches' | 'courses'>('taches');
+  /*
+   * L'onglet peut être imposé par l'URL : c'est ce qui permet à la notification
+   * « la liste de courses est prête » d'ouvrir directement la bonne liste, au
+   * lieu de déposer la personne sur les tâches, à elle de chercher.
+   */
+  const [onglet, setOnglet] = useState<'taches' | 'courses'>(
+    typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('onglet') === 'courses'
+      ? 'courses'
+      : 'taches',
+  );
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 

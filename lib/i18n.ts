@@ -280,6 +280,59 @@ const UI = {
     en: 'The account is required: an upcoming payment has to say where the money leaves from. It also carries visibility — if the account is restricted, so is the payment.',
   },
 
+  /* --- Notifications --- */
+  NOTIF_TITRE: { fr: 'Notifications', en: 'Notifications' },
+  NOTIF_SOUS: {
+    fr: 'Nestync peut prévenir ton téléphone. Les notifications restent volontairement vagues — elles s’affichent sur l’écran verrouillé, visible par qui tient l’appareil. Le détail n’apparaît qu’une fois l’app ouverte.',
+    en: 'Nestync can notify your phone. Notifications stay deliberately vague — they show on the lock screen, visible to whoever holds the device. Details only appear once the app is open.',
+  },
+  NOTIF_ACTIVER: { fr: 'Activer sur cet appareil', en: 'Enable on this device' },
+  NOTIF_DESACTIVER: { fr: 'Ne plus recevoir sur cet appareil', en: 'Stop receiving on this device' },
+  NOTIF_ACTIVEE: { fr: 'Notifications activées sur cet appareil.', en: 'Notifications enabled on this device.' },
+  NOTIF_DESACTIVEE: { fr: 'Cet appareil ne recevra plus de notifications.', en: 'This device will no longer receive notifications.' },
+  NOTIF_REFUSEE: {
+    fr: 'Autorisation refusée. Tu peux la rétablir dans les réglages de ton navigateur.',
+    en: 'Permission denied. You can restore it in your browser settings.',
+  },
+  NOTIF_INDISPO: {
+    fr: 'Les notifications ne sont pas encore configurées sur ce service.',
+    en: 'Notifications are not configured on this service yet.',
+  },
+  NOTIF_INSTALLER: {
+    fr: 'Sur iPhone, les notifications ne fonctionnent que si Nestync est installé sur l’écran d’accueil : bouton Partager → « Sur l’écran d’accueil ». Rouvre ensuite l’app depuis l’icône.',
+    en: 'On iPhone, notifications only work once Nestync is added to the home screen: Share → “Add to Home Screen”. Then reopen the app from its icon.',
+  },
+  NOTIF_COURSES: { fr: 'Liste de courses prête', en: 'Shopping list ready' },
+  NOTIF_COURSES_D: {
+    fr: 'Quand quelqu’un du foyer valide la liste et te l’envoie.',
+    en: 'When someone in the household finalises the list and sends it to you.',
+  },
+  NOTIF_EVENEMENTS: { fr: 'Anniversaires et événements', en: 'Birthdays and events' },
+  NOTIF_EVENEMENTS_D: {
+    fr: 'Un rappel la veille. Uniquement pour ce que tu peux déjà voir dans l’app.',
+    en: 'A reminder the day before. Only for what you can already see in the app.',
+  },
+  NOTIF_ECHEANCES: { fr: 'Échéances financières', en: 'Upcoming payments' },
+  NOTIF_ECHEANCES_D: {
+    fr: 'Désactivé par défaut : un rappel de prélèvement s’affiche sur l’écran verrouillé. Ne concerne que les comptes qui te sont partagés.',
+    en: 'Off by default: a payment reminder shows on your lock screen. Only covers accounts shared with you.',
+  },
+
+  /* --- Courses : valider et envoyer --- */
+  CS_VALIDER: { fr: '✓ Valider la liste', en: '✓ Finalise the list' },
+  CS_VALIDER_TITRE: { fr: 'Prévenir qui ?', en: 'Notify whom?' },
+  CS_VALIDER_SOUS: {
+    fr: 'Les personnes choisies recevront une notification. La liste reste dans l’app — elle n’est pas envoyée dans le message.',
+    en: 'The chosen people get a notification. The list stays in the app — it is not sent in the message.',
+  },
+  CS_VALIDER_ENVOYER: { fr: 'Prévenir', en: 'Notify' },
+  CS_VALIDER_OK: { fr: 'Liste envoyée.', en: 'List sent.' },
+  CS_VALIDER_AUCUN_ABO: {
+    fr: 'Personne n’a encore activé les notifications. Chacun peut le faire depuis Réglages.',
+    en: 'Nobody has enabled notifications yet. Anyone can do so from Settings.',
+  },
+  CS_VOIR_LISTE: { fr: 'Voir la liste', en: 'Open the list' },
+
   /* --- Cadeaux : garder la surprise --- */
   CAD_MASQUER: { fr: 'Ne pas montrer à', en: 'Hide from' },
   CAD_MASQUER_PERSONNE: { fr: 'Personne — visible de tout le foyer', en: 'No one — visible to the whole household' },

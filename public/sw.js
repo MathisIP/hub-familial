@@ -30,7 +30,7 @@
  * pages déjà stockées sur les appareils. Sans ce bump, les copies existantes
  * survivraient au correctif.
  */
-const CACHE = 'nestync-v2';
+const CACHE = 'nestync-v3';
 const PRECACHE = ['/hors-ligne', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -80,4 +80,74 @@ self.addEventListener('fetch', (e) => {
       ),
     );
   }
+});
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATIONS PUSH
+
+   ⚠ Le contenu affiché ici est visible sur un ECRAN VERROUILLE, donc par
+   quiconque tient le telephone. Le serveur n'envoie deja que des textes pauvres
+   (« La liste de courses est prete »), jamais le detail : ce fichier ne fait que
+   les afficher, il ne doit RIEN enrichir.
+
+   ⚠ iOS n'accepte le push que pour une PWA ajoutee a l'ecran d'accueil
+   (iOS 16.4+). Dans un onglet Safari, rien de tout ceci ne se declenche.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+self.addEventListener('push', (e) => {
+  if (!e.data) return;
+
+  let d;
+  try {
+    d = e.data.json();
+  } catch {
+    // Charge illisible : on n'affiche rien plutot qu'une notification vide,
+    // qui inquieterait sans rien apprendre.
+    return;
+  }
+
+  e.waitUntil(
+    self.registration.showNotification(d.titre || 'Nestync', {
+      body: d.corps || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      // `tag` remplace la notification precedente de meme nature au lieu de les
+      // empiler : trois rappels de courses ne doivent pas faire trois lignes.
+      tag: d.tag || 'nestync',
+      data: { url: d.url || '/' },
+      lang: 'fr',
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const cible = (e.notification.data && e.notification.data.url) || '/';
+
+  e.waitUntil(
+    (async () => {
+      const fenetres = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+
+      // Si l'app est deja ouverte, on la reutilise et on navigue : ouvrir un
+      // second onglet laisserait deux etats divergents de la meme liste.
+      for (const f of fenetres) {
+        if ('focus' in f) {
+          await f.focus();
+          if ('navigate' in f) {
+            try {
+              await f.navigate(cible);
+            } catch {
+              /* navigation refusee (origine differente) : le focus suffit */
+            }
+          }
+          return;
+        }
+      }
+      await self.clients.openWindow(cible);
+    })(),
+  );
 });

@@ -3,6 +3,7 @@ import { and, asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { taches as tTaches, courses as tCourses } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
+import { envoyer, membresDuFoyer, pushDisponible } from '@/lib/notifications/service';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
   RECURRENCES_ACTIVES,
@@ -271,4 +272,75 @@ export async function viderCoursesFaites(): Promise<number> {
     .where(and(eq(tCourses.foyerId, foyerId), eq(tCourses.fait, true)))
     .returning({ id: tCourses.id });
   return res.length;
+}
+
+/* ---------------------------------------------------------------------------
+ * VALIDER LA LISTE DE COURSES
+ *
+ * Remplace l'envoi « par message » : `navigator.share` marchait pour deux
+ * numéros connus d'avance, pas pour des clients. La liste ne part plus par SMS —
+ * elle reste dans l'app, et une notification dit simplement qu'elle est prête.
+ *
+ * ⚠ LA NOTIFICATION NE CONTIENT PAS LA LISTE. Elle s'affiche sur un écran
+ * verrouillé : y déverser « 12 articles dont test de grossesse » serait exposer
+ * le foyer à quiconque tient le téléphone. Le clic ouvre l'app sur la liste à
+ * cocher, après authentification.
+ * ------------------------------------------------------------------------- */
+
+/** Ce que l'écran de validation a besoin de savoir avant d'envoyer. */
+export type ApercuValidation = {
+  articles: number;
+  membres: { utilisateurId: string; nom: string }[];
+  /** Faux si les clés VAPID manquent : on le dit plutôt que d'échouer en silence. */
+  pushDisponible: boolean;
+};
+
+export async function apercuValidationCourses(): Promise<ApercuValidation> {
+  const foyerId = await idFoyerCourant();
+  const [lignes, membres] = await Promise.all([
+    db()
+      .select({ id: tCourses.id })
+      .from(tCourses)
+      .where(and(eq(tCourses.foyerId, foyerId), eq(tCourses.fait, false))),
+    membresDuFoyer(),
+  ]);
+  return { articles: lignes.length, membres, pushDisponible: pushDisponible() };
+}
+
+/**
+ * Prévient les personnes choisies que la liste est prête.
+ *
+ * Les destinataires sont validés contre les membres du foyer : la route reçoit
+ * des identifiants du client, et rien n'empêcherait sinon de notifier quelqu'un
+ * d'un autre foyer.
+ */
+export async function validerCourses(utilisateurIds: string[]): Promise<{ envoyes: number; articles: number }> {
+  const foyerId = await idFoyerCourant();
+
+  const lignes = await db()
+    .select({ id: tCourses.id })
+    .from(tCourses)
+    .where(and(eq(tCourses.foyerId, foyerId), eq(tCourses.fait, false)));
+  if (lignes.length === 0) {
+    throw new ErreurValidation('La liste est vide : rien à envoyer.');
+  }
+
+  const membres = await membresDuFoyer();
+  const duFoyer = new Set(membres.map((m) => m.utilisateurId));
+  const retenus = [...new Set(utilisateurIds)].filter((u) => duFoyer.has(u));
+  if (retenus.length === 0) {
+    throw new ErreurValidation('Choisis au moins une personne à prévenir.');
+  }
+
+  const envoyes = await envoyer(retenus, 'courses', {
+    titre: 'La liste de courses est prête',
+    corps:
+      lignes.length === 1
+        ? '1 article à prendre. Touchez pour l’ouvrir.'
+        : `${lignes.length} articles à prendre. Touchez pour l’ouvrir.`,
+    url: '/todo?onglet=courses',
+    tag: 'courses',
+  });
+
+  return { envoyes, articles: lignes.length };
 }

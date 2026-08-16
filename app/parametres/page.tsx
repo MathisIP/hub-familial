@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import ReglagesForm from '@/components/ReglagesForm';
+import ReglagesNotifications from '@/components/ReglagesNotifications';
 import { auth } from '@/auth';
 import { etatAbonnement } from '@/lib/abonnement';
 import { t, type CleUI } from '@/lib/i18n';
@@ -39,6 +40,10 @@ export default async function PageParametres() {
       <section className="compte-bloc">
         <h2 className="bloc-titre">{t('REG_PERSO', langue)}</h2>
         <ReglagesForm nomCompte={session?.user?.name ?? ''} />
+
+        {/* Chaque appareil s'abonne séparément : le réglage vit ici, pas au
+            niveau du foyer — un téléphone peut être autorisé, pas le PC. */}
+        <ReglagesNotifications />
       </section>
 
       <section className="compte-bloc">

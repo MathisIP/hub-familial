@@ -29,7 +29,17 @@ import type { Config } from 'drizzle-kit';
  * — surcharger la variable ici ne suffirait pas, et on migrerait le bac à sable
  * en croyant faire l'inverse.
  */
-config({ path: '.env.local', override: true });
+if (process.env.NESTYNC_DB_EXPLICITE) {
+  // Sortie de secours : `npm run db:migrate:prod` a déjà posé DATABASE_URL et
+  // ne veut surtout pas que `.env.local` le remplace. Sans cette porte, la
+  // commande de migration production migrait le BAC À SABLE — vérifié le
+  // 16/08/2026, `override: true` gagnant même sur une variable passée au
+  // processus enfant.
+  config({ path: '.env' });
+} else {
+  config({ path: '.env.local', override: true });
+  config({ path: '.env' });
+}
 
 export default {
   schema: './lib/db/schema.ts',

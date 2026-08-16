@@ -70,6 +70,13 @@ console.log('  Application…\n');
 execSync('npx drizzle-kit migrate', {
   stdio: 'inherit',
   // On repart d'un environnement propre : `.env.local` ne doit pas s'inviter.
-  env: { ...process.env, DATABASE_URL: u.toString(), DOTENV_CONFIG_PATH: '.env' },
+  env: {
+    ...process.env,
+    DATABASE_URL: u.toString(),
+    // Dit à drizzle.config.ts de NE PAS charger `.env.local` : sans ce drapeau,
+    // son `override: true` remplacerait l'URL ci-dessus par celle du bac à
+    // sable, et on migrerait la mauvaise base en croyant l'inverse.
+    NESTYNC_DB_EXPLICITE: '1',
+  },
 });
 console.log('\n  Migrations appliquées à la production.');

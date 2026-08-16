@@ -24,6 +24,8 @@ import {
   dossiers,
   dossiersAcces,
   cadeauxMasques,
+  abonnementsPush,
+  preferencesNotif,
 } from '@/lib/db/schema';
 
 /**
@@ -80,6 +82,8 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
     documentsRows,
     dossiersRows,
     dossiersAccesRows,
+    abonnementsRows,
+    preferencesRows,
   ] = await Promise.all([
     d.select().from(membres).where(eq(membres.foyerId, foyerId)),
     d.select().from(comptes).where(eq(comptes.foyerId, foyerId)),
@@ -100,6 +104,34 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
       .from(dossiersAcces)
       .where(
         and(eq(dossiersAcces.foyerId, foyerId), eq(dossiersAcces.utilisateurId, utilisateurId)),
+      ),
+    /*
+     * Appareils abonnes aux notifications. Ce SONT des donnees personnelles :
+     * un endpoint push identifie un appareil precis. Ils avaient ete oublies de
+     * l'export — c'est le genre d'oubli qu'on ne remarque qu'en relisant la
+     * liste des tables. Filtres sur la personne : les appareils des autres
+     * membres ne la regardent pas.
+     */
+    d
+      .select({
+        appareil: abonnementsPush.appareil,
+        creeLe: abonnementsPush.creeLe,
+      })
+      .from(abonnementsPush)
+      .where(
+        and(
+          eq(abonnementsPush.foyerId, foyerId),
+          eq(abonnementsPush.utilisateurId, utilisateurId),
+        ),
+      ),
+    d
+      .select()
+      .from(preferencesNotif)
+      .where(
+        and(
+          eq(preferencesNotif.foyerId, foyerId),
+          eq(preferencesNotif.utilisateurId, utilisateurId),
+        ),
       ),
   ]);
 
@@ -198,6 +230,17 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
       echeances: echVisibles,
     },
     documents: documentsVisibles,
+    /*
+     * On n'exporte PAS l'endpoint ni les cles de chiffrement de l'abonnement :
+     * ce sont des identifiants de livraison, pas une information utile a la
+     * personne, et les recopier dans un fichier qu'elle transmettra peut-etre
+     * ailleurs serait leur faire quitter notre perimetre sans raison.
+     */
+    notifications: abonnementsRows.map((a) => ({
+      appareil: a.appareil || 'appareil non nomme',
+      abonneDepuis: a.creeLe,
+    })),
+    preferencesNotifications: preferencesRows[0] ?? null,
     cadeaux: cadeauxVisibles,
     occasions: occasionsRows,
     taches: tachesRows,

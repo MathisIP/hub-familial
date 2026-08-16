@@ -610,10 +610,15 @@ const UI = {
   CPT_SOUS: { fr: 'Tes données et ta confidentialité', en: 'Your data and privacy' },
   CPT_EXPORT_TITRE: { fr: 'Exporter mes données', en: 'Export my data' },
   CPT_EXPORT_DESC: {
-    fr: "Télécharge l'intégralité des données de ton foyer (comptes et transactions, tâches et courses, recettes, cadeaux, événements…) dans un fichier JSON. C'est ton droit à la portabilité.",
-    en: 'Download all of your household’s data (accounts and transactions, tasks and shopping, recipes, gifts, events…) as a JSON file. This is your right to data portability.',
+    fr: "Une archive contenant tes documents rangés comme dans l'application, ton budget et tes listes au format tableur (Excel, LibreOffice, Numbers), et un fichier JSON complet. C'est ton droit à la portabilité.",
+    en: 'An archive with your documents organised as in the app, your budget and lists as spreadsheets (Excel, LibreOffice, Numbers), and a complete JSON file. This is your right to data portability.',
   },
-  CPT_EXPORT_BTN: { fr: '⬇ Exporter mes données (JSON)', en: '⬇ Export my data (JSON)' },
+  CPT_EXPORT_APRES: {
+    fr: 'Tu peux le télécharger à tout moment, y compris après la fin d’un abonnement, tant que ton compte existe.',
+    en: 'You can download it at any time, including after a subscription ends, as long as your account exists.',
+  },
+  CPT_EXPORT_BTN: { fr: '⬇ Télécharger toutes mes données', en: '⬇ Download all my data' },
+  CPT_EXPORT_JSON: { fr: 'ou le JSON seul', en: 'or the JSON alone' },
   CPT_SUPPR_TITRE: { fr: 'Supprimer mon compte', en: 'Delete my account' },
   CPT_SUPPR_DESC: {
     fr: 'Efface définitivement ton compte et toutes les données de ton foyer. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',

@@ -1,12 +1,13 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { db } from '@/lib/db';
-import { foyers } from '@/lib/db/schema';
+import { foyers, membres, utilisateurs } from '@/lib/db/schema';
 import { foyerCourant, utilisateurCourant, SansFoyer } from '@/lib/foyer';
 import { stripe, stripeDisponible } from '@/lib/stripe';
 import { ErreurValidation } from '@/lib/erreurs';
+import { envoyerResiliation } from '@/lib/email/messages';
 import type { IdOffre } from '@/lib/offres';
 
 /**
@@ -266,8 +267,50 @@ async function appliquerAbonnement(sub: Stripe.Subscription): Promise<void> {
     annulationProgrammee: !!(sub.cancel_at || sub.cancel_at_period_end),
   };
   const d = db();
+
+  /*
+   * On relit l'etat AVANT d'ecrire : c'est ce qui permet de n'envoyer l'e-mail
+   * de resiliation qu'au moment ou l'annulation apparait.
+   *
+   * ⚠ Stripe reemet le meme evenement plusieurs fois (nouvelle tentative,
+   * `customer.subscription.updated` a chaque changement mineur). Sans cette
+   * comparaison, le client recevrait « ton abonnement est resilie » a repetition
+   * — le genre de detail qui fait douter du serieux du service au pire moment.
+   */
+  const [avant] = foyerId
+    ? await d.select().from(foyers).where(eq(foyers.id, foyerId)).limit(1)
+    : await d.select().from(foyers).where(eq(foyers.stripeCustomerId, customerId)).limit(1);
+
   if (foyerId) await d.update(foyers).set(set).where(eq(foyers.id, foyerId));
   else await d.update(foyers).set(set).where(eq(foyers.stripeCustomerId, customerId));
+
+  const vientDeResilier =
+    !!avant && !avant.annulationProgrammee && set.annulationProgrammee;
+  if (vientDeResilier) await prevenirResiliation(avant.id, fin);
+}
+
+/**
+ * Previent le proprietaire du foyer qu'il a resilie : on lui demande pourquoi,
+ * et on lui rappelle qu'il peut recuperer ses donnees.
+ *
+ * ⚠ Adresse au PROPRIETAIRE seul : c'est lui qui paie et qui a decide. Prevenir
+ * tout le foyer annoncerait la nouvelle a des gens qui n'ont rien demande.
+ *
+ * N'echoue jamais : un e-mail qui ne part pas ne doit pas faire echouer le
+ * traitement du webhook, sous peine de voir Stripe le rejouer indefiniment.
+ */
+async function prevenirResiliation(foyerId: string, finAcces: Date | null): Promise<void> {
+  try {
+    const [proprio] = await db()
+      .select({ email: utilisateurs.email, nom: utilisateurs.nom })
+      .from(membres)
+      .innerJoin(utilisateurs, eq(utilisateurs.id, membres.utilisateurId))
+      .where(and(eq(membres.foyerId, foyerId), eq(membres.role, 'proprietaire')))
+      .limit(1);
+    if (proprio) await envoyerResiliation(proprio.email, proprio.nom, finAcces);
+  } catch (e) {
+    console.error('[abonnement] e-mail de resiliation non envoye', e instanceof Error ? e.message : e);
+  }
 }
 
 /** Traite un événement Stripe déjà vérifié (signature). */

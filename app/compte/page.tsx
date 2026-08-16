@@ -32,7 +32,14 @@ export default async function PageCompte() {
         <h2 className="bloc-titre">{t('CPT_EXPORT_TITRE', langue)}</h2>
         <p className="compte-note">{t('CPT_EXPORT_DESC', langue)}</p>
         <p className="compte-note">{t('CPT_EXPORT_DESC_PARTIEL', langue)}</p>
+        {/* ⚠ Cette page et la route d'export n'appellent PAS `exigerAcces()` :
+            les droits RGPD survivent à la fin de l'abonnement. Un ancien client
+            doit pouvoir récupérer ses affaires sans repayer. */}
+        <p className="compte-note">{t('CPT_EXPORT_APRES', langue)}</p>
         <a className="bouton bouton-action" href="/api/compte/export">{t('CPT_EXPORT_BTN', langue)}</a>
+        <p className="compte-note compte-export-json">
+          <a href="/api/compte/export?format=json">{t('CPT_EXPORT_JSON', langue)}</a>
+        </p>
       </section>
 
       <section className="compte-bloc compte-danger">

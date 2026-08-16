@@ -306,3 +306,69 @@ export async function envoyerRelanceInactivite(
     ),
   });
 }
+
+/**
+ * Résiliation : on demande le motif du départ, et on rappelle que les données
+ * restent récupérables.
+ *
+ * ⚠ LE RAPPEL DE RÉCUPÉRATION N'EST PAS DE LA COURTOISIE. Quelqu'un qui résilie
+ * pense rarement à ses documents avant de perdre l'accès — bail, carnet de
+ * santé, papiers d'identité. C'est le moment exact où il faut le lui dire,
+ * pendant qu'il a encore l'e-mail sous les yeux.
+ *
+ * ⚠ La question du motif est facultative et sans traçage : un lien de contact,
+ * pas un formulaire d'enquête avec pixel espion. On demande, on n'instrumente pas.
+ */
+export async function envoyerResiliation(
+  email: string,
+  nom: string | null,
+  finAcces: Date | null,
+): Promise<boolean> {
+  const url = urlSite();
+  const quand = finAcces
+    ? finAcces.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  const texte =
+    `Bonjour${nom ? ` ${nom}` : ''},\n\n` +
+    `Ton abonnement Nestync est résilié` +
+    (quand ? `. Tu gardes l'accès jusqu'au ${quand}.` : '.') +
+    `\n\n` +
+    `Peux-tu nous dire pourquoi tu pars ? Une phrase suffit, et ça nous aide ` +
+    `vraiment : ${url}/aide\n\n` +
+    `RÉCUPÈRE TES DONNÉES\n` +
+    `Avant de partir, tu peux tout télécharger en une fois : tes documents ` +
+    `rangés comme dans l'application, ton budget et tes listes au format tableur.\n` +
+    `${url}/compte\n\n` +
+    `Cet export reste possible même après la fin de ton accès, tant que ton ` +
+    `compte existe : connecte-toi et clique sur « Exporter mes données ».\n\n` +
+    `Merci d'avoir essayé Nestync.`;
+
+  return envoyerEmail({
+    a: email,
+    nomDestinataire: nom,
+    sujet: 'Ton abonnement Nestync est résilié',
+    texte,
+    html: gabarit(
+      'Ton abonnement est résilié',
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">C'est noté${
+        quand ? `, et tu gardes l'accès jusqu'au <strong>${quand}</strong>` : ''
+      }.</p>
+       <p style="margin:0 0 14px;font-size:15px;line-height:1.6">
+         <strong>Peux-tu nous dire pourquoi tu pars&nbsp;?</strong> Une phrase suffit,
+         et ça nous aide vraiment à améliorer Nestync&nbsp;:
+         <a href="${url}/aide" style="color:#c0392b">nous répondre</a>.
+       </p>
+       <p style="margin:0 0 6px;font-size:15px;line-height:1.6"><strong>N'oublie pas tes données.</strong></p>
+       <p style="margin:0 0 14px;font-size:15px;line-height:1.6">
+         Tu peux tout télécharger en une fois&nbsp;: tes documents rangés comme dans
+         l'application, ton budget et tes listes au format tableur, prêts à ouvrir.
+       </p>
+       <p style="margin:0;font-size:14px;line-height:1.6;color:#666">
+         Cet export reste possible <strong>même après la fin de ton accès</strong>,
+         tant que ton compte existe.
+       </p>`,
+      { texte: 'Récupérer mes données', url: `${url}/compte` },
+    ),
+  });
+}

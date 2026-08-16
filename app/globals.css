@@ -2481,3 +2481,5 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cs-case { display: flex; align-items: center; gap: .55rem; cursor: pointer; font-size: .95rem; }
 .cs-case input[type='checkbox'] { accent-color: var(--acc); }
 .cs-validation-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.compte-export-json { margin-top: .5rem; font-size: .82rem; }
+.compte-export-json a { color: var(--muted); text-decoration: underline; }

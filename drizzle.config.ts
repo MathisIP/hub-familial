@@ -22,6 +22,13 @@ import type { Config } from 'drizzle-kit';
  * Le journal de dotenv le disait pourtant : « injected env (0) from .env »,
  * c'est-à-dire « rien de nouveau », donc `.env` avait déjà été lu.
  */
+/*
+ * ⚠ `override: true` fait que ce fichier gagne TOUJOURS, y compris sur un
+ * DATABASE_URL posé à la main dans le terminal. Pour migrer la production, il
+ * faut donc `npm run db:migrate:prod`, qui contourne délibérément `.env.local`
+ * — surcharger la variable ici ne suffirait pas, et on migrerait le bac à sable
+ * en croyant faire l'inverse.
+ */
 config({ path: '.env.local', override: true });
 
 export default {

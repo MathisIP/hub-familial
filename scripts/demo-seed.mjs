@@ -16,6 +16,7 @@
  * Cible : DEMO_EMAIL dans .env, sinon mip@nestync.app.
  */
 import { connexion, exigerBacASable, chargerEnv } from './_env.mjs';
+import { garnirDocuments } from './_documents-demo.mjs';
 
 chargerEnv();
 const { sql, hote } = connexion({ max: 3 });
@@ -63,7 +64,8 @@ console.log(`  foyer cible : « ${f.nom} »`);
 await sql`update foyers set nom = 'Foyer Lambert' where id = ${F}`;
 
 // --- Purge de ce foyer uniquement -------------------------------------------
-for (const t of ['transactions', 'echeances', 'comptes', 'budget_categories', 'taches',
+for (const t of ['comptes_acces', 'dossiers_acces', 'agendas_acces',
+                 'transactions', 'echeances', 'comptes', 'budget_categories', 'taches',
                  'courses', 'recettes', 'semaine', 'cadeaux', 'occasions',
                  'ev_invites', 'ev_checklist', 'ev_menu', 'evenements']) {
   await sql`delete from ${sql(t)} where foyer_id = ${F}`;
@@ -311,6 +313,48 @@ console.log('\n  soldes obtenus :');
 let total = 0;
 for (const s of soldes) { total += Number(s.solde); console.log(`     ${s.nom.padEnd(18)} ${Number(s.solde).toFixed(2).padStart(9)} EUR`); }
 console.log(`     ${'TOTAL'.padEnd(18)} ${total.toFixed(2).padStart(9)} EUR`);
+
+// --- MEMBRES DU FOYER --------------------------------------------------------
+/*
+ * Deux membres de plus : sans eux, « restreindre un dossier aux parents » n'a
+ * aucun sens — il n'y aurait personne a qui le cacher. Le foyer de demonstration
+ * doit pouvoir montrer la fonctionnalite, pas seulement la contenir.
+ *
+ * Antoine est un second PARENT (il voit les dossiers sensibles), Noe est
+ * l'ENFANT (il ne les voit pas). Adresses en .invalid : ce domaine est reserve
+ * par la norme, aucun courriel ne peut y partir par accident.
+ */
+const membre = async (email, nom, role) => {
+  const [u] = await sql`
+    insert into utilisateurs (email, nom) values (${email}, ${nom})
+    on conflict (email) do update set nom = excluded.nom
+    returning id`;
+  await sql`insert into membres (foyer_id, utilisateur_id, role)
+    values (${F}, ${u.id}, ${role})
+    on conflict (foyer_id, utilisateur_id) do nothing`;
+  return u.id;
+};
+const idClara = (await sql`
+  select u.id from utilisateurs u join membres m on m.utilisateur_id = u.id
+  where m.foyer_id = ${F} and lower(u.email) = ${CIBLE}`)[0].id;
+const idAntoine = await membre('antoine.lambert@exemple.invalid', 'Antoine Lambert', 'membre');
+const idNoe = await membre('noe.lambert@exemple.invalid', 'Noé Lambert', 'membre');
+
+// --- DOCUMENTS ---------------------------------------------------------------
+/*
+ * « Papiers » et « Sante » sont restreints aux deux parents : c'est le scenario
+ * exact que la fonctionnalite vise (le carnet de sante et le bail ne regardent
+ * pas l'enfant). Les autres dossiers restent communs.
+ */
+await garnirDocuments(sql, F, {
+  restreints: {
+    Papiers: [idClara, idAntoine],
+    Sante: [idClara, idAntoine],
+  },
+});
+
+console.log(`
+  membres du foyer : Clara (proprietaire), Antoine, Noé`);
 
 // Controle : sur un bac a sable dedie, il ne doit exister aucun AUTRE foyer.
 // Si ce compteur n'est pas nul, on n'est pas la ou l'on croit.

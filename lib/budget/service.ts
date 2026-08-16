@@ -834,10 +834,22 @@ export async function chargerTransactions(
  * d'écran de plus. Sans compte, l'échéance est commune au foyer.
  * ------------------------------------------------------------------------- */
 
-/** Le compte rattaché doit exister ET être accessible, sinon on refuse. */
-async function compteRattacheValide(brut: string | null | undefined): Promise<string | null> {
+/**
+ * Le compte rattaché doit exister ET être accessible, sinon on refuse.
+ *
+ * ⚠ OBLIGATOIRE. Une échéance est un prélèvement à venir : sans compte, rien ne
+ * dit d'où l'argent sortira, et le tableau de bord affichait des lignes qu'on ne
+ * pouvait rattacher à aucun solde. Les échéances antérieures gardent `null` et
+ * s'affichent « compte non précisé » — on ne réécrit pas des données existantes,
+ * mais on n'en crée plus de nouvelles dans cet état.
+ */
+async function compteRattacheValide(brut: string | null | undefined): Promise<string> {
   const v = (brut ?? '').trim();
-  if (!v) return null;
+  if (!v) {
+    throw new ErreurValidation(
+      'Choisis le compte sur lequel cette échéance sera prélevée.',
+    );
+  }
   const acces = await accesComptes();
   const cible = acces.comptes.find((c) => c.id === v);
   // Même message qu'un compte inexistant : ne pas révéler un compte masqué.

@@ -335,22 +335,11 @@ export const cadeaux = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     pourQui: text('pour_qui').notNull().default(''),
-    /**
-     * LISTE NOIRE : la personne à qui ce cadeau est destiné ne doit pas le voir.
-     * `null` = visible de tout le foyer.
-     *
-     * ⚠ Pourquoi pas une liste blanche comme ailleurs : un cadeau doit rester
-     * visible du foyer ENTIER, y compris de quelqu'un qui le rejoint après la
-     * saisie. Une liste blanche le lui masquerait — contresens exact de ce qu'on
-     * veut. La surprise doit survivre à l'arrivée d'un nouveau membre.
-     *
-     * ⚠ `set null` et non `cascade` : si la personne quitte le foyer, le cadeau
-     * réapparaît simplement pour tous au lieu de disparaître.
-     *
-     * `pour_qui` (texte libre) reste à côté : beaucoup de cadeaux visent des gens
-     * hors du foyer (« Mamie »), qui n'ont pas de compte utilisateur.
+    /*
+     * Le masquage vit dans `cadeaux_masques` (plusieurs personnes possibles) —
+     * voir cette table. `pour_qui` (texte libre) reste ici : beaucoup de cadeaux
+     * visent des gens hors du foyer (« Mamie »), sans compte utilisateur.
      */
-    masqueA: uuid('masque_a').references(() => utilisateurs.id, { onDelete: 'set null' }),
     occasion: text('occasion').notNull().default(''),
     idee: text('idee').notNull(),
     statut: text('statut').notNull().default('Idée'),
@@ -368,6 +357,43 @@ export const cadeaux = pgTable(
 );
 
 export type LigneOccasion = typeof occasions.$inferSelect;
+/**
+ * LISTE NOIRE : qui ne doit PAS voir ce cadeau.
+ *
+ * ⚠ Plusieurs personnes, et c'est le cas courant : les enfants qui préparent un
+ * cadeau commun doivent le cacher aux DEUX parents. Une seule colonne
+ * `masque_a` ne couvrait que la moitié des situations.
+ *
+ * ⚠ Pourquoi une liste noire et pas une liste blanche comme les comptes ou les
+ * dossiers : un cadeau doit rester visible du foyer ENTIER, y compris de
+ * quelqu'un qui le rejoint après la saisie. Une liste blanche le lui masquerait
+ * — contresens exact de ce qu'on veut. La surprise doit survivre à l'arrivée
+ * d'un nouveau membre.
+ *
+ * `cascade` sur l'utilisateur : si la personne quitte le foyer, le cadeau
+ * redevient simplement visible de tous plutôt que de disparaître.
+ */
+export const cadeauxMasques = pgTable(
+  'cadeaux_masques',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    cadeauId: uuid('cadeau_id')
+      .notNull()
+      .references(() => cadeaux.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('cadeaux_masques_cadeau_utilisateur').on(t.cadeauId, t.utilisateurId),
+    index('cadeaux_masques_foyer_idx').on(t.foyerId),
+  ],
+);
+
 export type LigneCadeau = typeof cadeaux.$inferSelect;
 
 /* ======================== MODULE TO-DO & COURSES ======================== */

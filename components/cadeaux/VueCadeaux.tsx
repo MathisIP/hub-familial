@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Combobox from '@/components/Combobox';
+import Liste from '@/components/Liste';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_STATUT_CADEAU } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
@@ -111,9 +112,13 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                       {c.pourQui && <span className="puce assigne">{tr('CAD_POUR')} {c.pourQui}</span>}
                       {/* Rappel de la surprise : si on ne montre pas à qui le
                           cadeau est caché, on risque d'en parler devant elle. */}
-                      {c.masqueA && (
+                      {c.masqueA.length > 0 && (
                         <span className="puce cad-cache">
-                          🤫 {tr('CAD_CACHE_A')} {d.membres.find((m) => m.utilisateurId === c.masqueA)?.nom ?? '…'}
+                          🤫 {tr('CAD_CACHE_A')}{' '}
+                          {c.masqueA
+                            .map((u) => d.membres.find((m) => m.utilisateurId === u)?.nom)
+                            .filter(Boolean)
+                            .join(', ') || '…'}
                         </span>
                       )}
                       {c.offertPar && <span className="puce categorie">{tr('CAD_PAR')} {c.offertPar}</span>}
@@ -141,17 +146,17 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
                     )}
                   </div>
                   <div className="cad-actions">
-                    <select
+                    <Liste
                       className="statut"
-                      value={c.statut}
+                      valeur={c.statut}
                       disabled={occupe}
-                      onChange={(e) => action(() => envoi('PATCH', { id: c.id, statut: e.target.value }))}
-                      aria-label={`Statut de ${c.idee}`}
-                    >
-                      {d.statuts.map((s) => (
-                        <option key={s} value={s}>{tEnum(CLE_STATUT_CADEAU, s, langue)}</option>
-                      ))}
-                    </select>
+                      onChange={(v) => action(() => envoi('PATCH', { id: c.id, statut: v }))}
+                      options={d.statuts.map((s) => ({
+                        valeur: s,
+                        libelle: tEnum(CLE_STATUT_CADEAU, s, langue),
+                      }))}
+                      ariaLabel={`Statut de ${c.idee}`}
+                    />
                     <button className="bouton discret" onClick={() => setEdite(c.id)} disabled={occupe}>
                       {tr('G_MODIFIER')}
                     </button>
@@ -223,7 +228,7 @@ function CadeauForm({
   d: DonneesCadeaux;
   cadeau?: Cadeau;
   occupe: boolean;
-  onEnregistrerAction: (corps: Record<string, string | boolean>) => void;
+  onEnregistrerAction: (corps: Record<string, string | boolean | string[]>) => void;
   onAnnulerAction: () => void;
   onSupprimerAction?: () => void;
 }) {
@@ -231,7 +236,7 @@ function CadeauForm({
   const langue = useLangue();
   const [idee, setIdee] = useState(cadeau?.idee ?? '');
   const [pourQui, setPourQui] = useState(cadeau?.pourQui ?? '');
-  const [masqueA, setMasqueA] = useState(cadeau?.masqueA ?? '');
+  const [masqueA, setMasqueA] = useState<string[]>(cadeau?.masqueA ?? []);
   const [occasion, setOccasion] = useState(cadeau?.occasion ?? '');
   const [statut, setStatut] = useState(cadeau?.statut ?? d.statuts[0] ?? 'Idée');
   const [budgetPrevu, setBudgetPrevu] = useState(cadeau?.budgetPrevu ?? '');
@@ -254,9 +259,13 @@ function CadeauForm({
         <Combobox value={pourQui} onChange={setPourQui} options={d.offertPar} placeholder={tr('CAD_POUR_QUI')} disabled={occupe} ariaLabel={tr('CAD_POUR_QUI')} />
         <Combobox value={occasion} onChange={setOccasion} options={d.occasions.map((o) => o.occasion)} placeholder={tr('CAD_OCCASION')} disabled={occupe} ariaLabel={tr('CAD_OCCASION')} />
         <Astuce texte={tr('AIDE_OCCASION')} />
-        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
-          {d.statuts.map((s) => <option key={s} value={s}>{tEnum(CLE_STATUT_CADEAU, s, langue)}</option>)}
-        </select>
+        <Liste
+          valeur={statut}
+          onChange={setStatut}
+          options={d.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_CADEAU, s, langue) }))}
+          disabled={occupe}
+          ariaLabel={tr('EVT_STATUT')}
+        />
       </div>
       <div className="rf-ligne1">
         <input className="champ" inputMode="decimal" placeholder={tr('CAD_BUDGET_PH')} value={budgetPrevu} onChange={(e) => setBudgetPrevu(e.target.value)} disabled={occupe} />
@@ -278,21 +287,21 @@ function CadeauForm({
           personne. Masqué si le foyer n'a qu'un membre — rien à cacher. */}
       {d.membres.length > 0 && (
         <div className="rf-ligne1">
-          <label className="cad-masque">
+          <div className="cad-masque">
             <span className="cad-masque-lbl">{tr('CAD_MASQUER')}</span>
-            <select
-              className="champ"
-              value={masqueA}
-              onChange={(e) => setMasqueA(e.target.value)}
+            {/* Plusieurs personnes : un cadeau des enfants se cache aux DEUX
+                parents. La liste reste ouverte pendant qu'on coche. */}
+            <Liste
+              multiple
+              valeurs={masqueA}
+              onChangeMultiple={setMasqueA}
+              options={d.membres.map((m) => ({ valeur: m.utilisateurId, libelle: m.nom }))}
+              libelleVide={tr('CAD_MASQUER_PERSONNE')}
               disabled={occupe}
-              aria-label={tr('CAD_MASQUER')}
-            >
-              <option value="">{tr('CAD_MASQUER_PERSONNE')}</option>
-              {d.membres.map((m) => (
-                <option key={m.utilisateurId} value={m.utilisateurId}>{m.nom}</option>
-              ))}
-            </select>
-          </label>
+              ariaLabel={tr('CAD_MASQUER')}
+              className="cad-masque-liste"
+            />
+          </div>
           <Astuce texte={tr('AIDE_MASQUER')} />
         </div>
       )}

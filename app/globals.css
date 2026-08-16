@@ -2368,3 +2368,95 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 }
 .bandeau-env.bac { background: #1f6f52; color: #eafaf2; }
 .bandeau-env.prod { background: #b3261e; color: #fff; text-transform: uppercase; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LISTES DÉROULANTES (components/Liste.tsx)
+
+   ⚠ Le panneau d'un <select> natif est dessiné par le SYSTÈME, pas par la page :
+   ni le rayon, ni les couleurs, ni la police des <option> ne sont atteignables
+   en CSS. D'où une liste redessinée entièrement — c'est le seul moyen d'obtenir
+   le même arrondi que le reste de l'app.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.liste { position: relative; display: inline-block; min-width: 0; }
+
+.liste-bouton {
+  width: 100%; display: flex; align-items: center; gap: .5rem;
+  padding: .55rem .8rem; border: 1px solid var(--line); border-radius: .8rem;
+  background: var(--champ, var(--cell)); color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.liste-bouton:hover:not(:disabled) { border-color: color-mix(in srgb, var(--acc) 45%, var(--line)); }
+.liste-bouton:focus-visible {
+  outline: none; border-color: var(--acc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);
+}
+.liste-bouton:disabled { opacity: .55; cursor: not-allowed; }
+.liste-bouton.vide .liste-valeur { color: var(--muted); }
+.liste-valeur { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.liste-fleche {
+  flex: 0 0 auto; width: .5rem; height: .5rem; margin-left: .1rem;
+  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  border-radius: 1px; transform: translateY(-2px) rotate(45deg);
+}
+.liste-bouton[aria-expanded='true'] .liste-fleche { transform: translateY(2px) rotate(225deg); }
+
+.liste-panneau {
+  position: absolute; z-index: 60; top: calc(100% + .35rem); left: 0;
+  min-width: 100%; max-width: min(22rem, 90vw); max-height: 16rem; overflow-y: auto;
+  margin: 0; padding: .3rem; list-style: none;
+  background: var(--cell); border: 1px solid var(--line); border-radius: 1rem;
+  box-shadow: 0 12px 28px -12px rgba(0, 0, 0, .35), 0 0 0 1px color-mix(in srgb, var(--acc) 10%, transparent);
+  animation: liste-apparait .12s ease-out;
+}
+@keyframes liste-apparait { from { opacity: 0; transform: translateY(-4px); } }
+/* Respecte le réglage système « réduire les animations ». */
+@media (prefers-reduced-motion: reduce) { .liste-panneau { animation: none; } }
+
+.liste-option {
+  width: 100%; display: flex; align-items: center; gap: .55rem;
+  padding: .5rem .65rem; border: 0; border-radius: .65rem;
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.liste-option.actif { background: color-mix(in srgb, var(--acc) 14%, transparent); }
+.liste-option.choisi { font-weight: 700; color: var(--acc-deep); }
+.liste-libelle { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.liste-coche {
+  flex: 0 0 auto; width: .4rem; height: .7rem; margin-right: .15rem;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+/* ── Cases à cocher RONDES ────────────────────────────────────────────────
+   Demandé pour s'accorder au reste de l'interface. Elles gardent une COCHE
+   (et non un point plein) : un rond plein se lit comme un bouton radio, donc
+   comme un choix unique — alors qu'on en sélectionne plusieurs ici. */
+.liste-case,
+.pc-case input[type='checkbox'],
+.ag-partage .pc-case input[type='checkbox'] {
+  appearance: none; -webkit-appearance: none;
+  flex: 0 0 auto; width: 1.15rem; height: 1.15rem; margin: 0;
+  border: 2px solid color-mix(in srgb, var(--acc) 40%, var(--line));
+  border-radius: 50%; background: var(--cell);
+  display: inline-grid; place-content: center; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.liste-case::after,
+.pc-case input[type='checkbox']::after {
+  content: ''; width: .32rem; height: .6rem;
+  border-right: 2px solid var(--on-acc, #fff); border-bottom: 2px solid var(--on-acc, #fff);
+  transform: rotate(45deg) translate(-1px, -1px) scale(0);
+  transition: transform .12s ease-out;
+}
+.liste-option.choisi .liste-case,
+.pc-case input[type='checkbox']:checked {
+  background: var(--acc); border-color: var(--acc);
+}
+.liste-option.choisi .liste-case::after,
+.pc-case input[type='checkbox']:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
+.pc-case input[type='checkbox']:focus-visible {
+  outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent);
+}
+.pc-case { align-items: center; }

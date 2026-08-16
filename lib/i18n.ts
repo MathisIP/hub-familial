@@ -273,10 +273,11 @@ const UI = {
   ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
   ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   ECH_COMPTE: { fr: 'Compte', en: 'Account' },
-  ECH_COMPTE_AUCUN: { fr: 'Aucun — visible de tout le foyer', en: 'None — visible to the whole household' },
+  ECH_COMPTE_CHOISIR: { fr: 'Choisir un compte…', en: 'Pick an account…' },
+  ECH_COMPTE_AUCUN: { fr: 'Compte non précisé', en: 'No account specified' },
   AIDE_ECHEANCE_COMPTE: {
-    fr: 'Rattacher une échéance à un compte lui donne la visibilité de ce compte : si le compte est restreint, l’échéance ne sera visible que des mêmes personnes. Sans compte, elle reste visible de tout le foyer.',
-    en: 'Linking a payment to an account gives it that account’s visibility: if the account is restricted, so is the payment. With no account, it stays visible to the whole household.',
+    fr: 'Le compte est obligatoire : une échéance est un prélèvement à venir, il doit être clair d’où l’argent sortira. Il porte aussi la visibilité — si le compte est restreint, l’échéance ne sera visible que des mêmes personnes.',
+    en: 'The account is required: an upcoming payment has to say where the money leaves from. It also carries visibility — if the account is restricted, so is the payment.',
   },
 
   /* --- Cadeaux : garder la surprise --- */

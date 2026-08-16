@@ -64,7 +64,7 @@ console.log(`  foyer cible : « ${f.nom} »`);
 await sql`update foyers set nom = 'Foyer Lambert' where id = ${F}`;
 
 // --- Purge de ce foyer uniquement -------------------------------------------
-for (const t of ['comptes_acces', 'dossiers_acces', 'agendas_acces',
+for (const t of ['comptes_acces', 'dossiers_acces', 'agendas_acces', 'cadeaux_masques',
                  'transactions', 'echeances', 'comptes', 'budget_categories', 'taches',
                  'courses', 'recettes', 'semaine', 'cadeaux', 'occasions',
                  'ev_invites', 'ev_checklist', 'ev_menu', 'evenements']) {
@@ -165,11 +165,21 @@ const tx = [
 ];
 await sql`insert into transactions ${sql(tx)}`;
 
+/*
+ * Chaque echeance porte SON compte de prelevement. Sans lui, la ligne dit qu'un
+ * paiement arrive mais pas d'ou l'argent sortira — une information incomplete
+ * dans un module de budget. Le compte porte aussi la visibilite.
+ */
+const compteId = async (nom) =>
+  (await sql`select id from comptes where foyer_id = ${F} and nom = ${nom}`)[0].id;
+const cCommun = await compteId('Compte commun');
+const cAntoine = await compteId('Compte Antoine');
+
 await sql`insert into echeances ${sql([
-  { foyer_id: F, libelle: 'Loyer', date: '02/09/2026', date_iso: '2026-09-02', recurrence: 'Mensuelle', note: '' },
-  { foyer_id: F, libelle: 'Assurance habitation', date: '15/09/2026', date_iso: '2026-09-15', recurrence: 'Annuelle', note: '' },
-  { foyer_id: F, libelle: 'Cantine — 1er trimestre', date: '20/09/2026', date_iso: '2026-09-20', recurrence: 'Aucune', note: '' },
-  { foyer_id: F, libelle: 'Assurance voiture', date: '28/08/2026', date_iso: '2026-08-28', recurrence: 'Annuelle', note: '' },
+  { foyer_id: F, libelle: 'Loyer', date: '02/09/2026', date_iso: '2026-09-02', recurrence: 'Mensuelle', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Assurance habitation', date: '15/09/2026', date_iso: '2026-09-15', recurrence: 'Annuelle', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Cantine — 1er trimestre', date: '20/09/2026', date_iso: '2026-09-20', recurrence: 'Aucune', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Assurance voiture', date: '28/08/2026', date_iso: '2026-08-28', recurrence: 'Annuelle', note: '', compte_id: cAntoine },
 ])}`;
 
 // --- TO-DO & COURSES ---------------------------------------------------------
@@ -358,8 +368,11 @@ await garnirDocuments(sql, F, {
  * NOIRE : contrairement aux dossiers, le cadeau reste visible de tout le reste
  * du foyer, y compris de quelqu'un qui le rejoindrait apres la saisie.
  */
-await sql`update cadeaux set masque_a = ${idNoe}
-  where foyer_id = ${F} and idee = 'Vélo 16 pouces'`;
+const [velo] = await sql`select id from cadeaux where foyer_id = ${F} and idee = 'Vélo 16 pouces'`;
+if (velo) {
+  await sql`insert into cadeaux_masques (foyer_id, cadeau_id, utilisateur_id)
+    values (${F}, ${velo.id}, ${idNoe}) on conflict do nothing`;
+}
 
 console.log(`
   membres du foyer : Clara (proprietaire), Antoine, Noé`);

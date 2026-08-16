@@ -1,8 +1,9 @@
 import 'server-only';
-import { and, desc, eq, isNull, ne, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   cadeaux as tCadeaux,
+  cadeauxMasques as tMasques,
   occasions as tOccasions,
   membres as tMembres,
   utilisateurs as tUtilisateurs,
@@ -43,11 +44,18 @@ import {
 export type { ChampsCadeau };
 
 /**
- * Restreint une requête aux cadeaux que cette personne a le droit de voir.
- * `masque_a IS NULL` (cas courant) ou visant quelqu'un d'autre.
+ * Restreint une requête aux cadeaux que cette personne a le droit de voir :
+ * ceux dont elle ne figure PAS dans la liste des personnes à qui on les cache.
+ *
+ * `not exists` plutôt qu'une jointure : un cadeau masqué à trois personnes ne
+ * doit pas être renvoyé trois fois.
  */
 function filtreMasquage(utilisateurId: string) {
-  return or(isNull(tCadeaux.masqueA), ne(tCadeaux.masqueA, utilisateurId));
+  return sql`not exists (
+    select 1 from ${tMasques}
+    where ${tMasques.cadeauId} = ${tCadeaux.id}
+      and ${tMasques.utilisateurId} = ${utilisateurId}
+  )`;
 }
 
 export async function chargerCadeaux(): Promise<DonneesCadeaux> {
@@ -69,7 +77,24 @@ export async function chargerCadeaux(): Promise<DonneesCadeaux> {
       .where(eq(tMembres.foyerId, foyerId)),
   ]);
 
-  const cadeaux = lignesCad.map(construireCadeau);
+  // Qui est masqué sur quoi — une seule requête pour toute la liste.
+  const masques = lignesCad.length
+    ? await d
+        .select({ cadeauId: tMasques.cadeauId, utilisateurId: tMasques.utilisateurId })
+        .from(tMasques)
+        .where(
+          and(
+            eq(tMasques.foyerId, foyerId),
+            inArray(tMasques.cadeauId, lignesCad.map((c) => c.id)),
+          ),
+        )
+    : [];
+  const parCadeau = new Map<string, string[]>();
+  for (const m of masques) {
+    parCadeau.set(m.cadeauId, [...(parCadeau.get(m.cadeauId) ?? []), m.utilisateurId]);
+  }
+
+  const cadeaux = lignesCad.map((r) => construireCadeau({ ...r, masqueA: parCadeau.get(r.id) ?? [] }));
   const occasions = lignesOcc
     .map((o) => construireOccasion({ nom: o.nom, date: o.date, budget: o.budget, note: o.note }))
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
@@ -117,27 +142,40 @@ async function cadeauVisible(foyerId: string, utilisateurId: string, id: string)
 }
 
 /**
- * `masque_a` reçu du client : on n'accepte qu'un membre RÉEL du foyer. Sans ce
- * contrôle, un identifiant arbitraire s'inscrirait en base et masquerait le
- * cadeau à personne — ou à quelqu'un d'un autre foyer.
+ * Identifiants reçus du client : on ne retient que de VRAIS membres du foyer.
+ * Sans ce contrôle, un identifiant arbitraire s'inscrirait en base — masquant le
+ * cadeau à personne, ou à quelqu'un d'un autre foyer.
  */
-async function masqueAValide(foyerId: string, brut: string | null | undefined): Promise<string | null> {
-  const v = (brut ?? '').trim();
-  if (!v) return null;
-  const [m] = await db()
+async function masquesValides(foyerId: string, brut: string[] | undefined): Promise<string[]> {
+  const demandes = [...new Set((brut ?? []).map((v) => v.trim()).filter(Boolean))];
+  if (demandes.length === 0) return [];
+  const membresRows = await db()
     .select({ u: tMembres.utilisateurId })
     .from(tMembres)
-    .where(and(eq(tMembres.foyerId, foyerId), eq(tMembres.utilisateurId, v)))
-    .limit(1);
-  if (!m) throw new ErreurValidation('Cette personne ne fait pas partie du foyer.');
-  return m.u;
+    .where(eq(tMembres.foyerId, foyerId));
+  const duFoyer = new Set(membresRows.map((m) => m.u));
+  const inconnu = demandes.find((d) => !duFoyer.has(d));
+  if (inconnu) throw new ErreurValidation('Cette personne ne fait pas partie du foyer.');
+  return demandes;
+}
+
+/** Réécrit la liste des personnes à qui ce cadeau est caché. */
+async function ecrireMasques(foyerId: string, cadeauId: string, personnes: string[]): Promise<void> {
+  const d = db();
+  await d
+    .delete(tMasques)
+    .where(and(eq(tMasques.foyerId, foyerId), eq(tMasques.cadeauId, cadeauId)));
+  if (personnes.length > 0) {
+    await d
+      .insert(tMasques)
+      .values(personnes.map((utilisateurId) => ({ foyerId, cadeauId, utilisateurId })));
+  }
 }
 
 /** Valeurs d'une ligne cadeau à partir des champs éditables (défauts inclus). */
-function valeurs(c: ChampsCadeau, masqueA: string | null) {
+function valeurs(c: ChampsCadeau) {
   return {
     pourQui: c.pourQui ?? '',
-    masqueA,
     occasion: (c.occasion ?? '').trim(),
     idee: c.idee.trim(),
     statut: c.statut ?? 'Idée',
@@ -154,12 +192,13 @@ function valeurs(c: ChampsCadeau, masqueA: string | null) {
 export async function ajouterCadeau(c: ChampsCadeau): Promise<string> {
   if (!c.idee?.trim()) throw new ErreurValidation("L'idée de cadeau est requise.");
   const { foyerId } = await contexteAcces();
-  const masqueA = await masqueAValide(foyerId, c.masqueA);
+  const masques = await masquesValides(foyerId, c.masqueA);
   await assurerOccasion(foyerId, c.occasion ?? '');
   const [row] = await db()
     .insert(tCadeaux)
-    .values({ foyerId, ...valeurs(c, masqueA) })
+    .values({ foyerId, ...valeurs(c) })
     .returning({ id: tCadeaux.id });
+  await ecrireMasques(foyerId, row.id, masques);
   return row.id;
 }
 
@@ -167,14 +206,15 @@ export async function modifierCadeau(id: string, c: ChampsCadeau): Promise<void>
   if (!c.idee?.trim()) throw new ErreurValidation("L'idée de cadeau est requise.");
   const { foyerId, utilisateurId } = await contexteAcces();
   await cadeauVisible(foyerId, utilisateurId, id);
-  const masqueA = await masqueAValide(foyerId, c.masqueA);
+  const masques = await masquesValides(foyerId, c.masqueA);
   await assurerOccasion(foyerId, c.occasion ?? '');
   const res = await db()
     .update(tCadeaux)
-    .set(valeurs(c, masqueA))
+    .set(valeurs(c))
     .where(and(eq(tCadeaux.id, id), eq(tCadeaux.foyerId, foyerId)))
     .returning({ id: tCadeaux.id });
   if (res.length === 0) throw new ErreurValidation('Cadeau introuvable.');
+  await ecrireMasques(foyerId, id, masques);
 }
 
 /** Change uniquement le statut. */

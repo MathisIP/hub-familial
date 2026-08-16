@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Liste from '@/components/Liste';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { locale, type IdLangue } from '@/lib/i18n';
 import {
@@ -256,9 +257,13 @@ function FormAgenda({
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder={tr('AGD_TITRE_PH')} value={titre} onChange={(e) => setTitre(e.target.value)} disabled={occupe} autoFocus />
         {agendas.length > 1 && (
-          <select className="champ" value={calendarId} onChange={(e) => setCalendarId(e.target.value)} disabled={occupe} aria-label="Agenda">
-            {agendas.map((a) => <option key={a.id} value={a.id}>{a.nom}</option>)}
-          </select>
+          <Liste
+            valeur={calendarId}
+            onChange={setCalendarId}
+            options={agendas.map((a) => ({ valeur: a.id, libelle: a.nom }))}
+            disabled={occupe}
+            ariaLabel="Agenda"
+          />
         )}
         <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>
           <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={occupe} />

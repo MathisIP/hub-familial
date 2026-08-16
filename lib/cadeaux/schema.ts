@@ -15,8 +15,8 @@ export const STATUT_OFFERT = 'Offert';
 export type Cadeau = {
   id: string;
   pourQui: string;
-  /** Membre à qui ce cadeau est caché (`null` = visible de tout le foyer). */
-  masqueA: string | null;
+  /** Membres à qui ce cadeau est caché (vide = visible de tout le foyer). */
+  masqueA: string[];
   occasion: string;
   idee: string;
   statut: string;
@@ -59,10 +59,11 @@ export type DonneesCadeaux = {
 export type ChampsCadeau = {
   pourQui?: string;
   /**
-   * Identifiant du membre à qui ce cadeau doit rester caché (la surprise).
-   * Chaîne vide ou absent = visible de tout le foyer.
+   * Membres à qui ce cadeau doit rester caché (la surprise). Plusieurs sont
+   * possibles : un cadeau des enfants se cache aux DEUX parents.
+   * Liste vide ou absente = visible de tout le foyer.
    */
-  masqueA?: string | null;
+  masqueA?: string[];
   occasion?: string;
   idee: string;
   statut?: string;
@@ -81,7 +82,7 @@ const S = (v: unknown): string => (v == null ? '' : String(v).trim());
 export function construireCadeau(r: {
   id: string;
   pourQui: string;
-  masqueA: string | null;
+  masqueA: string[];
   occasion: string;
   idee: string;
   statut: string;

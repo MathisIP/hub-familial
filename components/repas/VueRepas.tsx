@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Liste from '@/components/Liste';
 import Combobox from '@/components/Combobox';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID, CLE_JOUR } from '@/lib/i18n';
@@ -422,24 +423,30 @@ function RecetteForm({
           disabled={occupe}
           autoFocus
         />
-        <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)} disabled={occupe} aria-label={tr('REPAS_CATEGORIE')}>
-          <option value="">{tr('REPAS_CATEGORIE')}</option>
-          {d.categoriesPlat.map((c) => (
-            <option key={c} value={c}>{tEnum(CLE_CATEGORIE_PLAT, c, langue)}</option>
-          ))}
-        </select>
-        <select className="champ" value={type} onChange={(e) => setType(e.target.value)} disabled={occupe} aria-label={tr('REPAS_TYPE')}>
-          <option value="">{tr('REPAS_TYPE')}</option>
-          {d.types.map((ty) => (
-            <option key={ty} value={ty}>{tEnum(CLE_TYPE_RECETTE, ty, langue)}</option>
-          ))}
-        </select>
-        <select className="champ" value={chaudFroid} onChange={(e) => setChaudFroid(e.target.value)} disabled={occupe} aria-label={tr('REPAS_CHAUDFROID')}>
-          <option value="">{tr('REPAS_CHAUDFROID')}</option>
-          {d.chaudFroid.map((c) => (
-            <option key={c} value={c}>{tEnum(CLE_CHAUD_FROID, c, langue)}</option>
-          ))}
-        </select>
+        <Liste
+          valeur={categorie}
+          onChange={setCategorie}
+          options={d.categoriesPlat.map((c) => ({ valeur: c, libelle: tEnum(CLE_CATEGORIE_PLAT, c, langue) }))}
+          placeholder={tr('REPAS_CATEGORIE')}
+          disabled={occupe}
+          ariaLabel={tr('REPAS_CATEGORIE')}
+        />
+        <Liste
+          valeur={type}
+          onChange={setType}
+          options={d.types.map((ty) => ({ valeur: ty, libelle: tEnum(CLE_TYPE_RECETTE, ty, langue) }))}
+          placeholder={tr('REPAS_TYPE')}
+          disabled={occupe}
+          ariaLabel={tr('REPAS_TYPE')}
+        />
+        <Liste
+          valeur={chaudFroid}
+          onChange={setChaudFroid}
+          options={d.chaudFroid.map((c) => ({ valeur: c, libelle: tEnum(CLE_CHAUD_FROID, c, langue) }))}
+          placeholder={tr('REPAS_CHAUDFROID')}
+          disabled={occupe}
+          ariaLabel={tr('REPAS_CHAUDFROID')}
+        />
         <label className="jr-pers">
           <input
             className="champ"
@@ -476,18 +483,14 @@ function RecetteForm({
               onChange={(e) => majIngredient(k, 'quantite', e.target.value)}
               disabled={occupe}
             />
-            <select
-              className="champ"
-              value={ing.unite}
-              onChange={(e) => majIngredient(k, 'unite', e.target.value)}
+            <Liste
+              valeur={ing.unite}
+              onChange={(v) => majIngredient(k, 'unite', v)}
+              options={d.unites.map((u) => ({ valeur: u, libelle: u }))}
+              placeholder="—"
               disabled={occupe}
-              aria-label={tr('REPAS_ING_UNITE')}
-            >
-              <option value="">—</option>
-              {d.unites.map((u) => (
-                <option key={u} value={u}>{u}</option>
-              ))}
-            </select>
+              ariaLabel={tr('REPAS_ING_UNITE')}
+            />
             <input
               className="champ"
               placeholder={tr('REPAS_ING_RAYON')}

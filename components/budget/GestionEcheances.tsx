@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
+import Liste from '@/components/Liste';
 import Astuce from '@/components/Astuce';
 import { useT } from '@/components/I18nProvider';
 import {
@@ -122,6 +123,8 @@ function FormeEcheance({
     null,
   );
   const [etatSuppr, actionSuppr, supprEnCours] = useActionState(supprimerEcheanceAction, null);
+  const [recurrence, setRecurrence] = useState(echeance?.recurrence ?? 'Aucune');
+  const [compteId, setCompteId] = useState(echeance?.compteId ?? '');
 
   // Le formulaire ne se referme qu'une fois l'enregistrement CONFIRMÉ par le
   // serveur : le refermer au clic laisserait croire qu'un refus a été accepté.
@@ -162,31 +165,27 @@ function FormeEcheance({
 
           <label className="ge-champ">
             <span className="ge-lbl">{tr('ECH_RECURRENCE')}</span>
-            <select
-              className="champ"
+            <Liste
               name="recurrence"
-              defaultValue={echeance?.recurrence ?? 'Aucune'}
+              valeur={recurrence}
+              onChange={setRecurrence}
+              options={RECURRENCES_ECHEANCE.map((r) => ({ valeur: r, libelle: r }))}
               disabled={enCours}
-            >
-              {RECURRENCES_ECHEANCE.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
+              ariaLabel={tr('ECH_RECURRENCE')}
+            />
           </label>
 
           <label className="ge-champ">
             <span className="ge-lbl">{tr('ECH_COMPTE')}</span>
-            <select
-              className="champ"
+            <Liste
               name="compteId"
-              defaultValue={echeance?.compteId ?? ''}
+              valeur={compteId}
+              onChange={setCompteId}
+              options={comptes.map((c) => ({ valeur: c.id, libelle: c.nom }))}
+              placeholder={tr('ECH_COMPTE_CHOISIR')}
               disabled={enCours}
-            >
-              <option value="">{tr('ECH_COMPTE_AUCUN')}</option>
-              {comptes.map((c) => (
-                <option key={c.id} value={c.id}>{c.nom}</option>
-              ))}
-            </select>
+              ariaLabel={tr('ECH_COMPTE')}
+            />
           </label>
         </div>
 

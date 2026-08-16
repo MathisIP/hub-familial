@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Liste from '@/components/Liste';
 import Combobox from '@/components/Combobox';
 import SousListes from '@/components/evenements/SousListes';
 import { useT, useLangue } from '@/components/I18nProvider';
@@ -98,18 +99,17 @@ export default function VueEvenements({ initial }: { initial: DonneesEvenements 
                       {libelleJours(ev.joursRestants, langue)}
                     </span>
                   )}
-                  <select
+                  <Liste
                     className="statut"
-                    value={ev.statut}
+                    valeur={ev.statut}
                     disabled={occupe}
-                    onChange={(e) => statutChange(ev, e.target.value)}
-                    aria-label={`Statut de ${ev.nom}`}
-                  >
-                    <option value="">—</option>
-                    {d.statuts.map((s) => (
-                      <option key={s} value={s}>{tEnum(CLE_STATUT_EVT, s, langue)}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => statutChange(ev, v)}
+                    options={d.statuts.map((s) => ({
+                      valeur: s,
+                      libelle: tEnum(CLE_STATUT_EVT, s, langue),
+                    }))}
+                    ariaLabel={`Statut de ${ev.nom}`}
+                  />
                   <button className="bouton discret" onClick={() => setEdite(ev.id)} disabled={occupe}>
                     {tr('G_MODIFIER')}
                   </button>
@@ -220,22 +220,18 @@ function SyncAgenda({
         </button>
       ) : (
         <>
-          <select
-            className="champ"
-            defaultValue=""
+          <Liste
+            valeur=""
             disabled={occupe}
-            aria-label={tr('EVT_CHOISIR_AGENDA')}
-            onChange={(e) => {
-              if (e.target.value) {
-                action(() => envoiAgenda('POST', { id: ev.id, calendarId: e.target.value })).then(() => setChoix(false));
+            ariaLabel={tr('EVT_CHOISIR_AGENDA')}
+            placeholder={tr('EVT_CHOISIR_AGENDA')}
+            options={agendas.map((a) => ({ valeur: a.id, libelle: a.nom }))}
+            onChange={(v) => {
+              if (v) {
+                action(() => envoiAgenda('POST', { id: ev.id, calendarId: v })).then(() => setChoix(false));
               }
             }}
-          >
-            <option value="">{tr('EVT_CHOISIR_AGENDA')}</option>
-            {agendas.map((a) => (
-              <option key={a.id} value={a.id}>{a.nom}</option>
-            ))}
-          </select>
+          />
           <button className="bouton discret" onClick={() => setChoix(false)} disabled={occupe}>{tr('G_ANNULER')}</button>
         </>
       )}
@@ -289,10 +285,14 @@ function EvenementForm({
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder={tr('EVT_NOM_PH')} value={nom} onChange={(e) => setNom(e.target.value)} disabled={occupe} autoFocus />
         <Combobox value={type} onChange={setType} options={d.types} placeholder={tr('EVT_TYPE')} disabled={occupe} ariaLabel={tr('EVT_TYPE')} />
-        <select className="champ" value={statut} onChange={(e) => setStatut(e.target.value)} disabled={occupe} aria-label={tr('EVT_STATUT')}>
-          <option value="">{tr('EVT_STATUT')}…</option>
-          {d.statuts.map((s) => <option key={s} value={s}>{tEnum(CLE_STATUT_EVT, s, langue)}</option>)}
-        </select>
+        <Liste
+          valeur={statut}
+          onChange={setStatut}
+          options={d.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_EVT, s, langue) }))}
+          placeholder={`${tr('EVT_STATUT')}…`}
+          disabled={occupe}
+          ariaLabel={tr('EVT_STATUT')}
+        />
       </div>
       <div className="rf-ligne1">
         <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>

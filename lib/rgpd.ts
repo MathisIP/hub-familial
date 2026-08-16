@@ -23,6 +23,7 @@ import {
   documents,
   dossiers,
   dossiersAcces,
+  cadeauxMasques,
 } from '@/lib/db/schema';
 
 /**
@@ -167,7 +168,20 @@ export async function exporterDonneesFoyer(foyerId: string, utilisateurId: strin
 
   // Cadeaux : LISTE NOIRE. On retire ceux qui sont masqués à cette personne —
   // l'export serait sinon le moyen le plus simple de gâcher sa propre surprise.
-  const cadeauxVisibles = cadeauxRows.filter((c) => c.masqueA !== utilisateurId);
+  const cachesPourMoi = new Set(
+    (
+      await d
+        .select({ cadeauId: cadeauxMasques.cadeauId })
+        .from(cadeauxMasques)
+        .where(
+          and(
+            eq(cadeauxMasques.foyerId, foyerId),
+            eq(cadeauxMasques.utilisateurId, utilisateurId),
+          ),
+        )
+    ).map((m) => m.cadeauId),
+  );
+  const cadeauxVisibles = cadeauxRows.filter((c) => !cachesPourMoi.has(c.id));
 
   return {
     exporteLe: new Date().toISOString(),

@@ -37,12 +37,13 @@ try {
   // Ce script crée puis efface un foyer complet : jamais ailleurs qu'en bac à sable.
   await exigerBacASable(sql, hote);
 
-  // Le schéma 0025 doit être en place, sinon les vérifications n'ont pas de sens.
+  // Le schéma de la visibilité doit être en place, sinon les vérifications
+  // n'ont aucun sens : elles passeraient « à vide ».
   const [{ present }] = await sql`
-    select count(*)::int as present from information_schema.columns
-    where table_name = 'cadeaux' and column_name = 'masque_a'`;
+    select count(*)::int as present from information_schema.tables
+    where table_name = 'cadeaux_masques'`;
   if (!present) {
-    console.error('Migration 0025 non appliquée sur cette base. Lance `npm run db:migrate` dessus.');
+    console.error('Migrations non appliquées sur cette base. Lance `npm run db:migrate` dessus.');
     await sql.end();
     process.exit(1);
   }
@@ -121,19 +122,28 @@ try {
 
   /* ------------------------------ CADEAUX ------------------------------ */
   titre('Cadeaux (liste noire)');
-  await sql`insert into cadeaux (foyer_id, idee, occasion, prix_paye, masque_a) values
-    (${foyerId}, 'Vélo', 'Noël', '200', ${users.enfant}),
-    (${foyerId}, 'Livre', 'Noël', '20', null)`;
+  const [{ id: kVelo }] = await sql`insert into cadeaux (foyer_id, idee, occasion, prix_paye)
+    values (${foyerId}, 'Vélo', 'Noël', '200') returning id`;
+  await sql`insert into cadeaux (foyer_id, idee, occasion, prix_paye)
+    values (${foyerId}, 'Livre', 'Noël', '20')`;
+  // Masqué aux DEUX enfants serait le cas réel ; ici un seul suffit à prouver
+  // la règle, et le second membre vérifie qu'on ne masque pas à tout le monde.
+  await sql`insert into cadeaux_masques (foyer_id, cadeau_id, utilisateur_id)
+    values (${foyerId}, ${kVelo}, ${users.enfant})`;
   const cadVus = async (uid) => (await sql`
-    select idee from cadeaux where foyer_id = ${foyerId}
-      and (masque_a is null or masque_a <> ${uid}) order by idee`).map((r) => r.idee);
+    select idee from cadeaux c where c.foyer_id = ${foyerId}
+      and not exists (select 1 from cadeaux_masques m
+        where m.cadeau_id = c.id and m.utilisateur_id = ${uid})
+      order by idee`).map((r) => r.idee);
   const kE = await cadVus(users.enfant);
   const kP1 = await cadVus(users.parent1);
   verifier(kE.join(',') === 'Livre', `l'enfant ne voit pas son cadeau surprise (${kE})`);
   verifier(kP1.join(',') === 'Livre,Vélo', `les parents voient tout (${kP1})`);
   const [{ total }] = await sql`
-    select coalesce(sum(prix_paye::numeric),0) as total from cadeaux
-    where foyer_id = ${foyerId} and occasion = 'Noël' and (masque_a is null or masque_a <> ${users.enfant})`;
+    select coalesce(sum(prix_paye::numeric),0) as total from cadeaux c
+    where c.foyer_id = ${foyerId} and c.occasion = 'Noël'
+      and not exists (select 1 from cadeaux_masques m
+        where m.cadeau_id = c.id and m.utilisateur_id = ${users.enfant})`;
   verifier(Number(total) === 20, `total de l'occasion vu par l'enfant = 20, pas 220 (${total})`);
 
   /* ------------------------------ AGENDAS ------------------------------ */
@@ -201,8 +211,8 @@ try {
 
   await sql`delete from utilisateurs where id = ${users.enfant}`;
   const [{ n: nCad }] = await sql`
-    select count(*)::int as n from cadeaux where foyer_id = ${foyerId} and idee = 'Vélo' and masque_a is null`;
-  verifier(nCad === 1, 'un membre qui part : son cadeau surprise redevient visible de tous');
+    select count(*)::int as n from cadeaux_masques where cadeau_id = ${kVelo}`;
+  verifier(nCad === 0, 'un membre qui part : son cadeau surprise redevient visible de tous');
   const [{ n: nFoyer }] = await sql`select count(*)::int as n from foyers where id = ${foyerId}`;
   verifier(nFoyer === 1, 'le foyer survit au départ d’un membre non propriétaire');
 } finally {

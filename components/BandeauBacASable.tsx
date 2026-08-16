@@ -19,7 +19,7 @@ import { bacASable } from '@/lib/db/schema';
  * pas payer une requête de plus à chaque page.
  */
 export default async function BandeauBacASable() {
-  if (process.env.NODE_ENV === 'production' || !baseDisponible()) return null;
+  if (!baseDisponible()) return null;
 
   let marque = false;
   try {
@@ -29,6 +29,19 @@ export default async function BandeauBacASable() {
     // que de faire tomber toutes les pages pour un bandeau d'aide.
     return null;
   }
+
+  /*
+   * ⚠ Le bandeau VERT s'affiche même en mode production, parce qu'on teste
+   * souvent en local avec `npm run build && npm start` — le service worker n'est
+   * enregistré que dans ce mode, donc c'est le SEUL moyen d'essayer les
+   * notifications. Sans cette nuance, l'écran ne disait plus sur quelle base on
+   * travaillait précisément quand on en avait le plus besoin.
+   *
+   * Aucun risque pour les vrais clients : la base de production ne porte pas le
+   * marqueur, et l'avertissement ROUGE, lui, reste réservé au développement (en
+   * production il serait à la fois faux et alarmant).
+   */
+  if (!marque && process.env.NODE_ENV === 'production') return null;
 
   return (
     <div className={`bandeau-env ${marque ? 'bac' : 'prod'}`} role="status">

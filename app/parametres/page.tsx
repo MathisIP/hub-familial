@@ -40,11 +40,12 @@ export default async function PageParametres() {
       <section className="compte-bloc">
         <h2 className="bloc-titre">{t('REG_PERSO', langue)}</h2>
         <ReglagesForm nomCompte={session?.user?.name ?? ''} />
-
-        {/* Chaque appareil s'abonne séparément : le réglage vit ici, pas au
-            niveau du foyer — un téléphone peut être autorisé, pas le PC. */}
-        <ReglagesNotifications />
       </section>
+
+      {/* Section à part, et haut placée : le réglage vaut pour CET appareil, pas
+          pour le foyer — un téléphone peut être autorisé et pas le PC. C'est
+          donc la première chose qu'on vient y faire depuis un nouvel appareil. */}
+      <ReglagesNotifications />
 
       <section className="compte-bloc">
         <h2 className="bloc-titre">{t('NAV_MON_FOYER', langue)}</h2>

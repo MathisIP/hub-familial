@@ -195,6 +195,11 @@ export default function SideBar() {
                 <p className="bm-sheet-titre">{tr('NAV_APPARENCE')}</p>
                 <ReglagesApparence modeVisible={false} />
                 <div className="menu-sep" />
+                {/* ⚠ Ce lien MANQUAIT sur mobile : /parametres n'existait que
+                    dans le rail du bureau. Or c'est là que vivent les réglages
+                    de notification, qui se règlent APPAREIL PAR APPAREIL —
+                    exactement ce qu'on vient faire depuis son téléphone. */}
+                <Link href="/parametres" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_REGLAGES')}</Link>
                 <Link href="/foyer" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_FOYER')}</Link>
                 <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_ABONNEMENT')}</Link>
                 <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_COMPTE')}</Link>

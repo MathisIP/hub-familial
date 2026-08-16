@@ -2429,34 +2429,32 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   transform: rotate(45deg) translate(-1px, -1px);
 }
 
-/* ── Cases à cocher RONDES ────────────────────────────────────────────────
-   Demandé pour s'accorder au reste de l'interface. Elles gardent une COCHE
-   (et non un point plein) : un rond plein se lit comme un bouton radio, donc
-   comme un choix unique — alors qu'on en sélectionne plusieurs ici. */
-.liste-case,
-.pc-case input[type='checkbox'],
-.ag-partage .pc-case input[type='checkbox'] {
+/* ── Cases à cocher : CARRÉES ─────────────────────────────────────────────
+   Elles avaient été arrondies pour s'accorder au reste de l'interface, puis
+   remises carrées : un rond se lit comme un bouton radio, donc comme un choix
+   UNIQUE, alors qu'on en coche plusieurs ici. La forme porte le sens — mieux
+   vaut une case un peu moins douce qu'une case qui ment sur ce qu'elle fait.
+
+   On garde seulement la couleur d'accent, qui ne change rien à la lecture. */
+.liste-case {
   appearance: none; -webkit-appearance: none;
-  flex: 0 0 auto; width: 1.15rem; height: 1.15rem; margin: 0;
+  flex: 0 0 auto; width: 1.1rem; height: 1.1rem; margin: 0;
   border: 2px solid color-mix(in srgb, var(--acc) 40%, var(--line));
-  border-radius: 50%; background: var(--cell);
-  display: inline-grid; place-content: center; cursor: pointer;
+  border-radius: .3rem; background: var(--cell);
+  display: inline-grid; place-content: center;
   transition: background .15s, border-color .15s;
 }
-.liste-case::after,
-.pc-case input[type='checkbox']::after {
-  content: ''; width: .32rem; height: .6rem;
+.liste-case::after {
+  content: ''; width: .3rem; height: .58rem;
   border-right: 2px solid var(--on-acc, #fff); border-bottom: 2px solid var(--on-acc, #fff);
   transform: rotate(45deg) translate(-1px, -1px) scale(0);
   transition: transform .12s ease-out;
 }
-.liste-option.choisi .liste-case,
-.pc-case input[type='checkbox']:checked {
-  background: var(--acc); border-color: var(--acc);
-}
-.liste-option.choisi .liste-case::after,
-.pc-case input[type='checkbox']:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
-.pc-case input[type='checkbox']:focus-visible {
-  outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent);
-}
+.liste-option.choisi .liste-case { background: var(--acc); border-color: var(--acc); }
+.liste-option.choisi .liste-case::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
+
+/* Les cases du panneau de partage restent celles du navigateur : carrées,
+   familières, et cochables au clavier sans qu'on ait à le réimplémenter.
+   `accent-color` suffit à les accorder à la teinte de l'app. */
+.pc-case input[type='checkbox'] { accent-color: var(--acc); }
 .pc-case { align-items: center; }

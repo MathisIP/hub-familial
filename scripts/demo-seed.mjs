@@ -353,6 +353,14 @@ await garnirDocuments(sql, F, {
   },
 });
 
+/*
+ * Le velo d'anniversaire est cache a Noe — c'est son cadeau. Illustre la LISTE
+ * NOIRE : contrairement aux dossiers, le cadeau reste visible de tout le reste
+ * du foyer, y compris de quelqu'un qui le rejoindrait apres la saisie.
+ */
+await sql`update cadeaux set masque_a = ${idNoe}
+  where foyer_id = ${F} and idee = 'Vélo 16 pouces'`;
+
 console.log(`
   membres du foyer : Clara (proprietaire), Antoine, Noé`);
 

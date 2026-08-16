@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
 import { StockageNonConfigure } from '@/lib/stockage';
+import { ChiffrementNonConfigure } from '@/lib/stockage/chiffrement';
 
 /**
  * Traduit une exception en réponse JSON. Centralisé pour que toutes les routes
@@ -13,7 +14,11 @@ export function reponseErreur(e: unknown): NextResponse {
   if (e instanceof ErreurValidation) {
     return NextResponse.json({ erreur: e.message }, { status: 400 });
   }
-  if (e instanceof ConfigManquante || e instanceof StockageNonConfigure) {
+  if (
+    e instanceof ConfigManquante ||
+    e instanceof StockageNonConfigure ||
+    e instanceof ChiffrementNonConfigure
+  ) {
     return NextResponse.json({ erreur: e.message }, { status: 503 });
   }
   /**

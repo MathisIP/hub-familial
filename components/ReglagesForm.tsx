@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Liste from '@/components/Liste';
 import { useRouter } from 'next/navigation';
 import { useT } from '@/components/I18nProvider';
 import BasculeNeon from '@/components/BasculeNeon';
@@ -65,16 +66,12 @@ export default function ReglagesForm({ nomCompte }: { nomCompte: string }) {
 
       <label className="reglage-champ">
         <span className="reglage-lbl">{t('REG_LANGUE_LBL')}</span>
-        <select
-          className="champ"
-          value={langue}
-          onChange={(e) => setLangue(e.target.value)}
-          aria-label={t('REG_LANGUE_LBL')}
-        >
-          {LANGUES_DISPO.map((l) => (
-            <option key={l.code} value={l.code}>{l.nom}</option>
-          ))}
-        </select>
+        <Liste
+          valeur={langue}
+          onChange={setLangue}
+          options={LANGUES_DISPO.map((l) => ({ valeur: l.code, libelle: l.nom }))}
+          ariaLabel={t('REG_LANGUE_LBL')}
+        />
         <span className="reglage-aide">{t('REG_LANGUE_AIDE')}</span>
       </label>
 

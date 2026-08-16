@@ -50,7 +50,16 @@ export default function GestionComptes({ comptes }: { comptes: CompteGere[] }) {
             ) : (
               <div className="gc-ligne">
                 <div className="gc-infos">
-                  <span className="gc-nom">{c.nom}</span>
+                  <span className="gc-nom">
+                    {c.nom}
+                    {/* Badge informatif : le réglage se fait dans « Qui voit quels
+                        comptes », réservé au propriétaire du foyer. */}
+                    {c.restreint && (
+                      <span className="gc-cadenas" title={tr('GC_RESTREINT')}>
+                        {' '}🔒
+                      </span>
+                    )}
+                  </span>
                   <span className="gc-meta">
                     {c.nbOperations === 0
                       ? tr('GC_AUCUNE_OP')

@@ -1,17 +1,29 @@
 import 'server-only';
-import { and, desc, eq, gte, lte, ne, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, ne, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   comptes as tComptes,
+  comptesAcces as tAcces,
   budgetCategories as tCats,
   transactions as tTx,
   echeances as tEch,
+  membres as tMembres,
   type LigneCompte,
   type LigneBudgetCategorie,
   type LigneTransaction,
 } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
+import {
+  accesComptes,
+  comptesAutorises,
+  contexteAcces,
+  exigerComptesAccessibles,
+  filtrerComptes,
+  PARTAGE_FOYER,
+  PARTAGE_RESTREINT,
+  type AccesComptes,
+} from '@/lib/budget/acces';
 import {
   MOIS_FR,
   TYPE_DEPENSE,
@@ -22,6 +34,7 @@ import {
   formatEuro,
   joursJusqua,
   versISO,
+  type ChampsEcheance,
   type CompteGere,
   type DonneesBudget,
   type Echeance,
@@ -52,6 +65,25 @@ import {
 
 const NB_TX_RECENTES = 12;
 const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Ce qui remplace le nom d'un compte qu'on n'a pas le droit de voir. */
+export const COMPTE_MASQUE = '•••';
+
+/**
+ * Restreint une requête sur les transactions aux comptes visibles.
+ *
+ * ⚠ `compte OU dest`, jamais « et ». Un virement relie deux comptes : quand un
+ * seul est visible, la ligne DOIT être conservée. L'écarter ferait bouger le
+ * solde d'un compte visible sans aucune opération pour l'expliquer — un budget
+ * qui ne tombe plus juste est pire qu'un nom masqué. C'est l'autre côté du
+ * virement qu'on cache (cf. `versTransaction`), pas le mouvement d'argent.
+ */
+function filtreVisibilite(acces: AccesComptes) {
+  if (acces.complet) return undefined;
+  // Aucun compte visible : `inArray` sur une liste vide est invalide en SQL.
+  if (acces.noms.length === 0) return sql`false`;
+  return or(inArray(tTx.compte, acces.noms), inArray(tTx.dest, acces.noms));
+}
 
 function moisCourant(): SelectionMois {
   const d = new Date();
@@ -137,13 +169,22 @@ function construireParametres(
  * complet d'une période à la demande. On borne les requêtes, on ne cache pas les
  * données.
  */
-async function chargerTables(foyerId: string, cleMois: string) {
+async function chargerTables(foyerId: string, utilisateurId: string, cleMois: string) {
   const d = db();
   const debutMois = `${cleMois}-01`;
   const finMois = `${cleMois}-32`; // borne haute textuelle : les dates sont en aaaa-mm-jj
 
-  const [comptesRows, catsRows, echRows, deltas, txMois, txRecentes, annees] = await Promise.all([
+  // Les comptes visibles conditionnent les 4 requêtes sur les transactions : il
+  // faut donc les connaître d'abord. Les deux lectures partent EN PARALLÈLE —
+  // une requête concurrente de plus ne coûte pas un aller-retour de plus.
+  const [comptesRows, autorises] = await Promise.all([
     d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
+    comptesAutorises(foyerId, utilisateurId),
+  ]);
+  const acces = filtrerComptes(comptesRows, autorises);
+  const visibles = filtreVisibilite(acces);
+
+  const [catsRows, echRows, deltas, txMois, txRecentes, annees] = await Promise.all([
     d.select().from(tCats).where(eq(tCats.foyerId, foyerId)),
     d.select().from(tEch).where(eq(tEch.foyerId, foyerId)),
 
@@ -157,20 +198,22 @@ async function chargerTables(foyerId: string, cleMois: string) {
         total: sql<number>`sum(${tTx.montant})`,
       })
       .from(tTx)
-      .where(eq(tTx.foyerId, foyerId))
+      .where(and(eq(tTx.foyerId, foyerId), visibles))
       .groupBy(tTx.type, tTx.compte, tTx.dest),
 
     // Le mois affiché, pour les KPI et le réel par catégorie.
     d
       .select()
       .from(tTx)
-      .where(and(eq(tTx.foyerId, foyerId), gte(tTx.dateIso, debutMois), lte(tTx.dateIso, finMois))),
+      .where(
+        and(eq(tTx.foyerId, foyerId), gte(tTx.dateIso, debutMois), lte(tTx.dateIso, finMois), visibles),
+      ),
 
     // Les dernières opérations, toutes périodes confondues.
     d
       .select()
       .from(tTx)
-      .where(eq(tTx.foyerId, foyerId))
+      .where(and(eq(tTx.foyerId, foyerId), visibles))
       .orderBy(desc(tTx.dateIso), desc(tTx.creeLe))
       .limit(NB_TX_RECENTES),
 
@@ -178,12 +221,14 @@ async function chargerTables(foyerId: string, cleMois: string) {
     d
       .selectDistinct({ annee: sql<string>`substring(${tTx.dateIso} from 1 for 4)` })
       .from(tTx)
-      .where(eq(tTx.foyerId, foyerId)),
+      .where(and(eq(tTx.foyerId, foyerId), visibles)),
   ]);
 
-  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
   catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
-  return { comptesRows, catsRows, echRows, deltas, txMois, txRecentes, annees };
+  const comptesVisibles = [...acces.comptes].sort(
+    (a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime(),
+  );
+  return { comptesRows: comptesVisibles, catsRows, echRows, deltas, txMois, txRecentes, annees, acces };
 }
 
 /**
@@ -210,13 +255,21 @@ function deltasDepuisAgregats(
   return deltas;
 }
 
-/** Ligne de base -> transaction d'affichage. Partagé par le tableau de bord et l'historique. */
-function versTransaction(t: LigneTransaction): Transaction {
+/**
+ * Ligne de base -> transaction d'affichage. Partagé par le tableau de bord et
+ * l'historique.
+ *
+ * `acces` masque le côté d'un virement dont le compte n'est pas visible : la
+ * ligne reste (le mouvement d'argent est réel et explique le solde), seul le nom
+ * de l'autre compte disparaît.
+ */
+function versTransaction(t: LigneTransaction, acces?: AccesComptes): Transaction {
+  const visible = (nom: string) => !acces || acces.complet || nom === '' || acces.noms.includes(nom);
   return {
     date: t.date,
     type: t.type,
-    compte: t.compte,
-    dest: t.dest,
+    compte: visible(t.compte) ? t.compte : COMPTE_MASQUE,
+    dest: visible(t.dest) ? t.dest : COMPTE_MASQUE,
     categorie: t.categorie,
     libelle: t.libelle,
     montant: formatEuro(r2(t.montant)),
@@ -224,11 +277,11 @@ function versTransaction(t: LigneTransaction): Transaction {
 }
 
 export async function chargerBudget(selection?: SelectionMois): Promise<DonneesBudget> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   const sel = normaliserSelection(selection);
   const cle = `${sel.annee}-${String(sel.mois).padStart(2, '0')}`; // aaaa-mm
-  const { comptesRows, catsRows, echRows, deltas, txMois, txRecentes, annees } =
-    await chargerTables(foyerId, cle);
+  const { comptesRows, catsRows, echRows, deltas, txMois, txRecentes, annees, acces } =
+    await chargerTables(foyerId, utilisateurId, cle);
 
   // Soldes sur TOUT l'historique — mais additionné par Postgres, pas en mémoire.
   const { soldes, patrimoineNum } = soldesComptes(comptesRows, deltasDepuisAgregats(deltas));
@@ -263,18 +316,28 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
     });
 
   // Déjà triées et limitées par la base : rien à retrier ici.
-  const transactions: Transaction[] = txRecentes.map(versTransaction);
+  const transactions: Transaction[] = txRecentes.map((t) => versTransaction(t, acces));
 
   // Échéances à venir (ou sans date), plus proche d'abord.
+  //
+  // ⚠ Une échéance rattachée à un compte hérite de SA visibilité : « prêt auto »
+  // sur un compte masqué n'a pas à apparaître, sinon le libellé et la date
+  // racontent le compte qu'on cache. Sans compte (`compteId` vide), elle est
+  // commune au foyer et reste visible de tous.
+  const nomParCompte = new Map(comptesRows.map((c) => [c.id, c.nom]));
   const auj = aujourdhuiISO();
   const echeances: Echeance[] = echRows
+    .filter((e) => !e.compteId || nomParCompte.has(e.compteId))
     .map((e): Echeance => ({
+      id: e.id,
       libelle: e.libelle,
       date: e.date,
       dateISO: e.dateIso,
       recurrence: e.recurrence || 'Aucune',
       note: e.note,
       joursRestants: e.dateIso ? joursJusqua(e.dateIso) : null,
+      compteId: e.compteId ?? '',
+      compte: e.compteId ? (nomParCompte.get(e.compteId) ?? '') : '',
     }))
     .filter((e) => e.dateISO === null || e.dateISO >= auj)
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
@@ -286,6 +349,10 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
   return {
     periode: `${MOIS_FR[sel.mois - 1]} ${sel.annee}`,
     selection: sel,
+    // ⚠ Vue partielle : les jauges réel/budget compareraient MES dépenses au
+    // budget du FOYER. La vue masque donc la comparaison plutôt que d'afficher
+    // une jauge fausse (cf. VueBudget).
+    vuePartielle: !acces.complet,
     anneesDisponibles: anneesDisponibles(sel.annee, txAnnees),
     kpis: {
       revenus: formatEuro(r2(revenus)),
@@ -320,44 +387,52 @@ const estEpargne = (nom: string) => /épargne|epargne/i.test(nom);
  * ne grandit avec l'ancienneté du foyer.
  */
 export async function chargerAccueilBudget(): Promise<AccueilBudget> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   const d = db();
-  const [comptesRows, catsRows, agregats] = await Promise.all([
+  const [comptesRows, catsRows, autorises] = await Promise.all([
     d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
     d.select().from(tCats).where(eq(tCats.foyerId, foyerId)),
-    d
-      .select({
-        type: tTx.type,
-        compte: tTx.compte,
-        dest: tTx.dest,
-        total: sql<number>`sum(${tTx.montant})`,
-      })
-      .from(tTx)
-      .where(eq(tTx.foyerId, foyerId))
-      .groupBy(tTx.type, tTx.compte, tTx.dest),
+    comptesAutorises(foyerId, utilisateurId),
   ]);
-  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  const acces = filtrerComptes(comptesRows, autorises);
+  const visibles = [...acces.comptes].sort(
+    (a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime(),
+  );
   catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
 
-  const { soldes } = soldesComptes(comptesRows, deltasDepuisAgregats(agregats));
+  const agregats = await d
+    .select({
+      type: tTx.type,
+      compte: tTx.compte,
+      dest: tTx.dest,
+      total: sql<number>`sum(${tTx.montant})`,
+    })
+    .from(tTx)
+    .where(and(eq(tTx.foyerId, foyerId), filtreVisibilite(acces)))
+    .groupBy(tTx.type, tTx.compte, tTx.dest);
+
+  const { soldes } = soldesComptes(visibles, deltasDepuisAgregats(agregats));
   return {
     soldes,
     soldesHorsEpargne: soldes.filter((s) => !estEpargne(s.compte)),
-    parametres: construireParametres(comptesRows, catsRows),
+    parametres: construireParametres(visibles, catsRows),
   };
 }
 
-/** Listes déroulantes de la saisie seules. */
+/** Listes déroulantes de la saisie seules — comptes visibles uniquement. */
 export async function chargerParametresSaisie(): Promise<ParametresSaisie> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   const d = db();
-  const [comptesRows, catsRows] = await Promise.all([
+  const [comptesRows, catsRows, autorises] = await Promise.all([
     d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
     d.select().from(tCats).where(eq(tCats.foyerId, foyerId)),
+    comptesAutorises(foyerId, utilisateurId),
   ]);
-  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  const visibles = [...filtrerComptes(comptesRows, autorises).comptes].sort(
+    (a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime(),
+  );
   catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
-  return construireParametres(comptesRows, catsRows);
+  return construireParametres(visibles, catsRows);
 }
 
 /**
@@ -384,7 +459,13 @@ export async function ajouterTransaction(input: NouvelleTransaction): Promise<st
   }
 
   const dateLabel = (input.dateLabel ?? '').trim() || aujourdhuiLabel();
-  const foyerId = await idFoyerCourant();
+  const { foyerId } = await contexteAcces();
+
+  // ⚠ La saisie envoie un NOM de compte en texte libre : sans ce contrôle, on
+  // pourrait imputer une opération à un compte qu'on n'a pas le droit de voir —
+  // et en déduire l'existence par la réponse du serveur.
+  exigerComptesAccessibles([compte, dest], await accesComptes());
+
   const [row] = await db()
     .insert(tTx)
     .values({
@@ -453,10 +534,15 @@ export async function creerComptes(entrees: NouveauCompte[]): Promise<number> {
   // ⚠ Le doublon avec un compte DÉJÀ EN BASE est le plus dangereux : les soldes
   // sont rapprochés par NOM, donc deux comptes homonymes se verraient attribuer
   // les mêmes opérations — le même argent compté deux fois dans le patrimoine.
+  //
+  // ⚠ L'unicité se vérifie sur TOUT le foyer, comptes masqués compris : la
+  // relâcher pour cause d'invisibilité fabriquerait précisément ces homonymes.
+  // En contrepartie, le message ne NOMME plus le compte en conflit — il
+  // révélerait un compte qu'on n'a pas le droit de voir.
   const existants = new Set(dejaLa.map((x) => x.nom.trim().toLowerCase()));
   const collision = propres.find((c) => existants.has(c.nom.toLowerCase()));
   if (collision) {
-    throw new ErreurValidation(`Un compte « ${collision.nom} » existe déjà. Choisis un autre nom.`);
+    throw new ErreurValidation(`Le nom « ${collision.nom} » n'est pas disponible.`);
   }
 
   const depart = dejaLa.reduce((m, x) => Math.max(m, x.ordre), 0) + 1;
@@ -486,16 +572,23 @@ export async function creerComptes(entrees: NouveauCompte[]): Promise<number> {
 
 /** Les comptes du foyer avec leur solde réel et de quoi avertir avant suppression. */
 export async function chargerComptesGestion(): Promise<CompteGere[]> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   const d = db();
-  const [comptesRows, txRows] = await Promise.all([
+  const [comptesRows, txRows, autorises] = await Promise.all([
     d.select().from(tComptes).where(eq(tComptes.foyerId, foyerId)),
     d.select().from(tTx).where(eq(tTx.foyerId, foyerId)),
+    comptesAutorises(foyerId, utilisateurId),
   ]);
-  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+  const acces = filtrerComptes(comptesRows, autorises);
+  const visibles = [...acces.comptes].sort(
+    (a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime(),
+  );
 
+  // ⚠ Les deltas se calculent sur TOUTES les transactions, y compris celles des
+  // comptes masqués : un virement venu d'un compte invisible fait bel et bien
+  // varier le solde d'un compte visible. Seule la LISTE rendue est filtrée.
   const deltas = calculerDeltas(txRows);
-  return comptesRows.map((c) => {
+  return visibles.map((c) => {
     const lien = txRows.filter((t) => t.compte === c.nom || t.dest === c.nom);
     return {
       id: c.id,
@@ -503,20 +596,33 @@ export async function chargerComptesGestion(): Promise<CompteGere[]> {
       soldeCourant: r2(c.soldeInitial + (deltas.get(c.nom) ?? 0)),
       nbOperations: lien.length,
       nbVirements: lien.filter((t) => t.type === TYPE_VIREMENT).length,
+      restreint: c.partage === PARTAGE_RESTREINT,
     };
   });
 }
 
-/** Le compte demandé, s'il appartient bien au foyer courant. */
+/**
+ * Le compte demandé, s'il appartient au foyer courant ET que la personne y a
+ * accès. Renommer ou supprimer un compte qu'on ne voit pas doit être aussi
+ * impossible que le lire — sans quoi l'écriture révèle ce que la lecture cache.
+ */
 async function compteDuFoyer(id: string): Promise<LigneCompte> {
-  const foyerId = await idFoyerCourant();
-  const [c] = await db()
-    .select()
-    .from(tComptes)
-    .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, id)))
-    .limit(1);
-  // Même message qu'un compte inexistant : ne pas révéler qu'il existe ailleurs.
+  const { foyerId, utilisateurId } = await contexteAcces();
+  const d = db();
+  const [[c], autorises] = await Promise.all([
+    d
+      .select()
+      .from(tComptes)
+      .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, id)))
+      .limit(1),
+    comptesAutorises(foyerId, utilisateurId),
+  ]);
+  // Même message qu'un compte inexistant : ne pas révéler qu'il existe ailleurs,
+  // ni qu'il existe mais nous est masqué.
   if (!c) throw new ErreurValidation('Compte introuvable.');
+  if (c.partage === PARTAGE_RESTREINT && !autorises.has(c.id)) {
+    throw new ErreurValidation('Compte introuvable.');
+  }
   return c;
 }
 
@@ -546,8 +652,10 @@ export async function modifierCompte(input: {
     .select({ id: tComptes.id, nom: tComptes.nom })
     .from(tComptes)
     .where(eq(tComptes.foyerId, foyerId));
+  // Unicité sur tout le foyer, comptes masqués compris (cf. `creerComptes`), et
+  // message neutre pour ne pas révéler un compte qu'on n'a pas le droit de voir.
   if (autres.some((a) => a.id !== compte.id && a.nom.trim().toLowerCase() === nom.toLowerCase())) {
-    throw new ErreurValidation(`Un autre compte s'appelle déjà « ${nom} ».`);
+    throw new ErreurValidation(`Le nom « ${nom} » n'est pas disponible.`);
   }
 
   // Le delta est celui du nom ACTUEL : on le calcule avant de renommer quoi que ce soit.
@@ -680,7 +788,8 @@ export async function chargerTransactions(
   selection?: SelectionMois,
   limite = 2000,
 ): Promise<{ transactions: Transaction[]; tronque: boolean }> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId } = await contexteAcces();
+  const acces = await accesComptes();
   const sel = normaliserSelection(selection);
   const an = String(sel.annee);
   const [debut, fin] =
@@ -696,12 +805,236 @@ export async function chargerTransactions(
   const lignes = await db()
     .select()
     .from(tTx)
-    .where(and(eq(tTx.foyerId, foyerId), gte(tTx.dateIso, debut), lte(tTx.dateIso, fin)))
+    .where(
+      and(
+        eq(tTx.foyerId, foyerId),
+        gte(tTx.dateIso, debut),
+        lte(tTx.dateIso, fin),
+        filtreVisibilite(acces),
+      ),
+    )
     .orderBy(desc(tTx.dateIso), desc(tTx.creeLe))
     .limit(limite + 1);
 
   return {
-    transactions: lignes.slice(0, limite).map(versTransaction),
+    transactions: lignes.slice(0, limite).map((t) => versTransaction(t, acces)),
     tronque: lignes.length > limite,
   };
+}
+
+/* ---------------------------------------------------------------------------
+ * ÉCHÉANCES — ajouter / modifier / supprimer
+ *
+ * ⚠ Ce CRUD n'existait pas : les échéances s'affichaient sans qu'aucun écran ne
+ * permette d'en créer une. Elles ne pouvaient venir que d'une écriture SQL
+ * directe — autant dire de nulle part pour un vrai foyer, qui voyait une section
+ * vide sans comprendre pourquoi.
+ *
+ * La visibilité est HÉRITÉE du compte rattaché : pas de réglage propre, pas
+ * d'écran de plus. Sans compte, l'échéance est commune au foyer.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Le compte rattaché doit exister ET être accessible, sinon on refuse.
+ *
+ * ⚠ OBLIGATOIRE. Une échéance est un prélèvement à venir : sans compte, rien ne
+ * dit d'où l'argent sortira, et le tableau de bord affichait des lignes qu'on ne
+ * pouvait rattacher à aucun solde. Les échéances antérieures gardent `null` et
+ * s'affichent « compte non précisé » — on ne réécrit pas des données existantes,
+ * mais on n'en crée plus de nouvelles dans cet état.
+ */
+async function compteRattacheValide(brut: string | null | undefined): Promise<string> {
+  const v = (brut ?? '').trim();
+  if (!v) {
+    throw new ErreurValidation(
+      'Choisis le compte sur lequel cette échéance sera prélevée.',
+    );
+  }
+  const acces = await accesComptes();
+  const cible = acces.comptes.find((c) => c.id === v);
+  // Même message qu'un compte inexistant : ne pas révéler un compte masqué.
+  if (!cible) throw new ErreurValidation('Compte introuvable.');
+  return cible.id;
+}
+
+function champsEcheance(c: ChampsEcheance, compteId: string | null) {
+  const libelle = (c.libelle ?? '').trim();
+  if (!libelle) throw new ErreurValidation("Le libellé de l'échéance est requis.");
+  const dateLabel = (c.dateLabel ?? '').trim();
+  const dateIso = dateLabel ? versISO(dateLabel) : null;
+  if (dateLabel && !dateIso) {
+    throw new ErreurValidation('La date doit être au format jj/mm/aaaa.');
+  }
+  return {
+    libelle,
+    date: dateLabel,
+    dateIso,
+    recurrence: (c.recurrence ?? 'Aucune').trim() || 'Aucune',
+    note: (c.note ?? '').trim(),
+    compteId,
+  };
+}
+
+export async function ajouterEcheance(c: ChampsEcheance): Promise<string> {
+  const { foyerId } = await contexteAcces();
+  const compteId = await compteRattacheValide(c.compteId);
+  const [row] = await db()
+    .insert(tEch)
+    .values({ foyerId, ...champsEcheance(c, compteId) })
+    .returning({ id: tEch.id });
+  return row.id;
+}
+
+/**
+ * L'échéance demandée, si elle appartient au foyer ET que son compte rattaché
+ * est accessible — sinon modifier une échéance invisible en révélerait le
+ * contenu par la réponse du serveur.
+ */
+async function echeanceAccessible(id: string): Promise<{ id: string }> {
+  const { foyerId } = await contexteAcces();
+  const [e] = await db()
+    .select({ id: tEch.id, compteId: tEch.compteId })
+    .from(tEch)
+    .where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)))
+    .limit(1);
+  if (!e) throw new ErreurValidation('Échéance introuvable.');
+  if (e.compteId) {
+    const acces = await accesComptes();
+    if (!acces.comptes.some((c) => c.id === e.compteId)) {
+      throw new ErreurValidation('Échéance introuvable.');
+    }
+  }
+  return { id: e.id };
+}
+
+export async function modifierEcheance(id: string, c: ChampsEcheance): Promise<void> {
+  await echeanceAccessible(id);
+  const { foyerId } = await contexteAcces();
+  const compteId = await compteRattacheValide(c.compteId);
+  await db()
+    .update(tEch)
+    .set(champsEcheance(c, compteId))
+    .where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)));
+}
+
+export async function supprimerEcheance(id: string): Promise<void> {
+  await echeanceAccessible(id);
+  const { foyerId } = await contexteAcces();
+  await db().delete(tEch).where(and(eq(tEch.foyerId, foyerId), eq(tEch.id, id)));
+}
+
+/* ---------------------------------------------------------------------------
+ * PARTAGE DES COMPTES — qui voit quoi
+ *
+ * ⚠ Écran d'ADMINISTRATION, pas de lecture : il ne renvoie ni solde ni
+ * opération, seulement des noms de comptes et la liste des personnes
+ * autorisées. C'est ce qui permet au propriétaire de régler le partage d'un
+ * compte SANS en devenir lecteur — la condition pour que le cas colocation ait
+ * un sens (celui qui a créé le foyer n'a pas à lire les comptes de ses colocs).
+ * ------------------------------------------------------------------------- */
+
+/** Réglage de partage d'un compte, tel que l'écran du propriétaire l'affiche. */
+export type ComptePartage = {
+  id: string;
+  nom: string;
+  restreint: boolean;
+  utilisateurIds: string[]; // personnes autorisées quand `restreint`
+};
+
+/**
+ * Le propriétaire seul règle les partages — comme le reste de la gestion du
+ * foyer (inviter, retirer, renommer). Le rôle est relu ici plutôt qu'importé de
+ * [lib/membres.ts] pour ne pas tirer toute la pile e-mail dans le module Budget.
+ */
+async function exigerProprietaireDuFoyer(): Promise<{ foyerId: string }> {
+  const { foyerId, utilisateurId } = await contexteAcces();
+  const [m] = await db()
+    .select({ role: tMembres.role })
+    .from(tMembres)
+    .where(and(eq(tMembres.foyerId, foyerId), eq(tMembres.utilisateurId, utilisateurId)))
+    .limit(1);
+  if (m?.role !== 'proprietaire') {
+    throw new ErreurValidation(
+      'Seul le propriétaire du foyer peut régler la visibilité des comptes.',
+    );
+  }
+  return { foyerId };
+}
+
+/** Tous les comptes du foyer avec leur partage. Noms seulement, aucun montant. */
+export async function chargerPartageComptes(): Promise<ComptePartage[]> {
+  const { foyerId } = await exigerProprietaireDuFoyer();
+  const d = db();
+  const [comptesRows, accesRows] = await Promise.all([
+    d
+      .select({ id: tComptes.id, nom: tComptes.nom, partage: tComptes.partage, ordre: tComptes.ordre, creeLe: tComptes.creeLe })
+      .from(tComptes)
+      .where(eq(tComptes.foyerId, foyerId)),
+    d
+      .select({ compteId: tAcces.compteId, utilisateurId: tAcces.utilisateurId })
+      .from(tAcces)
+      .where(eq(tAcces.foyerId, foyerId)),
+  ]);
+  comptesRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
+
+  const parCompte = new Map<string, string[]>();
+  for (const a of accesRows) {
+    parCompte.set(a.compteId, [...(parCompte.get(a.compteId) ?? []), a.utilisateurId]);
+  }
+  return comptesRows.map((c) => ({
+    id: c.id,
+    nom: c.nom,
+    restreint: c.partage === PARTAGE_RESTREINT,
+    utilisateurIds: parCompte.get(c.id) ?? [],
+  }));
+}
+
+/**
+ * Définit qui voit un compte.
+ *
+ * `restreint = false` → visible de tout le foyer, et la liste d'accès est vidée
+ * (la garder ferait resurgir un ancien réglage à la prochaine restriction, sans
+ * que personne ne l'ait redemandé).
+ *
+ * ⚠ Les identifiants reçus sont vérifiés comme membres DU FOYER : la route les
+ * reçoit du client, et rien n'empêcherait sinon d'autoriser un inconnu.
+ */
+export async function definirPartageCompte(input: {
+  compteId: string;
+  restreint: boolean;
+  utilisateurIds: string[];
+}): Promise<void> {
+  const { foyerId } = await exigerProprietaireDuFoyer();
+  const d = db();
+
+  const [compte] = await d
+    .select({ id: tComptes.id })
+    .from(tComptes)
+    .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, input.compteId)))
+    .limit(1);
+  if (!compte) throw new ErreurValidation('Compte introuvable.');
+
+  const membresRows = await d
+    .select({ utilisateurId: tMembres.utilisateurId })
+    .from(tMembres)
+    .where(eq(tMembres.foyerId, foyerId));
+  const duFoyer = new Set(membresRows.map((m) => m.utilisateurId));
+  const retenus = [...new Set(input.utilisateurIds)].filter((id) => duFoyer.has(id));
+
+  if (input.restreint && retenus.length === 0) {
+    throw new ErreurValidation('Choisis au moins une personne, sinon plus personne ne verrait ce compte.');
+  }
+
+  await d.transaction(async (tx) => {
+    await tx
+      .update(tComptes)
+      .set({ partage: input.restreint ? PARTAGE_RESTREINT : PARTAGE_FOYER })
+      .where(and(eq(tComptes.foyerId, foyerId), eq(tComptes.id, compte.id)));
+    await tx.delete(tAcces).where(and(eq(tAcces.foyerId, foyerId), eq(tAcces.compteId, compte.id)));
+    if (input.restreint && retenus.length > 0) {
+      await tx
+        .insert(tAcces)
+        .values(retenus.map((utilisateurId) => ({ foyerId, compteId: compte.id, utilisateurId })));
+    }
+  });
 }

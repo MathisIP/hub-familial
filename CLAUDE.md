@@ -25,7 +25,66 @@ npm run lint         # ESLint (next lint)
 npm run db:generate  # Génère une migration Drizzle depuis lib/db/schema.ts
 npm run db:migrate   # Applique les migrations à la base (Neon)
 npm run db:studio    # Explorateur Drizzle Studio (base du foyer)
+
+# --- Bac à sable local (voir la section PUBLICATION juste en dessous) ---
+npm run bac:init     # Arme une base de dev (pose le marqueur bac_a_sable)
+npm run bac:garnir   # Remplit le foyer fictif « Foyer Lambert »
+npm run bac:reset    # db:migrate + bac:garnir
+npm run verif:isolation  # Contrôles « qui voit quoi » (refuse hors bac à sable)
 ```
+
+## ⚠ PUBLICATION — bac à sable local avant la production (15/08/2026)
+
+**Nestync a des clients réels. Plus rien ne part directement en production.**
+
+Cycle imposé : **bac à sable local** (`npm run dev`, base séparée, données fictives) →
+Mathis teste → **il décide** → promotion en production.
+
+| Interdit de sa propre initiative | À faire à la place |
+|---|---|
+| `git push origin main` | pousser sur la branche de travail |
+| `npm run db:migrate` sur la base de prod | migrer le bac à sable |
+| Annoncer « c'est en ligne » | donner le protocole de test |
+
+⚠ **Le piège d'origine** : `.env` ne contenait qu'un seul `DATABASE_URL`, celui de la
+**production**. `npm run dev` en local travaillait donc sur les données des clients, sans
+que rien ne le signale. Trois protections, par ordre d'importance :
+
+1. **Marqueur en base** — table `bac_a_sable`. `bac:garnir` et `verif:isolation` refusent
+   de démarrer sans lui. Le test ne porte **pas sur l'URL** : une chaîne de connexion se
+   recopie de travers, et c'est justement l'erreur à rendre impossible.
+2. **Bandeau permanent** en développement ([BandeauBacASable.tsx](components/BandeauBacASable.tsx)) :
+   vert « bac à sable », rouge « BASE DE PRODUCTION ».
+3. **`.env.local` prioritaire sur `.env`** — pour l'app (Next.js), les scripts
+   ([scripts/_env.mjs](scripts/_env.mjs)) **et** drizzle-kit. Sans ça, `dev` viserait le
+   bac à sable pendant que `db:migrate` modifierait la production.
+
+Commandes : `bac:init` (arme la base), `bac:garnir` (foyer fictif « Foyer Lambert »),
+`bac:reset` (migre + garnit), `verif:isolation` (contrôles « qui voit quoi »).
+
+⚠ **`STOCKAGE_LOCAL`** met les fichiers du module Documents sur le disque
+([lib/stockage/index.ts](lib/stockage/index.ts)). Sans lui, tester Documents en local
+viserait le **vrai** conteneur OVH — et une suppression y détruirait le fichier d'un client.
+Ne s'active jamais en production (double condition avec `NODE_ENV`).
+
+⚠ **`npm run build` n'applique PAS les migrations** (`drizzle-kit migrate` est manuel).
+C'est une protection : aucun déploiement ne change le schéma tout seul. C'est aussi une
+responsabilité : ne pas se tromper de base.
+
+- **Un protocole de test accompagne chaque livraison** : quoi ouvrir, quoi observer, et
+  surtout **ce qui doit échouer**. Les contrôles d'isolation se vérifient en direct sur les
+  API — un filtre d'interface ne prouve rien.
+- Contrôle des secrets avant chaque commit : `.env`, `.env.local`, `credentials.json`,
+  `*.b64`, `gserviceaccount` ne doivent jamais être indexés.
+
+⚠ **`DOCUMENTS_SECRET` est OBLIGATOIRE (15/08/2026).** `chiffrerFichier()` renvoyait
+auparavant les données en clair quand la clé manquait : un bail ou un carnet de santé
+partait non chiffré chez l'hébergeur **sans que rien ne le signale**. C'est désormais un
+refus (503). La lecture reste tolérante, pour que les fichiers déposés avant cette règle
+restent lisibles. ⚠ Ne jamais changer la clé sans re-chiffrer.
+
+Mise en place : [docs/PUBLICATION.md](docs/PUBLICATION.md) ·
+base locale : [docs/POSTGRES_LOCAL.md](docs/POSTGRES_LOCAL.md).
 
 ## Règles d'architecture (non négociables)
 

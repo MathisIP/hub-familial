@@ -207,6 +207,87 @@ const UI = {
     fr: 'Aucun compte pour l’instant.',
     en: 'No accounts yet.',
   },
+  GC_RESTREINT: { fr: 'Visibilité restreinte', en: 'Restricted visibility' },
+
+  /* --- Budget : qui voit quels comptes --- */
+  PART_TITRE: { fr: 'Qui voit quels comptes', en: 'Who sees which accounts' },
+  PART_SOUS: {
+    fr: 'Par défaut, chaque compte est visible de tout le foyer. Restreins-en un pour qu’il n’apparaisse qu’aux personnes que tu choisis — dans leurs soldes, leurs opérations et leurs totaux.',
+    en: 'By default every account is visible to the whole household. Restrict one so it only appears to the people you pick — in their balances, transactions and totals.',
+  },
+  PART_TOUS: { fr: 'Tout le foyer', en: 'Whole household' },
+  PART_RESTREINT: { fr: 'Personnes choisies', en: 'Selected people' },
+  PART_ENREGISTRER: { fr: 'Enregistrer', en: 'Save' },
+  PART_MODIFIER: { fr: 'Modifier', en: 'Change' },
+  PART_ANNULER: { fr: 'Annuler', en: 'Cancel' },
+  PART_VISIBLE_TOUS: { fr: 'Visible de tout le foyer', en: 'Visible to the whole household' },
+  PART_VISIBLE_N: { fr: 'Visible de', en: 'Visible to' },
+  PART_PERSONNES: { fr: 'personnes', en: 'people' },
+  PART_PERSONNE_1: { fr: 'personne', en: 'person' },
+  PART_AUCUN: {
+    fr: 'Aucun compte à régler pour l’instant.',
+    en: 'No accounts to configure yet.',
+  },
+  PART_AIDE: {
+    fr: 'Cet écran ne montre aucun montant : régler le partage d’un compte ne donne pas le droit de le lire. Pour le consulter, il faut y figurer comme les autres.',
+    en: 'This screen shows no amounts: setting an account’s sharing does not grant the right to read it. To see it, you must be listed like everyone else.',
+  },
+  PART_VUE_PARTIELLE: {
+    fr: 'Certains comptes du foyer ne te sont pas partagés : ces chiffres ne portent que sur les tiens.',
+    en: 'Some household accounts are not shared with you: these figures cover only yours.',
+  },
+
+  /* --- Documents : qui voit quels dossiers --- */
+  DOSS_PART_TITRE: { fr: 'Qui voit quels dossiers', en: 'Who sees which folders' },
+  DOSS_PART_SOUS: {
+    fr: 'Par défaut, chaque dossier est visible de tout le foyer. Restreins-en un pour que ses fichiers n’apparaissent qu’aux personnes que tu choisis.',
+    en: 'By default every folder is visible to the whole household. Restrict one so its files only appear to the people you pick.',
+  },
+  DOSS_PART_AUCUN: {
+    fr: 'Aucun dossier à régler pour l’instant. Crée un dossier depuis la liste des documents.',
+    en: 'No folders to configure yet. Create one from the documents list.',
+  },
+  DOSS_PART_AIDE: {
+    fr: 'Un dossier restreint disparaît complètement pour les autres : ses fichiers ne sortent ni dans la liste, ni dans la recherche de l’accueil, ni au téléchargement direct, ni dans l’export de leurs données. La boîte d’arrivée, elle, reste toujours commune.',
+    en: 'A restricted folder disappears entirely for others: its files show up in no list, no home search, no direct download, and no data export of theirs. The inbox always stays shared.',
+  },
+  DOC_DOSSIER_PRIVE: { fr: 'dossier restreint', en: 'restricted folder' },
+
+  /* --- Agenda : qui voit quel calendrier --- */
+  AGC_QUI_VOIT: { fr: 'Qui voit mes agendas', en: 'Who sees my calendars' },
+  AGC_AUTRE_PROPRIO: {
+    fr: 'réglé par la personne qui l’a ajouté',
+    en: 'managed by the person who added it',
+  },
+
+  /* --- Budget : échéances --- */
+  ECH_TITRE: { fr: 'Mes échéances', en: 'My upcoming payments' },
+  ECH_VIDE: {
+    fr: 'Aucune échéance pour l’instant. Ajoute un loyer, une assurance, une cantine…',
+    en: 'No upcoming payments yet. Add rent, insurance, school meals…',
+  },
+  ECH_AJOUTER: { fr: '＋ Ajouter une échéance', en: '＋ Add an upcoming payment' },
+  ECH_LIBELLE: { fr: 'Intitulé', en: 'Label' },
+  ECH_LIBELLE_PH: { fr: 'Loyer, assurance…', en: 'Rent, insurance…' },
+  ECH_DATE: { fr: 'Date', en: 'Date' },
+  ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
+  ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
+  ECH_COMPTE: { fr: 'Compte', en: 'Account' },
+  ECH_COMPTE_CHOISIR: { fr: 'Choisir un compte…', en: 'Pick an account…' },
+  ECH_COMPTE_AUCUN: { fr: 'Compte non précisé', en: 'No account specified' },
+  AIDE_ECHEANCE_COMPTE: {
+    fr: 'Le compte est obligatoire : une échéance est un prélèvement à venir, il doit être clair d’où l’argent sortira. Il porte aussi la visibilité — si le compte est restreint, l’échéance ne sera visible que des mêmes personnes.',
+    en: 'The account is required: an upcoming payment has to say where the money leaves from. It also carries visibility — if the account is restricted, so is the payment.',
+  },
+
+  /* --- Cadeaux : garder la surprise --- */
+  CAD_MASQUER: { fr: 'Ne pas montrer à', en: 'Hide from' },
+  CAD_MASQUER_PERSONNE: { fr: 'Personne — visible de tout le foyer', en: 'No one — visible to the whole household' },
+  CAD_CACHE_A: { fr: 'caché à', en: 'hidden from' },
+  AIDE_MASQUER: {
+    fr: 'La personne choisie ne verra pas ce cadeau : ni dans la liste, ni dans le budget de l’occasion. Tous les autres membres du foyer le voient normalement, y compris ceux qui rejoindront le foyer plus tard.',
+    en: 'The chosen person won’t see this gift: not in the list, not in the occasion’s budget. Everyone else in the household sees it normally, including people who join later.',
+  },
 
   AIDE_NOM_COMPTE: {
     fr: 'Le nom que TU utilises au quotidien : « Compte commun », « Livret A », « Compte de Lou »… Il apparaîtra tel quel dans l’app.',
@@ -492,6 +573,21 @@ const UI = {
   },
   CPT_SUPPR_BTN: { fr: 'Supprimer définitivement mon compte', en: 'Permanently delete my account' },
   CPT_CONF_LIEN: { fr: 'Politique de confidentialité →', en: 'Privacy policy →' },
+  // Variantes pour un MEMBRE non propriétaire : il quitte le foyer, il ne le
+  // supprime pas. Annoncer le contraire ferait renoncer quelqu'un à son droit à
+  // l'effacement par peur d'emporter les données des autres.
+  CPT_SUPPR_DESC_MEMBRE: {
+    fr: 'Efface définitivement ton compte et te retire de ce foyer. Les données du foyer (comptes, tâches, documents…) restent en place pour les autres membres. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',
+    en: 'Permanently deletes your account and removes you from this household. The household’s data (accounts, tasks, documents…) stays in place for the other members. This action is irreversible (right to erasure). Remember to export your data first if you want to keep a copy.',
+  },
+  CPT_CHECK_MEMBRE: {
+    fr: 'Je comprends que la suppression est définitive et que je quitte ce foyer.',
+    en: 'I understand that deletion is permanent and that I am leaving this household.',
+  },
+  CPT_EXPORT_DESC_PARTIEL: {
+    fr: 'Ton export contient les données du foyer que tu peux consulter. Les comptes bancaires qui ne te sont pas partagés n’y figurent pas.',
+    en: 'Your export contains the household data you can see. Bank accounts not shared with you are not included.',
+  },
 
   // Mon foyer
   FOY_SOUS_A: { fr: 'Les personnes qui partagent les données de', en: 'The people who share the data of' },

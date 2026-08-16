@@ -104,6 +104,25 @@ export const utilisateurs = pgTable('utilisateurs', {
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * MARQUEUR DE BAC À SABLE — une seule ligne, jamais présente en production.
+ *
+ * ⚠ C'est un garde-fou d'exécution, pas de la documentation. Les scripts qui
+ * écrivent des données FICTIVES (`npm run bac:garnir`) refusent de s'exécuter si
+ * cette ligne est absente : impossible, même en collant la mauvaise chaîne de
+ * connexion, de déverser un foyer de démonstration sur les données d'un client.
+ *
+ * Poser le marqueur est un geste explicite (`npm run bac:init`) qu'on ne fait
+ * que sur sa base de développement. La production ne l'a pas, et ne doit jamais
+ * l'avoir — c'est la seule chose qui distingue les deux bases de façon fiable,
+ * une URL pouvant toujours être recopiée de travers.
+ */
+export const bacASable = pgTable('bac_a_sable', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  note: text('note').notNull().default(''),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Appartenance d'un utilisateur à un foyer, avec son rôle. Un user ↔ un foyer unique. */
 export const membres = pgTable(
   'membres',
@@ -209,11 +228,40 @@ export const foyerAgendas = pgTable(
     ajoutePar: uuid('ajoute_par')
       .notNull()
       .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    /**
+     * `foyer` (défaut) ou `restreint` — cf. [lib/visibilite.ts].
+     * ⚠ Réglé par CELUI QUI A RATTACHÉ (`ajoute_par`), pas par le propriétaire du
+     * foyer : c'est son compte Google et ses événements. Personne d'autre n'a à
+     * décider qui lit l'agenda professionnel de quelqu'un.
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index('foyer_agendas_foyer_idx').on(t.foyerId),
     unique('foyer_agendas_foyer_cal').on(t.foyerId, t.calendarId),
+  ],
+);
+
+/** Qui a accès à un agenda `restreint`. Voir `comptesAcces` pour le motif. */
+export const agendasAcces = pgTable(
+  'agendas_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    agendaId: uuid('agenda_id')
+      .notNull()
+      .references(() => foyerAgendas.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('agendas_acces_agenda_utilisateur').on(t.agendaId, t.utilisateurId),
+    index('agendas_acces_foyer_idx').on(t.foyerId),
   ],
 );
 
@@ -287,6 +335,11 @@ export const cadeaux = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     pourQui: text('pour_qui').notNull().default(''),
+    /*
+     * Le masquage vit dans `cadeaux_masques` (plusieurs personnes possibles) —
+     * voir cette table. `pour_qui` (texte libre) reste ici : beaucoup de cadeaux
+     * visent des gens hors du foyer (« Mamie »), sans compte utilisateur.
+     */
     occasion: text('occasion').notNull().default(''),
     idee: text('idee').notNull(),
     statut: text('statut').notNull().default('Idée'),
@@ -304,6 +357,43 @@ export const cadeaux = pgTable(
 );
 
 export type LigneOccasion = typeof occasions.$inferSelect;
+/**
+ * LISTE NOIRE : qui ne doit PAS voir ce cadeau.
+ *
+ * ⚠ Plusieurs personnes, et c'est le cas courant : les enfants qui préparent un
+ * cadeau commun doivent le cacher aux DEUX parents. Une seule colonne
+ * `masque_a` ne couvrait que la moitié des situations.
+ *
+ * ⚠ Pourquoi une liste noire et pas une liste blanche comme les comptes ou les
+ * dossiers : un cadeau doit rester visible du foyer ENTIER, y compris de
+ * quelqu'un qui le rejoint après la saisie. Une liste blanche le lui masquerait
+ * — contresens exact de ce qu'on veut. La surprise doit survivre à l'arrivée
+ * d'un nouveau membre.
+ *
+ * `cascade` sur l'utilisateur : si la personne quitte le foyer, le cadeau
+ * redevient simplement visible de tous plutôt que de disparaître.
+ */
+export const cadeauxMasques = pgTable(
+  'cadeaux_masques',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    cadeauId: uuid('cadeau_id')
+      .notNull()
+      .references(() => cadeaux.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('cadeaux_masques_cadeau_utilisateur').on(t.cadeauId, t.utilisateurId),
+    index('cadeaux_masques_foyer_idx').on(t.foyerId),
+  ],
+);
+
 export type LigneCadeau = typeof cadeaux.$inferSelect;
 
 /* ======================== MODULE TO-DO & COURSES ======================== */
@@ -580,9 +670,55 @@ export const comptes = pgTable(
     nom: text('nom').notNull(),
     soldeInitial: doublePrecision('solde_initial').notNull().default(0),
     ordre: integer('ordre').notNull().default(0),
+    /**
+     * Qui voit ce compte : `foyer` (tous les membres) ou `restreint` (seulement
+     * les personnes listées dans `comptes_acces`).
+     *
+     * ⚠ Le défaut `foyer` est délibéré : les comptes déjà en service, et ceux
+     * créés sans se poser la question, restent visibles de tout le foyer. Un
+     * défaut `restreint` aurait fait disparaître leur budget aux yeux de tous
+     * les foyers existants le jour de la migration.
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('comptes_foyer_idx').on(t.foyerId)],
+);
+
+/**
+ * Qui a accès à un compte `restreint`. Une ligne = une personne autorisée.
+ *
+ * Le besoin : dans une famille, les parents voient tout et chaque enfant ne voit
+ * que son compte ; en colocation, chacun ne voit que le sien plus le compte
+ * commun. Un simple rôle ne suffisait pas (deux parents, un seul propriétaire).
+ *
+ * ⚠ `foyer_id` est porté EN PLUS de `compte_id`, redondant par jointure : la
+ * règle d'isolation impose un `where foyer_id` sur chaque requête, et les
+ * routes de réglage reçoivent un identifiant venu du client.
+ *
+ * ⚠ Aucun privilège implicite : le propriétaire du foyer ne voit PAS les comptes
+ * restreints dont il n'est pas membre. Il peut seulement en régler le partage —
+ * administrer n'est pas lire. Sans cela, le cas colocation serait vide de sens.
+ */
+export const comptesAcces = pgTable(
+  'comptes_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    compteId: uuid('compte_id')
+      .notNull()
+      .references(() => comptes.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('comptes_acces_compte_utilisateur').on(t.compteId, t.utilisateurId),
+    index('comptes_acces_foyer_idx').on(t.foyerId),
+  ],
 );
 
 export const budgetCategories = pgTable(
@@ -634,6 +770,14 @@ export const echeances = pgTable(
     dateIso: text('date_iso'),
     recurrence: text('recurrence').notNull().default('Aucune'),
     note: text('note').notNull().default(''),
+    /**
+     * Compte rattaché — l'échéance hérite alors de SA visibilité. `null` (défaut)
+     * = échéance commune, visible de tout le foyer.
+     *
+     * ⚠ `set null` et non `cascade` : fermer un compte ne doit pas effacer
+     * « assurance habitation », qui reste due. L'échéance redevient commune.
+     */
+    compteId: uuid('compte_id').references(() => comptes.id, { onDelete: 'set null' }),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('echeances_foyer_idx').on(t.foyerId)],
@@ -682,9 +826,43 @@ export const dossiers = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     nom: text('nom').notNull(),
+    /**
+     * `foyer` (défaut) ou `restreint` — cf. [lib/visibilite.ts]. Réglé par le
+     * propriétaire du foyer (les dossiers n'ont pas de créateur enregistré).
+     *
+     * ⚠ Le lien vers les fichiers est `documents.dossier`, du **TEXTE**, pas une
+     * clé étrangère (voir le commentaire de `documents`). Restreindre un dossier
+     * n'a donc de sens que si l'on garde fermées les deux portes latérales :
+     * déplacer un fichier HORS d'un dossier restreint, et en faire entrer un
+     * DEDANS en tapant son nom. Les deux sont contrôlées dans
+     * [lib/documents/service.ts].
+     */
+    partage: text('partage').notNull().default('foyer'),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('dossiers_foyer_idx').on(t.foyerId), unique('dossiers_foyer_nom').on(t.foyerId, t.nom)],
+);
+
+/** Qui a accès à un dossier `restreint`. Voir `comptesAcces` pour le motif. */
+export const dossiersAcces = pgTable(
+  'dossiers_acces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    dossierId: uuid('dossier_id')
+      .notNull()
+      .references(() => dossiers.id, { onDelete: 'cascade' }),
+    utilisateurId: uuid('utilisateur_id')
+      .notNull()
+      .references(() => utilisateurs.id, { onDelete: 'cascade' }),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('dossiers_acces_dossier_utilisateur').on(t.dossierId, t.utilisateurId),
+    index('dossiers_acces_foyer_idx').on(t.foyerId),
+  ],
 );
 
 export type LigneDocument = typeof documents.$inferSelect;

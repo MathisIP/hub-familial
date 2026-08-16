@@ -1,11 +1,11 @@
 import 'server-only';
 import { google, type calendar_v3 } from 'googleapis';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, exists, ne, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { foyerAgendas } from '@/lib/db/schema';
-import { idFoyerCourant } from '@/lib/foyer';
+import { foyerAgendas, agendasAcces } from '@/lib/db/schema';
 import { jetonAgenda, peutEcrireEvenements } from '@/lib/agenda/oauth';
 import { ErreurValidation } from '@/lib/erreurs';
+import { contexteAcces, PARTAGE_RESTREINT } from '@/lib/visibilite';
 import {
   COULEURS_AGENDA,
   FUSEAU,
@@ -40,9 +40,22 @@ import {
 
 type AgendaFoyer = { calendarId: string; nom: string; ajoutePar: string | null };
 
-/** Calendriers rattachés AU FOYER courant (vide si aucun n'est configuré). */
+/**
+ * Calendriers du foyer que la personne connectée a le droit de voir.
+ *
+ * ⚠ POINT DE PASSAGE CENTRAL. Tout ce que le module expose part d'ici :
+ * `listerAgendas`, `chargerAgenda`, `chargerSemaineAgenda`, et — par ricochet,
+ * via `exigerAgendas()` — `ajouterEvenement` et le `lierAgenda` du module
+ * Événements. Filtrer ici ferme donc l'essentiel des portes d'un coup. Les deux
+ * autres chemins de lecture (`exigerAgendaDuFoyer` ci-dessous et
+ * `calendriersDuFoyer` dans [lib/agenda/calendriers.ts]) sont filtrés séparément.
+ *
+ * Un agenda `restreint` n'est visible que des personnes listées dans
+ * `agendas_acces` ; le réglage appartient à CELUI QUI L'A RATTACHÉ (`ajoute_par`),
+ * pas au propriétaire du foyer : c'est son compte Google et ses événements.
+ */
 async function agendasDuFoyer(): Promise<AgendaFoyer[]> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   return db()
     .select({
       calendarId: foyerAgendas.calendarId,
@@ -50,7 +63,33 @@ async function agendasDuFoyer(): Promise<AgendaFoyer[]> {
       ajoutePar: foyerAgendas.ajoutePar,
     })
     .from(foyerAgendas)
-    .where(eq(foyerAgendas.foyerId, foyerId));
+    .where(and(eq(foyerAgendas.foyerId, foyerId), visibleParMoi(utilisateurId)));
+}
+
+/**
+ * Condition SQL « cet agenda m'est visible » : partagé au foyer, ou restreint
+ * mais je figure dans `agendas_acces`.
+ *
+ * ⚠ Celui qui a rattaché l'agenda le voit toujours. Sans cette clause, il
+ * pourrait se retirer lui-même de son propre agenda et ne plus jamais pouvoir en
+ * modifier le partage — il n'apparaîtrait dans aucune de ses listes.
+ */
+function visibleParMoi(utilisateurId: string) {
+  return or(
+    ne(foyerAgendas.partage, PARTAGE_RESTREINT),
+    eq(foyerAgendas.ajoutePar, utilisateurId),
+    exists(
+      db()
+        .select({ n: sql`1` })
+        .from(agendasAcces)
+        .where(
+          and(
+            eq(agendasAcces.agendaId, foyerAgendas.id),
+            eq(agendasAcces.utilisateurId, utilisateurId),
+          ),
+        ),
+    ),
+  );
 }
 
 /** Idem, mais exige au moins un agenda (pour les opérations d'écriture). */
@@ -82,9 +121,16 @@ async function clientPour(a: AgendaFoyer): Promise<calendar_v3.Calendar | null> 
   return google.calendar({ version: 'v3', auth: oauth });
 }
 
-/** Vérifie qu'un calendrier appartient au foyer courant, et le renvoie. */
+/**
+ * Vérifie qu'un calendrier appartient au foyer courant ET m'est visible.
+ *
+ * ⚠ Le `calendarId` transite par le client (il revient dans chaque suppression
+ * d'événement) : c'est exactement le genre de valeur qu'on ne croit jamais sur
+ * parole. Le message ne distingue pas « pas à toi » de « pas visible » — le
+ * préciser confirmerait l'existence d'un agenda qu'on cache.
+ */
 async function exigerAgendaDuFoyer(calendarId: string): Promise<AgendaFoyer> {
-  const foyerId = await idFoyerCourant();
+  const { foyerId, utilisateurId } = await contexteAcces();
   const [ligne] = await db()
     .select({
       calendarId: foyerAgendas.calendarId,
@@ -92,7 +138,13 @@ async function exigerAgendaDuFoyer(calendarId: string): Promise<AgendaFoyer> {
       ajoutePar: foyerAgendas.ajoutePar,
     })
     .from(foyerAgendas)
-    .where(and(eq(foyerAgendas.foyerId, foyerId), eq(foyerAgendas.calendarId, calendarId)))
+    .where(
+      and(
+        eq(foyerAgendas.foyerId, foyerId),
+        eq(foyerAgendas.calendarId, calendarId),
+        visibleParMoi(utilisateurId),
+      ),
+    )
     .limit(1);
   if (!ligne) throw new ErreurValidation('Cet agenda n’appartient pas à ton foyer.');
   return ligne;
@@ -236,9 +288,11 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
 export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
   const ids = await exigerAgendas();
   const calendarId = S(n.calendarId) || ids[0].calendarId;
-  // L'agenda demandé doit appartenir au foyer : `calendarId` vient du client.
-  const cible = ids.find((a) => a.calendarId === calendarId);
-  if (!cible) throw new ErreurValidation('Agenda inconnu.');
+  // ⚠ UN SEUL chemin de validation, partagé avec `supprimerEvenement`. Cette
+  // fonction faisait auparavant sa propre vérification (`ids.find(...)`) : deux
+  // logiques parallèles à tenir synchronisées, donc l'écriture risquait de
+  // rester ouverte le jour où seule la lecture serait resserrée.
+  const cible = await exigerAgendaDuFoyer(calendarId);
 
   // Google autorise à n'accorder QU'UNE PARTIE des permissions demandées : la
   // personne a pu décocher l'écriture. On le dit clairement plutôt que de

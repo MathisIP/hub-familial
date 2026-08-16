@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Liste from '@/components/Liste';
 import Combobox from '@/components/Combobox';
 import { useT } from '@/components/I18nProvider';
 import { useLangue } from '@/components/I18nProvider';
@@ -154,12 +155,13 @@ function OngletTaches({
           aria-label={tr('TODO_NOUVELLE_TACHE')}
         />
         <Combobox value={assigne} onChange={setAssigne} options={params.personnes} placeholder={tr('TODO_QUI')} ariaLabel={tr('TODO_QUI')} />
-        <select className="champ" value={priorite} onChange={(e) => setPriorite(e.target.value)} aria-label={tr('TODO_PRIORITE')}>
-          <option value="">{tr('TODO_PRIORITE')}</option>
-          {params.priorites.map((p) => (
-            <option key={p} value={p}>{tEnum(CLE_PRIORITE, p, langue)}</option>
-          ))}
-        </select>
+        <Liste
+          valeur={priorite}
+          onChange={setPriorite}
+          options={params.priorites.map((p) => ({ valeur: p, libelle: tEnum(CLE_PRIORITE, p, langue) }))}
+          placeholder={tr('TODO_PRIORITE')}
+          ariaLabel={tr('TODO_PRIORITE')}
+        />
         <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
           {tr('G_AJOUTER')}
         </button>
@@ -218,17 +220,14 @@ function OngletTaches({
                   <span className="puce categorie">↻ {t.recurrence}</span>
                 )}
               </span>
-              <select
+              <Liste
                 className="statut"
-                value={t.statut}
+                valeur={t.statut}
                 disabled={occupe}
-                onChange={(e) => changerStatut(t.id, e.target.value)}
-                aria-label={`Statut de « ${t.tache} »`}
-              >
-                {params.statuts.map((s) => (
-                  <option key={s} value={s}>{tEnum(CLE_STATUT_TODO, s, langue)}</option>
-                ))}
-              </select>
+                onChange={(v) => changerStatut(t.id, v)}
+                options={params.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_TODO, s, langue) }))}
+                ariaLabel={`Statut de « ${t.tache} »`}
+              />
             </li>
           ))}
         </ul>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Liste from '@/components/Liste';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { locale } from '@/lib/i18n';
 import { type SelectionMois } from '@/lib/budget/schema';
@@ -46,27 +47,20 @@ export default function SelecteurMois({
         ‹
       </button>
 
-      <select
-        className="champ"
-        value={selection.mois}
-        onChange={(e) => aller(selection.annee, Number(e.target.value))}
-        aria-label={tr('A_MOIS')}
-      >
-        {moisNoms.map((nom, i) => (
-          <option key={nom} value={i + 1} style={{ textTransform: 'capitalize' }}>{nom}</option>
-        ))}
-      </select>
+      <Liste
+        valeur={String(selection.mois)}
+        onChange={(v) => aller(selection.annee, Number(v))}
+        options={moisNoms.map((nom, i) => ({ valeur: String(i + 1), libelle: nom }))}
+        ariaLabel={tr('A_MOIS')}
+        className="sm-mois"
+      />
 
-      <select
-        className="champ"
-        value={selection.annee}
-        onChange={(e) => aller(Number(e.target.value), selection.mois)}
-        aria-label={tr('A_ANNEE')}
-      >
-        {annees.map((a) => (
-          <option key={a} value={a}>{a}</option>
-        ))}
-      </select>
+      <Liste
+        valeur={String(selection.annee)}
+        onChange={(v) => aller(Number(v), selection.mois)}
+        options={annees.map((a) => ({ valeur: String(a), libelle: String(a) }))}
+        ariaLabel={tr('A_ANNEE')}
+      />
 
       <button className="mois-fleche" onClick={() => decaler(1)} disabled={dernierMois} aria-label={tr('MOIS_SUIVANT')}>
         ›

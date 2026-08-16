@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Liste from '@/components/Liste';
 import { useRouter } from 'next/navigation';
 import { useT } from '@/components/I18nProvider';
 import type { CleUI } from '@/lib/i18n';
@@ -146,27 +147,38 @@ export default function SaisieTransaction({ params: paramsInitiaux }: { params?:
 
               <label className="saisie-champ">
                 <span>{estVirement ? tr('SAISIE_COMPTE_DEP') : tr('SAISIE_COMPTE')}</span>
-                <select className="champ" value={compte} onChange={(e) => setCompte(e.target.value)}>
-                  <option value="">—</option>
-                  {params.comptes.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <Liste
+                  valeur={compte}
+                  onChange={setCompte}
+                  options={params.comptes.map((c) => ({ valeur: c, libelle: c }))}
+                  placeholder="—"
+                  ariaLabel={tr('SAISIE_COMPTE')}
+                />
               </label>
 
               {estVirement ? (
                 <label className="saisie-champ">
                   <span>{tr('SAISIE_COMPTE_DEST')}</span>
-                  <select className="champ" value={dest} onChange={(e) => setDest(e.target.value)}>
-                    <option value="">—</option>
-                    {params.comptes.filter((c) => c !== compte).map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <Liste
+                    valeur={dest}
+                    onChange={setDest}
+                    options={params.comptes
+                      .filter((c) => c !== compte)
+                      .map((c) => ({ valeur: c, libelle: c }))}
+                    placeholder="—"
+                    ariaLabel={tr('SAISIE_COMPTE_DEST')}
+                  />
                 </label>
               ) : (
                 <label className="saisie-champ">
                   <span>{tr('SAISIE_CATEGORIE')}</span>
-                  <select className="champ" value={categorie} onChange={(e) => setCategorie(e.target.value)}>
-                    <option value="">—</option>
-                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <Liste
+                    valeur={categorie}
+                    onChange={setCategorie}
+                    options={categories.map((c) => ({ valeur: c, libelle: c }))}
+                    placeholder="—"
+                    ariaLabel={tr('SAISIE_CATEGORIE')}
+                  />
                 </label>
               )}
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Liste from '@/components/Liste';
 import Astuce from '@/components/Astuce';
 import { useT } from '@/components/I18nProvider';
 import { RSVP_VALEURS, type Evenement } from '@/lib/evenements/schema';
@@ -68,17 +69,14 @@ export default function SousListes({
           {invites.map((i) => (
             <div className="sl-ligne sl-invite" key={i.id}>
               <span className="sl-nom">{i.nom}</span>
-              <select
-                className="champ sl-rsvp"
-                value={i.rsvp}
+              <Liste
+                className="sl-rsvp"
+                valeur={i.rsvp}
                 disabled={occupe}
-                onChange={(e) => modifier('invites', i.id, { rsvp: e.target.value })}
-                aria-label={`${tr('EVT_RSVP')} — ${i.nom}`}
-              >
-                {RSVP_VALEURS.map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
+                onChange={(v) => modifier('invites', i.id, { rsvp: v })}
+                options={RSVP_VALEURS.map((v) => ({ valeur: v, libelle: v }))}
+                ariaLabel={`${tr('EVT_RSVP')} — ${i.nom}`}
+              />
               <input
                 className="champ sl-nb"
                 type="number"

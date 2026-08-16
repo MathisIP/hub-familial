@@ -1,5 +1,11 @@
 import VueDocuments from '@/components/documents/VueDocuments';
-import { chargerDocuments } from '@/lib/documents/service';
+import PartageDossiers from '@/components/documents/PartageDossiers';
+import {
+  chargerDocuments,
+  chargerPartageDossiers,
+  membresPourPartageDossiers,
+  type DossierPartage,
+} from '@/lib/documents/service';
 import { ConfigManquante } from '@/lib/config';
 import { exigerAcces } from '@/lib/abonnement';
 import { t } from '@/lib/i18n';
@@ -11,10 +17,35 @@ export const metadata = { title: 'Documents — Nestync' };
 export default async function PageDocuments() {
   await exigerAcces();
   const langue = await langueCourante();
+  // Réglages de partage : propriétaire seulement. `null` (au lieu d'une erreur)
+  // quand la personne ne l'est pas — ce n'est pas un échec, juste une section
+  // qui ne la concerne pas ; la faire échouer ferait tomber toute la page.
+  const partage = await (async (): Promise<{
+    dossiers: DossierPartage[];
+    membres: { utilisateurId: string; nom: string }[];
+  } | null> => {
+    try {
+      const [dossiers, membres] = await Promise.all([
+        chargerPartageDossiers(),
+        membresPourPartageDossiers(),
+      ]);
+      return { dossiers, membres };
+    } catch {
+      return null;
+    }
+  })();
+
   let contenu;
   try {
     const initial = await chargerDocuments();
-    contenu = <VueDocuments initial={initial} />;
+    contenu = (
+      <>
+        <VueDocuments initial={initial} />
+        {partage && partage.membres.length > 1 && (
+          <PartageDossiers dossiers={partage.dossiers} membres={partage.membres} />
+        )}
+      </>
+    );
   } catch (e) {
     contenu =
       e instanceof ConfigManquante ? (

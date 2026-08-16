@@ -15,37 +15,57 @@
  *
  * Cible : DEMO_EMAIL dans .env, sinon mip@nestync.app.
  */
-import postgres from 'postgres';
-import { readFileSync } from 'node:fs';
+import { connexion, exigerBacASable, chargerEnv } from './_env.mjs';
+import { garnirDocuments } from './_documents-demo.mjs';
 
-for (const l of readFileSync('.env', 'utf8').split(/\r?\n/)) {
-  const m = l.match(/^([A-Z0-9_]+)=(.*)$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-}
-const u = new URL(process.env.DATABASE_URL);
-const [ep, ...r] = u.hostname.split('.');
-if (!u.hostname.includes('-pooler')) u.hostname = [`${ep}-pooler`, ...r].join('.');
-const sql = postgres(u.toString(), { prepare: false, max: 3 });
+chargerEnv();
+const { sql, hote } = connexion({ max: 3 });
 const CIBLE = (process.env.DEMO_EMAIL || 'mip@nestync.app').toLowerCase();
 
-// --- Le foyer cible, resolu par l'e-mail : jamais un id en dur ---------------
-const [f] = await sql`
+console.log(`  base : ${hote}`);
+
+/*
+ * ⚠ GARDE-FOU CENTRAL : ce script ne s'execute QUE sur un bac a sable marque.
+ * Le test porte sur une ligne presente dans la base, pas sur l'URL — une chaine
+ * de connexion se recopie de travers, et c'est justement l'erreur qu'on veut
+ * rendre impossible. Voir scripts/_env.mjs.
+ */
+await exigerBacASable(sql, hote);
+
+/*
+ * Le foyer de demonstration, cree s'il n'existe pas encore : sur une base de
+ * developpement neuve il n'y a rien. C'est ce qui permet de repartir d'une base
+ * vide (`npm run bac:reset`) sans aucune etape manuelle.
+ */
+let [f] = await sql`
   select f.id, f.nom from foyers f
   join membres m on m.foyer_id = f.id
   join utilisateurs u on u.id = m.utilisateur_id
-  where u.email = ${CIBLE}`;
-if (!f) { console.log('  foyer de demonstration introuvable'); await sql.end(); process.exit(1); }
+  where lower(u.email) = ${CIBLE}`;
+
+if (!f) {
+  console.log(`  foyer de demonstration absent : creation pour ${CIBLE}`);
+  const [u] = await sql`
+    insert into utilisateurs (email, nom) values (${CIBLE}, 'Clara Lambert')
+    on conflict (email) do update set nom = excluded.nom
+    returning id`;
+  const fin = new Date(Date.now() + 365 * 86400000);
+  const [nf] = await sql`
+    insert into foyers (nom, statut_abonnement, abonnement_fin, onboarding_fait)
+    values ('Foyer Lambert', 'essai', ${fin}, true) returning id, nom`;
+  await sql`insert into membres (foyer_id, utilisateur_id, role)
+    values (${nf.id}, ${u.id}, 'proprietaire')`;
+  f = nf;
+}
+
 const F = f.id;
 console.log(`  foyer cible : « ${f.nom} »`);
-
-// Garde-fou : on refuse de toucher au foyer reel.
-const [reel] = await sql`select id from foyers where nom = 'Foyer de Mathis'`;
-if (reel && reel.id === F) { console.log('  !! ARRET : cible = foyer reel'); await sql.end(); process.exit(1); }
 
 await sql`update foyers set nom = 'Foyer Lambert' where id = ${F}`;
 
 // --- Purge de ce foyer uniquement -------------------------------------------
-for (const t of ['transactions', 'echeances', 'comptes', 'budget_categories', 'taches',
+for (const t of ['comptes_acces', 'dossiers_acces', 'agendas_acces', 'cadeaux_masques',
+                 'transactions', 'echeances', 'comptes', 'budget_categories', 'taches',
                  'courses', 'recettes', 'semaine', 'cadeaux', 'occasions',
                  'ev_invites', 'ev_checklist', 'ev_menu', 'evenements']) {
   await sql`delete from ${sql(t)} where foyer_id = ${F}`;
@@ -145,11 +165,21 @@ const tx = [
 ];
 await sql`insert into transactions ${sql(tx)}`;
 
+/*
+ * Chaque echeance porte SON compte de prelevement. Sans lui, la ligne dit qu'un
+ * paiement arrive mais pas d'ou l'argent sortira — une information incomplete
+ * dans un module de budget. Le compte porte aussi la visibilite.
+ */
+const compteId = async (nom) =>
+  (await sql`select id from comptes where foyer_id = ${F} and nom = ${nom}`)[0].id;
+const cCommun = await compteId('Compte commun');
+const cAntoine = await compteId('Compte Antoine');
+
 await sql`insert into echeances ${sql([
-  { foyer_id: F, libelle: 'Loyer', date: '02/09/2026', date_iso: '2026-09-02', recurrence: 'Mensuelle', note: '' },
-  { foyer_id: F, libelle: 'Assurance habitation', date: '15/09/2026', date_iso: '2026-09-15', recurrence: 'Annuelle', note: '' },
-  { foyer_id: F, libelle: 'Cantine — 1er trimestre', date: '20/09/2026', date_iso: '2026-09-20', recurrence: 'Aucune', note: '' },
-  { foyer_id: F, libelle: 'Assurance voiture', date: '28/08/2026', date_iso: '2026-08-28', recurrence: 'Annuelle', note: '' },
+  { foyer_id: F, libelle: 'Loyer', date: '02/09/2026', date_iso: '2026-09-02', recurrence: 'Mensuelle', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Assurance habitation', date: '15/09/2026', date_iso: '2026-09-15', recurrence: 'Annuelle', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Cantine — 1er trimestre', date: '20/09/2026', date_iso: '2026-09-20', recurrence: 'Aucune', note: '', compte_id: cCommun },
+  { foyer_id: F, libelle: 'Assurance voiture', date: '28/08/2026', date_iso: '2026-08-28', recurrence: 'Annuelle', note: '', compte_id: cAntoine },
 ])}`;
 
 // --- TO-DO & COURSES ---------------------------------------------------------
@@ -294,9 +324,61 @@ let total = 0;
 for (const s of soldes) { total += Number(s.solde); console.log(`     ${s.nom.padEnd(18)} ${Number(s.solde).toFixed(2).padStart(9)} EUR`); }
 console.log(`     ${'TOTAL'.padEnd(18)} ${total.toFixed(2).padStart(9)} EUR`);
 
-// Controle : le foyer reel n'a pas bouge.
-const [{ n: nReel }] = await sql`
-  select count(*)::int as n from transactions t join foyers f on f.id = t.foyer_id
-  where f.nom = 'Foyer de Mathis'`;
-console.log(`\n  controle — transactions du foyer reel : ${nReel} (inchange)`);
+// --- MEMBRES DU FOYER --------------------------------------------------------
+/*
+ * Deux membres de plus : sans eux, « restreindre un dossier aux parents » n'a
+ * aucun sens — il n'y aurait personne a qui le cacher. Le foyer de demonstration
+ * doit pouvoir montrer la fonctionnalite, pas seulement la contenir.
+ *
+ * Antoine est un second PARENT (il voit les dossiers sensibles), Noe est
+ * l'ENFANT (il ne les voit pas). Adresses en .invalid : ce domaine est reserve
+ * par la norme, aucun courriel ne peut y partir par accident.
+ */
+const membre = async (email, nom, role) => {
+  const [u] = await sql`
+    insert into utilisateurs (email, nom) values (${email}, ${nom})
+    on conflict (email) do update set nom = excluded.nom
+    returning id`;
+  await sql`insert into membres (foyer_id, utilisateur_id, role)
+    values (${F}, ${u.id}, ${role})
+    on conflict (foyer_id, utilisateur_id) do nothing`;
+  return u.id;
+};
+const idClara = (await sql`
+  select u.id from utilisateurs u join membres m on m.utilisateur_id = u.id
+  where m.foyer_id = ${F} and lower(u.email) = ${CIBLE}`)[0].id;
+const idAntoine = await membre('antoine.lambert@exemple.invalid', 'Antoine Lambert', 'membre');
+const idNoe = await membre('noe.lambert@exemple.invalid', 'Noé Lambert', 'membre');
+
+// --- DOCUMENTS ---------------------------------------------------------------
+/*
+ * « Papiers » et « Sante » sont restreints aux deux parents : c'est le scenario
+ * exact que la fonctionnalite vise (le carnet de sante et le bail ne regardent
+ * pas l'enfant). Les autres dossiers restent communs.
+ */
+await garnirDocuments(sql, F, {
+  restreints: {
+    Papiers: [idClara, idAntoine],
+    Sante: [idClara, idAntoine],
+  },
+});
+
+/*
+ * Le velo d'anniversaire est cache a Noe — c'est son cadeau. Illustre la LISTE
+ * NOIRE : contrairement aux dossiers, le cadeau reste visible de tout le reste
+ * du foyer, y compris de quelqu'un qui le rejoindrait apres la saisie.
+ */
+const [velo] = await sql`select id from cadeaux where foyer_id = ${F} and idee = 'Vélo 16 pouces'`;
+if (velo) {
+  await sql`insert into cadeaux_masques (foyer_id, cadeau_id, utilisateur_id)
+    values (${F}, ${velo.id}, ${idNoe}) on conflict do nothing`;
+}
+
+console.log(`
+  membres du foyer : Clara (proprietaire), Antoine, Noé`);
+
+// Controle : sur un bac a sable dedie, il ne doit exister aucun AUTRE foyer.
+// Si ce compteur n'est pas nul, on n'est pas la ou l'on croit.
+const [{ n: autres }] = await sql`select count(*)::int as n from foyers where id <> ${F}`;
+console.log(`\n  controle — autres foyers sur cette base : ${autres} (attendu 0)`);
 await sql.end();

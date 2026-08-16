@@ -169,6 +169,34 @@
       "when": 1786482042800,
       "tag": "0023_bitter_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786737070279,
+      "tag": "0024_fast_leo",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786826571748,
+      "tag": "0025_empty_domino",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786828031594,
+      "tag": "0026_numerous_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786859686055,
+      "tag": "0027_rich_barracuda",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import Liste from '@/components/Liste';
 import { useRouter } from 'next/navigation';
 import { useT } from '@/components/I18nProvider';
 import {
@@ -119,16 +120,14 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
         <div className="vd-depot">
           <label className="vd-lbl" htmlFor="vd-cible">{tr('DOC_DEPOSER_DANS')}</label>
           <Astuce texte={tr('AIDE_DOSSIER')} />
-          <select
-            id="vd-cible"
-            className="champ"
-            value={dossierCible}
-            onChange={(e) => setDossierCible(e.target.value)}
-          >
-            {[...new Set([...initial.dossiers, DOSSIER_DEFAUT])]
+          <Liste
+            valeur={dossierCible}
+            onChange={setDossierCible}
+            options={[...new Set([...initial.dossiers, DOSSIER_DEFAUT])]
               .sort((a, b) => (a === DOSSIER_DEFAUT ? 1 : b === DOSSIER_DEFAUT ? -1 : a.localeCompare(b, 'fr')))
-              .map((x) => <option key={x} value={x}>{x}</option>)}
-          </select>
+              .map((x) => ({ valeur: x, libelle: x }))}
+            ariaLabel={tr('DOC_DEPLACER_VERS')}
+          />
           <input
             ref={inputRef}
             type="file"
@@ -190,7 +189,14 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
                 />
               ) : (
                 <h2 className="vd-gtitre">
-                  <span className="vd-gnom">📁 {g.dossier}</span>
+                  <span className="vd-gnom">
+                    📁 {g.dossier}
+                    {/* Cadenas : savoir qu'un dossier est restreint évite d'y
+                        déposer un fichier que les autres devaient voir. */}
+                    {initial.dossiersRestreints.includes(g.dossier) && (
+                      <span className="vd-cadenas" title={tr('DOC_DOSSIER_PRIVE')}> 🔒</span>
+                    )}
+                  </span>
                   <span className="vd-gcount">{g.documents.length}</span>
                   {g.dossier !== DOSSIER_DEFAUT && (
                     <button
@@ -294,14 +300,12 @@ function LigneDocument({
         onChange={(e) => setNom(e.target.value)}
         aria-label={tr('DOC_NOM')}
       />
-      <select
-        className="champ"
-        value={dossier}
-        onChange={(e) => setDossier(e.target.value)}
-        aria-label={tr('DOC_DEPLACER_VERS')}
-      >
-        {choix.map((x) => <option key={x} value={x}>{x}</option>)}
-      </select>
+      <Liste
+        valeur={dossier}
+        onChange={setDossier}
+        options={choix.map((x) => ({ valeur: x, libelle: x }))}
+        ariaLabel={tr('DOC_DEPLACER_VERS')}
+      />
       <div className="doc-edit-actions">
         <button
           type="button"

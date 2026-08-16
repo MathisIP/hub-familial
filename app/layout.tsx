@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Quicksand } from 'next/font/google';
 import { cssDesThemes, THEME_DEFAUT, THEME_ORDRE, THEMES } from '@/lib/themes';
+import BandeauBacASable from '@/components/BandeauBacASable';
 import EnregistrerSW from '@/components/EnregistrerSW';
 import AstuceInstallIOS from '@/components/AstuceInstallIOS';
 import PiedDePage from '@/components/PiedDePage';
@@ -94,6 +95,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
       </head>
       <body>
+        {/* Rien en production : cf. le composant. En développement, il dit en
+            permanence si l'on travaille sur des données fictives ou réelles. */}
+        <BandeauBacASable />
         <I18nProvider langue={langue}>
           <div className="enveloppe">{children}</div>
           {connecte && <PiedDePage />}

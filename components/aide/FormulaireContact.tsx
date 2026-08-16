@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState , useState} from 'react';
+import Liste from '@/components/Liste';
 import { envoyerAideAction } from '@/app/aide/actions';
 
 /**
@@ -17,6 +18,7 @@ export default function FormulaireContact({
   defautEmail?: string;
   defautNom?: string;
 }) {
+  const [sujet, setSujet] = useState('question');
   const [etat, action, enCours] = useActionState(envoyerAideAction, null);
 
   if (etat?.ok) {
@@ -61,13 +63,18 @@ export default function FormulaireContact({
 
       <label className="aide-champ">
         <span className="aide-lbl">De quoi s’agit-il ?</span>
-        <select className="champ" name="sujet" defaultValue="question">
-          <option value="question">Une question sur l’application</option>
-          <option value="probleme">Quelque chose ne fonctionne pas</option>
-          <option value="donnees">Mes données personnelles (accès, effacement…)</option>
-          <option value="facturation">Abonnement ou facturation</option>
-          <option value="autre">Autre chose</option>
-        </select>
+        <Liste
+          name="sujet"
+          valeur={sujet}
+          onChange={setSujet}
+          options={[
+            { valeur: 'question', libelle: 'Une question sur l’application' },
+            { valeur: 'probleme', libelle: 'Quelque chose ne fonctionne pas' },
+            { valeur: 'donnees', libelle: 'Mes données personnelles (accès, effacement…)' },
+            { valeur: 'facturation', libelle: 'Abonnement ou facturation' },
+            { valeur: 'autre', libelle: 'Autre chose' },
+          ]}
+        />
       </label>
 
       <label className="aide-champ">

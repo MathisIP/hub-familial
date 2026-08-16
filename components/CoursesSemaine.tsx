@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useT } from '@/components/I18nProvider';
-import type { Course } from '@/lib/todo/schema';
 
 /** Ce que renvoie GET /api/todo/courses/valider avant l'envoi. */
 type Apercu = {
@@ -18,14 +17,12 @@ type Apercu = {
  *   · « Valider la liste » prévient les membres choisis qu'elle est prête.
  *   · « Voir la liste » ouvre la liste à cocher.
  *
- * ⚠ LA VALIDATION REMPLACE L'ENVOI PAR SMS. Le partage natif marchait pour deux
- * numéros connus d'avance ; il ne tient pas dès qu'il y a des clients. La liste
- * ne QUITTE PLUS l'app : la notification dit seulement qu'elle est prête, et le
- * clic ouvre la liste à cocher. Un SMS, lui, laissait le contenu des courses en
- * clair dans l'historique de deux téléphones.
- *
- * Le bouton d'envoi par message est conservé : il dépanne quand le destinataire
- * n'a pas l'app (un proche qui passe au supermarché).
+ * ⚠ L'ENVOI PAR MESSAGE A ÉTÉ RETIRÉ (16/08/2026). Il ouvrait le partage natif du
+ * téléphone, ou un lien `sms:` — donc la liste partait en clair et restait dans
+ * l'historique de messages de deux appareils, hors de toute règle de visibilité
+ * et hors du chiffrement que le reste du produit s'impose. La notification la
+ * remplace : elle annonce seulement que la liste est prête, et le contenu ne
+ * quitte jamais l'app.
  */
 export default function CoursesSemaine() {
   const tr = useT();
@@ -108,35 +105,6 @@ export default function CoursesSemaine() {
     }
   }
 
-  async function envoyerMessage() {
-    setMessage(null);
-    setErreur(null);
-    setOccupe(true);
-    try {
-      const r = await fetch('/api/todo', { cache: 'no-store' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_CHARGEMENT'));
-      const texte = construireTexteListe(data.courses ?? [], tr('CS_TITRE'));
-      if (!texte) {
-        setErreur(tr('CS_VIDE'));
-        return;
-      }
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        try {
-          await navigator.share({ title: 'Liste de courses', text: texte });
-          return;
-        } catch {
-          // partage annulé ou indisponible → repli sur le lien SMS
-        }
-      }
-      window.location.href = `sms:?body=${encodeURIComponent(texte)}`;
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : String(e));
-    } finally {
-      setOccupe(false);
-    }
-  }
-
   return (
     <section className="courses-semaine" aria-label="Liste de courses">
       <div className="cs-tete">
@@ -160,11 +128,6 @@ export default function CoursesSemaine() {
         <a className="bouton discret" href="/todo?onglet=courses">
           {tr('CS_VOIR_LISTE')}
         </a>
-        {/* Conservé : dépanne quand le destinataire n'a pas l'app (un proche
-            qui passe au supermarché). Ce n'est plus le chemin principal. */}
-        <button className="bouton discret" onClick={envoyerMessage} disabled={occupe}>
-          💬 {tr('CS_ENVOYER')}
-        </button>
       </div>
 
       {validation && (
@@ -231,29 +194,4 @@ export default function CoursesSemaine() {
       )}
     </section>
   );
-}
-
-/** Groupe les articles NON cochés par rayon (pour l'envoi de la liste). */
-function grouperListe(courses: Course[]): [string, Course[]][] {
-  const map = new Map<string, Course[]>();
-  for (const c of courses) {
-    if (c.fait) continue;
-    const cle = c.rayon || 'Autre';
-    if (!map.has(cle)) map.set(cle, []);
-    map.get(cle)!.push(c);
-  }
-  return [...map.entries()];
-}
-
-/** Texte de la liste de courses entière, groupée par rayon, pour un message. */
-function construireTexteListe(courses: Course[], titre: string): string {
-  const groupes = grouperListe(courses);
-  if (groupes.length === 0) return '';
-  const lignes = [`🛒 ${titre}`, ''];
-  for (const [rayon, items] of groupes) {
-    lignes.push(`— ${rayon} —`);
-    for (const c of items) lignes.push(`- ${c.article}${c.quantite ? ` (${c.quantite})` : ''}`);
-    lignes.push('');
-  }
-  return lignes.join('\n').trim();
 }

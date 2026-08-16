@@ -277,9 +277,10 @@ export async function viderCoursesFaites(): Promise<number> {
 /* ---------------------------------------------------------------------------
  * VALIDER LA LISTE DE COURSES
  *
- * Remplace l'envoi « par message » : `navigator.share` marchait pour deux
- * numéros connus d'avance, pas pour des clients. La liste ne part plus par SMS —
- * elle reste dans l'app, et une notification dit simplement qu'elle est prête.
+ * Remplace l'envoi « par message », retiré le 16/08/2026. Celui-ci envoyait la
+ * liste en clair dans l'historique de messages de deux téléphones, hors de toute
+ * règle de visibilité et hors du chiffrement que le reste du produit s'impose.
+ * La liste ne quitte plus l'app : la notification dit seulement qu'elle est prête.
  *
  * ⚠ LA NOTIFICATION NE CONTIENT PAS LA LISTE. Elle s'affiche sur un écran
  * verrouillé : y déverser « 12 articles dont test de grossesse » serait exposer

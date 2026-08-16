@@ -180,7 +180,6 @@ export const DE: Partial<Record<CleUI, string>> = {
   CS_TITRE: 'Einkaufsliste',
   CS_AJOUT_LISTE: 'Zu meiner Liste hinzufügen',
   CS_AJOUTE_SUFFIXE: 'zu deiner Einkaufsliste hinzugefügt.',
-  CS_ENVOYER: 'Als Nachricht senden',
   CS_PRODUIT_PH: 'Produkt (z. B. Duschgel)…',
   CS_QTE: 'Menge',
   CS_VIDE: 'Deine Einkaufsliste ist leer.',

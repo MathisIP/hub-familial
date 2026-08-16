@@ -153,7 +153,6 @@ const UI = {
   SEM_RIEN: { fr: 'Rien de prévu ce jour.', en: 'Nothing planned that day.' },
   CS_TITRE: { fr: 'Liste de courses', en: 'Shopping list' },
   CS_AJOUT_LISTE: { fr: 'Ajouter à ma liste', en: 'Add to my list' },
-  CS_ENVOYER: { fr: 'Envoyer par message', en: 'Send by message' },
   CS_PRODUIT_PH: { fr: 'Produit (ex. gel douche)…', en: 'Item (e.g. shower gel)…' },
   CS_QTE: { fr: 'Qté', en: 'Qty' },
   CS_VIDE: { fr: 'Ta liste de courses est vide.', en: 'Your shopping list is empty.' },

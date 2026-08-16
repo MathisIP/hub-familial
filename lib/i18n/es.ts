@@ -183,7 +183,6 @@ export const ES: Partial<Record<CleUI, string>> = {
   CS_TITRE: 'Lista de la compra',
   CS_AJOUT_LISTE: 'Añadir a mi lista',
   CS_AJOUTE_SUFFIXE: 'añadido a tu lista de la compra.',
-  CS_ENVOYER: 'Enviar por mensaje',
   CS_PRODUIT_PH: 'Producto (p. ej. gel de ducha)…',
   CS_QTE: 'Cant.',
   CS_VIDE: 'Tu lista de la compra está vacía.',

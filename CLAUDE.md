@@ -173,7 +173,8 @@ Erreurs métier : `ErreurValidation` ([lib/erreurs.ts](lib/erreurs.ts)) → 400 
 
 **Carte d'accueil « Liste de courses »** ([CoursesSemaine.tsx](components/CoursesSemaine.tsx), **remaniée le 29/07/2026**). Elle ne fait plus l'agrégation des repas — c'est un raccourci vers la **liste de courses** elle-même. Deux actions :
 - **＋ Ajouter à ma liste** : révèle (au clic) un champ **produit + quantité** pour ajouter un article **ponctuel** (ex. gel douche), indépendant des repas → POST `/api/todo/courses`.
-- **💬 Envoyer par message** : lit la liste de courses **entière** (GET `/api/todo`, articles **non cochés** groupés par rayon, quantités incluses) et l'envoie via `navigator.share` (repli lien `sms:?body=`).
+- **✓ Valider la liste** : choisit les destinataires parmi les membres du foyer et leur envoie une **notification push** ; le clic ouvre `/todo?onglet=courses`, la liste à cocher. ⚠ **La notification ne contient PAS la liste** — elle s'affiche sur un écran verrouillé.
+- ⚠ **L'envoi par message a été RETIRÉ (16/08/2026)** (`navigator.share` / lien `sms:`). Il faisait sortir la liste **en clair** dans l'historique de messages de deux téléphones, hors de toute règle de visibilité et hors du chiffrement que le reste du produit s'impose. Ne pas le réintroduire.
 - L'ancienne agrégation repas→liste et le bouton « Copier » ont été retirés de la carte (décision utilisateur). `listeCoursesSemaine()`/`ajouterCoursesEnLot()` restent utilisés côté service/API mais ne sont plus câblés sur cette carte.
 
 Helpers monétaires/dates partagés par les nouveaux modules : [lib/argent.ts](lib/argent.ts) (`parseEuro`, `formatEuro`, `versISO`, `joursJusqua`). Le Budget garde ses helpers historiques.

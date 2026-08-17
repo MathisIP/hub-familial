@@ -16,6 +16,7 @@ import {
 import Astuce from '@/components/Astuce';
 import { envoyerFichiers, resumeReductions } from '@/lib/documents/envoi';
 import { erreurDeReponse } from '@/lib/api-client';
+import VisionneuseDocument, { clicSimple } from '@/components/documents/VisionneuseDocument';
 
 /**
  * Gestionnaire de documents (onglet dédié) : créer des dossiers (même vides),
@@ -37,6 +38,14 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
   const [dossierEdite, setDossierEdite] = useState<string | null>(null);
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [apercu, setApercu] = useState<Document | null>(null);
+
+  /** Ouvre le document DANS l'app plutôt que de naviguer vers son contenu. */
+  function ouvrirApercu(e: React.MouseEvent, doc: Document) {
+    if (!clicSimple(e)) return;
+    e.preventDefault();
+    setApercu(doc);
+  }
 
   const groupes = useMemo(
     () => grouperParDossier(initial.documents, initial.dossiers),
@@ -175,6 +184,7 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
                     onEditer={() => setEdite(doc.id)}
                     onFermer={() => setEdite(null)}
                     onAppel={appeler}
+                    onApercu={ouvrirApercu}
                   />
                 </li>
               ))}
@@ -231,6 +241,7 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
                         onEditer={() => setEdite(doc.id)}
                         onFermer={() => setEdite(null)}
                         onAppel={appeler}
+                        onApercu={ouvrirApercu}
                       />
                     </li>
                   ))}
@@ -240,6 +251,8 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
           ))}
         </div>
       )}
+
+      {apercu && <VisionneuseDocument doc={apercu} onFermer={() => setApercu(null)} />}
     </div>
   );
 }
@@ -253,6 +266,7 @@ function LigneDocument({
   onEditer,
   onFermer,
   onAppel,
+  onApercu,
 }: {
   doc: Document;
   dossiers: string[];
@@ -261,6 +275,7 @@ function LigneDocument({
   onEditer: () => void;
   onFermer: () => void;
   onAppel: (url: string, methode: string, corps?: unknown) => Promise<boolean>;
+  onApercu: (e: React.MouseEvent, doc: Document) => void;
 }) {
   const tr = useT();
   const [nom, setNom] = useState(doc.nom);
@@ -275,6 +290,7 @@ function LigneDocument({
           target="_blank"
           rel="noopener noreferrer"
           title={tr('DOC_OUVRIR')}
+          onClick={(e) => onApercu(e, doc)}
         >
           <span className="doc-ic" aria-hidden="true">{iconeDocument(doc)}</span>
           <span className="doc-nom">{doc.nom}</span>

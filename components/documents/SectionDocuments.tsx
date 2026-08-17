@@ -8,10 +8,12 @@ import {
   chercherDocuments,
   formatTaille,
   iconeDocument,
+  type Document,
   type DonneesDocuments,
 } from '@/lib/documents/schema';
 import { envoyerFichiers, resumeReductions } from '@/lib/documents/envoi';
 import { jsonOuErreur } from '@/lib/api-client';
+import VisionneuseDocument, { clicSimple } from '@/components/documents/VisionneuseDocument';
 
 /**
  * Section « Documents » de l'accueil — volontairement réduite à DEUX gestes :
@@ -28,6 +30,14 @@ export default function SectionDocuments() {
   const [succes, setSucces] = useState<string | null>(null);
   const [recherche, setRecherche] = useState('');
   const [occupe, setOccupe] = useState(false);
+  const [apercu, setApercu] = useState<Document | null>(null);
+
+  /** Ouvre le document DANS l'app plutôt que de naviguer vers son contenu. */
+  function ouvrirApercu(e: React.MouseEvent, doc: Document) {
+    if (!clicSimple(e)) return;
+    e.preventDefault();
+    setApercu(doc);
+  }
 
   useSignalPret('documents', etat !== 'charge');
 
@@ -127,6 +137,7 @@ export default function SectionDocuments() {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={tr('DOC_OUVRIR')}
+                    onClick={(e) => ouvrirApercu(e, doc)}
                   >
                     <span className="doc-ic" aria-hidden="true">{iconeDocument(doc)}</span>
                     <span className="doc-nom">{doc.nom}</span>
@@ -139,6 +150,8 @@ export default function SectionDocuments() {
           </ul>
         )
       )}
+
+      {apercu && <VisionneuseDocument doc={apercu} onFermer={() => setApercu(null)} />}
     </section>
   );
 }

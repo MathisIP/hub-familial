@@ -51,6 +51,27 @@ export function formatTaille(octets: number): string {
   return `${(mo / 1024).toFixed(1).replace('.', ',')} Go`;
 }
 
+/**
+ * Le document s'affiche-t-il directement dans une balise `<img>` ?
+ *
+ * On interroge le type MIME **et** l'extension : `documents.type` vient de ce que
+ * le navigateur a déclaré au dépôt, et il arrive qu'il soit vide (certains
+ * gestionnaires de fichiers ne renseignent rien). Se fier au seul type ferait
+ * alors passer une photo pour un fichier illisible.
+ */
+export function estImage(doc: { nom: string; type: string }): boolean {
+  const t = (doc.type || '').toLowerCase();
+  if (t.startsWith('image/')) return true;
+  const ext = doc.nom.toLowerCase().split('.').pop() ?? '';
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'heic', 'heif', 'bmp'].includes(ext);
+}
+
+/** Le document est-il un PDF ? (même raisonnement que `estImage`.) */
+export function estPdf(doc: { nom: string; type: string }): boolean {
+  const t = (doc.type || '').toLowerCase();
+  return t === 'application/pdf' || doc.nom.toLowerCase().endsWith('.pdf');
+}
+
 /** Emoji selon le type MIME / l'extension (cohérent avec le reste de l'app). */
 export function iconeDocument(doc: { nom: string; type: string }): string {
   const t = (doc.type || '').toLowerCase();

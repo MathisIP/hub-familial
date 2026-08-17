@@ -943,6 +943,102 @@ a { color: var(--link-tx); }
 }
 .modale-fermer:hover { color: var(--ink); }
 
+/* ======================= VISIONNEUSE DE DOCUMENT =========================
+ * Superposition qui affiche un document SANS quitter la page. Voir
+ * components/documents/VisionneuseDocument.tsx pour le pourquoi.
+ *
+ * ⚠ `100dvh` et non `100vh` : sur mobile, `vh` se mesure barres du navigateur
+ * DÉPLIÉES, donc le bas de la superposition — c'est-à-dire les boutons — passe
+ * sous la barre d'outils de Safari. `dvh` suit la hauteur réellement visible.
+ * `100vh` reste en repli pour les navigateurs plus anciens.
+ *
+ * ⚠ `env(safe-area-inset-*)` : en mode plein écran sur iPhone, sans ces marges,
+ * l'en-tête passe sous l'encoche et le pied sous la barre d'accueil. Le bouton
+ * de fermeture deviendrait difficile à atteindre — sur le correctif même qui
+ * doit rendre la sortie évidente.
+ * ------------------------------------------------------------------------- */
+.visio-fond {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(0, 0, 0, .82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(.6rem + env(safe-area-inset-top)) calc(.6rem + env(safe-area-inset-right))
+           calc(.6rem + env(safe-area-inset-bottom)) calc(.6rem + env(safe-area-inset-left));
+  /* Au-dessus des modales (50) ET du tiroir latéral (60), qui pourraient sinon
+     recouvrir le bouton de fermeture — soit exactement le piège à corriger. */
+  z-index: 70;
+}
+.visio-cadre {
+  background: var(--page);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 56rem;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .4);
+}
+.visio-tete {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .7rem .9rem;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.visio-ic { font-size: 1.1rem; }
+.visio-nom {
+  flex: 1 1 auto;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visio-taille { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+.visio-fermer {
+  font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer;
+  border: none; background: transparent; color: var(--muted);
+  /* Cible tactile confortable : c'est LE bouton qui doit toujours se trouver. */
+  padding: .5rem .7rem; margin: -.3rem -.4rem -.3rem 0; border-radius: .6rem;
+}
+.visio-fermer:hover, .visio-fermer:focus-visible { color: var(--ink); background: var(--cell); }
+.visio-corps {
+  flex: 1 1 auto;
+  min-height: 0; /* sans quoi le contenu déborde au lieu de défiler */
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cell);
+}
+.visio-corps-zoom { align-items: flex-start; justify-content: flex-start; }
+.visio-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+  display: block;
+}
+.visio-image-zoom { max-width: none; max-height: none; cursor: zoom-out; }
+.visio-pdf { width: 100%; height: 70vh; border: 0; background: #fff; }
+.visio-repli { text-align: center; padding: 2.5rem 1.2rem; color: var(--muted); }
+.visio-repli-ic { font-size: 2.6rem; margin: 0 0 .6rem; }
+.visio-pied {
+  display: flex;
+  gap: .6rem;
+  justify-content: flex-end;
+  padding: .7rem .9rem;
+  border-top: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
 /* ===================== ACCUEIL : COURSES DE LA SEMAINE ===================== */
 .courses-semaine {
   margin-top: 2rem;
@@ -1307,14 +1403,14 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   padding: .5rem .6rem; border: 0; background: none; color: var(--ink);
   border-radius: .55rem; cursor: pointer;
 }
-.combo-item:hover { background: var(--link-bg); }/* ===================== CHROME GLOBAL : BARRE + PIED ===================== */
-/* Barre supérieure collante {
-  position: sticky; top: 0; z-index: 45;
-  background: color-mix(in srgb, var(--page) 86%, transparent);
-  -webkit-backdrop-filter: saturate(1.4) blur(12px);
-  backdrop-filter: saturate(1.4) blur(12px);
-  border-bottom: 1px solid var(--line);
-}
+.combo-item:hover { background: var(--link-bg); }
+
+/* ===================== CHROME GLOBAL : BARRE + PIED ===================== */
+/* Un bloc « barre supérieure collante » figurait ici, mais SANS SÉLECTEUR et
+   dans un commentaire jamais fermé : il ne s'appliquait à rien et n'a donc
+   jamais rien fait. Retiré le 17/08/2026 — le supprimer ne change aucun rendu,
+   alors que le « réparer » aurait activé d'un coup un `position: sticky` et un
+   `backdrop-filter` que personne n'a jamais vus à l'œuvre. */
 
 /* --- Side bar (tiroir droit) + bouton d'ouverture --- */
 .sb-toggle {

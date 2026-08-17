@@ -112,3 +112,27 @@ function sansAccents(v: string): string {
 
 /** Taille maximale acceptée par fichier (garde-fou coût + temps de téléversement). */
 export const TAILLE_MAX = 25 * 1024 * 1024; // 25 Mo
+
+/**
+ * ⚠ PLAFOND RÉEL DE L'ENVOI — bien plus bas que `TAILLE_MAX`, et c'est la
+ * plateforme qui l'impose, pas nous.
+ *
+ * Une fonction Vercel refuse tout corps de requête au-delà de **4,5 Mo** : la
+ * requête est rejetée par l'infrastructure, **notre code ne s'exécute jamais**.
+ * `TAILLE_MAX` est donc inatteignable par cette route — son message « 25 Mo
+ * maximum » ne peut pas s'afficher, puisqu'un fichier de 10 Mo n'arrive pas
+ * jusqu'à lui. On garde la constante : elle exprime la politique de stockage, et
+ * redeviendrait la limite effective si les fichiers montaient un jour
+ * directement vers le stockage objet.
+ *
+ * ⚠ Pourquoi on ne prend PAS ce chemin direct (URL présignée vers OVH) alors
+ * qu'il lèverait la limite : le fichier arriverait chez l'hébergeur **sans
+ * passer par `chiffrerFichier()`**, donc en clair. Chiffrer dans le navigateur
+ * supposerait de lui confier la clé. Le plafond de 4 Mo est le prix du « seule
+ * l'application peut lire, l'hébergeur non ».
+ *
+ * 4 Mo et non 4,5 : l'enveloppe multipart (frontières, en-têtes, nom du fichier)
+ * s'ajoute au fichier lui-même, et un envoi refusé au ras de la limite serait
+ * incompréhensible.
+ */
+export const TAILLE_REQUETE_MAX = 4 * 1024 * 1024; // 4 Mo

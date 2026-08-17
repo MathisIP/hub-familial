@@ -10,6 +10,8 @@ import {
   iconeDocument,
   type DonneesDocuments,
 } from '@/lib/documents/schema';
+import { envoyerFichiers, resumeReductions } from '@/lib/documents/envoi';
+import { jsonOuErreur } from '@/lib/api-client';
 
 /**
  * Section « Documents » de l'accueil — volontairement réduite à DEUX gestes :
@@ -32,9 +34,8 @@ export default function SectionDocuments() {
   const charger = useCallback(async () => {
     try {
       const r = await fetch('/api/documents', { cache: 'no-store' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? 'Erreur');
-      setD(data as DonneesDocuments);
+      const data = await jsonOuErreur<DonneesDocuments>(r, 'Chargement impossible.');
+      setD(data);
       setEtat('ok');
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
@@ -51,14 +52,16 @@ export default function SectionDocuments() {
     setMessage(null);
     setSucces(null);
     try {
-      const form = new FormData();
-      Array.from(fichiers).forEach((f) => form.append('fichiers', f));
       // Pas de dossier → le service range dans « Fichiers non classés ».
-      const r = await fetch('/api/documents', { method: 'POST', body: form });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? 'Téléversement refusé.');
-      setSucces(`${data.documents?.length ?? 0} ${tr('DOC_AJOUTE_SUFFIXE')}`);
-      await charger();
+      const res = await envoyerFichiers(Array.from(fichiers));
+      if (res.erreurs.length > 0) setMessage(res.erreurs.join(' '));
+      if (res.ajoutes > 0) {
+        const reduction = resumeReductions(res.reduites);
+        setSucces(
+          `${res.ajoutes} ${tr('DOC_AJOUTE_SUFFIXE')}${reduction ? ` ${reduction}` : ''}`,
+        );
+        await charger();
+      }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     } finally {

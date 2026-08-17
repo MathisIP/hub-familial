@@ -14,6 +14,8 @@ import {
   type DonneesDocuments,
 } from '@/lib/documents/schema';
 import Astuce from '@/components/Astuce';
+import { envoyerFichiers, resumeReductions } from '@/lib/documents/envoi';
+import { erreurDeReponse } from '@/lib/api-client';
 
 /**
  * Gestionnaire de documents (onglet dédié) : créer des dossiers (même vides),
@@ -54,7 +56,7 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
         headers: corps ? { 'Content-Type': 'application/json' } : undefined,
         body: corps ? JSON.stringify(corps) : undefined,
       });
-      if (!r.ok) throw new Error((await r.json()).erreur ?? 'Action refusée.');
+      if (!r.ok) throw new Error(await erreurDeReponse(r, 'Action refusée.'));
       router.refresh();
       return true;
     } catch (e) {
@@ -67,12 +69,16 @@ export default function VueDocuments({ initial }: { initial: DonneesDocuments })
     setOccupe(true);
     setMessage(null);
     try {
-      const form = new FormData();
-      Array.from(fichiers).forEach((f) => form.append('fichiers', f));
-      form.append('dossier', dossierCible);
-      const r = await fetch('/api/documents', { method: 'POST', body: form });
-      if (!r.ok) throw new Error((await r.json()).erreur ?? 'Téléversement refusé.');
-      router.refresh();
+      const res = await envoyerFichiers(Array.from(fichiers), dossierCible);
+      // Les erreurs priment sur le résumé de réduction : c'est ce qu'il faut
+      // lire en premier quand une partie du lot n'est pas passée.
+      const reduction = resumeReductions(res.reduites);
+      setMessage(
+        res.erreurs.length > 0
+          ? res.erreurs.join(' ')
+          : reduction,
+      );
+      if (res.ajoutes > 0) router.refresh();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     } finally {

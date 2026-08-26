@@ -163,11 +163,11 @@ export default function SiteVitrine() {
         <div
           style={{
             ...contenu,
-            padding: '0 clamp(20px,5vw,96px)',
+            padding: '0 clamp(16px,5vw,96px)',
             height: 68,
             display: 'flex',
             alignItems: 'center',
-            gap: 'clamp(16px,3vw,48px)',
+            gap: 'clamp(12px,3vw,48px)',
           }}
         >
           {/* Aucun logo fourni : le nom en Fraunces EST la marque. */}
@@ -182,14 +182,27 @@ export default function SiteVitrine() {
           >
             Nestync
           </span>
-          <nav
-            className="nsy-nav-liens"
-            style={{ display: 'flex', gap: 24, marginLeft: 'auto', alignItems: 'center' }}
-          >
-            <a href="#demonstration" style={{ ...surtitre, textDecoration: 'none' }}>
+          {/*
+            ⚠ AUCUN `display` EN STYLE INLINE ICI. Il y en avait un
+            (`display: 'flex'`), et un style inline bat toute regle de feuille
+            externe : le `display: none` prevu pour le mobile dans
+            vitrine-ds.css n'a donc JAMAIS eu d'effet. Les trois liens
+            restaient sur une ligne et « Se connecter » sortait de l'ecran.
+            Rien ne le signalait — le CSS etait juste, le composant aussi.
+            La mise en page de cette barre vit desormais entierement dans la
+            feuille, ou le point de rupture peut la reprendre.
+          */}
+          <nav className="nsy-nav-liens">
+            {/*
+              ⚠ Les deux ancres disparaissent en mobile, PAS « Se connecter ».
+              Elles ne menent qu'a des sections de la meme page, qu'on atteint
+              en faisant defiler ; « Se connecter » est le seul chemin d'entree
+              pour quelqu'un qui a deja un foyer.
+            */}
+            <a href="#demonstration" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
               Démonstration
             </a>
-            <a href="#tarifs" style={{ ...surtitre, textDecoration: 'none' }}>
+            <a href="#tarifs" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
               Tarifs
             </a>
             {/* ⚠ IL MANQUAIT UN CHEMIN POUR LES MEMBRES DÉJÀ INSCRITS. La page
@@ -197,7 +210,11 @@ export default function SiteVitrine() {
                 un foyer n'avait aucun moyen d'entrer depuis le site, et rien ne
                 le lui disait. Le lien reste discret — le visiteur majoritaire
                 est un prospect, pas un membre. */}
-            <a href="/connexion" style={{ ...surtitre, textDecoration: 'none', color: 'var(--texte)' }}>
+            <a
+              href="/connexion"
+              className="nsy-nav-connexion"
+              style={{ ...surtitre, textDecoration: 'none', color: 'var(--texte)' }}
+            >
               Se connecter
             </a>
             <BasculeTheme theme={theme} onBasculer={() => setTheme(theme === 'jour' ? 'nuit' : 'jour')} />

@@ -205,6 +205,22 @@
 .nsy-site .ns-eyebrow    { font-family: var(--font-donnees); font-size: var(--eyebrow); text-transform: uppercase; letter-spacing: var(--ls-eyebrow); font-weight: 400; }
 .nsy-site .ns-chiffre    { font-family: var(--font-donnees); font-size: var(--chiffre-cle); font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1; }
 
+/* ====================== BARRE DE NAVIGATION ==========================
+ * ⚠ CETTE MISE EN PAGE DOIT RESTER ICI, PAS EN STYLE INLINE. Le `<nav>`
+ * portait `style={{ display: 'flex' }}` : un style inline bat toute regle de
+ * feuille externe, si bien que le `display: none` du point de rupture mobile
+ * n'a jamais rien fait. « Se connecter » sortait de l'ecran sur telephone,
+ * alors que c'est le seul chemin d'entree d'un membre deja inscrit.
+ * ------------------------------------------------------------------ */
+.nsy-site .nsy-nav-liens {
+  display: flex;
+  gap: 24px;
+  margin-left: auto;
+  align-items: center;
+  min-width: 0;
+}
+.nsy-site .nsy-nav-connexion { white-space: nowrap; }
+
 /* --- adaptations mobile ---
    La source impose que l'asymétrie du bureau « se résolve proprement » en
    mobile, et non qu'elle dégénère en empilement centré subi. */
@@ -225,7 +241,17 @@
     --rail: 0px;
   }
   .nsy-site .nsy-colonnes { grid-template-columns: minmax(0, 1fr); gap: var(--e-7); }
-  .nsy-site .nsy-nav-liens { display: none; }
+  /* ⚠ On masque les ANCRES, jamais la barre entiere : elles ne menent qu'a
+     des sections de la meme page, qu'on atteint en faisant defiler, alors que
+     « Se connecter » est le seul chemin d'entree d'un membre deja inscrit. */
+  .nsy-site .nsy-nav-ancre { display: none; }
+  .nsy-site .nsy-nav-liens { gap: 14px; }
+  /* Cible tactile : 44 px de haut, le minimum confortable au pouce. */
+  .nsy-site .nsy-nav-connexion {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 
 /* ⚠ LE SITE VITRINE N'EST PAS UNE PAGE DE L'APPLICATION.

@@ -45,7 +45,18 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
     return <p className="compte-note">{tr('ABO_NON_ACTIVE')}</p>;
   }
 
-  const peutAcheter = etat.statut !== 'actif';
+  /*
+   * ⚠ `offert` EXCLU AUTANT QUE `actif`. Sans cela, un testeur à qui l'accès a
+   * été donné verrait le bloc d'achat complet — tarifs, case de demande
+   * d'exécution immédiate, lien vers les CGV — c'est-à-dire qu'on lui
+   * réclamerait 4,99 € pour ce qu'on vient de lui offrir. Il n'a rien à acheter
+   * ici ; le message de statut suffit.
+   *
+   * Conséquence assumée : un accès offert ne peut pas se convertir en abonnement
+   * payant tant qu'il n'a pas été retiré (`npm run beta -- --retirer`). C'est le
+   * bon sens de la contrainte — on ne fait pas payer quelqu'un par accident.
+   */
+  const peutAcheter = etat.statut !== 'actif' && etat.statut !== 'offert';
 
   return (
     <div className="abo-actions">

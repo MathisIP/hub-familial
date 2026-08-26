@@ -1243,7 +1243,7 @@ a { color: var(--link-tx); }
 /* ===================== ABONNEMENT ===================== */
 .abo-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
 .abo-statut { font-size: 1.05rem; font-weight: 600; margin: 0; }
-.abo-statut.abo-actif { color: var(--ok-tx); }
+.abo-statut.abo-actif, .abo-statut.abo-offert { color: var(--ok-tx); }
 .abo-statut.abo-impaye, .abo-statut.abo-annule { color: var(--over-tx); }
 
 /* ===================== DOCUMENT LÉGAL (confidentialité) ===================== */

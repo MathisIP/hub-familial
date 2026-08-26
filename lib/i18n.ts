@@ -118,6 +118,7 @@ const UI = {
   ABO_LIBRE: { fr: 'Accès libre', en: 'Free access' },
   ABO_ACTIF: { fr: 'Abonnement actif ✓', en: 'Active subscription ✓' },
   ABO_ESSAI: { fr: 'Période d’essai', en: 'Trial period' },
+  ABO_OFFERT: { fr: 'Accès offert', en: 'Complimentary access' },
   ABO_IMPAYE: { fr: 'Paiement en attente', en: 'Payment pending' },
   ABO_ANNULE: { fr: 'Abonnement annulé', en: 'Subscription cancelled' },
 
@@ -721,6 +722,17 @@ const UI = {
   ABOP_LIBRE: { fr: 'Accès libre (facturation non activée).', en: 'Free access (billing not enabled).' },
   ABOP_ACTIF: { fr: 'Abonnement actif ✓', en: 'Active subscription ✓' },
   ABOP_ESSAI: { fr: 'Période d’essai', en: 'Trial period' },
+  ABOP_OFFERT: { fr: 'Accès offert ✓', en: 'Complimentary access ✓' },
+  /*
+   * ⚠ CE MESSAGE REMPLACE LE BLOC D'ACHAT, il ne s'y ajoute pas. Quelqu'un à qui
+   * l'accès a été offert ne doit pas voir de tarif : lui présenter « 4,99 € » et
+   * une case de renonciation reviendrait à lui réclamer ce qu'on vient de lui
+   * donner. Il n'a rien à faire sur cet écran, et le texte doit le dire.
+   */
+  ABO_OFFERT_NOTE: {
+    fr: 'Ton accès est offert, sans limite de durée et sans rien à payer. Merci pour tes retours — ils font avancer Nestync.',
+    en: 'Your access is complimentary, with no time limit and nothing to pay. Thank you for your feedback — it makes Nestync better.',
+  },
   ABOP_IMPAYE: { fr: 'Paiement en attente — régularise pour continuer.', en: 'Payment pending — settle it to continue.' },
   ABOP_ANNULE: { fr: 'Abonnement annulé.', en: 'Subscription cancelled.' },
   ABO_ESSAI_A: { fr: 'Essai gratuit jusqu’au', en: 'Free trial until' },

@@ -13,6 +13,7 @@ const ABO_CLE: Record<string, CleUI> = {
   libre: 'ABO_LIBRE',
   actif: 'ABO_ACTIF',
   essai: 'ABO_ESSAI',
+  offert: 'ABO_OFFERT',
   impaye: 'ABO_IMPAYE',
   annule: 'ABO_ANNULE',
 };

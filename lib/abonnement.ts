@@ -50,7 +50,18 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
   }
   const fin = foyer.abonnementFin ? new Date(foyer.abonnementFin) : null;
   const essaiValide = foyer.statutAbonnement === 'essai' && (fin === null || fin.getTime() > Date.now());
-  const autorise = foyer.statutAbonnement === 'actif' || essaiValide;
+  /*
+   * ⚠ `offert` AUTORISE SANS AUCUN CONTRÔLE DE DATE. C'est un accès accordé à la
+   * main (testeurs, proches), volontairement sans terme : `abonnement_fin` reste
+   * `null` sur ces foyers. Lui appliquer la règle de l'essai reviendrait à faire
+   * dépendre l'accès d'une colonne qu'on a justement choisi de ne pas remplir.
+   *
+   * Pour y mettre fin, on repasse le foyer en `essai` échu (`npm run beta
+   * --retirer`) : il retrouve alors le parcours d'abonnement normal, plutôt que
+   * de se retrouver devant une porte fermée sans explication.
+   */
+  const autorise =
+    foyer.statutAbonnement === 'actif' || foyer.statutAbonnement === 'offert' || essaiValide;
   return {
     autorise,
     statut: foyer.statutAbonnement,

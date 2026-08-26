@@ -29,8 +29,21 @@ import {
 export const ROLES_MEMBRE = ['proprietaire', 'membre'] as const;
 export type RoleMembre = (typeof ROLES_MEMBRE)[number];
 
-/** Statuts d'abonnement (miroir simplifié de Stripe). */
-export const STATUTS_ABONNEMENT = ['essai', 'actif', 'impaye', 'annule'] as const;
+/**
+ * Statuts d'abonnement (miroir simplifié de Stripe).
+ *
+ * ⚠ `offert` N'A PAS D'ÉQUIVALENT STRIPE, à dessein : c'est un accès accordé à
+ * la main, sans contrepartie financière (testeurs, proches). Il est posé
+ * uniquement par `npm run beta` — jamais par le webhook, jamais par l'app.
+ *
+ * Pourquoi un statut à part plutôt qu'un `essai` sans échéance, qui aurait
+ * suffi techniquement : sans lui, ces foyers deviendraient **indiscernables des
+ * vrais essais**. Toute question posée plus tard — combien d'essais en cours,
+ * quel taux de conversion, qui relancer avant l'échéance — les compterait
+ * dedans, et rien en base ne dirait qu'ils ont été offerts. Le statut porte
+ * l'intention ; une date lointaine ne l'aurait pas portée.
+ */
+export const STATUTS_ABONNEMENT = ['essai', 'actif', 'offert', 'impaye', 'annule'] as const;
 export type StatutAbonnement = (typeof STATUTS_ABONNEMENT)[number];
 
 /** Un client : un foyer. Porte ses préférences et l'état de son abonnement. */

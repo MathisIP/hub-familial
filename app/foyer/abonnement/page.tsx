@@ -10,6 +10,7 @@ const STATUT_CLE: Record<string, CleUI> = {
   libre: 'ABOP_LIBRE',
   actif: 'ABOP_ACTIF',
   essai: 'ABOP_ESSAI',
+  offert: 'ABOP_OFFERT',
   impaye: 'ABOP_IMPAYE',
   annule: 'ABOP_ANNULE',
 };
@@ -39,6 +40,15 @@ export default async function PageAbonnement() {
               ? `${t('ABO_ESSAI_A', langue)} ${fin.toLocaleDateString(locale(langue))}. ${t('ABO_ESSAI_B', langue)}`
               : t('ABO_ESSAI_OUVERT', langue)}
           </p>
+        )}
+        {/*
+          Accès offert : aucune date, et surtout aucune échéance affichée.
+          ⚠ Ces foyers ont `abonnement_fin` à `null` — le bloc de reconduction
+          ci-dessous ne les concerne donc pas, et ne doit jamais les concerner :
+          il n'y a rien à reconduire, ni rien à facturer.
+        */}
+        {etat.statut === 'offert' && (
+          <p className="compte-note">{t('ABO_OFFERT_NOTE', langue)}</p>
         )}
         {/*
           ⚠ ÉCHÉANCE AFFICHÉE EN PERMANENCE — ce n'est pas décoratif.

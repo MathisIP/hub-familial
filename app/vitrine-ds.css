@@ -919,3 +919,67 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   letter-spacing: var(--ls-eyebrow);
   color: var(--alerte) !important;
 }
+
+/* ====================== BASCULE ANNUEL / MENSUEL =====================
+ * ⚠ EN CSS, PAS EN STYLE INLINE. Toute la mise en forme posee dans des
+ * objets JavaScript sur cette page s'est revelee inatteignable par le point de
+ * rupture mobile — quatre fois pendant le chantier du 26/08/2026. Ce composant
+ * part donc du bon pied.
+ * ------------------------------------------------------------------ */
+.nsy-site .nsy-bascule {
+  display: inline-flex;
+  justify-self: center;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  padding: 4px;
+  gap: 4px;
+  background: var(--surface);
+}
+.nsy-site .nsy-bascule-choix {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit);
+  background: none;
+  border: 0;
+  border-radius: var(--rayon);
+  /* 44 px de haut : cible tactile minimale confortable au pouce. */
+  min-height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition:
+    background var(--duree-micro) var(--courbe),
+    color var(--duree-micro) var(--courbe);
+}
+.nsy-site .nsy-bascule-choix.actif {
+  background: var(--commun);
+  color: var(--sur-commun);
+}
+/* ⚠ L'economie reste lisible MEME quand le mensuel est choisi : c'est elle
+   qui justifie que l'annuel soit propose par defaut. La masquer reviendrait a
+   cacher l'argument au moment ou il sert. */
+.nsy-site .nsy-bascule-eco {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: var(--rayon);
+  background: var(--commun);
+  color: var(--sur-commun);
+  white-space: nowrap;
+}
+.nsy-site .nsy-bascule-choix.actif .nsy-bascule-eco {
+  background: var(--sur-commun);
+  color: var(--commun);
+}
+
+@media (max-width: 767px) {
+  /* La bascule prend toute la largeur : deux cibles moitie-moitie sont plus
+     sures au pouce que deux pastilles centrees. */
+  .nsy-site .nsy-bascule { display: flex; width: 100%; }
+  .nsy-site .nsy-bascule-choix { flex: 1 1 0; justify-content: center; padding: 0 10px; }
+  .nsy-site .nsy-bascule-eco { font-size: 0.5625rem; padding: 2px 5px; }
+}

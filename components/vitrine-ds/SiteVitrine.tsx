@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { Bouton, Pastille, Mockup, type Fil } from '@/components/vitrine-ds/Primitives';
 import EventailModules from '@/components/vitrine-ds/EventailModules';
 import EnTravaux from '@/components/vitrine-ds/EnTravaux';
+// ⚠ Les montants viennent de lib/offres.ts, JAMAIS recopies ici. Ils sont
+// deja lus par les conditions generales et servent de reference aux tarifs
+// Stripe : un prix ecrit en dur sur la vitrine finirait par annoncer autre
+// chose que ce qui est facture.
+import { OFFRES, formatPrix } from '@/lib/offres';
 
 /**
  * SITE VITRINE NESTYNC — porté de `templates/accueil/Accueil.dc.html`.
@@ -39,9 +44,21 @@ import EnTravaux from '@/components/vitrine-ds/EnTravaux';
 /** Nombre de convives servant de base aux quantités des recettes. */
 const BASE_CONVIVES = 4;
 
+/* Les deux formules, tirees de la source unique. */
+const ANNUEL = OFFRES.find((o) => o.id === 'annuel')!;
+const MENSUEL = OFFRES.find((o) => o.id === 'mensuel')!;
+
 export default function SiteVitrine() {
   const [theme, setTheme] = useState<'jour' | 'nuit'>('jour');
   const [convives, setConvives] = useState(BASE_CONVIVES);
+  /*
+   * ⚠ L'ANNUEL EST LA FORMULE PAR DEFAUT, et ce n'est pas un detail
+   * d'affichage. Deux cartes cote a cote presentaient deux options
+   * equivalentes, en laissant au visiteur le travail de comparer 49,90 €/an
+   * et 4,99 €/mois. Une formule mise en avant, avec l'economie annoncee sur
+   * la bascule elle-meme, dit ce qu'on recommande.
+   */
+  const [formule, setFormule] = useState<'annuel' | 'mensuel'>('annuel');
 
   /* Mise à l'échelle : c'est exactement ce que fait le module Repas. */
   const ech = (v: number) => (v * convives) / BASE_CONVIVES;
@@ -492,7 +509,16 @@ export default function SiteVitrine() {
                         key={it.nom}
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: '14px 1fr auto',
+                          // ⚠ `minmax(0,1fr)` ET NON `1fr`. Un élément de grille
+                          // a `min-width: auto` : la piste refuse de descendre
+                          // sous la largeur intrinsèque de son contenu. Avec le
+                          // badge « 2 recettes », la colonne du libellé
+                          // s'élargissait et poussait la quantité hors du cadre
+                          // — « 1,5 kg » touchait le bord de l'écran.
+                          // Même défaut que l'éditeur de recettes (13/08/2026) :
+                          // il faut `minmax(0,1fr)` ET `minWidth: 0` sur
+                          // l'enfant, l'un sans l'autre ne suffit pas.
+                          gridTemplateColumns: '14px minmax(0, 1fr) auto',
                           gap: 10,
                           alignItems: 'baseline',
                         }}
@@ -507,7 +533,7 @@ export default function SiteVitrine() {
                             display: 'block',
                           }}
                         />
-                        <span style={{ fontFamily: 'var(--font-corps)', fontSize: 16, lineHeight: 1.35 }}>
+                        <span style={{ fontFamily: 'var(--font-corps)', fontSize: 16, lineHeight: 1.35, minWidth: 0 }}>
                           {it.nom}
                           {it.fusion && (
                             // Le badge qui rend la fusion visible : c'est LE geste
@@ -705,61 +731,84 @@ export default function SiteVitrine() {
         <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gap: 'clamp(32px,4vw,48px)' }}>
           <div style={{ display: 'grid', gap: 16, maxWidth: '52ch' }}>
             <p style={surtitre}>Tarifs</p>
-            <h2 style={h2}>30 jours pour voir, puis 4,16 € par mois.</h2>
+            <h2 style={h2}>30 jours pour voir, puis {formatPrix(ANNUEL.parMois)} par mois.</h2>
           </div>
-          <div
+          {/*
+            UNE SEULE CARTE, ET UNE BASCULE.
+
+            ⚠ Les deux formules etaient presentees cote a cote, a egalite. Le
+            visiteur devait comparer lui-meme 49,90 €/an et 4,99 €/mois pour
+            decouvrir l'economie — travail qu'une page de conversion doit faire
+            a sa place. L'annuel s'affiche donc par defaut, l'economie est
+            portee par la bascule, et le mensuel reste a un clic.
+
+            ⚠ LE MEME BOUTON DANS LES DEUX CAS. L'ancienne carte mensuelle
+            disait « Choisir le mensuel », ce qui laissait croire qu'elle se
+            payait tout de suite alors que l'essai de 30 jours s'applique aux
+            deux. C'etait un desavantage inflige au mensuel par simple
+            formulation.
+          */}
+          <div className="nsy-bascule" role="group" aria-label="Périodicité de l'abonnement">
+            <button
+              type="button"
+              className={formule === 'annuel' ? 'nsy-bascule-choix actif' : 'nsy-bascule-choix'}
+              aria-pressed={formule === 'annuel'}
+              onClick={() => setFormule('annuel')}
+            >
+              Annuel
+              <span className="nsy-bascule-eco">2 mois offerts</span>
+            </button>
+            <button
+              type="button"
+              className={formule === 'mensuel' ? 'nsy-bascule-choix actif' : 'nsy-bascule-choix'}
+              aria-pressed={formule === 'mensuel'}
+              onClick={() => setFormule('mensuel')}
+            >
+              Mensuel
+            </button>
+          </div>
+
+          <article
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))',
-              gap: 'clamp(20px,2.5vw,28px)',
-              alignItems: 'stretch',
+              ...carte,
+              border: '2px solid var(--commun)',
+              padding: 'clamp(24px,3vw,32px)',
+              maxWidth: 420,
+              width: '100%',
+              justifySelf: 'center',
             }}
           >
-            <article style={{ ...carte, border: '2px solid var(--commun)', padding: 'clamp(24px,3vw,32px)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
-                <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.14em' }}>Annuel</span>
-                <span
-                  style={{
-                    ...mono(10, 'var(--sur-commun)'),
-                    textTransform: 'uppercase',
-                    letterSpacing: '.1em',
-                    background: 'var(--commun)',
-                    padding: '3px 8px',
-                    borderRadius: 'var(--rayon)',
-                  }}
-                >
-                  Deux mois offerts
+            <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.14em' }}>
+              {formule === 'annuel' ? 'Annuel' : 'Mensuel'}
+            </span>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <span
+                style={{
+                  ...mono('clamp(2rem,4vw,2.75rem)', 'var(--texte)'),
+                  fontWeight: 300,
+                  fontVariantNumeric: 'tabular-nums',
+                  lineHeight: 1,
+                }}
+              >
+                {formatPrix(formule === 'annuel' ? ANNUEL.prix : MENSUEL.prix)}
+                <span style={{ fontSize: '.4em', color: 'var(--texte-doux)', marginLeft: '.3em' }}>
+                  {formule === 'annuel' ? '/an' : '/mois'}
                 </span>
-              </div>
-              <div style={{ display: 'grid', gap: 6 }}>
-                <span style={{ ...mono('clamp(2rem,4vw,2.75rem)', 'var(--texte)'), fontWeight: 300, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                  49,90 €<span style={{ fontSize: '.4em', color: 'var(--texte-doux)', marginLeft: '.3em' }}>/an</span>
-                </span>
-                <span style={mono(13)}>soit 4,16 €/mois</span>
-              </div>
-              <Bouton variante="principal" href="/connexion" style={{ justifyContent: 'center' }}>
-                Essayer gratuitement 30 jours
-              </Bouton>
-              <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.1em' }}>
-                Sans carte bancaire
               </span>
-            </article>
-            <article style={{ ...carte, background: 'var(--fond)', padding: 'clamp(24px,3vw,32px)' }}>
-              <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.14em' }}>Mensuel</span>
-              <div style={{ display: 'grid', gap: 6 }}>
-                <span style={{ ...mono('clamp(2rem,4vw,2.75rem)', 'var(--texte)'), fontWeight: 300, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                  4,99 €<span style={{ fontSize: '.4em', color: 'var(--texte-doux)', marginLeft: '.3em' }}>/mois</span>
-                </span>
-                <span style={mono(13)}>sans engagement</span>
-              </div>
-              <Bouton variante="secondaire" href="/connexion" style={{ justifyContent: 'center' }}>
-                Choisir le mensuel
-              </Bouton>
-              <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.1em' }}>
-                Résiliation en trois clics
+              <span style={mono(13)}>
+                {formule === 'annuel'
+                  ? `soit ${formatPrix(ANNUEL.parMois)}/mois`
+                  : 'sans engagement'}
               </span>
-            </article>
-          </div>
+            </div>
+            <Bouton variante="principal" href="/connexion" style={{ justifyContent: 'center' }}>
+              Essayer gratuitement 30 jours
+            </Bouton>
+            <span style={{ ...mono(11), textTransform: 'uppercase', letterSpacing: '.1em' }}>
+              {formule === 'annuel' ? 'Sans carte bancaire' : 'Résiliation en trois clics'}
+            </span>
+          </article>
+
           <ul
             style={{
               margin: 0,

@@ -59,6 +59,17 @@ function facteur(largeur: number) {
   return 1;
 }
 
+/**
+ * Version des captures, à INCRÉMENTER À CHAQUE RETRAITEMENT.
+ *
+ * ⚠ Les fichiers gardent le même nom d'une série à l'autre. Sans ce paramètre,
+ * un navigateur qui a déjà vu `/captures/chaux/repas.webp` ressert sa copie :
+ * constaté le 26/08/2026, le bureau montrait les nouvelles captures pendant que
+ * le téléphone affichait encore les anciennes. Le défaut est invisible pour qui
+ * teste sur une machine neuve, et permanent pour les visiteurs déjà venus.
+ */
+const VERSION_CAPTURES = 2;
+
 export type ModuleEventail = {
   fil: Fil;
   titre: string;
@@ -90,7 +101,7 @@ export default function EventailModules({
    * que c'est bien le produit qu'on regarde.
    */
   const capture = (m: ModuleEventail) =>
-    m.fichier ? `/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/${m.fichier}.webp` : undefined;
+    m.fichier ? `/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/${m.fichier}.webp?v=${VERSION_CAPTURES}` : undefined;
 
   const total = modules.length;
   const pagine = total > VISIBLES_MAX;

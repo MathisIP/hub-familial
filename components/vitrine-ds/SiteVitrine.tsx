@@ -333,7 +333,7 @@ export default function SiteVitrine() {
               largeur={300}
               rotation={3}
               alt="Écran d'accueil : la semaine du foyer, une couleur par personne"
-              src={`/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/accueil.webp`}
+              src={`/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/accueil.webp?v=2`}
             />
           </div>
         </div>

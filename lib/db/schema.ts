@@ -72,14 +72,23 @@ export const foyers = pgTable('foyers', {
    */
   onboardingFait: boolean('onboarding_fait').notNull().default(true),
   /**
-   * Date à laquelle l'abonné a demandé l'exécution immédiate du service et
-   * reconnu perdre son droit de rétractation (art. L221-25 du code de la
-   * consommation, repris à l'article 8 des CGV).
+   * Date à laquelle l'abonné a demandé l'exécution immédiate du service, pour y
+   * accéder sans attendre la fin du délai de rétractation (art. L. 221-25).
    *
-   * ⚠ C'est une PREUVE, pas un confort : sans cette reconnaissance recueillie
-   * AVANT le paiement, le délai de rétractation de 14 jours court normalement
-   * et l'abonnement peut être annulé avec remboursement. On horodate donc le
-   * consentement au moment où il est donné.
+   * ⚠ **LE NOM DE CETTE COLONNE MENT — L'ABONNÉ NE RENONCE À RIEN.** Elle date
+   * d'une version de l'article 8 qui faisait perdre le droit de rétractation
+   * « une fois le service pleinement exécuté ». Cette perte suppose une exécution
+   * COMPLÈTE pendant les quatorze jours, ce qu'un abonnement n'est jamais : la
+   * renonciation ne jouait pas. Depuis le 26/08/2026, l'article 8 accorde au
+   * contraire quatorze jours avec **remboursement intégral**.
+   *
+   * ⚠ NE JAMAIS S'APPUYER SUR CETTE COLONNE POUR REFUSER UN REMBOURSEMENT. Elle
+   * atteste d'une demande d'exécution immédiate, rien d'autre. Le nom est
+   * conservé parce que le renommer coûterait une migration sans rien changer au
+   * comportement — pas parce qu'il est juste.
+   *
+   * Ce qu'elle prouve, et qui reste nécessaire : sans cette demande recueillie
+   * AVANT le paiement, le service ne peut pas démarrer avant la fin du délai.
    */
   retractationRenonceeLe: timestamp('retractation_renoncee_le', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),

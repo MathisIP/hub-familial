@@ -112,13 +112,22 @@ function idPrix(formule: IdOffre): string {
 /**
  * Ouvre le paiement Stripe.
  *
- * ⚠ `renonciation` n'est pas une formalité : pour un service numérique dont
- * l'accès est immédiat, la loi (art. L221-25 du code de la consommation) exige
- * que le consommateur ait EXPRESSÉMENT demandé l'exécution immédiate et reconnu
- * perdre son droit de rétractation. Sans cette reconnaissance recueillie AVANT
- * le paiement, le délai de 14 jours s'applique et l'abonnement est annulable
- * avec remboursement. On refuse donc de créer la session, et on horodate le
- * consentement pour pouvoir en faire la preuve.
+ * ⚠ `renonciation` PORTE UN NOM TROMPEUR : le consommateur ne renonce à rien.
+ * Le paramètre recueille sa DEMANDE EXPRESSE d'exécution immédiate, que la loi
+ * (art. L. 221-25) exige pour qu'un service numérique démarre avant la fin du
+ * délai de rétractation. Sans elle, le service ne peut pas être fourni tout de
+ * suite — d'où le refus de créer la session, et l'horodatage qui en fait la
+ * preuve.
+ *
+ * ⚠ CE N'EST PAS UN MOTIF DE REFUS DE REMBOURSEMENT. Depuis le 26/08/2026,
+ * l'article 8 des CGV accorde quatorze jours avec remboursement INTÉGRAL, au-delà
+ * de ce que la loi impose (elle autoriserait une retenue au prorata). L'ancienne
+ * version faisait « perdre » le droit une fois le service pleinement exécuté —
+ * condition qu'un abonnement ne remplit jamais en deux semaines, si bien que la
+ * renonciation ne jouait pas tout en le faisant croire au client.
+ *
+ * Le nom est conservé faute de gain à le changer ; la case affichée, elle, a été
+ * réécrite (`ABO_RENONCIATION`, lib/i18n.ts).
  */
 export async function creerCheckout(
   origin: string,

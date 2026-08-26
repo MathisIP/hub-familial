@@ -728,13 +728,24 @@ const UI = {
   },
   ABO_AVANT_TVA: { fr: 'Prix TTC, sans engagement de durée.', en: 'Price incl. tax, no minimum term.' },
   /**
-   * ⚠ Formulation juridique — art. L221-25 du code de la consommation, reprise à
-   * l'article 8 des CGV. Ne pas l'adoucir : c'est elle qui rend la renonciation
-   * opposable. Toute reformulation doit être relue avec les CGV.
+   * ⚠ FORMULATION JURIDIQUE — art. L. 221-25, à lire avec l'article 8 des CGV.
+   *
+   * ⚠ ELLE NE FAIT PLUS RENONCER À QUOI QUE CE SOIT (26/08/2026). L'ancienne
+   * version annonçait la perte du droit de rétractation « une fois le service
+   * pleinement exécuté ». Cette perte suppose une exécution COMPLÈTE pendant les
+   * quatorze jours — or un abonnement n'est jamais pleinement exécuté en deux
+   * semaines. La condition n'étant pas remplie, le client conservait son droit
+   * pendant que la case lui affirmait le contraire, au moment même où il payait.
+   * Faire croire à un consommateur qu'il perd un droit d'ordre public est un
+   * manquement en soi, indépendamment de son effet.
+   *
+   * Ce qui reste, et qui est nécessaire : la DEMANDE EXPRESSE d'exécution
+   * immédiate, sans laquelle le service ne peut pas démarrer avant la fin du
+   * délai. Ne pas y réintroduire de renonciation.
    */
   ABO_RENONCIATION: {
-    fr: 'Je demande l’exécution immédiate de l’abonnement et je reconnais qu’une fois le service pleinement exécuté, je perdrai mon droit de rétractation de 14 jours.',
-    en: 'I request immediate performance of the subscription and acknowledge that, once the service has been fully performed, I will lose my 14-day right of withdrawal.',
+    fr: 'Je demande l’exécution immédiate de l’abonnement, sans attendre la fin du délai de rétractation. Je conserve mon droit de rétractation de 14 jours, avec remboursement intégral.',
+    en: 'I request immediate performance of the subscription, without waiting for the withdrawal period to end. I keep my 14-day right of withdrawal, with a full refund.',
   },
   ABO_RENONCIATION_REQUISE: {
     fr: 'Coche la case ci-dessus pour démarrer l’abonnement immédiatement.',

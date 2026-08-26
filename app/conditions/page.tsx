@@ -157,22 +157,48 @@ export default function PageConditions() {
       </ul>
 
       <h2>8. Droit de rétractation</h2>
+      {/*
+        ⚠ RÉÉCRIT LE 26/08/2026 — l'article précédent était juridiquement inopérant.
+        Il faisait renoncer l'Utilisateur à sa rétractation « une fois le service
+        pleinement exécuté ». Ce mécanisme (L. 221-25) suppose une exécution
+        COMPLÈTE pendant les quatorze jours ; un abonnement ne l'est jamais en
+        deux semaines. La renonciation ne jouait donc pas : le client conservait
+        son droit pendant que le contrat lui affirmait le contraire.
+
+        ⚠ CHOIX ASSUMÉ — remboursement INTÉGRAL, au-delà de ce qu'impose la loi.
+        Le droit permettrait de retenir un prorata des jours consommés. On y
+        renonce : l'essai dure trente jours sans carte, donc celui qui paie a déjà
+        utilisé le produit un mois, et le cas d'une rétractation au douzième jour
+        sera rarissime. L'écart se compterait en euros, contre une formule de
+        prorata à écrire, à expliquer et à maintenir.
+
+        ⚠ CE TEXTE ET LA CASE DU PAIEMENT (`ABO_RENONCIATION`, lib/i18n.ts) SE
+        LISENT ENSEMBLE. Ils se contredisaient — la case annonçait une perte de
+        droit que cet article accordait. Toute retouche de l'un impose de relire
+        l'autre.
+      */}
       <p>
         Conformément aux articles L. 221-18 et suivants du Code de la consommation,
         l’Utilisateur dispose d’un délai de <strong>quatorze (14) jours</strong> à compter
-        de la souscription pour se rétracter, sans motif ni pénalité.
+        de la souscription pour se rétracter, sans avoir à motiver sa décision ni à
+        supporter de pénalité.
       </p>
       <p>
-        Le Service étant fourni <strong>immédiatement</strong> après souscription, l’Utilisateur
-        est invité, au moment du paiement, à demander expressément l’exécution immédiate et à
-        reconnaître qu’il <strong>renonce alors à son droit de rétractation</strong> une fois le
-        service pleinement exécuté. À défaut d’une telle demande, le délai de rétractation
-        s’applique dans les conditions de droit commun.
+        Au moment du paiement, l’Utilisateur demande expressément que l’exécution du Service
+        commence immédiatement, afin d’y accéder sans attendre la fin de ce délai.{' '}
+        <strong>Cette demande ne lui fait perdre aucun droit</strong> : s’il se rétracte dans
+        les quatorze jours, l’éditeur lui rembourse <strong>l’intégralité</strong> des sommes
+        versées, sans retenue au prorata des jours d’utilisation, alors même que la loi
+        autoriserait une telle retenue.
       </p>
       <p>
         Pour exercer ce droit : écrire à contact@nestync.app avec les nom, prénom et
-        adresse e-mail du compte concerné. Le remboursement intervient sous 14 jours par le même
-        moyen de paiement.
+        adresse e-mail du compte concerné, ou utiliser le formulaire de la page{' '}
+        <Link href="/aide">Aide et contact</Link>. Le remboursement intervient au plus tard
+        quatorze jours après réception de la demande, par le même moyen de paiement.
+      </p>
+      <p>
+        Au-delà de ce délai, l’abonnement suit les règles de résiliation de l’article 7.
       </p>
 
       <h2>9. Disponibilité et maintenance</h2>

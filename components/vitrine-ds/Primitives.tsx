@@ -262,6 +262,10 @@ export function BlocChiffre({
 const RAYON_APPAREIL = 44 / 300;
 const RAYON_ECRAN = 34 / 300;
 const BORDURE = 10 / 300;
+/* Îlot de la caméra — mêmes proportions de référence. */
+const ILOT_L = 76 / 300;
+const ILOT_H = 22 / 300;
+const ILOT_HAUT = 10 / 300;
 
 export function Mockup({
   src,
@@ -327,11 +331,15 @@ export function Mockup({
             aria-hidden="true"
             style={{
               position: 'absolute',
-              top: 10,
+              // ⚠ Proportionnel, comme la bordure et les rayons juste au-dessus.
+              // Ces trois valeurs étaient figées (76 × 22 à 10 px du bord),
+              // calibrées pour une largeur de 300 : à 150 px l'îlot occupait
+              // proportionnellement le double et mangeait l'écran.
+              top: largeur * ILOT_HAUT,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 76,
-              height: 22,
+              width: largeur * ILOT_L,
+              height: largeur * ILOT_H,
               borderRadius: 'var(--rayon-pastille)',
               background: 'var(--encre)',
             }}

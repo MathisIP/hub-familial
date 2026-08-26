@@ -220,10 +220,31 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
               key={m.titre}
               className="nsy-eventail-carte"
               onMouseEnter={() => setSurvole(place)}
+              /*
+               * ⚠ CLIQUER UNE CARTE LA RAMENE AU CENTRE.
+               *
+               * Le survol souleve deja la carte pointee : la page promet donc
+               * une interaction que rien ne concretisait, et les fleches
+               * restaient le seul moyen d'avancer — deux crans pour atteindre
+               * une carte qu'on a sous le curseur.
+               *
+               * `centre` est l'indice du module occupant la place du milieu
+               * (cf. `places()`), il suffit donc de lui donner `i`.
+               *
+               * ⚠ Uniquement en mode pagine : sans pagination, les cartes
+               * sont figees a leur indice et `centre` ne deplace rien. Un
+               * curseur qui promet un clic sans effet serait pire que rien.
+               *
+               * ⚠ Ce n'est pas le chemin clavier : ce sont les fleches, qui
+               * sont de vrais boutons. Le clic est un raccourci a la souris,
+               * ajoute par-dessus un acces qui existe deja.
+               */
+              onClick={pagine && place !== milieuVisible ? () => setCentre(i) : undefined}
               style={{
                 transform: `translate(${x}rem, ${y}rem) rotate(${rot}deg) scale(${echelle})`,
                 zIndex: base.z,
                 transitionDelay: `${Math.abs(place - milieuVisible) * 20}ms`,
+                cursor: pagine && place !== milieuVisible ? 'pointer' : 'default',
               }}
             >
               <Mockup largeur={230} rotation={0} alt={m.alt} src={m.src} />

@@ -257,6 +257,12 @@ export function BlocChiffre({
  * ⚠ Les captures doivent venir du **foyer de démonstration** (Clara, Antoine,
  * Noé), jamais d'un compte réel.
  */
+/* Proportions de l'appareil, exprimees en fraction de sa largeur. Mesurees sur
+   la valeur de reference historique (largeur 300 : rayon 44, bordure 10). */
+const RAYON_APPAREIL = 44 / 300;
+const RAYON_ECRAN = 34 / 300;
+const BORDURE = 10 / 300;
+
 export function Mockup({
   src,
   alt,
@@ -278,25 +284,32 @@ export function Mockup({
         margin: 0,
         width: largeur,
         transform: `rotate(${rotation}deg)`,
-        // L'unique ombre de tout le système.
-        filter: 'drop-shadow(24px 32px 48px rgba(20,28,38,.28))',
+        // L'unique ombre de tout le systeme — elle suit la taille elle aussi,
+        // sinon une petite maquette porte l'ombre d'une grande.
+        filter: `drop-shadow(${largeur * 0.08}px ${largeur * 0.107}px ${largeur * 0.16}px rgba(20,28,38,.28))`,
         ...style,
       }}
     >
       <div
         style={{
           background: 'var(--encre)',
-          borderRadius: 44, // rayon réel de l'appareil, seule exception au 2 px
-          padding: 10,
+          // ⚠ GEOMETRIE PROPORTIONNELLE, PAS FIXE. Ces valeurs etaient des
+          // constantes (rayon 44, bordure 10) calibrees pour une largeur de
+          // 300. A 150 px la bordure devenait proportionnellement deux fois
+          // trop epaisse et le rayon avalait l'ecran : le telephone avait
+          // l'air d'un jouet. Un appareil reel a des proportions constantes,
+          // pas des cotes constantes.
+          borderRadius: largeur * RAYON_APPAREIL, // seule exception au rayon de 2 px
+          padding: largeur * BORDURE,
           border: '1px solid rgba(255,255,255,.09)',
         }}
       >
         <div
           style={{
             position: 'relative',
-            borderRadius: 34,
+            borderRadius: largeur * RAYON_ECRAN,
             overflow: 'hidden',
-            height: largeur * ratio - 20,
+            height: largeur * ratio - largeur * BORDURE * 2,
             background: 'var(--chaux-clair)',
           }}
         >

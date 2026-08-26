@@ -180,25 +180,9 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
       >
         {modules.map((m, i) => {
           const place = carte.get(i);
-          // ⚠ Le test de compacite passe AVANT le remplisseur invisible :
-          // en mobile il ne doit rester qu'un seul element dans la scene,
-          // remplisseurs compris, sinon la grille garde des trous.
-          if (compact) {
-            if (place !== milieuVisible) return null;
-            return (
-              <figure key={m.titre} className="nsy-eventail-carte">
-                {/* ⚠ 150 et non 230 : la maquette respecte les proportions
-                    d'un telephone, donc 230 px de large font pres de 500 px de
-                    haut — a elle seule plus que l'ecran utile, titre et
-                    fleches compris. C'est la LARGEUR qu'il faut reduire, la
-                    hauteur suit. */}
-                <Mockup largeur={150} rotation={0} alt={m.alt} src={m.src} />
-                <figcaption className="nsy-eventail-legende">
-                  <Pastille fil={m.fil}>{m.titre}</Pastille>
-                </figcaption>
-              </figure>
-            );
-          }
+          // En mobile c'est le bloc `compact` plus bas qui rend les cartes :
+          // on sort d'ici sans rien produire, remplisseurs invisibles compris.
+          if (compact) return null;
           if (place === undefined) {
             return <div key={m.titre} className="nsy-eventail-carte" style={{ opacity: 0, pointerEvents: 'none' }} aria-hidden="true" />;
           }
@@ -245,6 +229,44 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
             </figure>
           );
         })}
+
+        {/*
+          VUE MOBILE : la carte centrale, et un morceau de chaque voisine.
+          ⚠ Une carte seule ne dit pas qu'il y en a d'autres — c'est ce qui
+          obligeait a chercher les fleches. Les voisines depassent, coupees par
+          le bord de la scene : c'est le signal que l'eventail donne en bureau,
+          transpose a un ecran etroit. Elles sont cliquables, ce qui donne une
+          troisieme facon d'avancer apres le geste et les fleches.
+
+          ⚠ La cle est le decalage, pas le titre : avec moins de trois
+          modules, la meme carte occuperait deux places et deux cles
+          identiques feraient sauter le rendu.
+
+          ⚠ 150 px de large et non 230 : la maquette garde les proportions
+          d'un telephone, donc 230 px de large font pres de 500 px de haut —
+          a elle seule plus que la place utile, titre et fleches compris.
+        */}
+        {compact &&
+          [-1, 0, 1].map((decalage) => {
+            const m = modules[((centre + decalage) % total + total) % total];
+            if (!m) return null;
+            const cote = decalage !== 0;
+            return (
+              <figure
+                key={decalage}
+                className={cote ? 'nsy-eventail-carte nsy-eventail-cote' : 'nsy-eventail-carte'}
+                onClick={cote ? () => tourner(decalage > 0 ? 'avant' : 'arriere') : undefined}
+                aria-hidden={cote}
+              >
+                <Mockup largeur={150} rotation={0} alt={m.alt} src={m.src} />
+                {!cote && (
+                  <figcaption className="nsy-eventail-legende">
+                    <Pastille fil={m.fil}>{m.titre}</Pastille>
+                  </figcaption>
+                )}
+              </figure>
+            );
+          })}
       </div>
 
       {/* Le texte du module centré, à hauteur fixe : sans elle, la page

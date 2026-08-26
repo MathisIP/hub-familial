@@ -60,11 +60,20 @@ export default function PageConditions() {
       </ul>
 
       <h2>2. Objet</h2>
+      {/*
+        ⚠ « Majeure » qualifie le SOUSCRIPTEUR, pas les membres du foyer —
+        distinction ajoutée le 26/08/2026. Le texte précédent réservait le Service
+        aux majeurs sans nuance : inviter son enfant de quinze ans était donc
+        contraire aux conditions, alors que le produit est fait pour ça (la
+        visibilité par personne existe précisément pour que les parents partagent
+        entre eux sans partager avec les enfants). Le détail est à l'article 4.
+      */}
       <p>
         Les présentes conditions régissent l’accès au Service et sa souscription par toute
         personne physique majeure agissant à des fins non professionnelles (ci-après
         « l’Utilisateur »). Toute création de compte vaut acceptation pleine et entière
-        des présentes.
+        des présentes. Un mineur peut être <strong>membre</strong> d’un foyer dans les
+        conditions de l’article 4, sans pouvoir souscrire d’abonnement.
       </p>
 
       <h2>3. Description du Service</h2>
@@ -97,6 +106,27 @@ export default function PageConditions() {
           membres peuvent restreindre la visibilité de certains éléments — comptes
           bancaires, dossiers de documents, agendas — et masquer un cadeau à son
           destinataire. L’Utilisateur s’engage à n’inviter que des personnes de confiance.
+        </li>
+        {/*
+          ⚠ LA DEUXIÈME PHRASE EST CELLE QUI COMPTE. Le RGPD traite le
+          consentement d'un mineur de moins de quinze ans comme relevant des
+          titulaires de l'autorité parentale ; le produit, lui, n'en garde aucune
+          trace — la connexion passe par un compte Google, qui a ses propres
+          règles d'âge. Recueillir la déclaration dans le contrat est ce qui
+          rattache le traitement à une base légale identifiable.
+
+          ⚠ Aucun âge plancher n'est posé, à dessein : rien dans le code n'empêche
+          un enfant plus jeune d'être membre, et une clause qui l'interdirait
+          serait à nouveau décalée du produit — l'erreur qu'on vient de corriger.
+          ⚠ Point signalé pour la relecture juridique.
+        */}
+        <li>
+          Seule une personne <strong>majeure</strong> peut souscrire un abonnement et créer
+          un foyer. Un <strong>mineur</strong> peut être invité comme membre d’un foyer, sous
+          la responsabilité du titulaire du compte qui l’invite. En invitant un mineur de
+          moins de quinze ans, ce dernier déclare exercer l’autorité parentale à son égard
+          et consentir, en son nom, au traitement de ses données décrit dans la{' '}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
         </li>
         <li>L’Utilisateur s’engage à ne pas détourner le Service de son objet, ni à y héberger de contenu illicite.</li>
       </ul>

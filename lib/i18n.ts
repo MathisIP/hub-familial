@@ -792,6 +792,12 @@ const UI = {
   CONF_S3_P: {
     fr: 'Ces données sont traitées uniquement pour fournir le Service (organiser la vie du foyer). La base légale est l’exécution du contrat qui te lie au Service, et ton consentement pour l’accès facultatif à Google Agenda (révocable à tout moment). La connexion Google sert à t’identifier ; le Service ne demande jamais accès à tes fichiers ni à tes e-mails.',
   },
+  // ⚠ Contrepartie de l'article 4 des CGV, qui recueille la déclaration du
+  // parent. Les deux textes se lisent ensemble : retoucher l'un impose de relire
+  // l'autre.
+  CONF_S3_MINEURS: {
+    fr: 'Un foyer peut compter des membres mineurs. Seule une personne majeure peut créer un foyer et souscrire un abonnement ; c’est elle qui invite les autres membres. Lorsqu’un mineur de moins de quinze ans est invité, le traitement de ses données repose sur le consentement donné en son nom par le titulaire de l’autorité parentale, recueilli auprès de la personne qui l’invite (article 4 des conditions générales). Les droits d’accès, de rectification et d’effacement peuvent être exercés par ce titulaire à tout moment.',
+  },
   CONF_S4_T: { fr: '4. Hébergement et sous-traitants' },
   CONF_S4_LI1: { fr: 'Base de données : Neon, région Union européenne.' },
   CONF_S4_LI2: { fr: 'Hébergement de l’application et mesure d’audience sans cookie : Vercel Inc.' },

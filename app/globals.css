@@ -2732,8 +2732,20 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 
 /* ⚠ Garde-fou général : plus rien ne doit provoquer de défilement horizontal.
    Un débordement d'un seul élément décale toute la page, et sur téléphone on
-   ne voit pas d'où il vient. */
-html, body { overflow-x: hidden; }
+   ne voit pas d'où il vient.
+
+   ⚠ SUR `html` SEUL, JAMAIS SUR `body`. Cette règle disait
+   `html, body { overflow-x: hidden }` et annulait, 2700 lignes plus bas, le
+   correctif commenté en tête de ce fichier : `hidden` sur les DEUX imbrique
+   deux conteneurs de défilement et NEUTRALISE LA MOLETTE en bureau. Le
+   diagnostic tient en une ligne de console —
+   `getComputedStyle(document.body).overflowX` répondait `hidden` au lieu de
+   `clip`, alors que la déclaration de tête demandait `clip`.
+
+   ⚠ Le découpage sur `html` suffit : il porte déjà le débordement de toute
+   la page. Ne jamais rajouter `body` ici pour faire bonne mesure — c'est
+   précisément ce qui a coûté deux allers-retours. */
+html { overflow-x: hidden; }
 
 
 /* ⚠ Les champs de l'éditeur de recettes refusaient de rétrécir : un <input>

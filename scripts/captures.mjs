@@ -24,10 +24,15 @@
  *  3. normaliser toutes les images à la même taille.
  *
  * ⚠ LES CAPTURES N'ARRIVENT PAS TOUTES DANS LE MÊME ÉTAT. Certaines sortent
- * brutes du téléphone (2532 px de haut, barre d'état comprise), d'autres ont
- * déjà été rognées à la main. On décide donc par la hauteur plutôt que
- * d'appliquer la même coupe à tout le monde — sinon les secondes perdraient
- * une bande de contenu utile.
+ * brutes du téléphone (barre d'état comprise), d'autres ont été rognées à la
+ * main, d'autres encore viennent du mode appareil des outils de développement
+ * — celles-là n'ont AUCUNE barre d'état, alors qu'elles sont plus hautes que
+ * les précédentes. Un seuil de hauteur se trompait donc sur ce dernier cas et
+ * leur coupait le titre. On reconnaît les hauteurs d'appareil connues.
+ *
+ * ⚠ Le mode appareil est d'ailleurs la meilleure source : pas de barre d'état
+ * à retirer, pas de connexion Google depuis une adresse IP privée (Google la
+ * refuse), et le bac à sable reste sur le PC.
  */
 import { readdir, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -47,7 +52,15 @@ const HAUTEUR = Math.round(LARGEUR * RATIO);
  * déjà rognée à la main (~2350-2410). Sans lui, on couperait deux fois.
  */
 const BARRE_ETAT = 170;
-const SEUIL_BRUTE = 2450;
+
+/**
+ * Hauteurs des captures PRISES SUR L'APPAREIL, barre d'état comprise.
+ * ⚠ Une capture faite depuis le mode appareil des outils de développement
+ * (1179 × 2556 pour un iPhone 14 Pro) N'A PAS de barre d'état : lui couper
+ * 170 px emporterait le titre de l'écran. On liste donc les hauteurs connues
+ * des captures d'appareil au lieu de raisonner par « plus grand que ».
+ */
+const HAUTEURS_APPAREIL = new Set([2532, 2556, 2778, 2796, 2688, 2436]);
 
 /**
  * Luminosité moyenne au-delà de laquelle une capture est « chaux ».
@@ -67,7 +80,7 @@ async function traiter(fichierEntree, fichierSortie) {
   if (!w || !h) throw new Error('dimensions illisibles');
 
   // 1. Barre d'état.
-  const haut = h >= SEUIL_BRUTE ? BARRE_ETAT : 0;
+  const haut = HAUTEURS_APPAREIL.has(h) ? BARRE_ETAT : 0;
   const hUtile = h - haut;
 
   // 2. Rapport de l'écran de maquette. On rogne d'abord les côtés — c'est là

@@ -3,7 +3,7 @@ import { and, eq, gt } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { messagesContact, SUJETS_CONTACT } from '@/lib/db/schema';
 import { ErreurValidation } from '@/lib/erreurs';
-import { envoyerMessageContact } from '@/lib/email/messages';
+import { envoyerAccuseReception, envoyerMessageContact } from '@/lib/email/messages';
 
 /**
  * MESSAGES DE LA PAGE D'AIDE (serveur uniquement).
@@ -67,14 +67,42 @@ export async function envoyerDemandeAide(entree: NouveauMessage): Promise<void> 
     throw new ErreurValidation('Tu as déjà envoyé plusieurs messages. Laisse-nous le temps de répondre.');
   }
 
-  await d.insert(messagesContact).values({
-    foyerId: entree.foyerId ?? null,
-    email,
-    nom: S(entree.nom).slice(0, 120),
-    sujet,
-    message,
-  });
+  const [ligne] = await d
+    .insert(messagesContact)
+    .values({
+      foyerId: entree.foyerId ?? null,
+      email,
+      nom: S(entree.nom).slice(0, 120),
+      sujet,
+      message,
+    })
+    // ⚠ On relit la date POSÉE PAR LA BASE (`defaultNow()`) plutôt que d'en
+    // fabriquer une ici : c'est elle qui fait foi dans la table, et c'est donc
+    // elle qui doit figurer dans l'accusé. Deux horodatages proches mais
+    // différents suffiraient à faire douter d'une trace censée dater une
+    // réclamation.
+    .returning({ creeLe: messagesContact.creeLe });
 
   // Après l'enregistrement, et sans conséquence si l'envoi échoue.
   await envoyerMessageContact({ email, nom: S(entree.nom), sujet, message });
+
+  /*
+   * Accusé de réception à l'expéditeur — sa preuve écrite et datée.
+   *
+   * ⚠ N'INTERROMPT JAMAIS. Si l'accusé ne part pas, la demande est déjà
+   * enregistrée et nous a déjà été signalée : faire échouer l'envoi ici
+   * afficherait une erreur à quelqu'un dont le message est pourtant bien arrivé,
+   * et il recommencerait — jusqu'à buter sur le garde-fou anti-inondation.
+   */
+  try {
+    await envoyerAccuseReception({
+      email,
+      nom: S(entree.nom),
+      sujet,
+      message,
+      recu: ligne?.creeLe ?? new Date(),
+    });
+  } catch (e) {
+    console.error('[contact] accusé de réception non envoyé', e instanceof Error ? e.message : e);
+  }
 }

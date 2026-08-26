@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lt, notInArray, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   invitations,
@@ -74,6 +74,42 @@ const RELANCES_PAR_PASSAGE = 50;
  */
 export const RETENTION_MESSAGES = 365 * JOUR;
 
+/**
+ * Conservation des messages qui peuvent devenir un LITIGE.
+ *
+ * ⚠ UN AN NE SUFFIT PAS, ET LE DÉFAUT SE RETOURNE AU PIRE MOMENT. Le
+ * consommateur dispose d'**un an à compter de sa réclamation écrite** pour
+ * saisir le médiateur de la consommation ; celui-ci dispose ensuite de **90
+ * jours**, prolongeables si le litige est complexe. Une réclamation purgée à
+ * 365 jours disparaît donc alors que la saisine est **encore recevable** — et,
+ * dans le cas d'une saisine tardive, elle s'efface *pendant* la médiation.
+ *
+ * Nestync se retrouverait à devoir prouver devant un tiers qu'il a répondu, sans
+ * plus disposer ni de la réclamation ni de sa réponse. C'est le professionnel
+ * qui supporte cette charge, pas le consommateur.
+ *
+ * 365 (saisine) + 90 (médiation) = 455 jours au strict minimum ; 550 couvre la
+ * prolongation pour litige complexe sans conserver indéfiniment.
+ *
+ * ⚠ Durée volontairement RÉSERVÉE aux objets susceptibles de virer au litige.
+ * Le reste — une question, une demande RGPD — reste à un an : ces messages sont
+ * du texte libre non maîtrisé, où quelqu'un peut très bien détailler sa
+ * situation médicale, et rien ne justifierait de les garder plus longtemps.
+ */
+export const RETENTION_RECLAMATIONS = 550 * JOUR;
+
+/**
+ * Objets traités comme des réclamations pour la conservation.
+ *
+ * ⚠ Ne pas réduire à `reclamation`. L'étiquette choisie par l'expéditeur ne
+ * décide pas de la nature juridique de son message : « on m'a prélevé deux
+ * fois » envoyé sous « facturation » est une réclamation, et « rien ne
+ * s'affiche depuis trois jours » sous « problème » fonde un défaut de
+ * conformité. Se fier au bouton cliqué reviendrait à laisser le consommateur
+ * décider, à son insu, de la durée pendant laquelle on peut se défendre.
+ */
+const SUJETS_LITIGIEUX = ['reclamation', 'facturation', 'probleme'];
+
 export type RapportMenage = {
   invitationsPurgees: number;
   messagesPurges: number;
@@ -130,12 +166,32 @@ export async function purgerInvitationsExpirees(): Promise<number> {
   return supprimees.length;
 }
 
-/** Supprime les messages de contact au-delà de leur durée de conservation. */
+/**
+ * Supprime les messages de contact au-delà de leur durée de conservation.
+ *
+ * ⚠ DEUX DURÉES, PAS UNE. Un message ordinaire part à un an ; un message
+ * susceptible de virer au litige est conservé le temps que la voie de la
+ * médiation reste ouverte (cf. `RETENTION_RECLAMATIONS`). La condition unique
+ * ci-dessous les traite d'un seul passage : garder deux requêtes ferait deux
+ * endroits où oublier un objet nouvellement ajouté.
+ */
 export async function purgerMessagesContact(): Promise<number> {
-  const limite = new Date(Date.now() - RETENTION_MESSAGES);
+  const limiteOrdinaire = new Date(Date.now() - RETENTION_MESSAGES);
+  const limiteLitige = new Date(Date.now() - RETENTION_RECLAMATIONS);
   const supprimes = await db()
     .delete(messagesContact)
-    .where(lt(messagesContact.creeLe, limite))
+    .where(
+      or(
+        and(
+          inArray(messagesContact.sujet, SUJETS_LITIGIEUX),
+          lt(messagesContact.creeLe, limiteLitige),
+        ),
+        and(
+          notInArray(messagesContact.sujet, SUJETS_LITIGIEUX),
+          lt(messagesContact.creeLe, limiteOrdinaire),
+        ),
+      ),
+    )
     .returning({ id: messagesContact.id });
   return supprimes.length;
 }

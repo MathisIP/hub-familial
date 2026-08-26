@@ -16,6 +16,7 @@
     "avis:apercu": "node --import tsx scripts/avis-reconduction.mts",
     "captures": "node scripts/captures.mjs",
     "verif:avis": "node --import tsx scripts/verif-avis-reconduction.mts",
+    "verif:reclamations": "node --import tsx scripts/verif-reclamations.mts",
     "verif:isolation": "node scripts/verif-isolation.mjs",
     "bac:init": "node scripts/bac-init.mjs",
     "bac:garnir": "node scripts/demo-seed.mjs",

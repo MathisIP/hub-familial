@@ -532,3 +532,86 @@ export async function envoyerFoyerEnSuppression(
 
   return envoyerEmail({ a: email, nomDestinataire: nom, sujet: objet, texte, html: gabarit(objet, html) });
 }
+
+/**
+ * Accusé de réception envoyé à la PERSONNE qui a écrit depuis la page d'aide.
+ *
+ * ⚠ CE N'EST PAS UNE POLITESSE, C'EST SA PREUVE. Le consommateur ne peut saisir
+ * le médiateur de la consommation qu'après une **réclamation écrite préalable**
+ * restée sans solution. Jusqu'ici, l'envoi du formulaire ne produisait aucune
+ * trace de son côté : la ligne existait en base, chez nous, et lui n'avait rien.
+ * Il ne pouvait donc établir ni qu'il avait écrit, ni quand — alors que c'est la
+ * condition de recevabilité de sa saisine, et que le délai d'un an court à
+ * compter de cette date.
+ *
+ * ⚠ RECOPIER SON MESSAGE, pas seulement confirmer la réception. Un accusé qui
+ * dit « nous avons bien reçu votre demande » ne prouve rien de son contenu. En
+ * le lui renvoyant daté, l'e-mail devient le support durable de sa réclamation —
+ * et lui évite de devoir nous la redemander.
+ *
+ * ⚠ À COMPLÉTER LE JOUR OÙ LA CONVENTION DE MÉDIATION EST SIGNÉE : ajouter ici
+ * le rappel du recours au médiateur (nom, site, adresse postale). Ne PAS le
+ * faire avant — annoncer relever d'un médiateur avec lequel aucune convention
+ * n'existe est une information fausse, et c'est un manquement qui se constate
+ * sans même qu'il y ait litige.
+ *
+ * N'échoue jamais bruyamment : un accusé qui ne part pas ne doit pas faire
+ * échouer l'enregistrement de la demande, qui est le geste utile.
+ */
+export async function envoyerAccuseReception(m: {
+  email: string;
+  nom: string;
+  sujet: string;
+  message: string;
+  recu: Date;
+}): Promise<boolean> {
+  const quand = m.recu.toLocaleString('fr-FR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone: 'Europe/Paris',
+  });
+  const bonjour = m.nom ? `Bonjour ${m.nom},` : 'Bonjour,';
+  const objet = LIBELLE_SUJET[m.sujet] ?? m.sujet;
+
+  const texte =
+    `${bonjour}\n\n` +
+    `Nous avons bien recu votre message du ${quand} (heure de Paris).\n` +
+    `Objet : ${objet}\n\n` +
+    `Vous trouverez ci-dessous la copie de ce que vous nous avez ecrit. ` +
+    `Conservez ce courriel : il date votre demande.\n\n` +
+    `---\n${m.message}\n---\n\n` +
+    `Nous vous repondons sous 30 jours au plus, et generalement bien avant.\n`;
+
+  const echappe = m.message.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  return envoyerEmail({
+    a: m.email,
+    sujet: 'Nous avons bien reçu votre message',
+    texte,
+    html: gabarit(
+      'Message bien reçu',
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${bonjour}</p>
+       <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Nous avons bien reçu votre message du <strong>${quand}</strong> (heure de Paris).<br>Objet : <strong>${objet}</strong></p>
+       <p style="margin:0 0 8px;font-size:13px;color:#7a6f78">Copie de votre message — conservez ce courriel, il date votre demande :</p>
+       <p style="margin:0 0 14px;padding:14px;background:#faf7f5;border-radius:8px;font-size:15px;line-height:1.6;white-space:pre-wrap">${echappe}</p>
+       <p style="margin:0;font-size:15px;line-height:1.6">Nous vous répondons sous 30 jours au plus, et généralement bien avant.</p>`,
+      undefined,
+      "Vous recevez ce message parce que vous avez écrit à Nestync depuis la page d'aide.",
+    ),
+  });
+}
+
+/**
+ * Libellés lisibles des objets du formulaire.
+ * ⚠ Doivent rester alignés sur `SUJETS_CONTACT` (lib/db/schema.ts) et sur les
+ * intitulés du formulaire : l'accusé recopie ce que la personne a choisi, et un
+ * écart lui ferait douter d'avoir été comprise.
+ */
+const LIBELLE_SUJET: Record<string, string> = {
+  question: 'Une question sur l’application',
+  probleme: 'Quelque chose ne fonctionne pas',
+  donnees: 'Données personnelles',
+  facturation: 'Abonnement ou facturation',
+  reclamation: 'Une réclamation',
+  autre: 'Autre',
+};

@@ -741,7 +741,30 @@ export const evMenu = pgTable(
  * message dont on ne maîtrise pas le contenu). Durée de conservation bornée :
  * voir la purge dans [lib/maintenance.ts].
  */
-export const SUJETS_CONTACT = ['question', 'probleme', 'donnees', 'facturation', 'autre'] as const;
+/**
+ * Objets possibles d'un message envoyé depuis la page d'aide.
+ *
+ * ⚠ `reclamation` A UNE PORTÉE JURIDIQUE, pas seulement documentaire. Le
+ * consommateur ne peut saisir le médiateur de la consommation qu'**après une
+ * réclamation écrite préalable** restée sans solution (art. L. 612-2 c. conso.).
+ * Encore faut-il qu'un canal de réclamation existe, soit identifiable, et laisse
+ * une trace datée : sans lui, les saisines arrivent directement chez le
+ * médiateur et rien ne prouve que la réclamation a eu lieu.
+ *
+ * ⚠ L'ÉTIQUETTE NE FAIT PAS LA NATURE JURIDIQUE. Quelqu'un qui écrit « on m'a
+ * prélevé deux fois » sous l'objet « facturation » a formé une réclamation, même
+ * s'il n'a pas cliqué sur le bon bouton. C'est pourquoi la durée de conservation
+ * allongée ([lib/maintenance.ts]) couvre `reclamation`, `facturation` ET
+ * `probleme`, et pas seulement le premier.
+ */
+export const SUJETS_CONTACT = [
+  'question',
+  'probleme',
+  'donnees',
+  'facturation',
+  'reclamation',
+  'autre',
+] as const;
 
 export const messagesContact = pgTable(
   'messages_contact',

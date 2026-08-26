@@ -18,9 +18,16 @@ export const metadata = {
  * laissés en champ à compléter (le document doit se lire comme un vrai document
  * juridique, pas comme un brouillon — il est public et lu par les évaluateurs
  * Google) :
- *   · article 1 : numéro SIREN + adresse, dès l'immatriculation ;
  *   · article 15 : médiateur de la consommation, à désigner (obligatoire en B2C).
  * Faire relire l'ensemble par un professionnel avant d'ouvrir les abonnements.
+ *
+ * ⚠ RELECTURE COMPLÈTE DU 26/08/2026 — sept points corrigés, chacun documenté
+ * par un commentaire à l'endroit concerné. Trois d'entre eux sont ADOSSÉS À DU
+ * CODE et ne peuvent pas être retouchés seuls : l'avis de reconduction
+ * (article 7 ↔ `envoyerAvisReconductions`), la rétractation (article 8 ↔ la case
+ * `ABO_RENONCIATION`), et l'effet de la suppression sur les autres membres
+ * (article 12 ↔ `DELAI_SUPPRESSION_FOYER`). Modifier le texte sans le code
+ * transformerait une clause en engagement non tenu.
  */
 export default function PageConditions() {
   const mensuel = OFFRES[0];
@@ -28,7 +35,7 @@ export default function PageConditions() {
 
   return (
     <CadreSite surtitre="Le contrat" titre="Conditions générales de vente et d’utilisation">
-      <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 26 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <p className="doc-avertissement">
@@ -264,14 +271,33 @@ export default function PageConditions() {
         L’éditeur s’engage à mettre en œuvre les moyens raisonnables pour assurer la
         disponibilité du Service, sans obligation de résultat. Des interruptions peuvent
         survenir pour maintenance ou du fait de prestataires tiers (hébergeur, fournisseur
-        d’authentification). Une interruption prolongée et imputable à l’éditeur peut donner
-        lieu à un geste commercial ou à un remboursement au prorata.
+        d’authentification).
+      </p>
+      {/*
+        ⚠ « Geste commercial ou remboursement au prorata » laissait la réparation
+        à la discrétion de l'éditeur, alors que la garantie légale de conformité
+        OUVRE UN DROIT. Une clause qui présente comme une faveur ce que la loi
+        accorde est de celles qu'un contrôle relève. Corrigé le 26/08/2026.
+      */}
+      <p>
+        Une indisponibilité prolongée imputable à l’éditeur constitue un défaut de conformité.
+        L’Utilisateur peut alors obtenir la <strong>remise en conformité</strong> du Service et,
+        si elle n’intervient pas dans un délai raisonnable, une{' '}
+        <strong>réduction du prix</strong> proportionnelle à la durée de l’interruption ou la
+        résolution du contrat, dans les conditions des articles L. 224-25-17 et suivants du
+        Code de la consommation.
       </p>
 
       <h2>10. Garanties légales et responsabilité</h2>
       <p>
         L’Utilisateur bénéficie de la <strong>garantie légale de conformité</strong> des contenus
         et services numériques (articles L. 224-25-1 et suivants du Code de la consommation).
+        {/* ⚠ La DURÉE manquait. Pour une fourniture continue, la garantie ne dure pas
+            deux ans à compter d'une livraison : elle court pendant TOUTE la durée
+            de fourniture. Sans cette précision, un client pouvait croire sa
+            garantie éteinte alors qu'elle courait encore. */}
+        {' '}Le Service étant fourni de manière continue, cette garantie s’applique{' '}
+        <strong>pendant toute la durée de l’abonnement</strong>.
         La responsabilité de l’éditeur ne saurait être engagée pour les dommages indirects, ni
         pour une perte de données résultant d’une suppression volontaire par l’Utilisateur ou
         un membre de son foyer. Il appartient à l’Utilisateur d’exporter régulièrement ses
@@ -336,9 +362,20 @@ export default function PageConditions() {
         À défaut d’accord amiable, il peut recourir gratuitement à un médiateur de la
         consommation. Conformément à l’article L. 612-1 du Code de la consommation, un
         médiateur sera désigné et ses coordonnées publiées ici avant l’ouverture des
-        abonnements payants ; l’Utilisateur peut également saisir la plateforme européenne
-        de règlement en ligne des litiges (ec.europa.eu/consumers/odr). Les présentes sont
-        soumises au <strong>droit français</strong> ;
+        abonnements payants.
+        {/*
+          ⚠ NE PAS REMETTRE LA PLATEFORME EUROPÉENNE DE RÈGLEMENT EN LIGNE DES
+          LITIGES. Elle est FERMÉE : le règlement (UE) 2024/3228 du 19 décembre
+          2024 a abrogé le règlement (UE) n° 524/2013 — dépôt des plaintes clos le
+          20 mars 2025, plateforme éteinte le 20 juillet 2025, données effacées.
+          L'obligation d'en afficher le lien a disparu avec elle. La mention
+          figurait ici par habitude, recopiée de CGV plus anciennes ; elle
+          renvoyait le client vers un site qui n'existe plus, au moment précis où
+          il cherche un recours. Vérifié le 26/08/2026.
+        */}
+      </p>
+      <p>
+        Les présentes sont soumises au <strong>droit français</strong> ;
         à défaut de résolution amiable, les tribunaux compétents sont ceux du domicile du
         défendeur ou du lieu de livraison du service, au choix de l’Utilisateur.
       </p>

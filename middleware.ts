@@ -31,5 +31,21 @@ export { auth as middleware } from '@/auth';
  * d'écrire.
  */
 export const config = {
-  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|ico|svg|webmanifest)).*)'],
+  /*
+   * ⚠ CETTE LISTE D'EXTENSIONS EST UN PIÈGE SILENCIEUX. Tout ce qui n'y figure
+   * pas passe par l'authentification : un visiteur non connecté reçoit une
+   * redirection vers /connexion à la place du fichier. Pour une image ça se
+   * voit — icône cassée et texte alternatif ; pour une police ou un manifeste,
+   * ça casse sans rien afficher.
+   *
+   * ⚠ CONSTATÉ LE 26/08/2026 : les captures du carrousel sont passées de PNG à
+   * WebP pour alléger la page (8,9 Mo → 772 Ko) et se sont mises à renvoyer du
+   * HTML. Le format n'était pas dans la liste. Rien ne l'avait signalé — ni le
+   * build, ni les types, ni le lint : la page compilait parfaitement, seul le
+   * navigateur d'un visiteur NON CONNECTÉ voyait le problème, et on est
+   * toujours connecté quand on teste.
+   *
+   * En ajoutant un type d'actif servi depuis `public/`, l'ajouter ICI aussi.
+   */
+  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|jpe?g|webp|avif|ico|svg|webmanifest)).*)'],
 };

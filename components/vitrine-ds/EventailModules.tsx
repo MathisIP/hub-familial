@@ -131,6 +131,41 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
   const tourner = (sens: 'avant' | 'arriere') =>
     setCentre((p) => (sens === 'avant' ? (p + 1) % total : (p - 1 + total) % total));
 
+  /*
+   * GLISSEMENT AU DOIGT.
+   *
+   * ⚠ ON NE BLOQUE JAMAIS LE DEFILEMENT. Aucun `preventDefault` sur le
+   * mouvement : la page doit continuer de defiler verticalement pendant qu'on
+   * pose le doigt sur la carte. Un carrousel qui capture le geste vertical
+   * emprisonne le lecteur au milieu de la page — defaut classique, et
+   * particulierement penible sur une page longue comme celle-ci.
+   *
+   * On decide donc APRES coup, au relachement : le geste ne compte que s'il
+   * est franchement horizontal (deux fois plus large que haut) et assez ample
+   * (48 px). Sans ces deux conditions, un simple defilement du pouce ferait
+   * tourner le carrousel par accident.
+   *
+   * Les evenements tactiles ne se declenchent pas a la souris : rien de ceci
+   * n'affecte le bureau.
+   */
+  const depart = useRef<{ x: number; y: number } | null>(null);
+
+  const debutToucher = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    depart.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const finToucher = (e: React.TouchEvent) => {
+    const d = depart.current;
+    depart.current = null;
+    if (!d) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - d.x;
+    const dy = t.clientY - d.y;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    tourner(dx < 0 ? 'avant' : 'arriere');
+  };
+
   const carte = places();
   const milieuVisible = (pagine ? VISIBLES_MAX : total) >> 1;
 
@@ -140,6 +175,8 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
         ref={conteneur}
         className="nsy-eventail-scene"
         onMouseLeave={() => setSurvole(null)}
+        onTouchStart={debutToucher}
+        onTouchEnd={finToucher}
       >
         {modules.map((m, i) => {
           const place = carte.get(i);
@@ -150,7 +187,12 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
             if (place !== milieuVisible) return null;
             return (
               <figure key={m.titre} className="nsy-eventail-carte">
-                <Mockup largeur={230} rotation={0} alt={m.alt} src={m.src} />
+                {/* ⚠ 150 et non 230 : la maquette respecte les proportions
+                    d'un telephone, donc 230 px de large font pres de 500 px de
+                    haut — a elle seule plus que l'ecran utile, titre et
+                    fleches compris. C'est la LARGEUR qu'il faut reduire, la
+                    hauteur suit. */}
+                <Mockup largeur={150} rotation={0} alt={m.alt} src={m.src} />
                 <figcaption className="nsy-eventail-legende">
                   <Pastille fil={m.fil}>{m.titre}</Pastille>
                 </figcaption>

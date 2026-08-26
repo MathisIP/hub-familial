@@ -435,9 +435,14 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
     margin-top: var(--e-4);
     text-align: center;
   }
-  /* Les fleches restent : sans elles, plus rien ne permet de changer de
-     module puisqu'une seule carte est visible. */
+  /* Les fleches restent malgre le glissement au doigt : elles sont le seul
+     indice VISIBLE qu'il y a d'autres modules a voir. Un carrousel qui ne se
+     manipule qu'au geste ne se laisse pas decouvrir. */
   .nsy-site .nsy-eventail-nav { display: flex; }
+  /* ⚠ `pan-y` autorise le navigateur a garder le defilement vertical tout
+     en nous laissant lire le geste horizontal. Sans lui, certains navigateurs
+     retardent l'evenement le temps de decider a qui appartient le geste. */
+  .nsy-site .nsy-eventail-scene { touch-action: pan-y; }
 }
 
 

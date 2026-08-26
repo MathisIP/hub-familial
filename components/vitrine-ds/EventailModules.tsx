@@ -64,10 +64,34 @@ export type ModuleEventail = {
   titre: string;
   texte: string;
   alt: string;
-  src?: string;
+  /**
+   * Slug de la capture, sans chemin ni extension.
+   * ⚠ Le chemin depend du theme, qui change a l'execution : le composant le
+   * compose lui-meme. Un module sans slug garde son cartouche « capture a
+   * fournir » — pointer vers une image absente donnerait une maquette vide,
+   * qu'on lirait comme un bogue et non comme un contenu manquant.
+   */
+  fichier?: string;
 };
 
-export default function EventailModules({ modules }: { modules: ModuleEventail[] }) {
+export default function EventailModules({
+  modules,
+  theme = 'jour',
+}: {
+  modules: ModuleEventail[];
+  /** Theme du site : la capture suit, chaux avec chaux et encre avec encre. */
+  theme?: 'jour' | 'nuit';
+}) {
+  /*
+   * ⚠ LA CAPTURE SUIT LE THEME, ET C'EST LA SEULE FACON D'ETRE CREDIBLE.
+   * Une maquette de telephone affichant une interface claire au milieu d'un
+   * site passe en nuit ne se lit pas comme un choix graphique mais comme une
+   * image plaquee — elle detruit precisement ce qu'elle vient prouver, a savoir
+   * que c'est bien le produit qu'on regarde.
+   */
+  const capture = (m: ModuleEventail) =>
+    m.fichier ? `/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/${m.fichier}.png` : undefined;
+
   const total = modules.length;
   const pagine = total > VISIBLES_MAX;
   const [centre, setCentre] = useState(pagine ? MOITIE : total >> 1);
@@ -247,7 +271,7 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
                 cursor: pagine && place !== milieuVisible ? 'pointer' : 'default',
               }}
             >
-              <Mockup largeur={230} rotation={0} alt={m.alt} src={m.src} />
+              <Mockup largeur={230} rotation={0} alt={m.alt} src={capture(m)} />
               {/* ⚠ LE TITRE SEUL. Les descriptions se chevauchaient : chaque légende
                   pivote avec sa carte, et sept blocs de deux lignes inclinés se
                   recouvrent forcément en bas de l'éventail. Le texte de la carte
@@ -308,7 +332,7 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
                   pointerEvents: voisine ? 'auto' : 'none',
                 }}
               >
-                <Mockup largeur={150} rotation={0} alt={m.alt} src={m.src} />
+                <Mockup largeur={150} rotation={0} alt={m.alt} src={capture(m)} />
                 {ecart === 0 && (
                   <figcaption className="nsy-eventail-legende">
                     <Pastille fil={m.fil}>{m.titre}</Pastille>

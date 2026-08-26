@@ -653,7 +653,7 @@ export default function SiteVitrine() {
             <p style={surtitre}>Le produit, module par module</p>
             <h2 style={h2}>Chaque chose appartient à quelqu&apos;un.</h2>
           </div>
-          <EventailModules modules={MODULES} />
+          <EventailModules modules={MODULES} theme={theme} />
         </div>
       </section>
 
@@ -1099,15 +1099,35 @@ const PILIERS: { fil: Fil; etiquette: string; titre: string; texte: string }[] =
 ];
 
 /** Les huit modules réels, dans l'ordre du gabarit. */
-const MODULES: { fil: Fil; titre: string; texte: string; alt: string; rotation: number }[] = [
-  { fil: 'commun', titre: 'Accueil', texte: "Ce qui arrive aujourd'hui, pour tout le monde.", alt: "Accueil : la journée du foyer en un écran, une couleur par personne", rotation: 3 },
-  { fil: 'sauge', titre: 'Finances', texte: 'Le reste à vivre, sans identifiant bancaire.', alt: 'Finances : compte commun, dépenses par personne, reste à vivre', rotation: -2 },
+/*
+ * ⚠ `fichier` EST UN SLUG, PAS UN CHEMIN. Le chemin complet depend du theme
+ * du site (`/captures/chaux/...` ou `/captures/encre/...`), et le theme change
+ * a l'execution : ecrire l'un des deux ici figerait la capture claire sur un
+ * site passe en nuit, et inversement.
+ *
+ * ⚠ UN MODULE SANS `fichier` GARDE SON CARTOUCHE « CAPTURE A FOURNIR ».
+ * C'est volontaire : pointer vers une image absente afficherait une maquette
+ * vide, qu'on prendrait pour un bogue plutot que pour un contenu manquant.
+ * Agenda et Documents sont dans ce cas — l'un tire ses donnees de Google, que
+ * le foyer de demonstration ne peut pas garnir, l'autre stocke ses fichiers sur
+ * le disque du serveur de developpement.
+ */
+const MODULES: {
+  fil: Fil;
+  titre: string;
+  texte: string;
+  alt: string;
+  rotation: number;
+  fichier?: string;
+}[] = [
+  { fil: 'commun', titre: 'Accueil', texte: "Ce qui arrive aujourd'hui, pour tout le monde.", alt: "Accueil : la journée du foyer en un écran, une couleur par personne", rotation: 3 , fichier: 'accueil'},
+  { fil: 'sauge', titre: 'Finances', texte: 'Le reste à vivre, sans identifiant bancaire.', alt: 'Finances : compte commun, dépenses par personne, reste à vivre', rotation: -2 , fichier: 'finances'},
   { fil: 'corail', titre: 'Agenda', texte: 'Les rendez-vous de chacun sur une même semaine.', alt: 'Agenda : la semaine du foyer, une ligne par personne', rotation: 2 },
-  { fil: 'ambre', titre: 'Repas', texte: 'On pose les recettes, les quantités suivent.', alt: 'Repas : le planning de la semaine et le nombre de convives par repas', rotation: -3 },
-  { fil: 'ambre', titre: 'Courses', texte: 'Rangée par rayon, cochée à deux en magasin.', alt: 'Courses : la liste déduite des repas, rangée par rayon', rotation: 3 },
-  { fil: 'ciel', titre: 'To-do', texte: "Qui s'en occupe, visible sans avoir à le demander.", alt: 'To-do : les tâches du foyer, assignées par personne', rotation: -2 },
+  { fil: 'ambre', titre: 'Repas', texte: 'On pose les recettes, les quantités suivent.', alt: 'Repas : le planning de la semaine et le nombre de convives par repas', rotation: -3 , fichier: 'repas'},
+  { fil: 'ambre', titre: 'Courses', texte: 'Rangée par rayon, cochée à deux en magasin.', alt: 'Courses : la liste déduite des repas, rangée par rayon', rotation: 3 , fichier: 'courses'},
+  { fil: 'ciel', titre: 'To-do', texte: "Qui s'en occupe, visible sans avoir à le demander.", alt: 'To-do : les tâches du foyer, assignées par personne', rotation: -2 , fichier: 'todo'},
   { fil: 'ciel', titre: 'Documents', texte: 'Assurances, attestations, échéances à ne pas manquer.', alt: 'Documents : les papiers importants du foyer et leurs échéances', rotation: 2 },
-  { fil: 'sauge', titre: 'Événements', texte: "Recevoir sans y penser trois soirs d'affilée.", alt: "Événements : la préparation d'une réception, invités et à-faire", rotation: -3 },
+  { fil: 'sauge', titre: 'Événements', texte: "Recevoir sans y penser trois soirs d'affilée.", alt: "Événements : la préparation d'une réception, invités et à-faire", rotation: -3 , fichier: 'evenements'},
 ];
 
 const ENGAGEMENTS: [string, string][] = [

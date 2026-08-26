@@ -2694,3 +2694,35 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   color: var(--muted);
   max-width: 60ch;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * ÉDITEUR DE RECETTES SUR TÉLÉPHONE (26/08/2026)
+ *
+ * ⚠ `.rf-ing-ligne` est une grille de CINQ colonnes (`1.6fr .8fr 1fr 1.2fr
+ * auto`) sans rupture mobile. Sur 375 px, cinq colonnes ne tiennent pas : la
+ * ligne débordait hors de l'écran et les champs Quantité, Unité et Rayon
+ * étaient inatteignables. On ne pouvait donc pas saisir une recette au
+ * téléphone — l'appareil sur lequel on planifie les repas.
+ *
+ * Deux colonnes en dessous de 40 rem : article + quantité sur la première
+ * ligne, unité + rayon sur la seconde, la croix seule sur la troisième.
+ * ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 40rem) {
+  .rf-ing-entete { display: none; } /* des en-têtes de colonnes sans colonnes */
+  .rf-ing-ligne {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--e-2);
+    padding: var(--e-3);
+    border: 1px solid var(--line);
+    border-radius: .8rem;
+    /* Chaque ingrédient devient une petite carte : sans délimitation, six
+       champs empilés se lisent comme une seule liste indifférenciée. */
+  }
+  .rf-ing-ligne > :last-child { grid-column: 1 / -1; justify-self: end; }
+  .rf-ingredients { gap: var(--e-3); }
+}
+
+/* ⚠ Garde-fou général : plus rien ne doit provoquer de défilement horizontal.
+   Un débordement d'un seul élément décale toute la page, et sur téléphone on
+   ne voit pas d'où il vient. */
+html, body { overflow-x: hidden; }

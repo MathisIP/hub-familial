@@ -549,10 +549,15 @@ export default function SiteVitrine() {
               ce n&apos;est pas un talent d&apos;organisation — c&apos;est une charge.
             </p>
           </div>
+          {/* ⚠ NOTE INTERNE — commentaire, JAMAIS une prop. Trois données doivent
+              chiffrer ici la charge mentale, l'empilement d'applications et les
+              échéances oubliées. Rien ne se publie sans SOURCE et ANNÉE : un
+              chiffre sur la vie domestique se vérifie en une recherche, et c'est
+              le premier qu'un journaliste ira contrôler.
+              À fournir pour chacun : la valeur, l'organisme source, l'année. */}
           <EnTravaux
             quoi="Les chiffres du problème"
-            pourquoi="Trois données doivent chiffrer la charge mentale, l'empilement d'applications et les échéances oubliées. Aucune n'est publiée tant qu'elle n'a pas sa source et son année : un chiffre sur la vie domestique se vérifie en une recherche, et c'est le premier qu'un journaliste ira contrôler."
-            attendu="À fournir pour chacun : la valeur, l'organisme source, l'année de l'étude."
+            publique="Des données sourcées viendront ici étayer ce constat."
           />
         </div>
       </section>
@@ -801,10 +806,17 @@ export default function SiteVitrine() {
             <p style={surtitre}>Ils l&apos;utilisent</p>
             <h2 style={h2}>Ce que les foyers en disent.</h2>
           </div>
+          {/* ⚠ NOTE INTERNE — commentaire, JAMAIS une prop. Nestync sort d'essai :
+              aucun foyer ne l'utilise depuis assez longtemps pour en parler
+              honnêtement. Aucun avis, aucune note, aucun logo de presse ne sera
+              inventé pour occuper la place.
+              À recueillir : deux à trois phrases sur un usage précis, avec
+              prénom, ville et composition du foyer — auprès de vrais
+              utilisateurs. Si la section est encore vide au lancement, la
+              RETIRER plutôt que la meubler. */}
           <EnTravaux
             quoi="Les premiers retours"
-            pourquoi="Nestync sort de période d'essai : il n'y a pas encore de foyer utilisateur depuis assez longtemps pour en parler honnêtement. Aucun avis, aucune note et aucun logo de presse ne sera inventé pour occuper la place."
-            attendu="Deux à trois phrases sur un usage précis, avec prénom, ville et composition du foyer — recueillies auprès de vrais utilisateurs."
+            publique="Les premiers foyers utilisateurs témoigneront ici."
           />
         </div>
       </section>

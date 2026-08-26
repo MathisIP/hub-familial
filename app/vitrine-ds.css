@@ -749,3 +749,28 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   border-top: 1px solid var(--trait);
   padding-top: var(--e-3);
 }
+
+/* ⚠ Note interne des blocs « Bientôt » — DÉVELOPPEMENT UNIQUEMENT.
+   Le composant ne la rend pas en production ; ce style n'existe que pour la
+   rendre lisible pendant le travail, et visiblement distincte du contenu réel
+   pour qu'on ne la confonde jamais avec de la copie publiée. */
+.nsy-site .nsy-travaux-interne {
+  margin-top: var(--e-4);
+  padding: var(--e-3);
+  border: 1px dashed var(--alerte);
+  border-radius: var(--rayon);
+  display: grid;
+  gap: var(--e-2);
+}
+.nsy-site .nsy-travaux-interne p {
+  margin: 0;
+  font-family: var(--font-donnees);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--texte-petit);
+}
+.nsy-site .nsy-travaux-interne-titre {
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--alerte) !important;
+}

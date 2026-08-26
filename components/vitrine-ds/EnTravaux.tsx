@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * BLOC « EN TRAVAUX » — ce qui n'existe pas encore, dit franchement.
+ * BLOC « BIENTÔT » — une section encore vide, dite sobrement.
  *
  * ⚠ POURQUOI UN COMPOSANT PLUTÔT QUE DU REMPLISSAGE. Le site parle de charge
  * mentale, de confidentialité et d'argent : sa crédibilité tient à ce qu'il
@@ -10,35 +10,38 @@ import type { ReactNode } from 'react';
  * donc l'avis serait forcément faux. **Un vide assumé se corrige ; un faux
  * publié se retrouve.**
  *
- * ⚠ ET ÇA REND LE MANQUE VISIBLE POUR NOUS. Un emplacement `—` discret finit par
- * se fondre dans la page et par partir en production sans que personne ne le
- * voie. Celui-ci ne peut pas passer inaperçu.
+ * ⚠ AUCUNE NOTE INTERNE NE PASSE PAR CE COMPOSANT (26/08/2026). La première
+ * version prenait des props `pourquoi` et `attendu` et ne les rendait qu'en
+ * développement — mais **une prop voyage dans le bundle même sans être
+ * affichée** : `process.env.NODE_ENV` élimine la branche d'affichage, pas la
+ * chaîne écrite dans le JSX de l'appelant. Vérifié après un build de
+ * production : « un journaliste ira contrôler » s'y trouvait encore.
  *
- * Conforme à la charte : filet tireté (aucun aplat coloré, aucun dégradé),
- * rayon 2 px, surtitre en mono capitales, aucun emoji, aucune icône — le
- * système n'en a pas.
+ * Ce qui relève de l'atelier — pourquoi c'est vide, ce qu'il faut fournir —
+ * s'écrit donc en **commentaire JSX** chez l'appelant. Un commentaire disparaît
+ * à la compilation ; une chaîne, non.
+ *
+ * Le visiteur ne lit qu'une phrase sobre : il hésite à s'abonner, il n'a pas à
+ * savoir ce qui nous manque.
  */
 export default function EnTravaux({
   quoi,
-  pourquoi,
-  attendu,
+  publique,
   children,
 }: {
-  /** Ce qui manque, en une ligne : « Les chiffres du problème ». */
+  /** Ce qui arrive, en une ligne : « Les chiffres du problème ». */
   quoi: string;
-  /** Pourquoi c'est vide plutôt que rempli — la raison, pas l'excuse. */
-  pourquoi: string;
-  /** Ce qu'il faudra pour lever le chantier. */
-  attendu?: string;
-  /** Gabarits ou aperçus éventuels, sous le texte. */
+  /** La phrase montrée au visiteur. Sobre, sans aveu. */
+  publique?: string;
   children?: ReactNode;
 }) {
   return (
     <div className="nsy-travaux" role="note">
-      <p className="nsy-travaux-etiquette">En travaux</p>
+      <p className="nsy-travaux-etiquette">Bientôt</p>
       <p className="nsy-travaux-quoi">{quoi}</p>
-      <p className="nsy-travaux-pourquoi">{pourquoi}</p>
-      {attendu && <p className="nsy-travaux-attendu">{attendu}</p>}
+      <p className="nsy-travaux-pourquoi">
+        {publique ?? 'Cette section arrive prochainement.'}
+      </p>
       {children}
     </div>
   );

@@ -138,7 +138,10 @@ export default function SiteVitrine() {
   const section = (fond: 'base' | 'alt'): React.CSSProperties => ({
     background: fond === 'alt' ? 'var(--fond-alt)' : 'var(--fond)',
     color: 'var(--texte)',
-    padding: 'clamp(64px,9vw,144px) clamp(20px,5vw,96px)',
+    // ⚠ Des JETONS, pas des `clamp()` ecrits ici : un objet de style
+    // JavaScript ne peut pas etre repris par une regle de feuille, donc le
+    // point de rupture mobile n'avait aucune prise sur ce rembourrage.
+    padding: 'var(--pad-section-v) var(--pad-section-h)',
     transition: 'background 300ms var(--courbe), color 300ms var(--courbe)',
   });
   const contenu: React.CSSProperties = { maxWidth: 1440, margin: '0 auto' };
@@ -227,7 +230,8 @@ export default function SiteVitrine() {
         id="hero"
         style={{
           ...section('base'),
-          padding: 'clamp(48px,7vw,104px) clamp(20px,5vw,96px) clamp(64px,9vw,144px)',
+          padding:
+            'calc(var(--pad-section-v) * .75) var(--pad-section-h) var(--pad-section-v)',
         }}
       >
         <div

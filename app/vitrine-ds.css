@@ -104,6 +104,13 @@
   --section-tablette: 96px;
   --section-mobile: 64px;
 
+  /* Rembourrage des sections. ⚠ EN JETONS, PAS EN `clamp()` INLINE : les
+     sections sont mises en forme par un objet de style JavaScript, qu'aucune
+     regle de feuille ne peut reprendre au point de rupture. Passer par des
+     variables est ce qui rend la version mobile reglable. */
+  --pad-section-v: clamp(64px, 9vw, 144px);
+  --pad-section-h: clamp(20px, 5vw, 96px);
+
   --contenu-max: 1440px;
   --gouttiere: 24px;
   --marge-desktop: 96px;
@@ -239,6 +246,44 @@
     --marge-desktop: var(--marge-mobile);
     --section-desktop: var(--section-mobile);
     --rail: 0px;
+
+    /* ============ ECHELLE MOBILE ============
+     * ⚠ LE DEFAUT N'ETAIT PAS « TOUT EST TROP GROS », C'ETAIT QUE LES
+     * `clamp()` NE S'ACTIVAIENT JAMAIS. Sur un ecran de 390 px, le terme
+     * fluide de `--display-xl` (9vw = 35 px) tombe SOUS son minimum de
+     * 3.25rem : la valeur se verrouille donc sur un plancher calibre pour
+     * une tablette. Tous les titres du site etaient dans ce cas.
+     *
+     * ⚠ ON REDUIT L'AMPLITUDE, PAS LE RAPPORT. Diviser tout par le meme
+     * facteur aplatirait l'ecart entre le Fraunces des titres et le corps
+     * de texte — or c'est cet ecart QUI FAIT la direction artistique. Le
+     * rapport titre/corps passe de 3,06 a environ 2,7 : assez pour que le
+     * titre domine encore, assez peu pour qu'il tienne dans l'ecran.
+     *
+     * ⚠ Rien de tout ceci ne touche au bureau : ces valeurs ne vivent que
+     * sous 767 px. */
+    --display-xl: clamp(2.5rem, 11vw, 3.25rem);
+    --display-l: clamp(1.75rem, 7.5vw, 2.25rem);
+    --titre-m: clamp(1.25rem, 5.5vw, 1.5rem);
+    --corps-l: 1.0625rem;
+    /* ⚠ Jamais sous 16 px : en dessous, iOS zoome de force au focus d'un
+       champ et la lecture au pouce devient penible. */
+    --corps: 1rem;
+    --petit: 0.875rem;
+    --chiffre-cle: clamp(1.75rem, 7vw, 2.5rem);
+
+    /* Interlignes desserres : 0,94 est tenable sur deux mots en bureau, pas
+       sur un titre qui passe a trois lignes dans une colonne etroite. */
+    --lh-display-xl: 1;
+    --lh-display-l: 1.08;
+
+    /* Espacements : les trois plus grands cadencaient une page large. */
+    --e-9: 56px;
+    --e-10: 72px;
+    --e-11: 96px;
+
+    --pad-section-v: 48px;
+    --pad-section-h: 20px;
   }
   .nsy-site .nsy-colonnes { grid-template-columns: minmax(0, 1fr); gap: var(--e-7); }
   /* ⚠ On masque les ANCRES, jamais la barre entiere : elles ne menent qu'a

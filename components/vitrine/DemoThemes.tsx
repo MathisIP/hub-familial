@@ -17,7 +17,12 @@ import { FAMILLES, THEMES, themeDeFamille, type IdFamille } from '@/lib/themes';
 const PRENOMS = ['Lou', 'Camille', 'Sacha', 'Inès', 'Noah', 'Léa', 'Gabriel', 'Jade', 'Louis', 'Manon'];
 
 export default function DemoThemes() {
-  const [famille, setFamille] = useState<IdFamille>('corail');
+  /*
+   * ⚠ Le catalogue est réduit à une seule gamme depuis le 25/08/2026 : on part
+   * de la première famille plutôt que d'un identifiant écrit en dur, qui
+   * casserait à chaque changement de nom.
+   */
+  const [famille, setFamille] = useState<IdFamille>(FAMILLES[0].id);
   const [sombre, setSombre] = useState(false);
   const [neon, setNeon] = useState(true);
   const [prenom, setPrenom] = useState(PRENOMS[0]);

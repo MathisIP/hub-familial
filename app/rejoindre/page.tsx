@@ -1,6 +1,6 @@
 import { utilisateurCourant } from '@/lib/foyer';
 import { invitationParJeton } from '@/lib/membres';
-import { accepterAction } from '@/app/foyer/actions';
+import { accepterAction } from '@/app/foyer/membres/actions';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
 

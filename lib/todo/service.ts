@@ -339,7 +339,7 @@ export async function validerCourses(utilisateurIds: string[]): Promise<{ envoye
       lignes.length === 1
         ? '1 article à prendre. Touchez pour l’ouvrir.'
         : `${lignes.length} articles à prendre. Touchez pour l’ouvrir.`,
-    url: '/todo?onglet=courses',
+    url: '/foyer/todo?onglet=courses',
     tag: 'courses',
   });
 

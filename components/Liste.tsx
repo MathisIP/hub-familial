@@ -168,7 +168,7 @@ export default function Liste({
   }
 
   return (
-    <div ref={racine} className={`liste ${className}`}>
+    <div ref={racine} className={`deroulante ${className}`}>
       {name &&
         (multiple ? (
           selection.map((v) => <input key={v} type="hidden" name={name} value={v} />)

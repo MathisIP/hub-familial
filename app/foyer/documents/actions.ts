@@ -12,7 +12,7 @@ export type ResultatAction = { ok?: true; erreur?: string };
  * Le service revérifie que la personne est propriétaire du foyer : une action
  * serveur reste une porte ouverte sur le réseau.
  *
- * ⚠ `revalidatePath('/')` en plus de `/documents` : la carte Documents de
+ * ⚠ `revalidatePath('/')` en plus de `/foyer/documents` : la carte Documents de
  * l'accueil fait sa propre recherche à travers tous les dossiers, elle doit
  * refléter la restriction immédiatement.
  */
@@ -26,7 +26,7 @@ export async function definirPartageDossierAction(
       restreint: formData.get('restreint') === 'oui',
       utilisateurIds: formData.getAll('utilisateurs').map(String).filter(Boolean),
     });
-    revalidatePath('/documents');
+    revalidatePath('/foyer/documents');
     revalidatePath('/');
     return { ok: true };
   } catch (e) {

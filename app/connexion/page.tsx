@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { signIn } from '@/auth';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
+import CadreSite from '@/components/vitrine-ds/CadreSite';
 
 export const metadata = { title: 'Connexion — Nestync' };
 
@@ -27,11 +27,14 @@ function destinationSure(brut: string | undefined): string {
 }
 
 /**
- * Page de connexion : identification Google, ouverte à tous. Un seul bouton qui
- * lance le flux OAuth Google via une action serveur.
+ * Page de connexion : identification Google, ouverte à tous.
  *
- * Un lien de retour vers la vitrine (`/`) évite d'enfermer un visiteur venu
- * simplement découvrir le produit, les tarifs ou les conditions.
+ * ⚠ PASSÉE À LA CHARTE DU SITE (25/08/2026). Elle portait l'habillage de
+ * l'application — carte très arrondie, halo, palette corail. Or c'est la
+ * première page que voit quelqu'un venu de la vitrine : enchaîner un site sobre
+ * et anguleux sur une interface arrondie et colorée donnait l'impression de
+ * changer de produit au premier clic. Elle partage désormais le cadre des pages
+ * publiques.
  */
 export default async function Connexion({
   searchParams,
@@ -44,29 +47,26 @@ export default async function Connexion({
   // retomber systématiquement sur l'accueil. On n'accepte qu'un chemin interne.
   const { callbackUrl } = await searchParams;
   const retour = destinationSure(callbackUrl);
+
   return (
-    <div className="connexion">
-      <div className="connexion-carte">
-        <Image
-          src="/icon-192.png"
-          alt=""
-          width={72}
-          height={72}
-          className="connexion-logo-img"
-          priority
-        />
-        <h1>{t('APP_TITRE', langue)}</h1>
-        <p>{t('CNX_ACCES', langue)}</p>
+    <CadreSite surtitre="Votre foyer" titre="Se connecter" chapeau={t('CNX_ACCES', langue)}>
+      <div className="nsy-connexion">
         <form
           action={async () => {
             'use server';
             await signIn('google', { redirectTo: retour });
           }}
         >
-          {/* Bouton conforme aux « Sign in with Google » Branding Guidelines :
-              logo officiel 4 couleurs non modifié, fond blanc, bordure et
-              typographie imposées. Google vérifie ce point lors de la validation
-              de la marque — ne pas restyler ni recolorer le logo. */}
+          {/*
+            ⚠ BOUTON CONFORME AUX « SIGN IN WITH GOOGLE » BRANDING GUIDELINES :
+            logo officiel quatre couleurs non modifié, fond blanc, bordure et
+            typographie imposées. Google vérifie ce point lors de la validation
+            de la marque — et la vérification du scope `calendar.events` est
+            déjà obtenue, la remettre en cause coûterait des semaines.
+            **Ne pas le repeindre aux couleurs du site**, contrairement à tout le
+            reste de cette page. C'est le seul élément qui échappe à la charte,
+            et c'est une contrainte externe, pas un oubli.
+          */}
           <button type="submit" className="bouton-google">
             <span className="bouton-google-ic" aria-hidden="true">
               <svg viewBox="0 0 48 48" width="18" height="18" focusable="false">
@@ -79,10 +79,16 @@ export default async function Connexion({
             {t('CNX_BOUTON', langue)}
           </button>
         </form>
-        <p className="connexion-retour">
+
+        <p className="nsy-connexion-note">
+          Créer un compte ne donne accès à rien : c&apos;est ce qui permet d&apos;être invité dans
+          un foyer, ou de demander à en rejoindre un.
+        </p>
+
+        <p className="nsy-connexion-retour">
           <Link href="/">{t('CNX_DECOUVRIR', langue)}</Link>
         </p>
       </div>
-    </div>
+    </CadreSite>
   );
 }

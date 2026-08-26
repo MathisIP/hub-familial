@@ -9,7 +9,7 @@ import {
   detacherAction,
   deconnecterGoogleAction,
   definirPartageAgendaAction,
-} from '@/app/agenda/actions';
+} from '@/app/foyer/agenda/actions';
 
 /**
  * Configuration des agendas du foyer : connecter son compte Google, puis choisir

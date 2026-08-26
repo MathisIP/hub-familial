@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import Astuce from '@/components/Astuce';
 import { useT } from '@/components/I18nProvider';
-import { creerComptesAction } from '@/app/budget/actions';
+import { creerComptesAction } from '@/app/foyer/budget/actions';
 
 type Ligne = { nom: string; solde: string };
 

@@ -23,17 +23,26 @@ const ROLES_TODO = [
 type RoleTodo = (typeof ROLES_TODO)[number];
 type JeuTodo = Record<RoleTodo, string>;
 
-/** Corail réglé à la main (look validé) ; les autres gammes sont générées. */
+/**
+ * Réglages manuels du module To-Do.
+ *
+ * ⚠ Les statuts et priorités sont des SIGNAUX, pas de la décoration : « en
+ * retard » doit se lire d'un coup d'œil. On les règle donc à la main plutôt que
+ * de les dériver de l'accent, qui les rendrait tous indigo — et donc
+ * indistinguables les uns des autres.
+ *
+ * Les teintes restent dans la famille du site : sable, ardoise, brique, olive.
+ */
 const FIXE: Partial<Record<IdTheme, JeuTodo>> = {
-  corail: {
-    DONE_BG: '#F4EDEC', DONE_TX: '#C0A9AB', STATUT_AFAIRE: '#FFE7E4', STATUT_ENCOURS: '#FDE8CF',
-    PRIO_HAUTE_BG: '#FBD2CC', PRIO_MOY_BG: '#FCE8C6', PRIO_MOY_TX: '#9A6A18', PRIO_BAS_BG: '#DCEFE0',
-    ASSIGN_A: '#FFDEE4', ASSIGN_B: '#DDEEFB', ASSIGN_BOTH: '#EADBF6',
+  chaux: {
+    DONE_BG: '#E4E6E1', DONE_TX: '#8B939C', STATUT_AFAIRE: '#DDE0DA', STATUT_ENCOURS: '#EFE4D2',
+    PRIO_HAUTE_BG: '#F2E2E0', PRIO_MOY_BG: '#F0E6D4', PRIO_MOY_TX: '#8A6420', PRIO_BAS_BG: '#E0EDE6',
+    ASSIGN_A: '#E4E3F7', ASSIGN_B: '#DEE9F1', ASSIGN_BOTH: '#E7E4EF',
   },
-  nuit: {
-    DONE_BG: '#2A1F21', DONE_TX: '#7A6663', STATUT_AFAIRE: '#3A2528', STATUT_ENCOURS: '#3A2C1B',
-    PRIO_HAUTE_BG: '#45231F', PRIO_MOY_BG: '#3E3320', PRIO_MOY_TX: '#F0C878', PRIO_BAS_BG: '#1E3327',
-    ASSIGN_A: '#3A2530', ASSIGN_B: '#21323F', ASSIGN_BOTH: '#2E2440',
+  encre: {
+    DONE_BG: '#1A2432', DONE_TX: '#6B7885', STATUT_AFAIRE: '#24313F', STATUT_ENCOURS: '#33301F',
+    PRIO_HAUTE_BG: '#3A2320', PRIO_MOY_BG: '#332E1D', PRIO_MOY_TX: '#E0B978', PRIO_BAS_BG: '#1C3329',
+    ASSIGN_A: '#232145', ASSIGN_B: '#1E2E3D', ASSIGN_BOTH: '#272442',
   },
 };
 

@@ -10,7 +10,7 @@ import { enregistrerAutorisation } from '@/lib/agenda/oauth';
 export const dynamic = 'force-dynamic';
 
 function versAgenda(req: NextRequest, params: Record<string, string>): NextResponse {
-  const url = new URL('/agenda', req.nextUrl.origin);
+  const url = new URL('/foyer/agenda', req.nextUrl.origin);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const rep = NextResponse.redirect(url);
   rep.cookies.delete('agenda-oauth-etat'); // jeton à usage unique

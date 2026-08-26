@@ -286,7 +286,7 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
         />
       )}
 
-      <ul className="liste recettes-liste">
+      <ul className="liste recettes-liste rf-grille">
         {d.recettes.map((r) =>
           edite === r.id ? (
             <li key={r.id}>

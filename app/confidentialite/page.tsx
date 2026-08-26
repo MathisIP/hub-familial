@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
+import CadreSite from '@/components/vitrine-ds/CadreSite';
 
 export const metadata = { title: 'Politique de confidentialité — Nestync' };
 
@@ -17,12 +18,7 @@ export const metadata = { title: 'Politique de confidentialité — Nestync' };
 export default async function PageConfidentialite() {
   const langue = await langueCourante();
   return (
-    <article className="doc-legal">
-      <Link className="lien-retour" href="/">
-        <span aria-hidden="true">←</span> <span>{t('CONF_RETOUR', langue)}</span>
-      </Link>
-
-      <h1>{t('CONF_TITRE', langue)}</h1>
+    <CadreSite surtitre="Vos données" titre={t('CONF_TITRE', langue)}>
       <p className="doc-maj">{t('CONF_MAJ', langue)}</p>
       <p className="doc-langue">{t('CONF_LANGUE', langue)}</p>
 
@@ -53,7 +49,7 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S5_T', langue)}</h2>
       <p>
-        {t('CONF_S5_A', langue)} <Link href="/compte">{t('NAV_MON_COMPTE', langue)}</Link>{' '}
+        {t('CONF_S5_A', langue)} <Link href="/foyer/compte">{t('NAV_MON_COMPTE', langue)}</Link>{' '}
         {t('CONF_S5_B', langue)}
       </p>
       <p>{t('CONF_S5_C', langue)}</p>
@@ -70,7 +66,7 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S7_T', langue)}</h2>
       <p>
-        {t('CONF_S7_A', langue)} <Link href="/compte">{t('NAV_MON_COMPTE', langue)}</Link> :
+        {t('CONF_S7_A', langue)} <Link href="/foyer/compte">{t('NAV_MON_COMPTE', langue)}</Link> :
       </p>
       <ul>
         <li>{t('CONF_S7_LI1', langue)}</li>
@@ -103,6 +99,6 @@ export default async function PageConfidentialite() {
       </p>
       <p>{t('CONF_S9_STOCKAGE', langue)}</p>
       <p>{t('CONF_S9_REVOQUER', langue)}</p>
-    </article>
+    </CadreSite>
   );
 }

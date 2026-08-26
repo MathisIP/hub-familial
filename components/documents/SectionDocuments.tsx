@@ -89,7 +89,7 @@ export default function SectionDocuments() {
     <section className="documents" aria-label={tr('DOC_TITRE')}>
       <div className="doc-tete">
         <h2>{tr('DOC_TITRE')}</h2>
-        <Link href="/documents" className="semaine-lien">{tr('DOC_LIEN_ONGLET')}</Link>
+        <Link href="/foyer/documents" className="semaine-lien">{tr('DOC_LIEN_ONGLET')}</Link>
       </div>
 
       <div className="doc-accueil">

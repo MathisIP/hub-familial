@@ -8,7 +8,7 @@ import {
   ajouterEcheanceAction,
   modifierEcheanceAction,
   supprimerEcheanceAction,
-} from '@/app/budget/actions';
+} from '@/app/foyer/budget/actions';
 import { RECURRENCES_ECHEANCE, type Echeance } from '@/lib/budget/schema';
 
 /**

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@/auth';
 import FormulaireContact from '@/components/aide/FormulaireContact';
+import CadreSite from '@/components/vitrine-ds/CadreSite';
 
 export const metadata = {
   title: 'Aide et contact — Nestync',
@@ -122,9 +123,7 @@ export default async function PageAide() {
   const session = await auth();
 
   return (
-    <article className="doc-legal aide">
-      <Link className="lien-retour" href="/">← Retour</Link>
-      <h1>Aide et contact</h1>
+    <CadreSite surtitre="Un problème, une question" titre="Aide et contact" large>
       <p className="doc-maj">
         Une question ? La réponse est peut-être ci-dessous. Sinon, écris-nous — on
         lit tout.
@@ -157,6 +156,6 @@ export default async function PageAide() {
         <li><Link href="/conditions">Conditions générales</Link> — abonnement, rétractation, résiliation</li>
         <li><Link href="/mentions-legales">Mentions légales</Link> — qui édite le service</li>
       </ul>
-    </article>
+    </CadreSite>
   );
 }

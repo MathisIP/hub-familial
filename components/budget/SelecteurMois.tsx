@@ -8,7 +8,7 @@ import { type SelectionMois } from '@/lib/budget/schema';
 
 /**
  * Sélecteur de mois du Budget. Le mois n'est plus un état partagé du classeur :
- * c'est un simple filtre d'affichage, porté par l'URL (`/budget?annee=&mois=`).
+ * c'est un simple filtre d'affichage, porté par l'URL (`/foyer/budget?annee=&mois=`).
  * Changer de mois navigue → la page serveur recalcule le dashboard pour ce mois.
  */
 export default function SelecteurMois({
@@ -25,7 +25,7 @@ export default function SelecteurMois({
   const moisNoms = Array.from({ length: 12 }, (_, i) => fmtMois.format(new Date(2000, i, 1)));
 
   function aller(annee: number, mois: number) {
-    router.push(`/budget?annee=${annee}&mois=${mois}`);
+    router.push(`/foyer/budget?annee=${annee}&mois=${mois}`);
   }
 
   function decaler(sens: -1 | 1) {

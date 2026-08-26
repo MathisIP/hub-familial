@@ -58,7 +58,7 @@ export default function SemaineAgenda() {
     <section className="semaine" aria-label="Agenda de la semaine">
       <div className="semaine-tete">
         <h2>{tr('SEM_TITRE')}</h2>
-        <Link href="/agenda" className="semaine-lien">{tr('SEM_LIEN')}</Link>
+        <Link href="/foyer/agenda" className="semaine-lien">{tr('SEM_LIEN')}</Link>
       </div>
 
       {etat === 'charge' && <p className="semaine-info">{tr('SEM_CHARGEMENT')}</p>}

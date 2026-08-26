@@ -1,0 +1,751 @@
+/* =====================================================================
+ * NESTYNC — SYSTÈME DE DESIGN DU SITE VITRINE
+ * Importé du projet Claude Design « Nestync Design System » le 25/08/2026.
+ *
+ * ⚠ TOUT EST PORTÉ SOUS `.nsy-site`, ALORS QUE LA SOURCE ÉCRIT `:root`.
+ * Ce n'est pas une coquetterie. L'application pose déjà `data-theme` sur
+ * <html>, et l'un de ses thèmes s'appelle littéralement `nuit` — le même nom
+ * que le thème sombre du site. Importer la source telle quelle aurait eu deux
+ * effets, tous deux invisibles jusqu'en production :
+ *
+ *  1. le `base.css` d'origine style `body`, `a`, `:focus-visible` et
+ *     `::selection` SANS restriction — donc dans toute l'application, qui a
+ *     ses propres règles et des clients qui s'en servent aujourd'hui ;
+ *  2. `:root[data-theme="nuit"]` se déclencherait pour un membre ayant
+ *     simplement choisi le thème sombre de l'application.
+ *
+ * D'où deux écarts assumés :
+ *  · le sélecteur racine devient `.nsy-site` ;
+ *  · le thème du site se lit sur `data-site-theme`, indépendant du
+ *    `data-theme` de l'application. Les deux coexistent sans se toucher.
+ *
+ * ⚠ LES POLICES NE VIENNENT PAS DE GOOGLE FONTS, contrairement à
+ * `tokens/fonts.css`. La section « Vie privée » du site affirme « Polices et
+ * ressources auto-hébergées » : les charger depuis un serveur tiers rendrait
+ * ce texte faux sur la page même qui l'écrit. Le readme du système demande
+ * d'ailleurs explicitement l'auto-hébergement. `next/font/google` télécharge
+ * les fichiers au build et les sert depuis notre domaine — aucune requête
+ * vers Google à l'exécution. Familles injectées par le layout de la route.
+ * ===================================================================== */
+
+.nsy-site {
+  /* --- valeurs brutes, référence --- */
+  --chaux: #E7E9E4;
+  --chaux-clair: #F2F3F0;
+  --chaux-profond: #DDE0DA;
+  --encre: #141C26;
+  --encre-alt: #1E2A38;
+  --encre-surface: #24313F;
+  /* Indigo de marque de l'application : fait foi pour un logo ou un export figé */
+  --indigo-marque: #4F46E5;
+
+  /* --- thème jour (chaux) par défaut --- */
+  --fond: #E7E9E4;
+  --fond-alt: #F2F3F0;
+  --surface: #DDE0DA;
+  --texte: #141C26;
+  --texte-doux: #5A6472;
+  /* Petit texte secondaire (< 16 px). --texte-doux plafonne à 4,91:1 sur chaux :
+     conforme AA mais sans marge, et la source interdit son usage sous 16 px. */
+  --texte-petit: #454E5C;
+  --trait: rgba(20, 28, 38, .14);
+  --sur-commun: #F2F3F0;
+
+  /* les cinq fils — usage graphique */
+  --commun: #4338CA;
+  --corail: #C33F52;
+  --ambre: #A96A1B;
+  --ciel: #2F6E9E;
+  --sauge: #3E7C63;
+
+  /* variantes texte : un accent coloré porté par du texte */
+  --commun-texte: #4338CA;
+  --corail-texte: #BB374A;
+  --ambre-texte: #955B13;
+  --ciel-texte: #2B6C9E;
+  --sauge-texte: #37735B;
+
+  /* sémantique produit */
+  --alerte: #B03A34;
+  --positif: #2F7A59;
+
+  --halo: none; /* le halo néon n'existe qu'en mode nuit */
+
+  /* --- typographie --- */
+  --display-xl: clamp(3.25rem, 9vw, 7.5rem);
+  --display-l: clamp(2.25rem, 5vw, 4rem);
+  --titre-m: clamp(1.5rem, 2.5vw, 2rem);
+  --corps-l: 1.25rem;
+  --corps: 1.0625rem;
+  --petit: 0.9375rem;
+  --eyebrow: 0.75rem;
+  --chiffre-cle: clamp(2rem, 4vw, 3.5rem);
+
+  --lh-display-xl: 0.94;
+  --lh-display-l: 1.02;
+  --lh-titre-m: 1.15;
+  --lh-corps-l: 1.55;
+  --lh-corps: 1.65;
+  --lh-petit: 1.5;
+
+  --ls-display-xl: -0.025em;
+  --ls-display-l: -0.02em;
+  --ls-eyebrow: 0.14em;
+
+  --mesure: 68ch;            /* le texte courant ne dépasse jamais 68 caractères */
+  --mesure-manifeste: 58ch;
+
+  /* --- espacement, base 4 px --- */
+  --e-1: 4px;  --e-2: 8px;  --e-3: 12px; --e-4: 16px;
+  --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
+  --e-9: 96px; --e-10: 144px; --e-11: 216px;
+
+  --section-desktop: 144px;
+  --section-tablette: 96px;
+  --section-mobile: 64px;
+
+  --contenu-max: 1440px;
+  --gouttiere: 24px;
+  --marge-desktop: 96px;
+  --marge-tablette: 48px;
+  --marge-mobile: 20px;
+
+  --rail: 72px;              /* rail des fils, desktop */
+  --rail-tablette: 48px;
+
+  /* Rayons — le site est presque anguleux, contrairement à l'application */
+  --rayon: 2px;
+  --rayon-pastille: 999px;
+
+  /* --- mouvement : une seule courbe --- */
+  --courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duree-micro: 180ms;      /* survol, focus */
+  --duree-apparition: 420ms;
+  --duree-fils: 900ms;
+  --decalage: 60ms;
+  --duree-theme: 300ms;
+
+  /* --- socle, porté par le conteneur plutôt que par `body` --- */
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  line-height: var(--lh-corps);
+  background: var(--fond);
+  color: var(--texte);
+  transition: background var(--duree-theme) var(--courbe),
+              color var(--duree-theme) var(--courbe);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+/* ⚠ `data-site-theme`, et non `data-theme` : voir l'en-tête de ce fichier.
+   Le mode nuit automatique n'est PAS fait en CSS — le script de bascule lit
+   prefers-color-scheme au montage et pose l'attribut. Le choix manuel de la
+   personne reste ainsi toujours prioritaire. */
+.nsy-site[data-site-theme="nuit"] {
+  --fond: #141C26;
+  --fond-alt: #1E2A38;
+  --surface: #24313F;
+  --texte: #F2F3F0;
+  --texte-doux: #A8B2BE;
+  --texte-petit: #A8B2BE;  /* déjà à 7,99:1 en nuit : valeur inchangée */
+  --trait: rgba(168, 178, 190, .18);
+  --sur-commun: #141C26;
+
+  --commun: #8B85F5;
+  --corail: #F0798B;
+  --ambre: #E8A757;
+  --ciel: #85B8E3;
+  --sauge: #74B99C;
+
+  --commun-texte: #8B85F5;
+  --corail-texte: #F0798B;
+  --ambre-texte: #E8A757;
+  --ciel-texte: #85B8E3;
+  --sauge-texte: #74B99C;
+
+  --alerte: #E8756E;
+  --positif: #6FBF97;
+
+  --halo: 0 0 48px rgba(139, 133, 245, .34);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nsy-site {
+    --duree-micro: 0ms;
+    --duree-apparition: 0ms;
+    --duree-fils: 0ms;
+    --decalage: 0ms;
+    --duree-theme: 0ms;
+  }
+}
+
+/* --- socle : borné au site, jamais appliqué à l'application --- */
+.nsy-site *,
+.nsy-site *::before,
+.nsy-site *::after { box-sizing: border-box; }
+
+.nsy-site a {
+  color: var(--commun-texte);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: opacity var(--duree-micro) var(--courbe);
+}
+.nsy-site a:hover { opacity: .7; }
+.nsy-site :focus-visible { outline: 2px solid var(--commun); outline-offset: 2px; }
+.nsy-site ::selection { background: var(--commun); color: var(--sur-commun); }
+
+/* --- rôles typographiques ---
+   Préfixés `ns-` à la source ; bornés ici au site, comme le reste. */
+.nsy-site .ns-display-xl { font-family: var(--font-display); font-variation-settings: var(--wonk); font-weight: 400; font-size: var(--display-xl); line-height: var(--lh-display-xl); letter-spacing: var(--ls-display-xl); }
+.nsy-site .ns-display-l  { font-family: var(--font-display); font-variation-settings: var(--wonk); font-weight: 400; font-size: var(--display-l); line-height: var(--lh-display-l); letter-spacing: var(--ls-display-l); }
+.nsy-site .ns-titre-m    { font-family: var(--font-display); font-variation-settings: var(--wonk); font-weight: 400; font-size: var(--titre-m); line-height: var(--lh-titre-m); }
+.nsy-site .ns-corps-l    { font-family: var(--font-corps); font-size: var(--corps-l); line-height: var(--lh-corps-l); }
+.nsy-site .ns-corps      { font-family: var(--font-corps); font-size: var(--corps); line-height: var(--lh-corps); }
+.nsy-site .ns-petit      { font-family: var(--font-corps); font-size: var(--petit); line-height: var(--lh-petit); }
+.nsy-site .ns-eyebrow    { font-family: var(--font-donnees); font-size: var(--eyebrow); text-transform: uppercase; letter-spacing: var(--ls-eyebrow); font-weight: 400; }
+.nsy-site .ns-chiffre    { font-family: var(--font-donnees); font-size: var(--chiffre-cle); font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* --- adaptations mobile ---
+   La source impose que l'asymétrie du bureau « se résolve proprement » en
+   mobile, et non qu'elle dégénère en empilement centré subi. */
+@media (max-width: 1199px) {
+  .nsy-site .nsy-rail { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .nsy-site {
+    --marge-desktop: var(--marge-tablette);
+    --section-desktop: var(--section-tablette);
+    --rail: var(--rail-tablette);
+  }
+}
+@media (max-width: 767px) {
+  .nsy-site {
+    --marge-desktop: var(--marge-mobile);
+    --section-desktop: var(--section-mobile);
+    --rail: 0px;
+  }
+  .nsy-site .nsy-colonnes { grid-template-columns: minmax(0, 1fr); gap: var(--e-7); }
+  .nsy-site .nsy-nav-liens { display: none; }
+}
+
+/* ⚠ LE SITE VITRINE N'EST PAS UNE PAGE DE L'APPLICATION.
+   `.enveloppe`, le conteneur du layout racine, plafonne à 68 rem : parfait pour
+   un tableau de bord, ruineux pour une page pleine largeur — le site s'affichait
+   enfermé dans une colonne centrale, avec le fond de l'app tout autour.
+   Le rail des modules et le pied de réglages sont traités séparément, par
+   `sansNavigation()` : ils trahissaient un intérieur réservé aux membres sur la
+   page même qui s'adresse à des visiteurs sans foyer. */
+body:has(.nsy-site) .enveloppe {
+  max-width: none;
+  padding: 0;
+}
+
+/* ⚠ Le layout racine RÉSERVE la place du châssis, même quand il est masqué :
+   `body { padding-right: 4.65rem }` au-dessus de 64 rem pour le rail latéral,
+   et un `padding-bottom` en mobile pour le bandeau. `sansNavigation()` retire
+   les composants, pas la place qu'ils occupaient — d'où la bande claire visible
+   à droite du site, qui laissait voir le fond de l'application. */
+body:has(.nsy-site) {
+  padding-right: 0;
+  padding-bottom: 0;
+}
+body:has(.nsy-site) .enveloppe { padding-top: 0; }
+
+/* ====================== ÉVENTAIL DE MODULES ==========================
+ * Portage de « card-fan-carousel » sans Tailwind ni GSAP — cf. l'en-tête de
+ * components/vitrine-ds/EventailModules.tsx.
+ * Une seule courbe et une seule durée, conformément à la charte.
+ * ------------------------------------------------------------------ */
+.nsy-site .nsy-eventail { display: grid; gap: var(--e-6); justify-items: center; width: 100%; }
+
+.nsy-site .nsy-eventail-scene {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 34rem;
+}
+.nsy-site .nsy-eventail-carte {
+  position: absolute;
+  margin: 0;
+  display: grid;
+  gap: var(--e-4);
+  justify-items: center;
+  width: 230px;
+  cursor: default;
+  /* ⚠ La seule courbe du système. Le composant d'origine utilisait un rebond
+     élastique, que la charte interdit. */
+  transition: transform var(--duree-fils) var(--courbe), opacity var(--duree-apparition) var(--courbe);
+}
+/* ⚠ Le titre SEUL, sur une seule ligne. Chaque légende pivote avec sa carte :
+   sept blocs de deux lignes inclinés à 21° se recouvrent forcément en bas de
+   l'éventail — c'est ce qui rendait la zone illisible. */
+.nsy-site .nsy-eventail-legende {
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Le texte du module centré, à HAUTEUR FIXE. Sans elle, la page sauterait de
+   quelques dizaines de pixels à chaque rotation de l'éventail. */
+.nsy-site .nsy-eventail-detail {
+  margin: 0;
+  min-height: 3.2em;
+  max-width: 46ch;
+  text-align: center;
+  font-family: var(--font-corps);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--texte-doux);
+  transition: opacity var(--duree-micro) var(--courbe);
+}
+
+/* Flèches : rayon 2 px, pas de rond — il est réservé aux pastilles et aux fils.
+   Pas de backdrop-filter non plus : la charte l'interdit explicitement. */
+.nsy-site .nsy-eventail-nav { display: flex; align-items: center; gap: var(--e-4); }
+.nsy-site .nsy-eventail-nav button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+  background: transparent; color: var(--texte-doux); cursor: pointer;
+  transition: color var(--duree-micro) var(--courbe), border-color var(--duree-micro) var(--courbe);
+}
+.nsy-site .nsy-eventail-nav button:hover { color: var(--texte); border-color: var(--texte); }
+.nsy-site .nsy-eventail-points { display: flex; align-items: center; gap: var(--e-2); }
+.nsy-site .nsy-eventail-points span {
+  width: 6px; height: 6px; border-radius: var(--rayon-pastille);
+  background: var(--trait);
+  transition: background var(--duree-micro) var(--courbe);
+}
+.nsy-site .nsy-eventail-points span.actif { background: var(--commun); }
+
+/* ⚠ La liste textuelle double l'éventail : elle porte l'information pour les
+   lecteurs d'écran et si le JavaScript ne s'exécute pas. Masquée à l'œil
+   seulement quand l'éventail est réellement affiché. */
+.nsy-site .nsy-eventail-liste {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; padding: 0;
+}
+
+/* ⚠ `prefers-reduced-motion` : NON NÉGOCIABLE selon la charte. L'éventail se
+   défait en une grille sage — la superposition n'a aucun sens sans mouvement,
+   et une carte pivotée de 21° sans transition est juste illisible. */
+@media (prefers-reduced-motion: reduce) {
+  .nsy-site .nsy-eventail-scene {
+    position: static; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: var(--e-7); min-height: 0;
+  }
+  .nsy-site .nsy-eventail-carte { position: static; transform: none !important; transition: none; }
+  .nsy-site .nsy-eventail-nav { display: none; }
+}
+@media (max-width: 767px) {
+  .nsy-site .nsy-eventail-scene { min-height: 26rem; }
+}
+
+
+
+/* ===================== CADRE DES PAGES PUBLIQUES =====================
+ * Connexion, mentions légales, CGV, confidentialité, aide.
+ * Cf. components/vitrine-ds/CadreSite.tsx.
+ * ------------------------------------------------------------------ */
+.nsy-site.nsy-cadre {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nsy-site .nsy-cadre-tete {
+  border-bottom: 1px solid var(--trait);
+  padding: 0 clamp(20px, 5vw, 96px);
+  height: 68px;
+  display: flex;
+  align-items: center;
+}
+/* Aucun logo n'existe : le nom en Fraunces EST la marque, comme sur la vitrine. */
+.nsy-site .nsy-cadre-marque {
+  font-family: var(--font-display);
+  font-variation-settings: var(--wonk);
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: -.02em;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.nsy-site .nsy-cadre-corps {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 88px) clamp(20px, 5vw, 48px) clamp(56px, 8vw, 112px);
+  display: grid;
+  gap: var(--e-7);
+  align-content: start;
+}
+.nsy-site .nsy-cadre-corps.large { max-width: 60rem; }
+.nsy-site .nsy-cadre-entete { display: grid; gap: var(--e-4); }
+
+/* --- Le corps de texte des pages légales ---
+   Ces pages sont de longs documents : la mesure de 68 caractères de la charte
+   y compte plus qu'ailleurs, et les titres doivent se distinguer sans crier. */
+.nsy-site .nsy-cadre-corps h2 {
+  font-family: var(--font-display);
+  font-variation-settings: var(--wonk);
+  font-weight: 400;
+  font-size: var(--titre-m);
+  line-height: var(--lh-titre-m);
+  margin: var(--e-6) 0 0;
+}
+.nsy-site .nsy-cadre-corps h3 {
+  font-family: var(--font-corps);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  margin: var(--e-5) 0 0;
+}
+.nsy-site .nsy-cadre-corps p,
+.nsy-site .nsy-cadre-corps li {
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  line-height: var(--lh-corps);
+  color: var(--texte-doux);
+  max-width: var(--mesure);
+}
+.nsy-site .nsy-cadre-corps strong { color: var(--texte); font-weight: 600; }
+.nsy-site .nsy-cadre-corps ul,
+.nsy-site .nsy-cadre-corps ol { padding-left: var(--e-5); display: grid; gap: var(--e-2); }
+.nsy-site .nsy-cadre-corps section { display: grid; gap: var(--e-3); }
+/* Les dates, montants et numéros : mono, comme partout sur le site. */
+.nsy-site .nsy-cadre-corps code,
+.nsy-site .nsy-cadre-corps .nsy-donnee {
+  font-family: var(--font-donnees);
+  font-size: .92em;
+  color: var(--texte);
+}
+
+.nsy-site .nsy-cadre-pied {
+  border-top: 1px solid var(--trait);
+  background: var(--fond-alt);
+  padding: var(--e-6) clamp(20px, 5vw, 96px);
+  display: grid;
+  gap: var(--e-3);
+}
+.nsy-site .nsy-cadre-pied nav { display: flex; flex-wrap: wrap; gap: var(--e-5); }
+.nsy-site .nsy-cadre-pied a {
+  font-family: var(--font-corps);
+  font-size: var(--petit);
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+.nsy-site .nsy-cadre-pied a:hover { color: var(--texte); }
+.nsy-site .nsy-cadre-pied span {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  color: var(--texte-petit);
+}
+
+/* --- Champs de formulaire, à la charte du site ---
+   Rayon 2 px, filet 1 px, aucun arrondi de pilule : la rupture avec
+   l'application est voulue jusque dans les formulaires. */
+.nsy-site .nsy-champ {
+  width: 100%;
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  color: var(--texte);
+  background: var(--fond-alt);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  transition: border-color var(--duree-micro) var(--courbe);
+}
+.nsy-site .nsy-champ:focus { border-color: var(--commun); outline: none; }
+.nsy-site .nsy-label {
+  display: grid;
+  gap: var(--e-2);
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit);
+}
+
+
+/* --------------------------- Page de connexion ---------------------------
+ * ⚠ `.bouton-google` n'est PAS restylé : son apparence est imposée par les
+ * Branding Guidelines de Google, qui la vérifient. Il reste défini dans
+ * globals.css et traverse cette page tel quel — seul élément à échapper à la
+ * charte du site, par contrainte externe.
+ * ---------------------------------------------------------------------- */
+.nsy-site .nsy-connexion { display: grid; gap: var(--e-5); justify-items: start; }
+.nsy-site .nsy-connexion-note {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-corps);
+  font-size: var(--petit);
+  line-height: 1.6;
+  color: var(--texte-petit);
+}
+.nsy-site .nsy-connexion-retour {
+  margin: 0;
+  padding-top: var(--e-3);
+  border-top: 1px solid var(--trait);
+  width: 100%;
+}
+.nsy-site .nsy-connexion-retour a {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--commun-texte);
+  text-decoration: none;
+}
+.nsy-site .nsy-connexion-retour a:hover { text-decoration: underline; }
+
+
+/* ------------- Éléments communs aux pages « document » -------------- */
+/* Date de mise à jour et note de langue : en mono, comme tout ce qui est
+   date ou métadonnée sur ce site. */
+.nsy-site .doc-maj,
+.nsy-site .doc-langue {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  line-height: 1.7;
+  color: var(--texte-petit);
+  margin: 0;
+}
+.nsy-site .doc-langue { max-width: var(--mesure); }
+
+/* Encadré d'avertissement : filet indigo à gauche, aplat franc, aucun rayon
+   arrondi ni fond coloré — la charte n'admet pas de bloc teinté. */
+.nsy-site .doc-avertissement {
+  border-left: 2px solid var(--commun);
+  padding-left: var(--e-5);
+  display: grid;
+  gap: var(--e-2);
+}
+
+/* --- Bloc d'état (demande en attente, refusée…) --- */
+.nsy-site .nsy-etat {
+  border: 1px solid var(--trait);
+  border-left: 2px solid var(--commun);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  padding: var(--e-5);
+  display: grid;
+  gap: var(--e-3);
+}
+.nsy-site .nsy-etat.alerte { border-left-color: var(--alerte); }
+.nsy-site .nsy-etat-surtitre {
+  margin: 0;
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte);
+}
+.nsy-site .nsy-lien-mono {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--commun-texte);
+  text-decoration: none;
+  justify-self: start;
+}
+.nsy-site .nsy-lien-mono:hover { text-decoration: underline; }
+
+/* --- Page d'aide : la FAQ repliable --- */
+.nsy-site .aide-faq { display: grid; gap: var(--e-3); }
+.nsy-site .aide-item {
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  padding: 0;
+}
+.nsy-site .aide-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: var(--e-4) var(--e-5);
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  color: var(--texte);
+}
+.nsy-site .aide-item summary::-webkit-details-marker { display: none; }
+.nsy-site .aide-reponse { padding: 0 var(--e-5) var(--e-5); }
+.nsy-site .aide-reponse p { margin: 0; }
+
+/* --- Messages de formulaire --- */
+.nsy-site .message {
+  margin: 0;
+  font-family: var(--font-corps);
+  font-size: var(--petit);
+  line-height: 1.6;
+  border-left: 2px solid var(--trait);
+  padding-left: var(--e-4);
+}
+.nsy-site .message.erreur { border-left-color: var(--alerte); color: var(--alerte); }
+.nsy-site .message.info { border-left-color: var(--positif); color: var(--positif); }
+
+/* --- Boutons hérités de l'application, ramenés à la charte du site ---
+   ⚠ `.bouton-google` est délibérément absent : son apparence est imposée par
+   Google, qui la vérifie. Il traverse ces pages tel qu'il est défini dans
+   globals.css. */
+.nsy-site .bouton,
+.nsy-site .bouton-primaire {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e-2);
+  font-family: var(--font-corps);
+  font-weight: 500;
+  font-size: var(--corps);
+  /* Rayon 2 px : jamais de pilule, c'est la signature de l'application. */
+  border-radius: var(--rayon);
+  border: 1px solid var(--texte);
+  background: transparent;
+  color: var(--texte);
+  padding: 12px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: none;
+  transition: opacity var(--duree-micro) var(--courbe);
+}
+.nsy-site .bouton-primaire {
+  background: var(--commun);
+  border-color: var(--commun);
+  color: var(--sur-commun);
+}
+.nsy-site .bouton:hover,
+.nsy-site .bouton-primaire:hover { opacity: .8; }
+.nsy-site .bouton:disabled,
+.nsy-site .bouton-primaire:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Champs hérités : mêmes règles que `.nsy-champ`. */
+.nsy-site input[type="text"],
+.nsy-site input[type="email"],
+.nsy-site textarea,
+.nsy-site select,
+.nsy-site .champ {
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  color: var(--texte);
+  background: var(--fond-alt);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  width: 100%;
+  box-shadow: none;
+}
+.nsy-site input:focus,
+.nsy-site textarea:focus,
+.nsy-site select:focus { border-color: var(--commun); outline: none; }
+.nsy-site label {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit);
+}
+
+
+/* ------------------- Page « Bienvenue » : les deux voies -------------------
+ * Rejoindre un foyer, ou en créer un. Deux cartes de même poids : à ce stade,
+ * on ne sait pas laquelle concerne la personne, et en pousser une reviendrait
+ * à deviner à sa place.
+ * ------------------------------------------------------------------------ */
+.nsy-site .nsy-choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--e-5);
+}
+.nsy-site .nsy-choix-carte {
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  padding: var(--e-6);
+  display: grid;
+  gap: var(--e-4);
+  align-content: start;
+}
+/* La carte « pas encore ouvert » n'est pas une erreur : c'est l'état normal
+   tant que les inscriptions sont fermées. Elle s'efface, elle n'alarme pas. */
+.nsy-site .nsy-choix-carte.discret { background: transparent; }
+.nsy-site .nsy-choix-carte h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variation-settings: var(--wonk);
+  font-weight: 400;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+.nsy-site .nsy-choix-carte .bouton,
+.nsy-site .nsy-choix-carte .bouton-primaire { justify-self: start; }
+.nsy-site .nsy-choix-note {
+  margin: 0;
+  font-family: var(--font-corps);
+  font-size: var(--petit);
+  line-height: 1.6;
+  color: var(--texte-petit);
+  max-width: var(--mesure);
+}
+.nsy-site .nsy-choix-note a { color: var(--commun-texte); }
+
+
+/* ========================== SECTIONS EN TRAVAUX ======================
+ * Cf. components/vitrine-ds/EnTravaux.tsx.
+ * Filet TIRETÉ : c'est le seul signal visuel du système pour « provisoire ».
+ * Pas d'aplat coloré, pas de bandeau jaune, pas de pictogramme — la charte
+ * n'a ni dégradé ni jeu d'icônes, et un bloc teinté crierait plus fort que le
+ * contenu réel de la page.
+ * ------------------------------------------------------------------ */
+.nsy-site .nsy-travaux {
+  border: 1px dashed var(--trait);
+  border-radius: var(--rayon);
+  padding: clamp(24px, 3vw, 40px);
+  display: grid;
+  gap: var(--e-3);
+  /* Léger retrait de couleur : le bloc doit se lire comme une zone en attente,
+     pas comme une carte de contenu. */
+  background: transparent;
+}
+.nsy-site .nsy-travaux-etiquette {
+  margin: 0;
+  justify-self: start;
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--sur-commun);
+  background: var(--commun);
+  padding: 3px 8px;
+  border-radius: var(--rayon);
+}
+.nsy-site .nsy-travaux-quoi {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variation-settings: var(--wonk);
+  font-weight: 400;
+  font-size: var(--titre-m);
+  line-height: var(--lh-titre-m);
+  color: var(--texte);
+  max-width: var(--mesure);
+}
+.nsy-site .nsy-travaux-pourquoi {
+  margin: 0;
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  line-height: var(--lh-corps);
+  color: var(--texte-doux);
+  max-width: var(--mesure);
+}
+.nsy-site .nsy-travaux-attendu {
+  margin: 0;
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  line-height: 1.7;
+  color: var(--texte-petit);
+  max-width: var(--mesure);
+  border-top: 1px solid var(--trait);
+  padding-top: var(--e-3);
+}

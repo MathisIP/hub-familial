@@ -29,14 +29,16 @@ import type { CleUI } from '@/lib/i18n';
 type Item = { href: string; icone: NomIcone; cle: CleUI };
 
 const NAV: Item[] = [
-  { href: '/', icone: 'home', cle: 'NAV_ACCUEIL' },
-  { href: '/budget', icone: 'budget', cle: 'MOD_BUDGET' },
-  { href: '/todo', icone: 'todo', cle: 'MOD_TODO' },
-  { href: '/repas', icone: 'repas', cle: 'MOD_REPAS' },
-  { href: '/evenements', icone: 'evenements', cle: 'MOD_EVENEMENTS' },
-  { href: '/cadeaux', icone: 'cadeaux', cle: 'MOD_CADEAUX' },
-  { href: '/agenda', icone: 'agenda', cle: 'MOD_AGENDA' },
-  { href: '/documents', icone: 'documents', cle: 'MOD_DOCUMENTS' },
+  // ⚠ La racine de l'application est /foyer depuis le 25/08/2026 : `/` est le
+  // site vitrine, qui n'a rien à faire dans la navigation d'un membre.
+  { href: '/foyer', icone: 'home', cle: 'NAV_ACCUEIL' },
+  { href: '/foyer/budget', icone: 'budget', cle: 'MOD_BUDGET' },
+  { href: '/foyer/todo', icone: 'todo', cle: 'MOD_TODO' },
+  { href: '/foyer/repas', icone: 'repas', cle: 'MOD_REPAS' },
+  { href: '/foyer/evenements', icone: 'evenements', cle: 'MOD_EVENEMENTS' },
+  { href: '/foyer/cadeaux', icone: 'cadeaux', cle: 'MOD_CADEAUX' },
+  { href: '/foyer/agenda', icone: 'agenda', cle: 'MOD_AGENDA' },
+  { href: '/foyer/documents', icone: 'documents', cle: 'MOD_DOCUMENTS' },
 ];
 
 function estActif(path: string | null, href: string): boolean {
@@ -108,7 +110,7 @@ export default function SideBar() {
   // Icône du bouton central : celle de l'onglet courant ; sur les pages de
   // réglages/compte, la roue crantée ; sinon l'icône « menu » par défaut.
   const itemActif = NAV.find((n) => estActif(path, n.href));
-  const surReglages = ['/parametres', '/foyer', '/compte', '/abonnement', '/confidentialite'].some(
+  const surReglages = ['/foyer/parametres', '/foyer/membres', '/foyer/compte', '/foyer/abonnement', '/confidentialite'].some(
     (r) => estActif(path, r),
   );
   const IcCentral = itemActif ? Icones[itemActif.icone] : surReglages ? IcReglages : IcMenu;
@@ -122,8 +124,8 @@ export default function SideBar() {
         <nav className="sb-rail-nav">{NAV.map(lienRail)}</nav>
         <div className="sb-rail-bas">
           <Link
-            href="/parametres"
-            className={`sb-rail-item${estActif(path, '/parametres') ? ' actif' : ''}`}
+            href="/foyer/parametres"
+            className={`sb-rail-item${estActif(path, '/foyer/parametres') ? ' actif' : ''}`}
           >
             <span className="sb-ic"><IcReglages /></span>
             <span className="sb-lbl">{tr('NAV_REGLAGES')}</span>
@@ -199,10 +201,10 @@ export default function SideBar() {
                     dans le rail du bureau. Or c'est là que vivent les réglages
                     de notification, qui se règlent APPAREIL PAR APPAREIL —
                     exactement ce qu'on vient faire depuis son téléphone. */}
-                <Link href="/parametres" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_REGLAGES')}</Link>
-                <Link href="/foyer" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_FOYER')}</Link>
-                <Link href="/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_ABONNEMENT')}</Link>
-                <Link href="/compte" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_COMPTE')}</Link>
+                <Link href="/foyer/parametres" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_REGLAGES')}</Link>
+                <Link href="/foyer/membres" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_FOYER')}</Link>
+                <Link href="/foyer/abonnement" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_ABONNEMENT')}</Link>
+                <Link href="/foyer/compte" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MON_COMPTE')}</Link>
                 <Link href="/confidentialite" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_CONFIDENTIALITE')}</Link>
                 <Link href="/aide" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_AIDE')}</Link>
                 <Link href="/mentions-legales" className="bm-lien" onClick={() => setFeuille(null)}>{tr('NAV_MENTIONS')}</Link>

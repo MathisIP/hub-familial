@@ -6,7 +6,7 @@ import {
   nommerFoyerAction,
   inviterOnboardingAction,
   terminerOnboardingAction,
-} from '@/app/foyer/actions';
+} from '@/app/foyer/membres/actions';
 import LienInvitation from '@/components/foyer/LienInvitation';
 
 /**

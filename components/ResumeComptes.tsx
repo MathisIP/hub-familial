@@ -32,7 +32,7 @@ export default function ResumeComptes({
       </div>
       <div className="mc-comptes">
         {soldes.map((s, i) => (
-          <Link href="/budget" className="mc-compte" key={s.compte}>
+          <Link href="/foyer/budget" className="mc-compte" key={s.compte}>
             <span className="mc-dot" style={{ background: DOTS[i % DOTS.length] }} />
             <span className="mc-nom">{s.compte}</span>
             <span className={`mc-val ${parseEuro(s.solde) < 0 ? 'neg' : ''}`}>{s.solde}</span>

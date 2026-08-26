@@ -2,7 +2,7 @@
 
 import PanneauPartage, { type MembrePartage } from '@/components/PanneauPartage';
 import { useT } from '@/components/I18nProvider';
-import { definirPartageAction } from '@/app/budget/actions';
+import { definirPartageAction } from '@/app/foyer/budget/actions';
 import type { ComptePartage } from '@/lib/budget/service';
 
 export type { MembrePartage };

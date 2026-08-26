@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 import { useT } from '@/components/I18nProvider';
+import ValiderCourses from '@/components/todo/ValiderCourses';
 
-/** Ce que renvoie GET /api/todo/courses/valider avant l'envoi. */
-type Apercu = {
-  articles: number;
-  membres: { utilisateurId: string; nom: string }[];
-  pushDisponible: boolean;
-};
+
 
 /**
  * Carte d'accueil « Liste de courses » : trois actions.
@@ -32,53 +28,6 @@ export default function CoursesSemaine() {
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [validation, setValidation] = useState<Apercu | null>(null);
-  const [destinataires, setDestinataires] = useState<string[]>([]);
-
-  /** Ouvre le choix des destinataires, en les cochant tous par défaut. */
-  async function ouvrirValidation() {
-    setMessage(null);
-    setErreur(null);
-    setOccupe(true);
-    try {
-      const r = await fetch('/api/todo/courses/valider', { cache: 'no-store' });
-      const data = (await r.json()) as Apercu & { erreur?: string };
-      if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_CHARGEMENT'));
-      if (data.articles === 0) {
-        setErreur(tr('CS_VIDE'));
-        return;
-      }
-      setValidation(data);
-      setDestinataires(data.membres.map((m) => m.utilisateurId));
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : String(e));
-    } finally {
-      setOccupe(false);
-    }
-  }
-
-  async function envoyerValidation() {
-    setOccupe(true);
-    setErreur(null);
-    try {
-      const r = await fetch('/api/todo/courses/valider', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ utilisateurs: destinataires }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_ACTION'));
-      // `envoyes` compte les APPAREILS joints, pas les personnes : le dire
-      // éviterait de croire que quelqu'un a été prévenu alors qu'il n'a jamais
-      // activé les notifications.
-      setMessage(data.envoyes > 0 ? tr('CS_VALIDER_OK') : tr('CS_VALIDER_AUCUN_ABO'));
-      setValidation(null);
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : String(e));
-    } finally {
-      setOccupe(false);
-    }
-  }
 
   async function ajouterProduit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,53 +71,15 @@ export default function CoursesSemaine() {
         >
           ＋ {tr('CS_AJOUT_LISTE')}
         </button>
-        <button className="bouton" onClick={ouvrirValidation} disabled={occupe}>
-          {tr('CS_VALIDER')}
-        </button>
-        <a className="bouton discret" href="/todo?onglet=courses">
+        {/* ⚠ Composant PARTAGÉ avec le module To-Do depuis le 25/08/2026.
+            Cette carte portait sa propre copie des quarante lignes ; deux
+            copies du même mécanisme finissent toujours par diverger — l'une
+            corrigée, l'autre oubliée. */}
+        <ValiderCourses compact />
+        <a className="bouton discret" href="/foyer/todo?onglet=courses">
           {tr('CS_VOIR_LISTE')}
         </a>
       </div>
-
-      {validation && (
-        <div className="cs-validation">
-          <h3>{tr('CS_VALIDER_TITRE')}</h3>
-          <p className="cs-validation-sous">{tr('CS_VALIDER_SOUS')}</p>
-          <ul className="cs-destinataires">
-            {validation.membres.map((m) => (
-              <li key={m.utilisateurId}>
-                <label className="cs-case">
-                  <input
-                    type="checkbox"
-                    checked={destinataires.includes(m.utilisateurId)}
-                    onChange={(e) =>
-                      setDestinataires((p) =>
-                        e.target.checked
-                          ? [...p, m.utilisateurId]
-                          : p.filter((x) => x !== m.utilisateurId),
-                      )
-                    }
-                  />
-                  <span>{m.nom}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          {!validation.pushDisponible && <p className="message erreur">{tr('NOTIF_INDISPO')}</p>}
-          <div className="cs-validation-actions">
-            <button
-              className="bouton bouton-primaire"
-              onClick={envoyerValidation}
-              disabled={occupe || destinataires.length === 0}
-            >
-              {tr('CS_VALIDER_ENVOYER')}
-            </button>
-            <button className="bouton discret" onClick={() => setValidation(null)} disabled={occupe}>
-              {tr('G_ANNULER')}
-            </button>
-          </div>
-        </div>
-      )}
 
       {ajoutOuvert && (
         <form className="cs-ajout" onSubmit={ajouterProduit}>

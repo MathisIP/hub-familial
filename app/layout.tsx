@@ -38,6 +38,21 @@ export const metadata: Metadata = {
     title: 'Nestync',
     statusBarStyle: 'default',
   },
+  /*
+   * Revendication du domaine auprès de Pinterest (25/08/2026).
+   *
+   * ⚠ NE PAS RETIRER UNE FOIS LA REVENDICATION OBTENUE. Pinterest revérifie
+   * périodiquement : la balise absente, le domaine est « dé-revendiqué » — et
+   * avec lui les statistiques de clics sortants, sans lesquelles la mesure du
+   * canal Pinterest est aveugle.
+   *
+   * ⚠ Elle doit être servie sur `/`, que le robot visite DÉCONNECTÉ. C'est le
+   * cas : `/` rend la vitrine aux visiteurs sans session, et ce layout racine
+   * s'applique à toutes les pages.
+   */
+  verification: {
+    other: { 'p:domain_verify': 'ca5c3bbc589f9541808fcbe5dc508fb9' },
+  },
 };
 
 export const viewport: Viewport = {
@@ -68,7 +83,21 @@ const SCRIPT_THEME = `
   var C = ${COULEURS_PAGE};
   var t, n;
   try { t = localStorage.getItem('hub-theme'); n = localStorage.getItem('hub-neon'); } catch (e) {}
-  if (!t || !C[t]) t = '${THEME_DEFAUT}';
+  /*
+   * ⚠ REPLI SUR UN THÈME RETIRÉ DU CATALOGUE. Le catalogue peut maigrir : un
+   * thème supprimé laisse derrière lui des \`hub-theme\` pointant vers un
+   * identifiant qui n'existe plus. Sans ce test, \`data-theme\` porterait une
+   * valeur sans bloc CSS correspondant — donc AUCUNE variable de couleur, donc
+   * une application sans couleurs du tout, chez la seule personne concernée.
+   *
+   * On RÉÉCRIT la valeur au lieu de simplement l'ignorer : sinon la préférence
+   * morte dort dans le navigateur et ressusciterait si l'identifiant était un
+   * jour réattribué à un autre thème.
+   */
+  if (!t || !C[t]) {
+    t = '${THEME_DEFAUT}';
+    try { localStorage.setItem('hub-theme', t); } catch (e) {}
+  }
   document.documentElement.setAttribute('data-theme', t);
   document.documentElement.setAttribute('data-neon', n === 'off' ? 'off' : 'on');
   var m = document.querySelector('meta[name="theme-color"]');

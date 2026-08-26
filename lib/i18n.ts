@@ -235,6 +235,16 @@ const UI = {
     fr: 'Certains comptes du foyer ne te sont pas partagés : ces chiffres ne portent que sur les tiens.',
     en: 'Some household accounts are not shared with you: these figures cover only yours.',
   },
+  /*
+   * ⚠ Distincte du bandeau ci-dessus, et volontairement : celui-ci prévient sur
+   * les KPIs en haut de page, celle-ci explique une ABSENCE au contact des
+   * jauges. Sans elle, on lit une liste de montants sans barre et on conclut
+   * que les barres ont disparu.
+   */
+  PART_SANS_COMPARAISON: {
+    fr: 'Pas de comparaison au budget ici : il porte sur tout le foyer, alors que ces montants ne portent que sur les comptes qui te sont partagés.',
+    en: 'No budget comparison here: the budget covers the whole household, while these amounts cover only the accounts shared with you.',
+  },
 
   /* --- Documents : qui voit quels dossiers --- */
   DOSS_PART_TITRE: { fr: 'Qui voit quels dossiers', en: 'Who sees which folders' },
@@ -480,6 +490,12 @@ const UI = {
   TODO_NOUVELLE_TACHE: { fr: 'Nouvelle tâche…', en: 'New task…' },
   TODO_QUI: { fr: 'Qui ?', en: 'Who?' },
   TODO_PRIORITE: { fr: 'Priorité', en: 'Priority' },
+  TODO_CATEGORIE: { fr: 'Catégorie', en: 'Category' },
+  TODO_ECHEANCE: { fr: 'Échéance', en: 'Due date' },
+  // ⚠ Le format est imposé par le stockage (texte « jj/mm/aaaa ») : l'exemple
+  // dans le champ vaut mieux qu'un message d'erreur après coup.
+  TODO_ECHEANCE_PH: { fr: 'Échéance (jj/mm/aaaa)', en: 'Due date (dd/mm/yyyy)' },
+  TODO_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   TODO_TOUS: { fr: 'Tous', en: 'All' },
   TODO_AUCUNE_TACHE: { fr: 'Aucune tâche. Ajoute la première ci-dessus.', en: 'No tasks. Add the first one above.' },
   TODO_AUCUNE_POUR: { fr: 'Aucune tâche pour', en: 'No tasks for' },

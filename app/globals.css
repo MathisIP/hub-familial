@@ -48,6 +48,17 @@ a { color: var(--link-tx); }
 
 /* Ombre douce commune aux cartes : plus présente qu'avant pour détacher les
    cartes blanches du fond en mode clair (quasi invisible en sombre). */
+/* ══════════════════════════════════════════════════════════════════════
+ * ÉCHELLE D'ESPACEMENT — la même que le site vitrine (base 4 px).
+ * Cf. `app/vitrine-ds.css`. Les deux doivent rester identiques : c'est ce
+ * qui fait que passer du site à l'application ne change pas de respiration.
+ * ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --e-1: 4px;  --e-2: 8px;  --e-3: 12px; --e-4: 16px;
+  --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
+  --e-9: 96px;
+}
+
 :root { --shadow-soft: 0 10px 26px -12px rgba(24, 22, 40, .16), 0 2px 8px -4px rgba(24, 22, 40, .10); }
 
 /* Réglage « néon » désactivé : les halos passent en transparent → plus aucune
@@ -158,7 +169,7 @@ a { color: var(--link-tx); }
 .enveloppe {
   max-width: 68rem;
   margin: 0 auto;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding: clamp(var(--e-4), 4vw, var(--e-7));
 }
 /* Grand écran : on exploite la largeur au lieu d'une colonne étroite centrée. */
 @media (min-width: 64rem) {
@@ -372,7 +383,7 @@ a { color: var(--link-tx); }
 .ajout .champ { flex: 1 1 12rem; min-width: 0; }
 
 /* --- Liste de tâches --- */
-.liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--e-2); }
 
 .tache {
   display: flex;
@@ -441,7 +452,7 @@ a { color: var(--link-tx); }
 .ajout .champ-qte { flex: 0 1 8.5rem; }
 .ajout.course-edit { margin-bottom: 0; }
 
-.rayon-groupe { margin-bottom: 1.1rem; }
+.rayon-groupe { margin-bottom: var(--e-5); }
 .rayon-titre {
   font-size: .8rem;
   text-transform: uppercase;
@@ -694,12 +705,12 @@ a { color: var(--link-tx); }
 .courses-apercu li { font-size: .88rem; }
 
 /* --- Éditeur de recettes --- */
-.recettes-liste { gap: .6rem; }
+.recettes-liste { gap: var(--e-3); }
 .recette-carte {
   display: flex;
   flex-direction: column;
-  gap: .4rem;
-  padding: .8rem .9rem;
+  gap: var(--e-2);
+  padding: var(--e-4);
   background: var(--cell);
   border: 1px solid var(--line);
   border-radius: .7rem;
@@ -744,7 +755,7 @@ a { color: var(--link-tx); }
 }
 
 /* ========================== MODULE CADEAUX ========================== */
-.occasion-groupe { margin-bottom: 1.5rem; }
+.occasion-groupe { margin-bottom: var(--e-5); }
 .occ-tete {
   display: flex;
   flex-wrap: wrap;
@@ -1121,7 +1132,7 @@ a { color: var(--link-tx); }
 .vd-depot .champ { width: 12rem; max-width: 100%; }
 .vd-lbl { font-size: .85rem; color: var(--muted); }
 
-.vd-groupes { display: flex; flex-direction: column; gap: 1.1rem; }
+.vd-groupes { display: flex; flex-direction: column; gap: var(--e-5); }
 .vd-groupe {
   background: var(--cell); border: 1px solid var(--line);
   border-radius: 1rem; padding: 1rem 1.15rem;
@@ -1316,7 +1327,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .sem-lieu { font-size: .78rem; color: var(--muted); }
 
 /* ===================== BUDGET REFONDU (Corail) ===================== */
-.bg-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-bottom: 1.1rem; }
+.bg-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e-3); margin-bottom: var(--e-5); }
 .bg-kpi {
   background: var(--cell); border: 1px solid var(--line); border-radius: 1.1rem;
   padding: .85rem .95rem; box-shadow: var(--shadow-soft, 0 6px 16px rgba(120,40,60,.06));
@@ -1335,11 +1346,11 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 
 .card-bloc {
   background: var(--cell); border: 1px solid var(--line); border-radius: 1.4rem;
-  padding: 1.1rem 1.15rem; box-shadow: var(--shadow-soft, 0 8px 20px rgba(120,40,60,.07)); margin-bottom: 1.1rem;
+  padding: var(--e-5); box-shadow: var(--shadow-soft, 0 8px 20px rgba(120,40,60,.07)); margin-bottom: var(--e-5);
 }
 .section-titre {
   font-family: var(--police-titre), Georgia, serif; font-size: 1.12rem; font-weight: 600;
-  letter-spacing: -.01em; margin: 0 0 .85rem;
+  letter-spacing: -.01em; margin: 0 0 var(--e-4);
 }
 .bg-comptes { display: flex; flex-direction: column; }
 .bg-compte { display: flex; align-items: center; gap: .7rem; padding: .55rem .1rem; border-bottom: 1px solid var(--line); }
@@ -1608,7 +1619,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 /* minmax(0, 1fr) (pas `1fr` = minmax(auto,1fr)) : autorise la colonne à rétrécir
    sous la largeur du contenu → pas de débordement quand une carte a un contenu
    large (agenda, documents) qui se charge après coup. */
-.grille-accueil { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; align-items: start; }
+.grille-accueil { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e-5); align-items: start; }
 .grille-accueil > * { margin: 0 !important; min-width: 0; }
 @media (min-width: 60rem) {
   .grille-accueil { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.35rem; }
@@ -2473,7 +2484,13 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
    en CSS. D'où une liste redessinée entièrement — c'est le seul moyen d'obtenir
    le même arrondi que le reste de l'app.
    ═══════════════════════════════════════════════════════════════════════════ */
-.liste { position: relative; display: inline-block; min-width: 0; }
+/* ⚠ RENOMMÉE LE 25/08/2026. Cette règle s'appelait `.liste` — le nom que
+   portait déjà, 2 100 lignes plus haut, la liste EMPILÉE des modules
+   (tâches, courses, jours, recettes). Même spécificité, déclarée plus bas :
+   elle écrasait `display: flex` et `gap`, et cinq modules affichaient leurs
+   éléments collés les uns aux autres sans que rien ne le signale.
+   Les enfants gardent leur préfixe `liste-*`, qui ne collisionnait pas. */
+.deroulante { position: relative; display: inline-block; min-width: 0; }
 
 .liste-bouton {
   width: 100%; display: flex; align-items: center; gap: .5rem;
@@ -2579,3 +2596,101 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cs-validation-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
 .compte-export-json { margin-top: .5rem; font-size: .82rem; }
 .compte-export-json a { color: var(--muted); text-decoration: underline; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * GRANDS ÉCRANS — EXPLOITER LA LARGEUR (25/08/2026)
+ *
+ * ⚠ L'application a été dessinée pour un téléphone, puis jamais adaptée : sur
+ * un écran de bureau, chaque module empilait ses cartes dans une colonne unique
+ * en laissant les deux tiers de l'écran vides. Seul l'accueil passait en deux
+ * colonnes.
+ *
+ * Le principe retenu : **grille automatique, pas nombre de colonnes figé**.
+ * `repeat(auto-fill, minmax(Xrem, 1fr))` laisse le navigateur décider combien
+ * de colonnes tiennent — deux sur un portable, trois sur un grand écran, une
+ * sur une fenêtre étroite. Figer « deux colonnes » aurait produit des cartes de
+ * 700 px de large sur un écran large, ce qui ne vaut pas mieux qu'une colonne.
+ *
+ * ⚠ LE SEUIL EST 75 rem (1200 px), pas 60. En dessous, deux colonnes rendraient
+ * chaque carte trop étroite pour son contenu — une tâche porte un libellé, des
+ * badges et un sélecteur de statut sur la même ligne.
+ *
+ * ⚠ CE QUI RESTE EN COLONNE UNIQUE, DÉLIBÉRÉMENT :
+ *  · le planning de la semaine, dont l'ordre lundi→dimanche est le sens même —
+ *    une grille le ferait lire en zigzag ;
+ *  · les listes courtes, où la grille créerait un vide à droite plutôt qu'un
+ *    gain.
+ * ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 75rem) {
+  /* --- Budget : les sections en pavé --- */
+  .bg-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr));
+    gap: var(--e-5);
+    align-items: start;
+  }
+  .bg-grille > .card-bloc { margin-bottom: 0; }
+
+  /* --- To-Do : les tâches --- */
+  .liste.multi {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
+    gap: var(--e-2);
+    align-items: start;
+  }
+
+  /* --- Courses : les rayons.
+     Le plus gros gain de tous : une liste de courses est faite de petits
+     groupes, elle produisait une colonne très longue et très étroite. --- */
+  .courses-rayons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: var(--e-5) var(--e-6);
+    align-items: start;
+  }
+
+  /* --- Recettes --- */
+  .rf-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+    gap: var(--e-3);
+    align-items: start;
+  }
+
+  /* --- Cadeaux : les occasions --- */
+  .cad-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+    gap: var(--e-5);
+    align-items: start;
+  }
+
+  /* --- Documents : les dossiers --- */
+  .vd-groupes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+    gap: var(--e-5);
+    align-items: start;
+  }
+}
+
+/* Actions de bas de liste de courses : « valider » + « retirer les cochés ».
+   ⚠ Hors de la grille des rayons : elles portent sur toute la liste. */
+.courses-actions { margin-top: var(--e-5); }
+.valider-courses { display: grid; gap: var(--e-3); justify-items: start; }
+
+/* Note au contact des jauges, en vue partielle.
+   ⚠ Plus discrète que `.bg-partielle` du haut de page : celui-là alerte sur des
+   chiffres qu'on pourrait mal lire, celle-ci explique une absence. Un second
+   encadré coloré à quinze centimètres du premier crierait deux fois la même
+   chose. */
+.jauges-note {
+  margin: 0 0 var(--e-4);
+  padding-left: var(--e-3);
+  border-left: 2px solid var(--line2);
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 60ch;
+}

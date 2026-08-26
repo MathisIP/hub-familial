@@ -38,7 +38,7 @@ export type ResultatAction = { ok?: true; erreur?: string };
 
 /** Les pages du budget ET l'accueil affichent des soldes : les deux à rafraîchir. */
 function rafraichir() {
-  revalidatePath('/budget');
+  revalidatePath('/foyer/budget');
   revalidatePath('/');
 }
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ESSAI_JOURS, OFFRES, formatPrix } from '@/lib/offres';
+import CadreSite from '@/components/vitrine-ds/CadreSite';
 
 export const metadata = {
   title: 'Conditions générales — Nestync',
@@ -26,9 +27,7 @@ export default function PageConditions() {
   const annuel = OFFRES[1];
 
   return (
-    <article className="doc-legal">
-      <Link className="lien-retour" href="/">← Retour</Link>
-      <h1>Conditions générales de vente et d’utilisation</h1>
+    <CadreSite surtitre="Le contrat" titre="Conditions générales de vente et d’utilisation">
       <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
@@ -197,6 +196,6 @@ export default function PageConditions() {
       <p className="doc-maj">
         <Link href="/">← Revenir à l’accueil</Link> · <Link href="/confidentialite">Politique de confidentialité</Link>
       </p>
-    </article>
+    </CadreSite>
   );
 }

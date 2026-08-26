@@ -50,7 +50,7 @@ export default async function PageParametres() {
       <section className="compte-bloc">
         <h2 className="bloc-titre">{t('NAV_MON_FOYER', langue)}</h2>
         <p className="compte-note">{t('REG_FOYER_DESC', langue)}</p>
-        <Link className="bouton reglage-lien" href="/foyer">{t('REG_FOYER_BTN', langue)}</Link>
+        <Link className="bouton reglage-lien" href="/foyer/membres">{t('REG_FOYER_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">
@@ -60,13 +60,13 @@ export default async function PageParametres() {
             ? `${t('REG_ABO_STATUT', langue)} : ${t(ABO_CLE[abo.statut] ?? 'ABO_LIBRE', langue)}.`
             : t('REG_ABO_DESC', langue)}
         </p>
-        <Link className="bouton reglage-lien" href="/abonnement">{t('REG_ABO_BTN', langue)}</Link>
+        <Link className="bouton reglage-lien" href="/foyer/abonnement">{t('REG_ABO_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">
         <h2 className="bloc-titre">{t('REG_COMPTE_TITRE', langue)}</h2>
         <p className="compte-note">{t('REG_COMPTE_DESC', langue)}</p>
-        <Link className="bouton reglage-lien" href="/compte">{t('REG_COMPTE_BTN', langue)}</Link>
+        <Link className="bouton reglage-lien" href="/foyer/compte">{t('REG_COMPTE_BTN', langue)}</Link>
       </section>
 
       <section className="compte-bloc">

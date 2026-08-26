@@ -30,3 +30,6 @@ maquettes/
 
 # Bac à sable local : fichiers du module Documents en développement
 .donnees-locales/
+
+# Journal du serveur de dev (recree a chaque lancement)
+dev.log

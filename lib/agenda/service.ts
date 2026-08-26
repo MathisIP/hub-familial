@@ -35,7 +35,7 @@ import {
  * Conséquence assumée : un calendrier rattaché sans `ajoute_par` (mode
  * historique, partagé à la main avec le compte de service) n'est plus
  * accessible. Ces rattachements ont été supprimés par la migration 0021 ; on les
- * reconnecte depuis `/agenda`, en OAuth, en quelques secondes.
+ * reconnecte depuis `/foyer/agenda`, en OAuth, en quelques secondes.
  */
 
 type AgendaFoyer = { calendarId: string; nom: string; ajoutePar: string | null };

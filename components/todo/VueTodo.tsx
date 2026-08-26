@@ -9,6 +9,7 @@ import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE } from '@/lib/i18n';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
 import { STATUT_FAIT } from '@/lib/todo/schema';
 import Astuce from '@/components/Astuce';
+import ValiderCourses from '@/components/todo/ValiderCourses';
 
 /**
  * Écran To-Do complet (client). Reçoit un premier chargement rendu côté serveur
@@ -129,6 +130,9 @@ function OngletTaches({
   const [titre, setTitre] = useState('');
   const [assigne, setAssigne] = useState('');
   const [priorite, setPriorite] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [echeance, setEcheance] = useState('');
+  const [recurrence, setRecurrence] = useState('');
   const [filtrePersonne, setFiltrePersonne] = useState('');
 
   // La valeur « commune » (Les deux / Nous deux) et les personnes individuelles.
@@ -140,11 +144,34 @@ function OngletTaches({
     ? taches.filter((t) => t.assigne === filtrePersonne || (commun !== '' && t.assigne === commun))
     : taches;
 
+  /**
+   * ⚠ LE FORMULAIRE N'ENVOYAIT QUE TROIS CHAMPS SUR SIX (25/08/2026). Les lignes
+   * affichent la catégorie, l'échéance et la récurrence ; le service et la base
+   * les acceptaient déjà — seule la saisie manquait. On voyait donc des
+   * informations qu'on ne pouvait pas renseigner, et il fallait créer la tâche
+   * puis la rouvrir pour les compléter.
+   */
   function ajouter(e: React.FormEvent) {
     e.preventDefault();
     if (!titre.trim()) return;
-    const corps = { tache: titre.trim(), assigne, priorite };
+    const corps = {
+      tache: titre.trim(),
+      assigne,
+      priorite,
+      categorie,
+      echeanceLabel: echeance,
+      // ⚠ `'Aucune'` et non `''` : le service ne comble le défaut que sur
+      // `null`/`undefined`, pas sur une chaîne vide. Sans ça, les tâches créées
+      // ici porteraient une récurrence vide là où toutes les autres portent
+      // « Aucune » — deux façons de dire la même chose dans la même colonne.
+      recurrence: recurrence || 'Aucune',
+    };
     setTitre('');
+    setEcheance('');
+    // ⚠ Assigné, priorité, catégorie et récurrence NE SONT PAS réinitialisés :
+    // on saisit presque toujours plusieurs tâches de suite pour la même
+    // personne ou le même sujet. Le titre et l'échéance, eux, changent à chaque
+    // fois — les garder ferait recopier une date sur la tâche suivante.
     action(() => fetch('/api/todo/taches', json(corps)));
   }
 
@@ -171,6 +198,35 @@ function OngletTaches({
           options={params.priorites.map((p) => ({ valeur: p, libelle: tEnum(CLE_PRIORITE, p, langue) }))}
           placeholder={tr('TODO_PRIORITE')}
           ariaLabel={tr('TODO_PRIORITE')}
+        />
+        {/* Catégorie en saisie LIBRE : la liste est dérivée des tâches
+            existantes, donc vide dans un foyer qui démarre. Un sélecteur fermé
+            y bloquerait la première saisie. */}
+        <Combobox
+          value={categorie}
+          onChange={setCategorie}
+          options={params.categories}
+          placeholder={tr('TODO_CATEGORIE')}
+          ariaLabel={tr('TODO_CATEGORIE')}
+        />
+        {/* ⚠ Champ TEXTE et non `type="date"` : l'échéance est stockée en
+            « jj/mm/aaaa », format hérité du classeur d'origine. Un sélecteur de
+            date renverrait « aaaa-mm-jj » et les tâches se trieraient de
+            travers sans que rien ne le signale. */}
+        <input
+          className="champ champ-echeance"
+          placeholder={tr('TODO_ECHEANCE_PH')}
+          value={echeance}
+          onChange={(e) => setEcheance(e.target.value)}
+          aria-label={tr('TODO_ECHEANCE')}
+          inputMode="numeric"
+        />
+        <Liste
+          valeur={recurrence}
+          onChange={setRecurrence}
+          options={params.recurrences.map((r) => ({ valeur: r, libelle: r }))}
+          placeholder={tr('TODO_RECURRENCE')}
+          ariaLabel={tr('TODO_RECURRENCE')}
         />
         <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
           {tr('G_AJOUTER')}
@@ -208,7 +264,7 @@ function OngletTaches({
             : `${tr('TODO_AUCUNE_POUR')} ${filtrePersonne}.`}
         </p>
       ) : (
-        <ul className="liste">
+        <ul className="liste multi">
           {tachesAffichees.map((t) => (
             <li
               key={t.id}
@@ -326,6 +382,10 @@ function OngletCourses({
         <p className="vide">{tr('TODO_LISTE_VIDE')}</p>
       ) : (
         <>
+          {/* ⚠ Les rayons passent en grille sur grand écran : une liste de
+              courses est faite de petits groupes, et empilés en colonne unique
+              ils produisaient un ruban très long et très étroit. */}
+          <div className="courses-rayons">
           {groupes.map(({ rayon: nomRayon, articles }) => (
             <div className="rayon-groupe" key={nomRayon || '—'}>
               {nomRayon && <p className="rayon-titre">{nomRayon}</p>}
@@ -370,6 +430,13 @@ function OngletCourses({
               </ul>
             </div>
           ))}
+          </div>
+          {/* Hors de la grille : ces actions concernent toute la liste, pas un
+              rayon. ⚠ « Valider » vit désormais ICI en plus de l'accueil : on
+              le cherche là où l'on vient de finir la liste. */}
+          <div className="barre-outils courses-actions">
+            <ValiderCourses compact />
+          </div>
           {nbFaites > 0 && (
             <div className="barre-outils">
               <button className="bouton discret" onClick={viderFaites} disabled={occupe}>

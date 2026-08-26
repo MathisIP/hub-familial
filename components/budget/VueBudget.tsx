@@ -53,6 +53,15 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
       {d.categories.length > 0 && (
         <section className="card-bloc">
           <h2 className="section-titre">{t('BUD_PAR_CAT', langue)} — {d.periode || t('BUD_MOIS_COURANT', langue)}</h2>
+          {/* ⚠ L'EXPLICATION DOIT ÊTRE ICI, pas seulement en haut de page.
+              En vue partielle, les jauges perdent leur barre de comparaison :
+              sans un mot au contact, on lit une liste de montants et on conclut
+              que les barres ont disparu — c'est exactement ce qui a été
+              rapporté le 25/08/2026. Le bandeau du haut prévient sur les KPIs,
+              il est trop loin pour expliquer ça. */}
+          {d.vuePartielle && (
+            <p className="jauges-note">{t('PART_SANS_COMPARAISON', langue)}</p>
+          )}
           <div className="jauges">
             {d.categories.map((c) => (
               <Jauge key={c.categorie} c={c} partielle={d.vuePartielle} />

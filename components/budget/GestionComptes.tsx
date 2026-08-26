@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import Astuce from '@/components/Astuce';
 import InitComptes from '@/components/budget/InitComptes';
 import { useT } from '@/components/I18nProvider';
-import { modifierCompteAction, supprimerCompteAction } from '@/app/budget/actions';
+import { modifierCompteAction, supprimerCompteAction } from '@/app/foyer/budget/actions';
 import { formatEuro, type CompteGere } from '@/lib/budget/schema';
 
 /**

@@ -20,7 +20,7 @@ export async function inviterAction(formData: FormData): Promise<void> {
   const email = String(formData.get('email') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await inviterMembre(foyer.id, user.id, email);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }
 
 /** Révoque une invitation en attente. */
@@ -28,7 +28,7 @@ export async function revoquerAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await revoquerInvitation(foyer.id, user.id, id);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }
 
 /** Retire un membre du foyer. */
@@ -36,7 +36,7 @@ export async function retirerAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await retirerMembre(foyer.id, user.id, id);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }
 
 /** Renomme le foyer. */
@@ -44,7 +44,7 @@ export async function renommerAction(formData: FormData): Promise<void> {
   const nom = String(formData.get('nom') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await renommerFoyer(foyer.id, user.id, nom);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }
 
 /**
@@ -70,7 +70,7 @@ export async function nommerFoyerAction(
     const nom = String(formData.get('nom') ?? '');
     const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
     await renommerFoyer(foyer.id, user.id, nom);
-    revalidatePath('/demarrage');
+    revalidatePath('/foyer/demarrage');
     return { ok: true };
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Nom refusé.' };
@@ -86,7 +86,7 @@ export async function inviterOnboardingAction(
     const email = String(formData.get('email') ?? '');
     const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
     await inviterMembre(foyer.id, user.id, email);
-    revalidatePath('/demarrage');
+    revalidatePath('/foyer/demarrage');
     return { invite: email.trim() };
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Invitation refusée.' };
@@ -127,7 +127,7 @@ export async function accepterDemandeAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await accepterDemande(foyer.id, user.id, id);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }
 
 /** Le propriétaire refuse une demande reçue. */
@@ -135,5 +135,5 @@ export async function refuserDemandeAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await refuserDemande(foyer.id, user.id, id);
-  revalidatePath('/foyer');
+  revalidatePath('/foyer/membres');
 }

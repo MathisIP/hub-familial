@@ -12,7 +12,7 @@ import 'server-only';
  * `configFoyer()` et son type `ConfigFoyer` ont été **retirés le 13/08/2026** —
  * plus aucun appelant depuis l'isolation de l'Agenda. Les variables `AGENDA_IDS`
  * et `AGENDA_ID` qu'ils lisaient n'ont plus aucun effet : un calendrier se
- * rattache depuis l'écran `/agenda`, et le lien est stocké en base. Les laisser
+ * rattache depuis l'écran `/foyer/agenda`, et le lien est stocké en base. Les laisser
  * dans `.env` ne casse rien, mais elles n'y servent plus à rien.
  */
 

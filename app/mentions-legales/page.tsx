@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import CadreSite from '@/components/vitrine-ds/CadreSite';
 
 export const metadata = {
   title: 'Mentions légales — Nestync',
@@ -20,9 +21,7 @@ export const metadata = {
  */
 export default function PageMentionsLegales() {
   return (
-    <article className="doc-legal">
-      <Link className="lien-retour" href="/">← Retour</Link>
-      <h1>Mentions légales</h1>
+    <CadreSite surtitre="Informations légales" titre="Mentions légales">
       <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
@@ -98,6 +97,6 @@ export default function PageMentionsLegales() {
         répondre dans un délai raisonnable, et au plus tard sous trente jours pour les
         demandes relatives aux données personnelles.
       </p>
-    </article>
+    </CadreSite>
   );
 }

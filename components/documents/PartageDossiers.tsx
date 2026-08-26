@@ -2,7 +2,7 @@
 
 import PanneauPartage, { type MembrePartage } from '@/components/PanneauPartage';
 import { useT } from '@/components/I18nProvider';
-import { definirPartageDossierAction } from '@/app/documents/actions';
+import { definirPartageDossierAction } from '@/app/foyer/documents/actions';
 import type { DossierPartage } from '@/lib/documents/service';
 
 /**

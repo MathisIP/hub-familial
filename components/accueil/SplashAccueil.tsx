@@ -40,7 +40,7 @@ const DELAI_SECURITE = 8000; // ms : masque le splash même si un composant ne r
  * client, le module vient d'être évalué : la valeur est la même qu'au serveur).
  *
  * Précision : le drapeau se pose au premier rendu de L'ACCUEIL, pas au démarrage
- * de l'app. Arriver directement sur `/budget` puis revenir à l'accueil affiche
+ * de l'app. Arriver directement sur `/foyer/budget` puis revenir à l'accueil affiche
  * donc le logo cette fois-là — c'est bien la première fois qu'on l'assemble.
  * Les fois suivantes, non.
  */

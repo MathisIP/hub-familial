@@ -14,7 +14,7 @@ import { utilisateurCourant } from '@/lib/foyer';
 export async function rattacherAction(calendarId: string, nom: string): Promise<{ erreur?: string }> {
   try {
     await rattacherCalendrier(calendarId, nom);
-    revalidatePath('/agenda');
+    revalidatePath('/foyer/agenda');
     return {};
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Ajout impossible.' };
@@ -24,7 +24,7 @@ export async function rattacherAction(calendarId: string, nom: string): Promise<
 export async function detacherAction(calendarId: string): Promise<{ erreur?: string }> {
   try {
     await detacherCalendrier(calendarId);
-    revalidatePath('/agenda');
+    revalidatePath('/foyer/agenda');
     return {};
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Retrait impossible.' };
@@ -40,7 +40,7 @@ export async function deconnecterGoogleAction(): Promise<{ erreur?: string }> {
   try {
     const user = await utilisateurCourant();
     await deconnecterAgenda(user.id);
-    revalidatePath('/agenda');
+    revalidatePath('/foyer/agenda');
     return {};
   } catch (e) {
     return { erreur: e instanceof Error ? e.message : 'Déconnexion impossible.' };
@@ -61,7 +61,7 @@ export async function definirPartageAgendaAction(
 ): Promise<{ erreur?: string }> {
   try {
     await definirPartageAgenda({ agendaId, restreint, utilisateurIds });
-    revalidatePath('/agenda');
+    revalidatePath('/foyer/agenda');
     revalidatePath('/');
     return {};
   } catch (e) {

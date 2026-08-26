@@ -76,6 +76,9 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
 
       {erreur && <p className="message erreur">{erreur}</p>}
 
+      {/* Les occasions passent en grille sur grand écran : chacune est une carte
+          courte, et empilées elles laissaient les deux tiers de l'écran vides. */}
+      <div className="cad-grille">
       {groupes.map(({ occasion, cadeaux }) => (
         <section className="occasion-groupe" key={occasion?.occasion ?? '—'}>
           <div className="occ-tete">
@@ -167,6 +170,7 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
           </ul>
         </section>
       ))}
+      </div>
     </>
   );
 }

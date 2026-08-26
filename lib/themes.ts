@@ -62,8 +62,15 @@ function halo(a: string, alpha: number): string {
 
 /* ----------------------------- Fabriques thème ----------------------------- */
 
-/** Thème CLAIR généré depuis l'accent, l'accent profond et la teinte de page. */
-function themeClair(nom: string, acc: string, deep: string, page: string): Theme {
+/**
+ * Thème CLAIR généré depuis l'accent, l'accent profond et la teinte de page.
+ *
+ * ⚠ EXPORTÉE BIEN QU'INUTILISÉE AUJOURD'HUI : c'est le point d'extension du
+ * système. Le catalogue est réduit à une gamme, pas le mécanisme — et
+ * supprimer la fabrique obligerait à la réécrire le jour où une seconde gamme
+ * arrivera.
+ */
+export function themeClair(nom: string, acc: string, deep: string, page: string): Theme {
   const W = '#FFFFFF';
   // Page très subtile (mêmes rapports que Corail) : à peine teintée d'accent
   // par-dessus la teinte de la maquette. Les cartes blanches ressortent grâce à
@@ -86,8 +93,8 @@ function themeClair(nom: string, acc: string, deep: string, page: string): Theme
   };
 }
 
-/** Thème SOMBRE généré depuis l'accent clair de la gamme. */
-function themeSombre(nom: string, acc: string, deep: string): Theme {
+/** Thème SOMBRE généré depuis l'accent. Même rôle d'extension que `themeClair`. */
+export function themeSombre(nom: string, acc: string, deep: string): Theme {
   const accClair = melange(acc, '#FFFFFF', 0.80); // accent éclairci pour fond sombre
   return {
     NOM: nom,
@@ -108,63 +115,87 @@ function themeSombre(nom: string, acc: string, deep: string): Theme {
 
 /* --------------------------------- Thèmes ---------------------------------- */
 
+/**
+ * ⚠ UN SEUL THÈME DEPUIS LE 25/08/2026 — et c'est un alignement, pas un
+ * appauvrissement. L'application portait six gammes colorées (Corail,
+ * Améthyste, Lagon, Menthe, Ambre, Indigo) héritées d'une direction
+ * artistique antérieure au site vitrine. Le site ayant sa charte — chaux le
+ * jour, encre la nuit, indigo pour la marque — laisser l'application dans une
+ * palette étrangère faisait deux produits d'un seul.
+ *
+ * ⚠ LES VALEURS SONT CELLES DE `app/vitrine-ds.css`, recopiées rôle par rôle.
+ * Quand l'une bouge, les deux doivent bouger : ce sont les mêmes couleurs vues
+ * de deux systèmes différents. Le site nomme `--fond`, l'application `PAGE` ;
+ * c'est la seule différence.
+ *
+ * ⚠ LE MÉCANISME RESTE ENTIER. `themeClair()` / `themeSombre()` demeurent
+ * exportés : ajouter une gamme reste une ligne. Il n'y en a simplement plus
+ * qu'une de proposée.
+ */
 export const THEMES = {
-  /* --- 🪸 Corail — thème clair PAR DÉFAUT (réglé à la main) --- */
-  corail: {
-    NOM: '🪸 Corail',
-    INK: '#39292C', INK2: '#7B6067', MUTED: '#B9979C', GHOST: '#E4C8C5',
-    PAGE: '#FFF5F3', CELL: '#FFFFFF',
-    HEAD: '#FFE7E4', BLOCK: '#FFF0EE', SOFT: '#FFEDEB', PARAM: '#FDECEA',
-    LINK_BG: '#FFECEC', LINK_TX: '#E23A5C',
-    LINE: '#FBE2E0', LINE2: '#F6D2CF', CARD_BD: '#FFFFFF', FIELD_BG: '#FFFFFF',
-    OVER: '#FF7A66', OVER_TX: '#C7362F', OVER_BG: '#FBE4E0',
-    OK_TX: '#2FA36A', OK_BG: '#E5F3EA',
-    ACC: '#FF5C7A', ACC_DEEP: '#E23A5C', ON_ACC: '#FFFFFF',
-    GLOW: 'rgba(255,92,122,.30)', GLOW2: 'rgba(255,92,122,.18)',
+  /* --- Chaux — thème CLAIR par défaut ---
+     La chaux #E7E9E4 est un gris légèrement verdi, volontairement plus froid
+     qu'un crème : le crème chaud à accent terracotta est un interdit explicite
+     de la charte. */
+  chaux: {
+    NOM: 'Chaux',
+    // Hiérarchie de texte : INK > INK2 > MUTED > GHOST.
+    // ⚠ INK2 (#454E5C, ~7:1) est PLUS SOMBRE que MUTED (#5A6472, 4,91:1) —
+    // ce n'est pas une inversion. La charte réserve #5A6472 au texte ≥ 16 px et
+    // impose #454E5C en dessous : un libellé de 13 px n'a pas droit au gris
+    // clair, il n'a pas la marge de contraste pour.
+    INK: '#141C26', INK2: '#454E5C', MUTED: '#5A6472', GHOST: '#98A0A9',
+    PAGE: '#E7E9E4', CELL: '#F2F3F0',
+    HEAD: '#DDE0DA', BLOCK: '#EDEEEA', SOFT: '#F2F3F0', PARAM: '#DDE0DA',
+    LINK_BG: '#E4E3F7', LINK_TX: '#4338CA',
+    LINE: '#CDD1CB', LINE2: '#BCC1BA', CARD_BD: '#DDE0DA', FIELD_BG: '#F2F3F0',
+    OVER: '#B03A34', OVER_TX: '#B03A34', OVER_BG: '#F2E2E0',
+    /*
+     * ⚠ ÉCART VOLONTAIRE AVEC LE SITE : #2A6B4F au lieu de son `--positif`
+     * #2F7A59. Mesuré, le vert du site tombe à **4,24:1** sur la chaux — sous
+     * le seuil AA de 4,5 que la charte s'impose pourtant elle-même. Assombri
+     * jusqu'à 5,18:1, teinte inchangée.
+     *
+     * ⚠ LE SITE A LE MÊME DÉFAUT et il n'est pas corrigé : `--positif` sur
+     * `--fond` y est aussi à 4,24:1. À reprendre dans `app/vitrine-ds.css`.
+     */
+    OK_TX: '#2A6B4F', OK_BG: '#E0EDE6',
+    ACC: '#4338CA', ACC_DEEP: '#3730A3', ON_ACC: '#F2F3F0',
+    // ⚠ HALOS ÉTEINTS EN JOUR, valeur nulle et non « presque nulle ».
+    // La charte est explicite : « en jour, --halo vaut none — un halo sur fond
+    // clair n'a aucun sens ». Les rôles restent définis pour que le CSS des
+    // composants n'ait pas à savoir quel thème est actif.
+    GLOW: 'rgba(67,56,202,0)', GLOW2: 'rgba(67,56,202,0)',
   },
-  /* --- 🌙 Corail nuit (réglé à la main) --- */
-  nuit: {
-    NOM: '🪸 Corail',
-    INK: '#F7EBE9', INK2: '#CFB0AD', MUTED: '#987C79', GHOST: '#5A4744',
-    PAGE: '#171012', CELL: '#241719',
-    HEAD: '#33191D', BLOCK: '#1E1416', SOFT: '#2A1B1D', PARAM: '#2A1B1D',
-    LINK_BG: '#2E1A1D', LINK_TX: '#FF7A90',
-    LINE: '#3A2528', LINE2: '#48302F', CARD_BD: '#3A2528', FIELD_BG: '#1E1416',
-    OVER: '#FF7A66', OVER_TX: '#FF8A78', OVER_BG: '#3A211D',
-    OK_TX: '#6FD69E', OK_BG: '#1E3327',
-    ACC: '#FF7A90', ACC_DEEP: '#FF5C7A', ON_ACC: '#2A1013',
-    GLOW: 'rgba(255,122,144,.42)', GLOW2: 'rgba(255,122,144,.24)',
+
+  /* --- Encre — thème SOMBRE ---
+     L'encre #141C26 est un bleu-ardoise, PAS un noir : le noir absolu à accent
+     fluo est l'autre interdit explicite de la charte. */
+  encre: {
+    NOM: 'Encre',
+    // En nuit, la charte fond --texte-doux et --texte-petit sur la même valeur
+    // (#A8B2BE, déjà à 7,99:1) : la distinction n'a plus lieu d'être.
+    INK: '#F2F3F0', INK2: '#A8B2BE', MUTED: '#8391A0', GHOST: '#55636F',
+    PAGE: '#141C26', CELL: '#1E2A38',
+    HEAD: '#24313F', BLOCK: '#1A2432', SOFT: '#24313F', PARAM: '#24313F',
+    LINK_BG: '#232145', LINK_TX: '#8B85F5',
+    LINE: '#2E3B49', LINE2: '#3B4857', CARD_BD: '#2E3B49', FIELD_BG: '#1A2432',
+    OVER: '#E8756E', OVER_TX: '#E8756E', OVER_BG: '#3A2320',
+    OK_TX: '#6FBF97', OK_BG: '#1C3329',
+    ACC: '#8B85F5', ACC_DEEP: '#6D66E8', ON_ACC: '#141C26',
+    // ⚠ Le seul halo que la charte tolère, et seulement en nuit.
+    GLOW: 'rgba(139,133,245,.34)', GLOW2: 'rgba(139,133,245,.18)',
   },
-
-  /* --- 🔮 Améthyste (violet) --- */
-  amethyste: themeClair('🔮 Améthyste', '#B840E0', '#9A1FD0', '#FAF4FE'),
-  'amethyste-nuit': themeSombre('🔮 Améthyste', '#B840E0', '#9A1FD0'),
-
-  /* --- 🐬 Lagon (cyan / bleu) --- */
-  lagon: themeClair('🐬 Lagon', '#12B0D6', '#0C8CAE', '#F0FAFD'),
-  'lagon-nuit': themeSombre('🐬 Lagon', '#12B0D6', '#0C8CAE'),
-
-  /* --- 🌿 Menthe (vert frais) --- */
-  menthe: themeClair('🌿 Menthe', '#14C08F', '#0E9670', '#F0FCF7'),
-  'menthe-nuit': themeSombre('🌿 Menthe', '#14C08F', '#0E9670'),
-
-  /* --- 🍯 Ambre (orange chaud) --- */
-  ambre: themeClair('🍯 Ambre', '#EE9327', '#C56E17', '#FEF7EE'),
-  'ambre-nuit': themeSombre('🍯 Ambre', '#EE9327', '#C56E17'),
-
-  /* --- 🌌 Indigo (bleu-violet) --- */
-  indigo: themeClair('🌌 Indigo', '#5566FF', '#3A47E0', '#F3F4FE'),
-  'indigo-nuit': themeSombre('🌌 Indigo', '#5566FF', '#3A47E0'),
 } satisfies Record<string, Theme>;
 
 /** Ordre d'itération pour générer le CSS (toutes les variantes). */
 export const THEME_ORDRE = Object.keys(THEMES) as IdTheme[];
 
-export const THEME_DEFAUT: IdTheme = 'corail';
+export const THEME_DEFAUT: IdTheme = 'chaux';
 
 /** Thèmes sombres — sert à basculer `color-scheme` et le mode clair/sombre. */
 export const THEMES_SOMBRES: IdTheme[] = THEME_ORDRE.filter(
-  (k) => k === 'nuit' || k.endsWith('-nuit'),
+  (k) => k === 'encre' || k.endsWith('-nuit'),
 );
 
 /**
@@ -172,13 +203,19 @@ export const THEMES_SOMBRES: IdTheme[] = THEME_ORDRE.filter(
  * Le sélecteur d'apparence choisit la *couleur* (la famille) ; la bascule ☀/🌙
  * choisit le *mode* (clair/sombre). Le thème appliqué = couleur × mode.
  */
+/**
+ * ⚠ UNE SEULE FAMILLE, ET ELLE DOIT LE RESTER AU MINIMUM. Tous les replis du
+ * système pointent sur `FAMILLES[0]` : une liste vide, ou une famille privée
+ * de sa variante sombre, casserait la bascule jour/nuit sans message d'erreur.
+ *
+ * Le sélecteur d'apparence n'affiche donc plus qu'une pastille. Le mécanisme
+ * est intact — ajouter une gamme, c'est ajouter une ligne ici et deux entrées
+ * dans `THEMES`.
+ *
+ * ⚠ Pas d'emoji : la charte du site les interdit, et l'application la rejoint.
+ */
 export const FAMILLES = [
-  { id: 'corail', nom: 'Corail', emoji: '🪸', clair: 'corail', sombre: 'nuit' },
-  { id: 'amethyste', nom: 'Améthyste', emoji: '🔮', clair: 'amethyste', sombre: 'amethyste-nuit' },
-  { id: 'lagon', nom: 'Lagon', emoji: '🐬', clair: 'lagon', sombre: 'lagon-nuit' },
-  { id: 'menthe', nom: 'Menthe', emoji: '🌿', clair: 'menthe', sombre: 'menthe-nuit' },
-  { id: 'ambre', nom: 'Ambre', emoji: '🍯', clair: 'ambre', sombre: 'ambre-nuit' },
-  { id: 'indigo', nom: 'Indigo', emoji: '🌌', clair: 'indigo', sombre: 'indigo-nuit' },
+  { id: 'nestync', nom: 'Nestync', emoji: '', clair: 'chaux', sombre: 'encre' },
 ] as const satisfies readonly {
   id: string;
   nom: string;

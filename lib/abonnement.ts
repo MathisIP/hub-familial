@@ -82,10 +82,10 @@ export async function exigerAcces(): Promise<void> {
   }
   // `redirect()` lève une exception de contrôle : jamais depuis un bloc `try`.
   if (sansFoyer) redirect('/bienvenue');
-  if (onboardingAFaire) redirect('/demarrage');
+  if (onboardingAFaire) redirect('/foyer/demarrage');
 
   const e = await etatAbonnement();
-  if (!e.autorise) redirect('/abonnement');
+  if (!e.autorise) redirect('/foyer/abonnement');
 }
 
 /**

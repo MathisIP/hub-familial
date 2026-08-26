@@ -84,7 +84,7 @@ export async function envoyerRappelsQuotidiens(): Promise<RapportRappels> {
       envois += await envoyer(tous, 'evenements', {
         titre: 'Demain',
         corps: ev.nom,
-        url: '/evenements',
+        url: '/foyer/evenements',
         tag: `ev-${cible}`,
       });
     }
@@ -102,7 +102,7 @@ export async function envoyerRappelsQuotidiens(): Promise<RapportRappels> {
       envois += await envoyer(tous, 'evenements', {
         titre: 'Demain',
         corps: o.nom,
-        url: '/cadeaux',
+        url: '/foyer/cadeaux',
         tag: `occ-${cible}`,
       });
     }
@@ -143,7 +143,7 @@ export async function envoyerRappelsQuotidiens(): Promise<RapportRappels> {
         // quelque chose, pas quoi ni combien.
         titre: 'Échéance demain',
         corps: e.libelle,
-        url: '/budget',
+        url: '/foyer/budget',
         tag: `ech-${cible}`,
       });
     }

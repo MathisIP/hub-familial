@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import Link from 'next/link';
-import { demanderAdhesionAction } from '@/app/foyer/actions';
+import { demanderAdhesionAction } from '@/app/foyer/membres/actions';
 
 type Etat = { ok?: string; erreur?: string } | null;
 

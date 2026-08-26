@@ -12,7 +12,14 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Nestync',
     short_name: 'Nestync',
     description: "L'organisation du foyer, en un seul endroit.",
-    start_url: '/',
+    /*
+     * ⚠ /foyer ET NON / DEPUIS LE 25/08/2026. L'icône installée doit ouvrir
+     * l'APPLICATION ; pointée sur `/`, elle afficherait la page de vente.
+     * `app/page.tsx` redirige les membres connectés vers /foyer, ce qui
+     * rattrape les installations faites avant ce changement — mais un
+     * `start_url` juste évite l'aller-retour.
+     */
+    start_url: '/foyer',
     display: 'standalone',
     lang: 'fr',
     background_color: THEMES[THEME_DEFAUT].PAGE,

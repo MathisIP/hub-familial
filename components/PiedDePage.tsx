@@ -21,7 +21,14 @@ const SANS_NAVIGATION = [
   '/rejoindre',
   '/rejoindre-foyer',
   '/bienvenue',
-  '/demarrage',
+  '/foyer/demarrage',
+  /*
+   * ⚠ Le site vitrine n'est PAS une page de l'application : il ne doit rien en
+   * montrer. Le rail des modules et le pied de réglages y trahiraient un
+   * intérieur réservé aux membres connectés — sur la page même qui s'adresse à
+   * des visiteurs qui n'ont pas encore de foyer.
+   */
+  '/apercu-site',
 ];
 export function sansNavigation(path: string | null): boolean {
   return !!path && SANS_NAVIGATION.some((p) => path === p || path.startsWith(p + '/'));

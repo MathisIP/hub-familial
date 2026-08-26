@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
-import Vitrine from '@/components/vitrine/Vitrine';
+import SiteVitrine from '@/components/vitrine-ds/SiteVitrine';
+import { classesPolices } from '@/lib/polices-site';
 import { auth } from '@/auth';
+import './vitrine-ds.css';
 
 /**
  * `/` — LE SITE VITRINE, et rien d'autre.
@@ -13,8 +15,18 @@ import { auth } from '@/auth';
  *
  * ⚠ UN MEMBRE CONNECTÉ EST REDIRIGÉ VERS `/foyer`, il ne voit pas la vitrine.
  * Ce n'est pas seulement un confort : c'est ce qui rattrape les installations
- * PWA existantes, dont le `start_url` pointe encore sur `/`. Sans cette
- * redirection, ouvrir l'icône afficherait la page de vente.
+ * PWA existantes, dont le `start_url` pointe encore sur `/`.
+ *
+ * ⚠ LE NOUVEAU SITE EST SERVI ICI DEPUIS LE 26/08/2026. Il a vécu deux jours
+ * sur `/apercu-site`, le temps d'être validé — mais la bascule avait été
+ * oubliée au moment du déploiement : la production servait encore l'ancienne
+ * vitrine, sur mobile comme sur bureau. `components/vitrine/Vitrine.tsx` reste
+ * dans le dépôt tant que le nouveau n'a pas fait ses preuves en ligne.
+ *
+ * ⚠ LES POLICES SONT POSÉES ICI. `SiteVitrine` est un composant client :
+ * `next/font` ne peut pas y être appelé. Sans ce pont, le site s'afficherait
+ * dans les polices de l'application au lieu de Fraunces / Instrument Sans /
+ * IBM Plex Mono.
  *
  * Route PUBLIQUE (cf. middleware) : le robot de Pinterest et les moteurs
  * arrivent déconnectés et voient donc bien la vitrine.
@@ -23,9 +35,23 @@ export const dynamic = 'force-dynamic';
 
 export default async function Accueil() {
   const session = await auth();
-  // Échappatoire de développement, identique à celle d'`auth.ts` : sans client
-  // OAuth configuré en local, on considère la session comme absente plutôt que
-  // de rediriger vers une application qu'on ne peut pas atteindre.
   if (session?.user) redirect('/foyer');
-  return <Vitrine />;
+
+  return (
+    <div
+      className={classesPolices}
+      style={
+        {
+          // Le pont entre les variables de next/font et les noms attendus par
+          // le système de design, qui ne connaît que --font-display/corps/donnees.
+          '--font-display': 'var(--font-display-site), Georgia, serif',
+          '--font-corps': 'var(--font-corps-site), system-ui, sans-serif',
+          '--font-donnees': 'var(--font-donnees-site), ui-monospace, monospace',
+          '--wonk': "'SOFT' 20, 'WONK' 1, 'opsz' 96",
+        } as React.CSSProperties
+      }
+    >
+      <SiteVitrine />
+    </div>
+  );
 }

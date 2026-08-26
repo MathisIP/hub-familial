@@ -111,6 +111,15 @@
   --pad-section-v: clamp(64px, 9vw, 144px);
   --pad-section-h: clamp(20px, 5vw, 96px);
 
+  /* Metrique des cartes de la demonstration. ⚠ EN JETONS pour la meme raison
+     que le rembourrage des sections : ces cartes sont mises en forme par des
+     objets de style JavaScript, hors de portee d'une regle de feuille. Sans
+     variables, le point de rupture mobile n'a aucune prise. */
+  --carte-pad: clamp(20px, 2.5vw, 28px);
+  --carte-gap: 20px;
+  --demo-gap: clamp(20px, 2.5vw, 32px);
+  --demo-ligne: 11px;
+
   --contenu-max: 1440px;
   --gouttiere: 24px;
   --marge-desktop: 96px;
@@ -284,6 +293,17 @@
 
     --pad-section-v: 48px;
     --pad-section-h: 20px;
+
+    /* ⚠ ON COMPACTE LE REMBOURRAGE, JAMAIS LE CONTENU. Une demonstration en
+       trois etapes occupe legitimement de la hauteur : c'est son propos, et
+       masquer une etape derriere un depliant reviendrait a cacher la
+       conclusion — la liste de courses qui se remplit seule est precisement ce
+       qu'on vient montrer. Ce sont les marges, calibrees pour trois colonnes
+       cote a cote, qui n'ont plus lieu d'etre une fois les cartes empilees. */
+    --carte-pad: 16px;
+    --carte-gap: 14px;
+    --demo-gap: 14px;
+    --demo-ligne: 8px;
   }
   .nsy-site .nsy-colonnes { grid-template-columns: minmax(0, 1fr); gap: var(--e-7); }
   /* ⚠ On masque les ANCRES, jamais la barre entiere : elles ne menent qu'a

@@ -130,9 +130,11 @@ export default function SiteVitrine() {
     background: 'var(--surface)',
     border: '1px solid var(--trait)',
     borderRadius: 'var(--rayon)',
-    padding: 'clamp(20px,2.5vw,28px)',
+    // ⚠ Des jetons, pas des valeurs ecrites ici : un objet de style
+    // JavaScript ne peut pas etre repris par un point de rupture.
+    padding: 'var(--carte-pad)',
     display: 'grid',
-    gap: 20,
+    gap: 'var(--carte-gap)',
     alignContent: 'start',
   };
   const section = (fond: 'base' | 'alt'): React.CSSProperties => ({
@@ -330,7 +332,7 @@ export default function SiteVitrine() {
               background: 'var(--surface)',
               border: '1px solid var(--trait)',
               borderRadius: 'var(--rayon)',
-              padding: '16px 20px',
+              padding: 'var(--carte-pad)',
               width: 'fit-content',
             }}
           >
@@ -376,7 +378,7 @@ export default function SiteVitrine() {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))',
-              gap: 'clamp(20px,2.5vw,32px)',
+              gap: 'var(--demo-gap)',
               alignItems: 'start',
             }}
           >
@@ -446,7 +448,7 @@ export default function SiteVitrine() {
                       gridTemplateColumns: '52px 1fr',
                       gap: 12,
                       alignItems: 'center',
-                      padding: '11px 0',
+                      padding: 'var(--demo-ligne) 0',
                       borderBottom: '1px solid var(--trait)',
                     }}
                   >

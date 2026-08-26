@@ -49,6 +49,14 @@ export default function robots(): MetadataRoute.Robots {
         '/rejoindre-foyer',
         '/comptes',
         '/apercu-site',
+        // ⚠ Fiches du programme de test : publiques mais NON INDEXABLES. Elles
+        // se donnent par lien, à des gens choisis ; les voir remonter dans une
+        // recherche amènerait des inscriptions non voulues, et elles seront
+        // caduques à l'ouverture des abonnements. Les pages portent en plus un
+        // `robots: { index: false }` dans leurs métadonnées — c'est LUI qui
+        // agit vraiment, cette ligne ne fait qu'éviter le crawl.
+        '/test',
+        '/test-proche',
         '/api/',
       ],
     },

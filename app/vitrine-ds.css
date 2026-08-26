@@ -1010,3 +1010,135 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   .nsy-site .nsy-bascule-choix { flex: 1 1 0; justify-content: center; padding: 0 10px; }
   .nsy-site .nsy-bascule-eco { font-size: 0.5625rem; padding: 2px 5px; }
 }
+
+/* =====================================================================
+   PAGES DE GUIDE — /test et /test-proche
+   ---------------------------------------------------------------------
+   Mise en forme partagée par les deux fiches du programme de test. Le
+   texte vit dans les pages ; ici, uniquement l'apparence.
+
+   ⚠ Ces pages passent par `CadreSite`, qui reste volontairement EN CHAUX
+   (pas de bascule de thème sur les pages qu'on lit une fois). Il n'y a
+   donc rien à redéfinir pour le mode nuit : les jetons de `.nsy-site`
+   suffisent.
+   ===================================================================== */
+
+/* ⚠ VERT ASSOMBRI, ET C'EST DÉLIBÉRÉ. `--positif` (#2F7A59) ne donne que
+   4,24:1 sur la chaux — sous le seuil AA de 4,5 que la charte s'impose.
+   Le défaut est connu et documenté dans lib/themes.ts, qui a déjà corrigé
+   sa propre valeur à #2A6B4F (5,18:1, teinte inchangée). On applique ici
+   la même correction, LOCALEMENT : reprendre `--positif` à la racine
+   changerait le vert de toute la vitrine, ce qui est un autre chantier. */
+.nsy-site .nsy-guide-corps { --guide-positif: #2A6B4F; }
+
+/* ⚠ TROIS COLLISIONS DE CASCADE AVEC `.nsy-cadre-corps`, toutes invisibles au
+   build et toutes constatées à l'écran. Le cadre est réglé pour de longs
+   documents juridiques, qui espacent au MARGE ; ces fiches espacent au GAP de
+   grille. Les deux s'additionnent au lieu de se remplacer.
+
+   1. `h2 { margin: var(--e-6) 0 0 }` poussait 32 px entre l'intertitre mono et
+      son propre titre : le libellé se retrouvait plus près du paragraphe
+      PRÉCÉDENT que de ce qu'il annonce, donc rattaché au mauvais bloc.
+   2. Les `p` gardaient leurs marges par défaut du navigateur, qui NE FUSIONNENT
+      PAS dans une grille : 12 px de gap devenaient 44 px, et une étape
+      ressemblait à trois blocs sans rapport.
+   3. `.nsy-cadre-corps ol` (0,2,1) l'emporte sur `.nsy-guide-etapes` (0,2,0) :
+      son `padding-left` de 24 px s'ajoutait au mien, décalant toutes les étapes
+      vers la droite par rapport au texte courant. D'où le sélecteur volontairement
+      plus spécifique ci-dessous — le couplage au cadre est explicite, pas subi. */
+.nsy-site .nsy-guide-corps { display: grid; gap: var(--e-7); align-content: start; }
+.nsy-site .nsy-guide-corps section > h2 { margin: 0; }
+.nsy-site .nsy-guide-corps p { margin: 0; }
+.nsy-site .nsy-cadre-corps ol.nsy-guide-etapes { padding-left: 0; gap: 0; }
+
+/* --- Intertitre mono --- */
+.nsy-site .nsy-guide-phase {
+  margin: 0 0 calc(-1 * var(--e-2));
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit);
+}
+
+/* --- Étapes numérotées --- */
+.nsy-site .nsy-guide-etapes {
+  list-style: none;
+  counter-reset: nsy-etape;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.nsy-site .nsy-guide-etapes > li {
+  counter-increment: nsy-etape;
+  position: relative;
+  padding: var(--e-5) 0 var(--e-5) var(--e-8);
+  border-top: 1px solid var(--trait);
+  display: grid;
+  gap: var(--e-3);
+}
+.nsy-site .nsy-guide-etapes > li:first-child { border-top: 0; padding-top: var(--e-2); }
+.nsy-site .nsy-guide-etapes > li::before {
+  content: counter(nsy-etape);
+  position: absolute;
+  left: 0;
+  top: var(--e-5);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--commun-texte);
+  font-variant-numeric: tabular-nums;
+}
+.nsy-site .nsy-guide-etapes > li:first-child::before { top: var(--e-2); }
+.nsy-site .nsy-guide-etapes > li > h3 { margin: 0; }
+
+/* --- Encarts ---
+   Un filet haut plutôt qu'une carte arrondie : ces fiches se lisent comme
+   un document, pas comme un tableau de bord. */
+.nsy-site .nsy-guide-encart {
+  border-top: 2px solid var(--trait);
+  background: var(--fond-alt);
+  padding: var(--e-3) var(--e-4) var(--e-4);
+  display: grid;
+  gap: var(--e-2);
+}
+.nsy-site .nsy-guide-encart > p { margin: 0; }
+.nsy-site .nsy-guide-etiq {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit);
+}
+.nsy-site .nsy-guide-encart.bon { border-top-color: var(--guide-positif); }
+.nsy-site .nsy-guide-encart.bon .nsy-guide-etiq { color: var(--guide-positif); }
+.nsy-site .nsy-guide-encart.attention { border-top-color: var(--alerte); }
+.nsy-site .nsy-guide-encart.attention .nsy-guide-etiq { color: var(--alerte); }
+
+/* --- Reproduction d'écran --- */
+.nsy-site .nsy-guide-ecran {
+  background: var(--fond-alt);
+  border: 1px solid var(--trait);
+  border-radius: 4px;
+  padding: var(--e-3) var(--e-4);
+  display: grid;
+  gap: var(--e-1);
+}
+.nsy-site .nsy-guide-statut {
+  font-family: var(--font-donnees);
+  font-weight: 600;
+  color: var(--guide-positif);
+}
+.nsy-site .nsy-guide-detail { font-size: var(--petit); color: var(--texte-doux); }
+
+/* --- Chemin de navigation --- */
+.nsy-site .nsy-guide-chemin {
+  font-family: var(--font-donnees);
+  font-size: 0.9em;
+  background: var(--surface);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  white-space: nowrap;
+}

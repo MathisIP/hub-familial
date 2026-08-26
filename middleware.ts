@@ -14,6 +14,12 @@ export { auth as middleware } from '@/auth';
  *    (signature Stripe, `CRON_SECRET`) ;
  *  - les pages publiques : /connexion, /conditions (CGV-CGU), /confidentialite,
  *    /mentions-legales, /aide, /hors-ligne ;
+ *  - les fiches du programme de test : /test (inconnus) et /test-proche.
+ *    ⚠ Elles n'auraient AUCUN SENS derrière l'authentification : on les envoie à
+ *    quelqu'un qui n'a pas encore de compte, et qui doit justement y lire
+ *    comment en créer un. Le `/test(-proche)?` du motif est volontairement
+ *    ancré : sans les parenthèses, un futur `/testeurs` deviendrait public par
+ *    ricochet.
  *  - le service worker (/sw.js), les fichiers statiques Next et les assets
  *    publics (.png/.ico/.svg/.webmanifest) ;
  *  - `/robots.txt` et `/sitemap.xml`. ⚠ Sans cette exclusion, un robot qui
@@ -47,5 +53,5 @@ export const config = {
    *
    * En ajoutant un type d'actif servi depuis `public/`, l'ajouter ICI aussi.
    */
-  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|jpe?g|webp|avif|ico|svg|webmanifest)).*)'],
+  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|test$|test-proche$|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|jpe?g|webp|avif|ico|svg|webmanifest)).*)'],
 };

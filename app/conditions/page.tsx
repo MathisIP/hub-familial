@@ -110,7 +110,24 @@ export default function PageConditions() {
       </p>
 
       <h2>6. Prix et modalités de paiement</h2>
-      <p>Les prix sont indiqués en euros, toutes taxes comprises :</p>
+      {/*
+        ⚠ NE PAS ÉCRIRE « TOUTES TAXES COMPRISES » — c'est l'erreur corrigée le
+        26/08/2026. L'article 1 indique, à juste titre, que la TVA n'est pas
+        applicable (franchise en base, art. 293 B du CGI). Annoncer des prix TTC
+        deux articles plus loin n'est pas trompeur au détriment du client — le
+        prix affiché est bien celui payé — mais l'incohérence saute aux yeux de
+        qui lit les deux articles à la suite.
+
+        ⚠ ÉCHÉANCE À VENIR : le jour où le chiffre d'affaires dépasse le seuil de
+        la franchise, la TVA devient exigible et ces prix deviennent des prix TTC
+        incluant 20 % — soit une baisse de revenu net, soit une hausse à annoncer
+        trente jours à l'avance. Cet article devra être réécrit ce jour-là.
+      */}
+      <p>
+        Les prix sont indiqués en euros et correspondent au{' '}
+        <strong>montant total dû par l’Utilisateur</strong>. La TVA n’étant pas applicable
+        (article 293 B du Code général des impôts), aucun montant de taxe ne s’y ajoute.
+      </p>
       <ul>
         <li><strong>Formule mensuelle</strong> : {formatPrix(mensuel.prix)} {mensuel.periode}.</li>
         <li><strong>Formule annuelle</strong> : {formatPrix(annuel.prix)} {annuel.periode}, soit {formatPrix(annuel.parMois)} par mois.</li>
@@ -118,9 +135,20 @@ export default function PageConditions() {
       <p>
         Le paiement s’effectue par carte bancaire via notre prestataire <strong>Stripe</strong>.
         Aucune coordonnée bancaire n’est conservée par l’éditeur. La facture est disponible
-        depuis l’espace « Mon abonnement ». L’éditeur se réserve le droit de modifier ses
-        tarifs ; tout changement est notifié au moins 30 jours à l’avance et ne s’applique
-        qu’à compter de la période suivante.
+        depuis l’espace « Mon abonnement ».
+      </p>
+      {/*
+        ⚠ La faculté de résilier sans frais en cas de hausse était absente : sans
+        elle, « l'éditeur se réserve le droit de modifier ses tarifs » se lit comme
+        un droit unilatéral sans contrepartie. L'article 14 accorde déjà cette
+        faculté pour les conditions ; le prix mérite exactement la même.
+      */}
+      <p>
+        L’éditeur peut modifier ses tarifs. Toute hausse est notifiée à l’Utilisateur au
+        moins <strong>30 jours</strong> avant son entrée en vigueur et ne s’applique qu’à
+        compter de la période d’abonnement suivante. L’Utilisateur qui la refuse peut{' '}
+        <strong>résilier sans frais</strong> avant cette date, dans les conditions de
+        l’article 7.
       </p>
 
       <h2>7. Durée, reconduction et résiliation</h2>

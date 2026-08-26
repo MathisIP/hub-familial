@@ -726,7 +726,11 @@ const UI = {
     fr: 'Tu peux résilier à tout moment depuis cette page. L’accès reste ouvert jusqu’à la fin de la période déjà payée, sans frais.',
     en: 'You can cancel at any time from this page. Access stays open until the end of the period already paid for, at no cost.',
   },
-  ABO_AVANT_TVA: { fr: 'Prix TTC, sans engagement de durée.', en: 'Price incl. tax, no minimum term.' },
+  // ⚠ Surtout pas « prix TTC » : la TVA n'est pas applicable (franchise en base,
+  // art. 293 B du CGI), et l'article 1 des CGV le dit. Annoncer des prix TTC au
+  // moment du paiement contredirait le contrat qu'on fait accepter juste en
+  // dessous. À réécrire le jour du passage à la TVA.
+  ABO_AVANT_TVA: { fr: 'Prix total, aucune taxe en sus. Sans engagement de durée.', en: 'Total price, no tax added. No minimum term.' },
   /**
    * ⚠ FORMULATION JURIDIQUE — art. L. 221-25, à lire avec l'article 8 des CGV.
    *

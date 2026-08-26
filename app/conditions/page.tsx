@@ -22,12 +22,20 @@ export const metadata = {
  * Faire relire l'ensemble par un professionnel avant d'ouvrir les abonnements.
  *
  * ⚠ RELECTURE COMPLÈTE DU 26/08/2026 — sept points corrigés, chacun documenté
- * par un commentaire à l'endroit concerné. Trois d'entre eux sont ADOSSÉS À DU
+ * par un commentaire à l'endroit concerné. QUATRE articles sont ADOSSÉS À DU
  * CODE et ne peuvent pas être retouchés seuls : l'avis de reconduction
  * (article 7 ↔ `envoyerAvisReconductions`), la rétractation (article 8 ↔ la case
- * `ABO_RENONCIATION`), et l'effet de la suppression sur les autres membres
- * (article 12 ↔ `DELAI_SUPPRESSION_FOYER`). Modifier le texte sans le code
- * transformerait une clause en engagement non tenu.
+ * `ABO_RENONCIATION`), l'effet de la suppression sur les autres membres
+ * (article 12 ↔ `DELAI_SUPPRESSION_FOYER`), et la cessation du Service
+ * (article 16 ↔ `construireArchive`, qui doit continuer de livrer les fichiers
+ * eux-mêmes et non des liens). Modifier le texte sans le code transformerait une
+ * clause en engagement non tenu.
+ *
+ * ⚠ ARTICLE 16 AJOUTÉ LE 27/08/2026. Il manquait : l'article 9 ne traitait que
+ * l'indisponibilité TEMPORAIRE, si bien qu'aucune clause ne disait ce qu'il
+ * advient d'un abonnement payé d'avance ni des données si le Service s'arrête
+ * pour de bon. Le trou pesait sur les abonnés, pas sur les testeurs — quelqu'un
+ * qui règle un an en janvier et voit fermer en mars.
  */
 export default function PageConditions() {
   const mensuel = OFFRES[0];
@@ -35,7 +43,7 @@ export default function PageConditions() {
 
   return (
     <CadreSite surtitre="Le contrat" titre="Conditions générales de vente et d’utilisation">
-      <p className="doc-maj">Dernière mise à jour : 26 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 27 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <p className="doc-avertissement">
@@ -378,6 +386,81 @@ export default function PageConditions() {
         Les présentes sont soumises au <strong>droit français</strong> ;
         à défaut de résolution amiable, les tribunaux compétents sont ceux du domicile du
         défendeur ou du lieu de livraison du service, au choix de l’Utilisateur.
+      </p>
+
+      {/*
+        ⚠ ARTICLE ADOSSÉ À DU CODE — le quatrième. Ce qui est promis ici doit
+        rester vrai dans l'application :
+          · « pleinement fonctionnel, fonction d'export comprise » ↔ la route
+            `/api/compte/export` et `construireArchive` (lib/rgpd-archive.ts),
+            qui produit une archive contenant les VRAIS documents. Si cet export
+            redevenait un simple JSON de liens, la clause promettrait la
+            récupération d'un bail que le client ne pourrait plus ouvrir ;
+          · le préavis et les rappels supposent des envois qui n'existent pas
+            encore dans lib/email/messages.ts — ils sont à écrire le jour venu,
+            et la clause fixe leur cadence.
+
+        ⚠ POURQUOI PAS D'ENVOI DES DONNÉES PAR COURRIEL. La question s'est posée
+        le 26/08/2026 : joindre l'archive au message d'adieu. Écarté pour trois
+        raisons qui se cumulent. La taille d'abord — l'offre annonce 2 Go quand
+        les boîtes de réception plafonnent autour de 25 Mo, si bien que la clause
+        échouerait précisément pour les foyers ayant le plus déposé. La sécurité
+        ensuite : ce serait recopier en clair, chez un tiers, des documents que
+        `DOCUMENTS_SECRET` chiffre justement pour que l'hébergeur ne les lise
+        pas — c'est exactement la raison pour laquelle l'envoi de la liste de
+        courses par message a été retiré le 16/08/2026. Les adresses mortes
+        enfin : un envoi qui rebondit est une obligation non tenue, et
+        obligerait à conserver les données alors qu'il faut les effacer.
+        Un lien de téléchargement authentifié resterait envisageable ; le
+        fichier lui-même, non.
+      */}
+      <h2>16. Cessation du Service</h2>
+      <p>
+        L’éditeur peut décider de mettre fin au Service. Il en informe alors chaque
+        Utilisateur par courrier électronique et par un avis affiché dans l’application,
+        au moins <strong>trois mois</strong> avant la date d’arrêt. Si la cessation
+        résulte d’une circonstance échappant à son contrôle — défaillance d’un
+        prestataire essentiel, force majeure — le préavis est le plus long que les
+        circonstances permettent, sans pouvoir être inférieur à <strong>trente jours</strong>.
+      </p>
+      <p>
+        Pendant toute la durée du préavis, le Service demeure accessible et{' '}
+        <strong>pleinement fonctionnel</strong>, la fonction d’export des données comprise.
+        Au moins deux rappels sont adressés par courrier électronique, dont un dans les
+        sept derniers jours.
+      </p>
+      <p>
+        {/* ⚠ L'archive, pas le JSON : c'est ce qui rend la clause tenable. */}
+        L’Utilisateur récupère l’intégralité de ses données depuis son compte, sous la
+        forme d’une archive contenant ses données structurées et{' '}
+        <strong>les fichiers qu’il a déposés</strong>. À compter de la date d’arrêt, les
+        comptes sont fermés et les données définitivement effacées dans un délai maximal
+        de trente jours ; pendant ce seul délai, une demande adressée à
+        contact@nestync.app permet encore d’en obtenir une copie.
+      </p>
+      <p>
+        Les abonnements en cours sont <strong>résiliés de plein droit</strong> à la date
+        d’arrêt. La fraction de la période payée et non courue est{' '}
+        <strong>remboursée</strong>, sans démarche de l’Utilisateur, dans les quatorze
+        jours suivant cette date.
+      </p>
+      <p>
+        {/*
+          ⚠ Cette phrase ferme la boucle avec la promesse faite aux premiers
+          testeurs : « gratuit à vie » y signifie « aussi longtemps que le
+          Service existera », et les fiches qui leur sont remises le disent dans
+          ces termes. Sans elle, le contrat resterait muet là où l'engagement
+          commercial est explicite — et c'est le silence qui s'interprète contre
+          le professionnel.
+        */}
+        Les accès accordés à titre gratuit, y compris ceux consentis sans limite de
+        durée, prennent fin à la même date et dans les mêmes conditions, sans indemnité :
+        la gratuité porte sur le prix, non sur la pérennité du Service.
+      </p>
+      <p>
+        En cas de <strong>transfert du Service</strong> à un autre exploitant, l’Utilisateur
+        en est informé au moins trente jours à l’avance et peut s’y opposer ; il obtient
+        alors l’export de ses données et la fermeture de son compte, sans frais.
       </p>
 
       <p className="doc-maj">

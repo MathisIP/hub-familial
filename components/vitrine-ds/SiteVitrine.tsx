@@ -319,10 +319,21 @@ export default function SiteVitrine() {
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
+            {/*
+              ⚠ LA MAQUETTE DU BANDEAU EST UN COMPOSANT À PART, pas une carte du
+              carrousel : brancher celui-ci ne l'avait donc pas branchée, et elle
+              affichait encore « capture à fournir » — au-dessus de la ligne de
+              flottaison, c'est-à-dire à l'endroit le plus vu de tout le site.
+
+              ⚠ Le chemin se compose depuis le thème, comme dans le carrousel.
+              L'écrire en dur figerait la capture claire sur un site passé en
+              nuit.
+            */}
             <Mockup
               largeur={300}
               rotation={3}
               alt="Écran d'accueil : la semaine du foyer, une couleur par personne"
+              src={`/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/accueil.webp`}
             />
           </div>
         </div>

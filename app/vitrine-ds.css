@@ -418,46 +418,34 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
      qu'une (drapeau `compact`) ; ici on remet simplement le flux normal.
      `min-height: 26rem` etait la seule adaptation mobile — elle reservait de
      la hauteur a un eventail qui debordait quand meme. */
-  /* ⚠ Trois cartes, pas une. Une carte seule au milieu d'un fond vide ne
-     dit pas qu'il y en a d'autres — c'est ce qui obligeait a decouvrir les
-     fleches. Les voisines depassent de chaque cote, coupees par le bord de la
-     scene : le meme signal que l'eventail donne en bureau, avec les moyens
-     d'un ecran etroit. */
+  /* ⚠ UNE SCENE, PAS UNE RANGEE. Les cartes sont empilees en absolu et
+     deplacees par `translateX` : c'est ce qui permet au navigateur d'INTERPOLER
+     quand le centre change. Une rangee de trois cartes dont seul le contenu
+     changeait ne pouvait rien animer — une transition suit une valeur qui
+     varie, pas un noeud qu'on remplace.
+
+     La hauteur est fixe : sans elle, des elements en absolu laissent la scene
+     s'effondrer, et la page sauterait au premier changement de module. */
   .nsy-site .nsy-eventail-scene {
-    position: static;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: var(--e-3);
+    position: relative;
+    display: block;
+    height: 400px;
     min-height: 0;
     overflow: hidden;
   }
   .nsy-site .nsy-eventail-carte {
-    position: static;
-    transform: none;
-    transition: none;
-    flex: 0 0 auto;
-    /* ⚠ C'EST CETTE LIGNE QUI MANQUAIT. La carte mesure 230 px en bureau,
-       largeur figee dans la regle de base. En mobile la maquette a ete reduite
-       a 150 px mais la carte gardait ses 230 : trois cartes faisaient 714 px
-       dans un ecran de 350, et comme la maquette est centree dans sa carte,
-       les voisines se retrouvaient repoussees hors champ — 8 px depassaient.
-       On voyait donc une carte seule, exactement comme avant.
-       La carte doit mesurer ce que mesure la maquette. */
+    position: absolute;
+    top: 0;
+    left: 50%;
     width: 150px;
-  }
-  /* Les voisines : reduites, estompees, et cliquables pour venir au centre. */
-  .nsy-site .nsy-eventail-cote {
-    transform: scale(0.8);
-    transform-origin: top center;
-    opacity: 0.35;
-    cursor: pointer;
-  }
-  /* Les fleches s'effacent : le geste et les voisines suffisent a dire qu'on
-     peut avancer. Elles restent pour qui ne devine pas le glissement. */
-  .nsy-site .nsy-eventail-nav button {
-    opacity: 0.5;
-    border-color: var(--trait);
+    margin-left: -75px;
+    /* ⚠ Le pivot est EN HAUT : une reduction depuis le centre ferait monter
+       et descendre les voisines a chaque passage, alors qu'elles doivent
+       simplement glisser derriere la carte principale. */
+    transform-origin: center top;
+    transition:
+      transform var(--duree-fils) var(--courbe),
+      opacity var(--duree-apparition) var(--courbe);
   }
   .nsy-site .nsy-eventail-legende {
     position: static;
@@ -465,10 +453,13 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
     margin-top: var(--e-4);
     text-align: center;
   }
-  /* Les fleches restent malgre le glissement au doigt : elles sont le seul
-     indice VISIBLE qu'il y a d'autres modules a voir. Un carrousel qui ne se
-     manipule qu'au geste ne se laisse pas decouvrir. */
   .nsy-site .nsy-eventail-nav { display: flex; }
+  /* Les fleches s'effacent : le geste et les voisines suffisent a dire qu'on
+     peut avancer. Elles restent pour qui ne devine pas le glissement. */
+  .nsy-site .nsy-eventail-nav button {
+    opacity: 0.5;
+    border-color: var(--trait);
+  }
   /* ⚠ NE PAS REMETTRE `touch-action` ICI. Une version precedente posait
      `touch-action: pan-y` sur la scene : le defilement a la molette a cesse de
      fonctionner en bureau. La declaration etait pourtant dans le bloc mobile —

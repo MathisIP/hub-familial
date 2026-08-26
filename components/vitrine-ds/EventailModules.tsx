@@ -149,6 +149,10 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
    * 28 px, soit environ un pouce de large, et un rapport de 1,3 : le geste
    * doit rester nettement horizontal sans avoir a etre parfait.
    *
+   * Ramene ensuite a 20 px et 1,1 : le premier reglage demandait encore un
+   * geste trop appuye. En dessous, on entrerait dans le domaine du simple
+   * tremblement du pouce pendant un defilement vertical.
+   *
    * Les evenements tactiles ne se declenchent pas a la souris : rien de ceci
    * n'affecte le bureau.
    */
@@ -166,7 +170,7 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
     const t = e.changedTouches[0];
     const dx = t.clientX - d.x;
     const dy = t.clientY - d.y;
-    if (Math.abs(dx) < 28 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    if (Math.abs(dx) < 20 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
     tourner(dx < 0 ? 'avant' : 'arriere');
   };
 
@@ -235,35 +239,56 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
         })}
 
         {/*
-          VUE MOBILE : la carte centrale, et un morceau de chaque voisine.
-          ⚠ Une carte seule ne dit pas qu'il y en a d'autres — c'est ce qui
-          obligeait a chercher les fleches. Les voisines depassent, coupees par
-          le bord de la scene : c'est le signal que l'eventail donne en bureau,
-          transpose a un ecran etroit. Elles sont cliquables, ce qui donne une
-          troisieme facon d'avancer apres le geste et les fleches.
+          VUE MOBILE : un vrai carrousel, pas trois cartes cote a cote.
 
-          ⚠ La cle est le decalage, pas le titre : avec moins de trois
-          modules, la meme carte occuperait deux places et deux cles
-          identiques feraient sauter le rendu.
+          ⚠ CE QUI A ECHOUE A L'ESSAI PRECEDENT, ET POURQUOI. On rendait trois
+          cartes (precedente, centrale, suivante) dans une rangee. Quand on
+          changeait de module, les cartes ne bougeaient pas : c'est leur CONTENU
+          qui changeait. Aucune transition CSS ne peut s'accrocher a ca — une
+          transition anime une propriete qui varie, pas un remplacement de
+          noeud. D'ou l'absence totale d'animation.
 
-          ⚠ 150 px de large et non 230 : la maquette garde les proportions
-          d'un telephone, donc 230 px de large font pres de 500 px de haut —
-          a elle seule plus que la place utile, titre et fleches compris.
+          Ici, TOUTES les cartes sont rendues et positionnees en absolu selon
+          leur ecart au centre. Changer de module change l'ecart, donc le
+          `translateX` de chacune : le navigateur interpole, et le carrousel
+          glisse. C'est exactement le principe de l'eventail en bureau.
+
+          ⚠ L'ecart est CIRCULAIRE et signe. Sans le repliement autour de
+          `total`, passer de la derniere carte a la premiere ferait traverser
+          tout le jeu d'un bord a l'autre au lieu d'avancer d'un cran.
+
+          ⚠ Le decalage (95 px pour une carte de 150) est choisi pour que la
+          voisine soit a moitie masquee par la centrale TOUT EN gardant son bord
+          exterieur dans le cadre. Un decalage plus grand la ferait couper par
+          le bord de la scene : on verrait une tranche d'ecran, pas un
+          telephone — c'est ce qui donnait l'impression d'une image coupee.
         */}
         {compact &&
-          [-1, 0, 1].map((decalage) => {
-            const m = modules[((centre + decalage) % total + total) % total];
-            if (!m) return null;
-            const cote = decalage !== 0;
+          modules.map((m, i) => {
+            let ecart = i - centre;
+            if (ecart > total / 2) ecart -= total;
+            if (ecart < -total / 2) ecart += total;
+
+            const voisine = Math.abs(ecart) === 1;
+            const visible = Math.abs(ecart) <= 1;
+
             return (
               <figure
-                key={decalage}
-                className={cote ? 'nsy-eventail-carte nsy-eventail-cote' : 'nsy-eventail-carte'}
-                onClick={cote ? () => tourner(decalage > 0 ? 'avant' : 'arriere') : undefined}
-                aria-hidden={cote}
+                key={m.titre}
+                className="nsy-eventail-carte"
+                onClick={voisine ? () => tourner(ecart > 0 ? 'avant' : 'arriere') : undefined}
+                aria-hidden={ecart !== 0}
+                style={{
+                  transform: `translateX(${ecart * 95}px) scale(${ecart === 0 ? 1 : 0.84})`,
+                  opacity: visible ? (ecart === 0 ? 1 : 0.55) : 0,
+                  zIndex: 10 - Math.abs(ecart),
+                  // Les cartes lointaines restent dans l'arbre pour pouvoir
+                  // s'animer, mais ne doivent capter aucun clic.
+                  pointerEvents: voisine ? 'auto' : 'none',
+                }}
               >
                 <Mockup largeur={150} rotation={0} alt={m.alt} src={m.src} />
-                {!cote && (
+                {ecart === 0 && (
                   <figcaption className="nsy-eventail-legende">
                     <Pastille fil={m.fil}>{m.titre}</Pastille>
                   </figcaption>

@@ -40,6 +40,27 @@ export default async function PageAbonnement() {
               : t('ABO_ESSAI_OUVERT', langue)}
           </p>
         )}
+        {/*
+          ⚠ ÉCHÉANCE AFFICHÉE EN PERMANENCE — ce n'est pas décoratif.
+          Pour un abonnement MENSUEL, c'est l'unique information sur la
+          reconduction : la fenêtre de l'article L. 215-1 (3 mois à 1 mois avant
+          le terme) est impraticable sur un contrat d'un mois, et les annuels
+          reçoivent en plus l'avis par courriel. Retirer ce bloc reviendrait à
+          laisser les mensuels sans aucune information — voir la clause 7 des
+          conditions, qui l'annonce.
+        */}
+        {etat.statut === 'actif' && !etat.annulationProgrammee && fin && (
+          <p className="compte-note">
+            {t('ABO_RECOND_A', langue)} {fin.toLocaleDateString(locale(langue))}
+            {etat.offre === 'annuel'
+              ? ` ${t('ABO_RECOND_AN', langue)}`
+              : etat.offre === 'mensuel'
+                ? ` ${t('ABO_RECOND_MENS', langue)}`
+                : ''}
+            . {t('ABO_RECOND_LIBRE', langue)}
+          </p>
+        )}
+
         {/* Résilié mais encore actif : sans ce message, la personne verrait
             « Abonnement actif » sans savoir que l'accès s'arrête, ni quand. */}
         {etat.annulationProgrammee && (

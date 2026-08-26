@@ -2738,3 +2738,17 @@ html, body { overflow-x: hidden; }
 .rf-ing-ligne select,
 .rf-ing-ligne .deroulante,
 .rf-ing-ligne .combo { min-width: 0; max-width: 100%; }
+
+/*
+ * Bandeau « ce foyer sera supprimé le … » (composants/BandeauSuppression).
+ * ⚠ Volontairement en tête de page et non repliable : c'est un préavis de sept
+ * jours sur des données irrécupérables, pas une notification.
+ */
+.bandeau-suppression {
+  background: var(--over-bg, #7a1f1f);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-align: center;
+}

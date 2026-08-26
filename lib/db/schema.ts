@@ -51,6 +51,20 @@ export const foyers = pgTable('foyers', {
    */
   annulationProgrammee: boolean('annulation_programmee').notNull().default(false),
   /**
+   * Périodicité souscrite : `mensuel` ou `annuel` (`null` tant qu'aucun
+   * abonnement payant n'existe).
+   *
+   * ⚠ Renseignée depuis l'INTERVALLE Stripe (`price.recurring.interval`), pas
+   * par comparaison d'identifiants de tarif : créer un nouveau prix — une hausse,
+   * une promotion — change l'identifiant mais pas l'intervalle. Une comparaison
+   * d'identifiants cesserait silencieusement de reconnaître les annuels, et
+   * l'avis obligatoire ne partirait plus.
+   *
+   * ⚠ Seuls les ANNUELS reçoivent l'avis de reconduction de l'article L. 215-1 :
+   * cette colonne est ce qui les distingue.
+   */
+  offre: text('offre'),
+  /**
    * Prise en main effectuée (nom du foyer choisi, proches invités) ?
    * ⚠ Défaut `true` À DESSEIN : les foyers déjà en service ne doivent pas se
    * voir imposer l'onboarding. Ce sont les foyers NOUVELLEMENT créés qui posent
@@ -58,16 +72,41 @@ export const foyers = pgTable('foyers', {
    */
   onboardingFait: boolean('onboarding_fait').notNull().default(true),
   /**
-   * Date à laquelle l'abonné a demandé l'exécution immédiate du service et
-   * reconnu perdre son droit de rétractation (art. L221-25 du code de la
-   * consommation, repris à l'article 8 des CGV).
+   * Date à laquelle l'abonné a demandé l'exécution immédiate du service, pour y
+   * accéder sans attendre la fin du délai de rétractation (art. L. 221-25).
    *
-   * ⚠ C'est une PREUVE, pas un confort : sans cette reconnaissance recueillie
-   * AVANT le paiement, le délai de rétractation de 14 jours court normalement
-   * et l'abonnement peut être annulé avec remboursement. On horodate donc le
-   * consentement au moment où il est donné.
+   * ⚠ **LE NOM DE CETTE COLONNE MENT — L'ABONNÉ NE RENONCE À RIEN.** Elle date
+   * d'une version de l'article 8 qui faisait perdre le droit de rétractation
+   * « une fois le service pleinement exécuté ». Cette perte suppose une exécution
+   * COMPLÈTE pendant les quatorze jours, ce qu'un abonnement n'est jamais : la
+   * renonciation ne jouait pas. Depuis le 26/08/2026, l'article 8 accorde au
+   * contraire quatorze jours avec **remboursement intégral**.
+   *
+   * ⚠ NE JAMAIS S'APPUYER SUR CETTE COLONNE POUR REFUSER UN REMBOURSEMENT. Elle
+   * atteste d'une demande d'exécution immédiate, rien d'autre. Le nom est
+   * conservé parce que le renommer coûterait une migration sans rien changer au
+   * comportement — pas parce qu'il est juste.
+   *
+   * Ce qu'elle prouve, et qui reste nécessaire : sans cette demande recueillie
+   * AVANT le paiement, le service ne peut pas démarrer avant la fin du délai.
    */
   retractationRenonceeLe: timestamp('retractation_renoncee_le', { withTimezone: true }),
+  /**
+   * Suppression différée du foyer, demandée par son propriétaire.
+   *
+   * ⚠ EXISTE POUR PROTÉGER LES AUTRES MEMBRES. Supprimer son compte quand on est
+   * propriétaire détruit en cascade TOUT le foyer — y compris ce que les autres
+   * ont saisi. En colocation, on ne peut pas présumer de la bonne intention de
+   * chacun : un départ conflictuel effaçait jusqu'ici le budget et les documents
+   * des colocataires, sans préavis ni copie.
+   *
+   * Le propriétaire, lui, est effacé IMMÉDIATEMENT — son droit à l'effacement ne
+   * se met pas en attente. Seul le foyer survit le temps que les autres exportent.
+   *
+   * `null` = foyer normal. Une date = suppression programmée, appliquée par le
+   * ménage quotidien une fois passée.
+   */
+  suppressionPrevueLe: timestamp('suppression_prevue_le', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -962,3 +1001,40 @@ export const mouvementsProjet = pgTable('mouvements_projet', {
 });
 
 export type LigneMouvementProjet = typeof mouvementsProjet.$inferSelect;
+
+
+/**
+ * TRACE DES AVIS DE RECONDUCTION (article L. 215-1).
+ *
+ * ⚠ CETTE TABLE EST UNE PREUVE, PAS UN CONFORT TECHNIQUE. En cas de litige,
+ * c'est au professionnel de démontrer qu'il a informé le consommateur dans la
+ * fenêtre légale. Un envoi dont il ne reste aucune trace ne prouve rien : le
+ * client serait fondé à résilier gratuitement et à se faire rembourser tout ce
+ * qui a été prélevé depuis la reconduction.
+ *
+ * ⚠ Elle sert AUSSI d'idempotence. Le ménage quotidien peut être rejoué — une
+ * reprise après incident, deux déclenchements le même jour — et un avis en
+ * double se lit comme une erreur de facturation. L'unicité
+ * `(foyer, échéance, type)` rend le second envoi impossible plutôt
+ * qu'improbable.
+ *
+ * L'adresse servie est conservée telle quelle : la preuve porte sur ce qui a
+ * été envoyé ce jour-là, pas sur l'adresse actuelle du compte, qui peut changer.
+ */
+export const avisReconduction = pgTable(
+  'avis_reconduction',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    /** Date de reconduction visée — ce qui distingue l'avis d'une année sur l'autre. */
+    echeance: timestamp('echeance', { withTimezone: true }).notNull(),
+    /** `legal` (45 j, l'avis obligatoire) ou `rappel` (7 j, filet). */
+    type: text('type').notNull(),
+    /** Adresse réellement servie, gardée comme élément de preuve. */
+    email: text('email').notNull(),
+    envoyeLe: timestamp('envoye_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('avis_reconduction_foyer_echeance_type').on(t.foyerId, t.echeance, t.type)],
+);

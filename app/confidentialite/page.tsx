@@ -36,6 +36,13 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S3_T', langue)}</h2>
       <p>{t('CONF_S3_P', langue)}</p>
+      {/*
+        ⚠ Greffé sur la section « base légale » plutôt qu'en section propre : le
+        consentement parental EST une question de base légale, et créer une
+        section renumérerait les six suivantes — des liens et des renvois pour
+        rien. À lire avec l'article 4 des CGV, qui recueille la déclaration.
+      */}
+      <p>{t('CONF_S3_MINEURS', langue)}</p>
 
       <h2>{t('CONF_S4_T', langue)}</h2>
       <ul>

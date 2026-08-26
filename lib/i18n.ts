@@ -640,6 +640,29 @@ const UI = {
   CPT_EXPORT_BTN: { fr: '⬇ Télécharger toutes mes données', en: '⬇ Download all my data' },
   CPT_EXPORT_JSON: { fr: 'ou le JSON seul', en: 'or the JSON alone' },
   CPT_SUPPR_TITRE: { fr: 'Supprimer mon compte', en: 'Delete my account' },
+  /**
+   * ⚠ Variante du propriétaire d'un foyer PARTAGÉ. Sans elle, on lui annonçait
+   * un effacement immédiat alors qu'un délai de grâce s'ouvre — et surtout on ne
+   * lui disait pas qu'il détruit le travail des autres, ni qu'ils seront
+   * prévenus. Voir `supprimerFoyerEtUtilisateur` (lib/rgpd.ts).
+   */
+  CPT_SUPPR_DESC_PARTAGE: {
+    fr: 'Efface définitivement ton compte. Comme tu es propriétaire d’un foyer partagé, le foyer et TOUTES ses données seront supprimés — y compris ce que les autres membres ont saisi. Ils en seront prévenus par e-mail et garderont sept jours pour exporter leurs données ; ton compte, lui, est effacé immédiatement.',
+    en: 'Permanently deletes your account. As the owner of a shared household, the household and ALL its data will be deleted — including what other members entered. They will be notified by email and will keep seven days to export their data; your own account is deleted immediately.',
+  },
+  CPT_CHECK_PARTAGE: {
+    fr: 'Je comprends que le foyer et les données des autres membres seront supprimés dans sept jours.',
+    en: 'I understand that the household and the other members’ data will be deleted in seven days.',
+  },
+  /** Bandeau affiché aux membres restants pendant le délai de grâce. */
+  SUPPR_BANDEAU: {
+    fr: 'Ce foyer sera supprimé le',
+    en: 'This household will be deleted on',
+  },
+  SUPPR_BANDEAU_B: {
+    fr: 'Exporte tes données depuis « Mon compte » avant cette date.',
+    en: 'Export your data from “My account” before then.',
+  },
   CPT_SUPPR_DESC: {
     fr: 'Efface définitivement ton compte et toutes les données de ton foyer. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',
     en: 'Permanently deletes your account and all your household’s data. This action is irreversible (right to erasure). Remember to export your data first if you want to keep a copy.',
@@ -702,6 +725,14 @@ const UI = {
   ABOP_ANNULE: { fr: 'Abonnement annulé.', en: 'Subscription cancelled.' },
   ABO_ESSAI_A: { fr: 'Essai gratuit jusqu’au', en: 'Free trial until' },
   ABO_ESSAI_B: { fr: 'Abonne-toi pour ne pas perdre l’accès.', en: 'Subscribe so you don’t lose access.' },
+  // ⚠ Affichage permanent de la prochaine échéance. Pour les abonnements
+  // MENSUELS, c'est ce qui tient lieu d'information sur la reconduction : la
+  // fenêtre légale de l'article L. 215-1 est impraticable sur un contrat d'un
+  // mois. Ne pas retirer sans lire la clause 7 des conditions.
+  ABO_RECOND_A: { fr: 'Reconduction automatique le', en: 'Renews automatically on' },
+  ABO_RECOND_MENS: { fr: 'pour un mois', en: 'for one month' },
+  ABO_RECOND_AN: { fr: 'pour un an', en: 'for one year' },
+  ABO_RECOND_LIBRE: { fr: 'Tu peux résilier à tout moment d’ici là, en trois clics.', en: 'You can cancel any time before then, in three clicks.' },
   ABO_ESSAI_OUVERT: { fr: 'Essai en cours. Abonne-toi quand tu veux pour pérenniser l’accès.', en: 'Trial in progress. Subscribe whenever you like to keep access.' },
   ABO_SUSPENDU: { fr: 'Ton accès est suspendu : un abonnement actif est requis.', en: 'Your access is suspended: an active subscription is required.' },
   ABO_NON_ACTIVE: { fr: 'La facturation n’est pas activée sur cette instance.', en: 'Billing is not enabled on this instance.' },
@@ -718,15 +749,30 @@ const UI = {
     fr: 'Tu peux résilier à tout moment depuis cette page. L’accès reste ouvert jusqu’à la fin de la période déjà payée, sans frais.',
     en: 'You can cancel at any time from this page. Access stays open until the end of the period already paid for, at no cost.',
   },
-  ABO_AVANT_TVA: { fr: 'Prix TTC, sans engagement de durée.', en: 'Price incl. tax, no minimum term.' },
+  // ⚠ Surtout pas « prix TTC » : la TVA n'est pas applicable (franchise en base,
+  // art. 293 B du CGI), et l'article 1 des CGV le dit. Annoncer des prix TTC au
+  // moment du paiement contredirait le contrat qu'on fait accepter juste en
+  // dessous. À réécrire le jour du passage à la TVA.
+  ABO_AVANT_TVA: { fr: 'Prix total, aucune taxe en sus. Sans engagement de durée.', en: 'Total price, no tax added. No minimum term.' },
   /**
-   * ⚠ Formulation juridique — art. L221-25 du code de la consommation, reprise à
-   * l'article 8 des CGV. Ne pas l'adoucir : c'est elle qui rend la renonciation
-   * opposable. Toute reformulation doit être relue avec les CGV.
+   * ⚠ FORMULATION JURIDIQUE — art. L. 221-25, à lire avec l'article 8 des CGV.
+   *
+   * ⚠ ELLE NE FAIT PLUS RENONCER À QUOI QUE CE SOIT (26/08/2026). L'ancienne
+   * version annonçait la perte du droit de rétractation « une fois le service
+   * pleinement exécuté ». Cette perte suppose une exécution COMPLÈTE pendant les
+   * quatorze jours — or un abonnement n'est jamais pleinement exécuté en deux
+   * semaines. La condition n'étant pas remplie, le client conservait son droit
+   * pendant que la case lui affirmait le contraire, au moment même où il payait.
+   * Faire croire à un consommateur qu'il perd un droit d'ordre public est un
+   * manquement en soi, indépendamment de son effet.
+   *
+   * Ce qui reste, et qui est nécessaire : la DEMANDE EXPRESSE d'exécution
+   * immédiate, sans laquelle le service ne peut pas démarrer avant la fin du
+   * délai. Ne pas y réintroduire de renonciation.
    */
   ABO_RENONCIATION: {
-    fr: 'Je demande l’exécution immédiate de l’abonnement et je reconnais qu’une fois le service pleinement exécuté, je perdrai mon droit de rétractation de 14 jours.',
-    en: 'I request immediate performance of the subscription and acknowledge that, once the service has been fully performed, I will lose my 14-day right of withdrawal.',
+    fr: 'Je demande l’exécution immédiate de l’abonnement, sans attendre la fin du délai de rétractation. Je conserve mon droit de rétractation de 14 jours, avec remboursement intégral.',
+    en: 'I request immediate performance of the subscription, without waiting for the withdrawal period to end. I keep my 14-day right of withdrawal, with a full refund.',
   },
   ABO_RENONCIATION_REQUISE: {
     fr: 'Coche la case ci-dessus pour démarrer l’abonnement immédiatement.',
@@ -768,6 +814,12 @@ const UI = {
   CONF_S3_T: { fr: '3. Finalités et base légale' },
   CONF_S3_P: {
     fr: 'Ces données sont traitées uniquement pour fournir le Service (organiser la vie du foyer). La base légale est l’exécution du contrat qui te lie au Service, et ton consentement pour l’accès facultatif à Google Agenda (révocable à tout moment). La connexion Google sert à t’identifier ; le Service ne demande jamais accès à tes fichiers ni à tes e-mails.',
+  },
+  // ⚠ Contrepartie de l'article 4 des CGV, qui recueille la déclaration du
+  // parent. Les deux textes se lisent ensemble : retoucher l'un impose de relire
+  // l'autre.
+  CONF_S3_MINEURS: {
+    fr: 'Un foyer peut compter des membres mineurs. Seule une personne majeure peut créer un foyer et souscrire un abonnement ; c’est elle qui invite les autres membres. Lorsqu’un mineur de moins de quinze ans est invité, le traitement de ses données repose sur le consentement donné en son nom par le titulaire de l’autorité parentale, recueilli auprès de la personne qui l’invite (article 4 des conditions générales). Les droits d’accès, de rectification et d’effacement peuvent être exercés par ce titulaire à tout moment.',
   },
   CONF_S4_T: { fr: '4. Hébergement et sous-traitants' },
   CONF_S4_LI1: { fr: 'Base de données : Neon, région Union européenne.' },

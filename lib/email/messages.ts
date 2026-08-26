@@ -372,3 +372,163 @@ export async function envoyerResiliation(
     ),
   });
 }
+
+/**
+ * AVIS DE RECONDUCTION D'UN ABONNEMENT ANNUEL — obligation légale.
+ *
+ * ⚠ CE COURRIEL N'EST PAS UNE COURTOISIE. L'article L. 215-1 du Code de la
+ * consommation impose d'informer le consommateur, par écrit et sur support
+ * durable, **au plus tôt trois mois et au plus tard un mois** avant le terme,
+ * de sa faculté de ne pas reconduire.
+ *
+ * ⚠ ET LA SANCTION EST AUTOMATIQUE : à défaut, le client peut résilier
+ * gratuitement à tout moment à compter de la reconduction, ET se faire
+ * rembourser tout ce qui a été prélevé après cette date. Ce n'est pas une
+ * amende ponctuelle, c'est un droit qu'il exerce quand il veut — des mois plus
+ * tard s'il le souhaite. L'offre annuelle étant celle qu'on met en avant, c'est
+ * l'offre majoritaire qui porterait le risque.
+ *
+ * ⚠ DEUX ENVOIS, ET UN SEUL EST L'AVIS LÉGAL.
+ *  · `legal` — à 45 jours. **C'est celui qui satisfait l'obligation.** Envoyé
+ *    à un mois et demi : assez tôt pour rester dans la fenêtre légale même si
+ *    un envoi échoue et doit être rejoué, assez tard pour que la personne s'en
+ *    souvienne au moment de décider.
+ *  · `rappel` — à 7 jours. **HORS FENÊTRE LÉGALE, donc sans valeur au regard
+ *    de L. 215-1.** C'est un filet : si le premier s'est perdu dans un dossier
+ *    indésirable, celui-ci rattrape la personne avant le prélèvement. Ne jamais
+ *    le considérer comme l'avis obligatoire, ni supprimer le premier en croyant
+ *    que celui-ci suffit.
+ */
+export async function envoyerAvisReconduction(
+  email: string,
+  nom: string | null,
+  finPeriode: Date,
+  montant: string,
+  type: 'legal' | 'rappel',
+): Promise<boolean> {
+  const url = urlSite();
+  const quand = finPeriode.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const objet =
+    type === 'legal'
+      ? `Ton abonnement Nestync se reconduit le ${quand}`
+      : `Rappel : reconduction de ton abonnement dans une semaine`;
+
+  const entree =
+    type === 'legal'
+      ? `Ton abonnement annuel Nestync arrive à son terme le ${quand}. Sauf action de ` +
+        `ta part, il se reconduira automatiquement pour un an, au tarif de ${montant}.`
+      : `Petit rappel : ton abonnement annuel Nestync se reconduit le ${quand}, ` +
+        `pour un an, au tarif de ${montant}.
+
+` +
+        // ⚠ Demandé explicitement : dire POURQUOI ce second message existe.
+        // Sans cette phrase, il ressemble à une relance commerciale ; avec elle,
+        // il se lit comme ce qu'il est — une précaution en faveur du client.
+        `Nous t'avions déjà prévenu il y a un mois et demi. Ce second message est ` +
+        `une sécurité de dernière minute : il vaut mieux te prévenir deux fois ` +
+        `que de te laisser découvrir un prélèvement que tu n'attendais pas.`;
+
+  const texte =
+    `Bonjour${nom ? ` ${nom}` : ''},
+
+` +
+    entree +
+    `
+
+` +
+    `TU NE VEUX PAS RECONDUIRE ?
+` +
+    `Tu peux résilier en trois clics depuis « Mon abonnement », sans avoir à ` +
+    `nous écrire ni à te justifier : ${url}/foyer/abonnement
+
+` +
+    `Si tu résilies, tu gardes l'accès jusqu'au ${quand}, et tes données ` +
+    `restent exportables.
+
+` +
+    `Rien à faire si tu souhaites continuer.
+
+` +
+    `— Nestync
+` +
+    `Cet avis t'est adressé au titre de l'article L. 215-1 du Code de la consommation.`;
+
+  // Le corps HTML reprend le texte : un paragraphe par ligne vide, les sauts
+  // simples devenant des <br>. Pas de mise en forme propre — cet avis doit se
+  // lire pareil dans un client qui refuse le HTML.
+  const SAUT = String.fromCharCode(10);
+  const html = texte
+    .split(SAUT + SAUT)
+    .map(
+      (par) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${par
+          .split(SAUT)
+          .join('<br>')}</p>`,
+    )
+    .join('');
+
+  return envoyerEmail({ a: email, sujet: objet, texte, html: gabarit(objet, html) });
+}
+
+/**
+ * PRÉVIENT LES AUTRES MEMBRES QU'UN FOYER VA ÊTRE SUPPRIMÉ.
+ *
+ * ⚠ Envoyé quand le PROPRIÉTAIRE supprime son compte alors que d'autres
+ * personnes partagent le foyer. Sa suppression détruit tout en cascade — budget,
+ * documents, agenda — y compris ce que les autres ont saisi.
+ *
+ * ⚠ CE COURRIEL EST LA CONTREPARTIE D'UN DÉLAI DE GRÂCE, il ne sert à rien seul.
+ * Avant, la suppression était immédiate : au moment où le message serait arrivé,
+ * il n'y aurait plus rien à exporter. C'est le report de la suppression qui rend
+ * l'information utile — ne jamais remettre la suppression en immédiat sans
+ * retirer ce message, ce serait promettre une fenêtre qui n'existe pas.
+ *
+ * On ne nomme pas la personne partie : elle a demandé l'effacement de ses
+ * données, l'annoncer à d'autres irait contre ce qu'elle vient d'exercer.
+ */
+export async function envoyerFoyerEnSuppression(
+  email: string,
+  nom: string | null,
+  nomFoyer: string,
+  suppressionLe: Date,
+): Promise<boolean> {
+  const url = urlSite();
+  const quand = suppressionLe.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const objet = `Le foyer « ${nomFoyer} » sera supprimé le ${quand}`;
+
+  const texte =
+    `Bonjour${nom ? ` ${nom}` : ''},\n\n` +
+    `La personne qui gérait le foyer « ${nomFoyer} » vient de supprimer son compte ` +
+    `Nestync. Comme elle en était propriétaire, le foyer et toutes ses données seront ` +
+    `supprimés le ${quand}.\n\n` +
+    `CE QUE TU PEUX FAIRE D'ICI LÀ\n` +
+    `Tu gardes l'accès normal jusqu'à cette date. Depuis « Mon compte », tu peux ` +
+    `exporter l'intégralité des données du foyer en un fichier : ${url}/foyer/compte\n\n` +
+    `Cela comprend le budget, les tâches, les repas, les événements et les cadeaux. ` +
+    `Les documents déposés se téléchargent depuis la section Documents.\n\n` +
+    `Passé le ${quand}, plus rien ne sera récupérable. Tu pourras créer ton propre ` +
+    `foyer et repartir de ton export.\n\n` +
+    `— Nestync`;
+
+  const SAUT = String.fromCharCode(10);
+  const html = texte
+    .split(SAUT + SAUT)
+    .map(
+      (par) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${par
+          .split(SAUT)
+          .join('<br>')}</p>`,
+    )
+    .join('');
+
+  return envoyerEmail({ a: email, nomDestinataire: nom, sujet: objet, texte, html: gabarit(objet, html) });
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "foyers" ADD COLUMN "suppression_prevue_le" timestamp with time zone;

@@ -18,9 +18,16 @@ export const metadata = {
  * laissés en champ à compléter (le document doit se lire comme un vrai document
  * juridique, pas comme un brouillon — il est public et lu par les évaluateurs
  * Google) :
- *   · article 1 : numéro SIREN + adresse, dès l'immatriculation ;
  *   · article 15 : médiateur de la consommation, à désigner (obligatoire en B2C).
  * Faire relire l'ensemble par un professionnel avant d'ouvrir les abonnements.
+ *
+ * ⚠ RELECTURE COMPLÈTE DU 26/08/2026 — sept points corrigés, chacun documenté
+ * par un commentaire à l'endroit concerné. Trois d'entre eux sont ADOSSÉS À DU
+ * CODE et ne peuvent pas être retouchés seuls : l'avis de reconduction
+ * (article 7 ↔ `envoyerAvisReconductions`), la rétractation (article 8 ↔ la case
+ * `ABO_RENONCIATION`), et l'effet de la suppression sur les autres membres
+ * (article 12 ↔ `DELAI_SUPPRESSION_FOYER`). Modifier le texte sans le code
+ * transformerait une clause en engagement non tenu.
  */
 export default function PageConditions() {
   const mensuel = OFFRES[0];
@@ -28,7 +35,7 @@ export default function PageConditions() {
 
   return (
     <CadreSite surtitre="Le contrat" titre="Conditions générales de vente et d’utilisation">
-      <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 26 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <p className="doc-avertissement">
@@ -60,11 +67,20 @@ export default function PageConditions() {
       </ul>
 
       <h2>2. Objet</h2>
+      {/*
+        ⚠ « Majeure » qualifie le SOUSCRIPTEUR, pas les membres du foyer —
+        distinction ajoutée le 26/08/2026. Le texte précédent réservait le Service
+        aux majeurs sans nuance : inviter son enfant de quinze ans était donc
+        contraire aux conditions, alors que le produit est fait pour ça (la
+        visibilité par personne existe précisément pour que les parents partagent
+        entre eux sans partager avec les enfants). Le détail est à l'article 4.
+      */}
       <p>
         Les présentes conditions régissent l’accès au Service et sa souscription par toute
         personne physique majeure agissant à des fins non professionnelles (ci-après
         « l’Utilisateur »). Toute création de compte vaut acceptation pleine et entière
-        des présentes.
+        des présentes. Un mineur peut être <strong>membre</strong> d’un foyer dans les
+        conditions de l’article 4, sans pouvoir souscrire d’abonnement.
       </p>
 
       <h2>3. Description du Service</h2>
@@ -79,7 +95,46 @@ export default function PageConditions() {
       <ul>
         <li>La création d’un compte s’effectue via une authentification Google. L’Utilisateur est responsable de la confidentialité de son accès.</li>
         <li>L’Utilisateur qui crée le foyer en est le propriétaire : il peut inviter, retirer des membres et gérer l’abonnement.</li>
-        <li>Chaque membre accède à l’intégralité des données du foyer. L’Utilisateur s’engage à n’inviter que des personnes de confiance.</li>
+        {/*
+          ⚠ CETTE CLAUSE DÉCRIT CE QU'ON ACHÈTE — elle doit suivre le produit.
+          Elle affirmait « chaque membre accède à l'intégralité des données du
+          foyer », ce qui est faux depuis le chantier de visibilité par personne
+          (26/08/2026) — et faux dans le mauvais sens, puisque la confidentialité
+          entre membres est un argument de vente.
+
+          ⚠ LES CINQ MÉCANISMES SONT NOMMÉS, choix assumé le 26/08/2026 : un
+          contrat qui décrit précisément ce qu'on achète vaut mieux qu'un contrat
+          prudent. Contrepartie acceptée — si la restriction s'étend un jour à
+          d'autres objets (les tâches, par exemple), CETTE LIGNE DOIT SUIVRE, et
+          la modification sera notifiée aux clients (cf. article 14).
+        */}
+        <li>
+          Chaque membre accède par défaut aux données du foyer. Le propriétaire et les
+          membres peuvent restreindre la visibilité de certains éléments — comptes
+          bancaires, dossiers de documents, agendas — et masquer un cadeau à son
+          destinataire. L’Utilisateur s’engage à n’inviter que des personnes de confiance.
+        </li>
+        {/*
+          ⚠ LA DEUXIÈME PHRASE EST CELLE QUI COMPTE. Le RGPD traite le
+          consentement d'un mineur de moins de quinze ans comme relevant des
+          titulaires de l'autorité parentale ; le produit, lui, n'en garde aucune
+          trace — la connexion passe par un compte Google, qui a ses propres
+          règles d'âge. Recueillir la déclaration dans le contrat est ce qui
+          rattache le traitement à une base légale identifiable.
+
+          ⚠ Aucun âge plancher n'est posé, à dessein : rien dans le code n'empêche
+          un enfant plus jeune d'être membre, et une clause qui l'interdirait
+          serait à nouveau décalée du produit — l'erreur qu'on vient de corriger.
+          ⚠ Point signalé pour la relecture juridique.
+        */}
+        <li>
+          Seule une personne <strong>majeure</strong> peut souscrire un abonnement et créer
+          un foyer. Un <strong>mineur</strong> peut être invité comme membre d’un foyer, sous
+          la responsabilité du titulaire du compte qui l’invite. En invitant un mineur de
+          moins de quinze ans, ce dernier déclare exercer l’autorité parentale à son égard
+          et consentir, en son nom, au traitement de ses données décrit dans la{' '}
+          <Link href="/confidentialite">politique de confidentialité</Link>.
+        </li>
         <li>L’Utilisateur s’engage à ne pas détourner le Service de son objet, ni à y héberger de contenu illicite.</li>
       </ul>
 
@@ -92,7 +147,24 @@ export default function PageConditions() {
       </p>
 
       <h2>6. Prix et modalités de paiement</h2>
-      <p>Les prix sont indiqués en euros, toutes taxes comprises :</p>
+      {/*
+        ⚠ NE PAS ÉCRIRE « TOUTES TAXES COMPRISES » — c'est l'erreur corrigée le
+        26/08/2026. L'article 1 indique, à juste titre, que la TVA n'est pas
+        applicable (franchise en base, art. 293 B du CGI). Annoncer des prix TTC
+        deux articles plus loin n'est pas trompeur au détriment du client — le
+        prix affiché est bien celui payé — mais l'incohérence saute aux yeux de
+        qui lit les deux articles à la suite.
+
+        ⚠ ÉCHÉANCE À VENIR : le jour où le chiffre d'affaires dépasse le seuil de
+        la franchise, la TVA devient exigible et ces prix deviennent des prix TTC
+        incluant 20 % — soit une baisse de revenu net, soit une hausse à annoncer
+        trente jours à l'avance. Cet article devra être réécrit ce jour-là.
+      */}
+      <p>
+        Les prix sont indiqués en euros et correspondent au{' '}
+        <strong>montant total dû par l’Utilisateur</strong>. La TVA n’étant pas applicable
+        (article 293 B du Code général des impôts), aucun montant de taxe ne s’y ajoute.
+      </p>
       <ul>
         <li><strong>Formule mensuelle</strong> : {formatPrix(mensuel.prix)} {mensuel.periode}.</li>
         <li><strong>Formule annuelle</strong> : {formatPrix(annuel.prix)} {annuel.periode}, soit {formatPrix(annuel.parMois)} par mois.</li>
@@ -100,9 +172,20 @@ export default function PageConditions() {
       <p>
         Le paiement s’effectue par carte bancaire via notre prestataire <strong>Stripe</strong>.
         Aucune coordonnée bancaire n’est conservée par l’éditeur. La facture est disponible
-        depuis l’espace « Mon abonnement ». L’éditeur se réserve le droit de modifier ses
-        tarifs ; tout changement est notifié au moins 30 jours à l’avance et ne s’applique
-        qu’à compter de la période suivante.
+        depuis l’espace « Mon abonnement ».
+      </p>
+      {/*
+        ⚠ La faculté de résilier sans frais en cas de hausse était absente : sans
+        elle, « l'éditeur se réserve le droit de modifier ses tarifs » se lit comme
+        un droit unilatéral sans contrepartie. L'article 14 accorde déjà cette
+        faculté pour les conditions ; le prix mérite exactement la même.
+      */}
+      <p>
+        L’éditeur peut modifier ses tarifs. Toute hausse est notifiée à l’Utilisateur au
+        moins <strong>30 jours</strong> avant son entrée en vigueur et ne s’applique qu’à
+        compter de la période d’abonnement suivante. L’Utilisateur qui la refuse peut{' '}
+        <strong>résilier sans frais</strong> avant cette date, dans les conditions de
+        l’article 7.
       </p>
 
       <h2>7. Durée, reconduction et résiliation</h2>
@@ -113,27 +196,74 @@ export default function PageConditions() {
           depuis « Mon abonnement », par un procédé aussi simple que la souscription, sans avoir
           à motiver sa demande ni à contacter le service client.
         </li>
+        {/*
+          ⚠ CETTE CLAUSE EST ADOSSÉE À DU CODE, pas seulement à du texte.
+          `envoyerAvisReconductions()` (lib/maintenance.ts) expédie l'avis à
+          45 jours et un rappel à 7 jours, avec trace en base. L'écrire ici sans
+          l'envoyer serait pire que le silence : un engagement non tenu.
+
+          ⚠ Seuls les ANNUELS sont visés, volontairement. Pour un abonnement
+          mensuel la fenêtre légale (3 mois à 1 mois avant le terme) est
+          impraticable — trois mois avant, le contrat n'existait pas. L'article
+          annonce donc pour eux ce qui est réellement fait : l'information à la
+          souscription et l'affichage permanent de l'échéance.
+        */}
+        <li>
+          <strong>Information avant reconduction</strong> : pour les abonnements annuels,
+          l’éditeur informe l’Utilisateur par courrier électronique, au plus tôt trois mois
+          et au plus tard un mois avant le terme de la période en cours, de sa faculté de ne
+          pas reconduire l’abonnement, conformément à l’article L. 215-1 du Code de la
+          consommation. Pour les abonnements mensuels, la date de reconduction et le montant
+          dû sont communiqués lors de la souscription et affichés en permanence dans l’espace
+          « Mon abonnement ».
+        </li>
         <li>La résiliation prend effet au terme de la période en cours. L’accès reste ouvert jusqu’à cette date ; aucune somme n’est remboursée au prorata pour la période entamée, sauf disposition légale contraire.</li>
         <li>L’éditeur peut suspendre un compte en cas de défaut de paiement ou de manquement grave aux présentes, après information de l’Utilisateur.</li>
       </ul>
 
       <h2>8. Droit de rétractation</h2>
+      {/*
+        ⚠ RÉÉCRIT LE 26/08/2026 — l'article précédent était juridiquement inopérant.
+        Il faisait renoncer l'Utilisateur à sa rétractation « une fois le service
+        pleinement exécuté ». Ce mécanisme (L. 221-25) suppose une exécution
+        COMPLÈTE pendant les quatorze jours ; un abonnement ne l'est jamais en
+        deux semaines. La renonciation ne jouait donc pas : le client conservait
+        son droit pendant que le contrat lui affirmait le contraire.
+
+        ⚠ CHOIX ASSUMÉ — remboursement INTÉGRAL, au-delà de ce qu'impose la loi.
+        Le droit permettrait de retenir un prorata des jours consommés. On y
+        renonce : l'essai dure trente jours sans carte, donc celui qui paie a déjà
+        utilisé le produit un mois, et le cas d'une rétractation au douzième jour
+        sera rarissime. L'écart se compterait en euros, contre une formule de
+        prorata à écrire, à expliquer et à maintenir.
+
+        ⚠ CE TEXTE ET LA CASE DU PAIEMENT (`ABO_RENONCIATION`, lib/i18n.ts) SE
+        LISENT ENSEMBLE. Ils se contredisaient — la case annonçait une perte de
+        droit que cet article accordait. Toute retouche de l'un impose de relire
+        l'autre.
+      */}
       <p>
         Conformément aux articles L. 221-18 et suivants du Code de la consommation,
         l’Utilisateur dispose d’un délai de <strong>quatorze (14) jours</strong> à compter
-        de la souscription pour se rétracter, sans motif ni pénalité.
+        de la souscription pour se rétracter, sans avoir à motiver sa décision ni à
+        supporter de pénalité.
       </p>
       <p>
-        Le Service étant fourni <strong>immédiatement</strong> après souscription, l’Utilisateur
-        est invité, au moment du paiement, à demander expressément l’exécution immédiate et à
-        reconnaître qu’il <strong>renonce alors à son droit de rétractation</strong> une fois le
-        service pleinement exécuté. À défaut d’une telle demande, le délai de rétractation
-        s’applique dans les conditions de droit commun.
+        Au moment du paiement, l’Utilisateur demande expressément que l’exécution du Service
+        commence immédiatement, afin d’y accéder sans attendre la fin de ce délai.{' '}
+        <strong>Cette demande ne lui fait perdre aucun droit</strong> : s’il se rétracte dans
+        les quatorze jours, l’éditeur lui rembourse <strong>l’intégralité</strong> des sommes
+        versées, sans retenue au prorata des jours d’utilisation, alors même que la loi
+        autoriserait une telle retenue.
       </p>
       <p>
         Pour exercer ce droit : écrire à contact@nestync.app avec les nom, prénom et
-        adresse e-mail du compte concerné. Le remboursement intervient sous 14 jours par le même
-        moyen de paiement.
+        adresse e-mail du compte concerné, ou utiliser le formulaire de la page{' '}
+        <Link href="/aide">Aide et contact</Link>. Le remboursement intervient au plus tard
+        quatorze jours après réception de la demande, par le même moyen de paiement.
+      </p>
+      <p>
+        Au-delà de ce délai, l’abonnement suit les règles de résiliation de l’article 7.
       </p>
 
       <h2>9. Disponibilité et maintenance</h2>
@@ -141,14 +271,33 @@ export default function PageConditions() {
         L’éditeur s’engage à mettre en œuvre les moyens raisonnables pour assurer la
         disponibilité du Service, sans obligation de résultat. Des interruptions peuvent
         survenir pour maintenance ou du fait de prestataires tiers (hébergeur, fournisseur
-        d’authentification). Une interruption prolongée et imputable à l’éditeur peut donner
-        lieu à un geste commercial ou à un remboursement au prorata.
+        d’authentification).
+      </p>
+      {/*
+        ⚠ « Geste commercial ou remboursement au prorata » laissait la réparation
+        à la discrétion de l'éditeur, alors que la garantie légale de conformité
+        OUVRE UN DROIT. Une clause qui présente comme une faveur ce que la loi
+        accorde est de celles qu'un contrôle relève. Corrigé le 26/08/2026.
+      */}
+      <p>
+        Une indisponibilité prolongée imputable à l’éditeur constitue un défaut de conformité.
+        L’Utilisateur peut alors obtenir la <strong>remise en conformité</strong> du Service et,
+        si elle n’intervient pas dans un délai raisonnable, une{' '}
+        <strong>réduction du prix</strong> proportionnelle à la durée de l’interruption ou la
+        résolution du contrat, dans les conditions des articles L. 224-25-17 et suivants du
+        Code de la consommation.
       </p>
 
       <h2>10. Garanties légales et responsabilité</h2>
       <p>
         L’Utilisateur bénéficie de la <strong>garantie légale de conformité</strong> des contenus
         et services numériques (articles L. 224-25-1 et suivants du Code de la consommation).
+        {/* ⚠ La DURÉE manquait. Pour une fourniture continue, la garantie ne dure pas
+            deux ans à compter d'une livraison : elle court pendant TOUTE la durée
+            de fourniture. Sans cette précision, un client pouvait croire sa
+            garantie éteinte alors qu'elle courait encore. */}
+        {' '}Le Service étant fourni de manière continue, cette garantie s’applique{' '}
+        <strong>pendant toute la durée de l’abonnement</strong>.
         La responsabilité de l’éditeur ne saurait être engagée pour les dommages indirects, ni
         pour une perte de données résultant d’une suppression volontaire par l’Utilisateur ou
         un membre de son foyer. Il appartient à l’Utilisateur d’exporter régulièrement ses
@@ -171,6 +320,27 @@ export default function PageConditions() {
         d’opposition, dont deux sont exerçables directement depuis « Mon compte » (export et
         suppression définitive).
       </p>
+      {/*
+        ⚠ CETTE CLAUSE DÉCRIT UNE CONSÉQUENCE IRRÉVERSIBLE SUR LES DONNÉES DE
+        TIERS — elle ne peut pas rester tacite. Ajoutée le 26/08/2026 en même
+        temps que le mécanisme qui la rend supportable.
+
+        ⚠ Le délai de sept jours et l'avertissement sont ADOSSÉS À DU CODE
+        (`supprimerFoyerEtUtilisateur`, `envoyerFoyerEnSuppression`,
+        `supprimerFoyersEchus`, `BandeauSuppression`). Les écrire ici sans les
+        tenir serait un engagement non tenu. Toute retouche du délai doit changer
+        `DELAI_SUPPRESSION_FOYER` et ce paragraphe ensemble.
+      */}
+      <p>
+        <strong>Effet de la suppression sur les autres membres.</strong> La suppression du
+        compte du propriétaire d’un foyer entraîne la suppression définitive de ce foyer et
+        de l’ensemble des données qu’il contient, <strong>y compris celles saisies par les
+        autres membres</strong>. Lorsque le foyer compte d’autres membres, ceux-ci en sont
+        informés par courrier électronique et disposent d’un délai de <strong>sept (7)
+        jours</strong> pour exporter les données avant leur effacement ; le compte du
+        propriétaire, lui, est supprimé immédiatement. Un membre non propriétaire qui
+        supprime son compte quitte le foyer sans affecter les données de celui-ci.
+      </p>
 
       <h2>13. Propriété intellectuelle</h2>
       <p>
@@ -192,9 +362,20 @@ export default function PageConditions() {
         À défaut d’accord amiable, il peut recourir gratuitement à un médiateur de la
         consommation. Conformément à l’article L. 612-1 du Code de la consommation, un
         médiateur sera désigné et ses coordonnées publiées ici avant l’ouverture des
-        abonnements payants ; l’Utilisateur peut également saisir la plateforme européenne
-        de règlement en ligne des litiges (ec.europa.eu/consumers/odr). Les présentes sont
-        soumises au <strong>droit français</strong> ;
+        abonnements payants.
+        {/*
+          ⚠ NE PAS REMETTRE LA PLATEFORME EUROPÉENNE DE RÈGLEMENT EN LIGNE DES
+          LITIGES. Elle est FERMÉE : le règlement (UE) 2024/3228 du 19 décembre
+          2024 a abrogé le règlement (UE) n° 524/2013 — dépôt des plaintes clos le
+          20 mars 2025, plateforme éteinte le 20 juillet 2025, données effacées.
+          L'obligation d'en afficher le lien a disparu avec elle. La mention
+          figurait ici par habitude, recopiée de CGV plus anciennes ; elle
+          renvoyait le client vers un site qui n'existe plus, au moment précis où
+          il cherche un recours. Vérifié le 26/08/2026.
+        */}
+      </p>
+      <p>
+        Les présentes sont soumises au <strong>droit français</strong> ;
         à défaut de résolution amiable, les tribunaux compétents sont ceux du domicile du
         défendeur ou du lieu de livraison du service, au choix de l’Utilisateur.
       </p>

@@ -13,8 +13,11 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
   const tr = useT();
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
-  // Renonciation au droit de rétractation : jamais pré-cochée — un consentement
+  // Demande d'exécution immédiate : jamais pré-cochée — un consentement
   // pré-coché n'en est pas un, et la loi l'exige « exprès ».
+  // ⚠ Le nom `renonce` est historique : l'abonné ne renonce PAS à sa
+  // rétractation, il garde quatorze jours avec remboursement intégral
+  // (article 8 des CGV, réécrit le 26/08/2026).
   const [renonce, setRenonce] = useState(false);
 
   async function aller(url: string, corps?: unknown) {

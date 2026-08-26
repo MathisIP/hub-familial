@@ -12,6 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "comptes": "node scripts/comptes-sync.mjs",
+    "avis:apercu": "node --import tsx scripts/avis-reconduction.mts",
+    "verif:avis": "node --import tsx scripts/verif-avis-reconduction.mts",
     "verif:isolation": "node scripts/verif-isolation.mjs",
     "bac:init": "node scripts/bac-init.mjs",
     "bac:garnir": "node scripts/demo-seed.mjs",

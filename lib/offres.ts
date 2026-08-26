@@ -29,7 +29,7 @@ export type IdOffre = 'mensuel' | 'annuel';
 export type Offre = {
   id: IdOffre;
   nom: string;
-  prix: number; // € TTC par période
+  prix: number; // € par période — montant TOTAL dû (TVA non applicable, art. 293 B)
   periode: string;
   parMois: number; // prix ramené au mois, pour comparer
   economie?: string; // mis en avant sur l'annuel

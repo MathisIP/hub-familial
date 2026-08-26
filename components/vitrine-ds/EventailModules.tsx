@@ -90,7 +90,7 @@ export default function EventailModules({
    * que c'est bien le produit qu'on regarde.
    */
   const capture = (m: ModuleEventail) =>
-    m.fichier ? `/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/${m.fichier}.png` : undefined;
+    m.fichier ? `/captures/${theme === 'nuit' ? 'encre' : 'chaux'}/${m.fichier}.webp` : undefined;
 
   const total = modules.length;
   const pagine = total > VISIBLES_MAX;

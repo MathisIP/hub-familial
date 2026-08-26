@@ -36,4 +36,3 @@ dev.log
 
 # Aperçu des avis de reconduction (npm run avis:apercu)
 apercu-avis.html
-public/captures/

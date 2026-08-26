@@ -825,7 +825,11 @@ export default function SiteVitrine() {
             }}
           >
             <li>— Tout le foyer inclus, sans supplément</li>
-            <li>— Les sept modules, sans option payante</li>
+            {/* ⚠ LE NOMBRE SUIT LE CARROUSEL. Il annoncait sept modules alors que
+                les conditions generales en listaient huit, cadeaux compris : la
+                vitrine promettait moins que le contrat. Compter les cartes du
+                carrousel SANS « Accueil », qui est un ecran, pas un module. */}
+            <li>— Les huit modules, sans option payante</li>
             <li>— Résiliation en trois clics, à tout moment</li>
           </ul>
         </div>
@@ -1085,9 +1089,9 @@ const PILIERS: { fil: Fil; etiquette: string; titre: string; texte: string }[] =
   {
     fil: 'ambre',
     etiquette: 'Le tout-en-un familial',
-    titre: 'Sept usages, une seule application',
+    titre: 'Huit usages, une seule application',
     texte:
-      'Comptes, agenda, repas, courses, tâches, papiers, réceptions. Plus de sept applications qui ne se parlent pas, ni de groupe de messages qui sert d’aide-mémoire.',
+      'Comptes, agenda, repas, courses, tâches, papiers, réceptions, cadeaux. Plus de huit applications qui ne se parlent pas, ni de groupe de messages qui sert d’aide-mémoire.',
   },
   {
     fil: 'commun',
@@ -1122,12 +1126,20 @@ const MODULES: {
 }[] = [
   { fil: 'commun', titre: 'Accueil', texte: "Ce qui arrive aujourd'hui, pour tout le monde.", alt: "Accueil : la journée du foyer en un écran, une couleur par personne", rotation: 3 , fichier: 'accueil'},
   { fil: 'sauge', titre: 'Finances', texte: 'Le reste à vivre, sans identifiant bancaire.', alt: 'Finances : compte commun, dépenses par personne, reste à vivre', rotation: -2 , fichier: 'finances'},
-  { fil: 'corail', titre: 'Agenda', texte: 'Les rendez-vous de chacun sur une même semaine.', alt: 'Agenda : la semaine du foyer, une ligne par personne', rotation: 2 },
+  { fil: 'corail', titre: 'Agenda', texte: 'Les rendez-vous de chacun sur une même semaine.', alt: 'Agenda : la semaine du foyer, une ligne par personne', rotation: 2 , fichier: 'agenda'},
   { fil: 'ambre', titre: 'Repas', texte: 'On pose les recettes, les quantités suivent.', alt: 'Repas : le planning de la semaine et le nombre de convives par repas', rotation: -3 , fichier: 'repas'},
-  { fil: 'ambre', titre: 'Courses', texte: 'Rangée par rayon, cochée à deux en magasin.', alt: 'Courses : la liste déduite des repas, rangée par rayon', rotation: 3 , fichier: 'courses'},
+  { fil: 'ambre', titre: 'Courses', texte: 'Rangée par rayon, cochée à deux en magasin.', alt: 'Courses : la liste déduite des repas, rangée par rayon', rotation: 3, fichier: 'courses' },
   { fil: 'ciel', titre: 'To-do', texte: "Qui s'en occupe, visible sans avoir à le demander.", alt: 'To-do : les tâches du foyer, assignées par personne', rotation: -2 , fichier: 'todo'},
-  { fil: 'ciel', titre: 'Documents', texte: 'Assurances, attestations, échéances à ne pas manquer.', alt: 'Documents : les papiers importants du foyer et leurs échéances', rotation: 2 },
+  { fil: 'ciel', titre: 'Documents', texte: 'Assurances, attestations, échéances à ne pas manquer.', alt: 'Documents : les papiers importants du foyer et leurs échéances', rotation: 2 , fichier: 'documents'},
   { fil: 'sauge', titre: 'Événements', texte: "Recevoir sans y penser trois soirs d'affilée.", alt: "Événements : la préparation d'une réception, invités et à-faire", rotation: -3 , fichier: 'evenements'},
+  /*
+   * ⚠ Le texte porte ce que le module a de PARTICULIER : un cadeau peut etre
+   * masque a son destinataire, meme s'il partage le foyer. C'est la seule
+   * fonction du produit qui protege une surprise plutot qu'une donnee, et
+   * aucune autre application de foyer ne la propose. Un texte generique
+   * (« suivez vos idees cadeaux ») perdrait tout l'interet.
+   */
+  { fil: 'corail', titre: 'Cadeaux', texte: 'Les idées de chacun, invisibles de celui qu’elles concernent.', alt: 'Cadeaux : les idées par occasion, avec un budget et un destinataire', rotation: 2, fichier: 'cadeaux' },
 ];
 
 const ENGAGEMENTS: [string, string][] = [

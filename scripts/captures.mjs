@@ -42,8 +42,16 @@ import sharp from 'sharp';
 /** Rapport de l'écran de la maquette. Doit suivre `ratio` de Primitives.tsx. */
 const RATIO = 19.5 / 9;
 
-/** Taille de sortie commune. 1080 de large donne 2340 de haut à ce rapport. */
-const LARGEUR = 1080;
+/**
+ * Taille de sortie commune.
+ *
+ * ⚠ 720 ET NON 1080. La maquette fait 230 px de large en bureau, 150 en
+ * mobile : même sur un écran à trois pixels par point, 720 couvre largement le
+ * besoin. En 1080 les neuf captures pesaient 8,9 Mo — sur une page d'accueil
+ * qui reçoit du trafic Pinterest en 4G, c'est une image lourde de plus à
+ * télécharger avant de comprendre ce qu'on vend.
+ */
+const LARGEUR = 720;
 const HAUTEUR = Math.round(LARGEUR * RATIO);
 
 /**
@@ -69,10 +77,19 @@ const HAUTEURS_APPAREIL = new Set([2532, 2556, 2778, 2796, 2688, 2436]);
  */
 const SEUIL_CLAIR = 128;
 
-const SOURCE =
-  process.env.CAPTURES_SOURCE ||
-  'C:/Users/mathi/Documents/Nestync/Nestync-Site/Screenshots pour le site-20260826T155354Z-1-001/Screenshots pour le site';
+const SOURCE = process.env.CAPTURES_SOURCE || 'C:/Users/mathi/Documents/Nestync/Captures';
 const CIBLE = 'public/captures';
+
+/**
+ * Fautes de frappe courantes → slug attendu par le carrousel.
+ * ⚠ On corrige ici plutot que de renommer les fichiers source : le nom qui
+ * compte est celui que le composant demande, et une capture refaite demain
+ * reviendrait avec la meme faute.
+ */
+const ALIAS = { acceuil: 'accueil', accueuil: 'accueil', 'to-do': 'todo', 'ev\u00e9nements': 'evenements' };
+
+/** Les modules du carrousel (cf. MODULES dans SiteVitrine.tsx). */
+const ATTENDUS = ['accueil', 'finances', 'agenda', 'repas', 'courses', 'todo', 'documents', 'evenements', 'cadeaux'];
 
 async function traiter(fichierEntree, fichierSortie) {
   const img = sharp(fichierEntree);
@@ -102,7 +119,11 @@ async function traiter(fichierEntree, fichierSortie) {
   await img
     .extract({ left: cx, top: haut, width: cw, height: ch })
     .resize(LARGEUR, HAUTEUR, { fit: 'fill' })
-    .png({ compressionLevel: 9 })
+    // ⚠ WebP et non PNG : une capture d'interface est une image de synthèse,
+    // que PNG encode sans perte — donc lourdement. À qualité 82 l'œil ne voit
+    // pas la différence sur du texte d'interface, et le fichier perd 80 % de
+    // son poids. Le format est compris par tous les navigateurs visés.
+    .webp({ quality: 82 })
     .toFile(fichierSortie);
 
   return { w, h, haut, cw, ch };
@@ -120,36 +141,100 @@ if (!existsSync(SOURCE)) {
   process.exit(1);
 }
 
-const fichiers = (await readdir(SOURCE)).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
-if (fichiers.length === 0) {
-  console.error(`  Aucune image dans ${SOURCE}`);
-  process.exit(1);
-}
+/**
+ * Deux rangements sont acceptes, et c'est deliberé.
+ *  · `Captures/chaux/` + `Captures/encre/` — le theme vient du dossier ;
+ *  · un dossier plat — le theme est deduit de la luminosite.
+ * ⚠ Meme quand le dossier fait foi, on MESURE quand meme la luminosite et on
+ * signale un desaccord : une capture rangee dans le mauvais dossier passerait
+ * sinon inapercue jusqu'a se retrouver en ligne.
+ */
+const parDossier = ['chaux', 'encre'].some((t) => existsSync(path.join(SOURCE, t)));
 
 for (const t of ['chaux', 'encre']) await mkdir(path.join(CIBLE, t), { recursive: true });
 
+const presents = { chaux: new Set(), encre: new Set() };
 let total = 0;
-for (const f of fichiers) {
-  try {
-    const entree = path.join(SOURCE, f);
-    const lum = await clarte(entree);
-    const theme = lum >= SEUIL_CLAIR ? 'chaux' : 'encre';
-    const nom = path.parse(f).name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
-    const r = await traiter(entree, path.join(CIBLE, theme, nom));
-    const note = r.haut ? "barre d'état retirée" : 'déjà rognée';
-    console.log(
-      `  ${f.padEnd(16)} → ${theme.padEnd(5)} / ${nom.padEnd(16)} ${r.w}×${r.h} · lum ${lum.toFixed(0).padStart(3)} · ${note}`,
-    );
-    total++;
-  } catch (e) {
-    console.error(`  ${f} : ÉCHEC — ${e instanceof Error ? e.message : e}`);
+
+async function traiterUn(entree, nomFichier, themeImpose) {
+  const lum = await clarte(entree);
+  const mesure = lum >= SEUIL_CLAIR ? 'chaux' : 'encre';
+  const theme = themeImpose || mesure;
+  const brut = path.parse(nomFichier).name.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+  const slug = ALIAS[brut] || brut;
+  // ⚠ Tout ce qui n'est pas un module du carrousel est ignoré : `public/` est
+  // servi tel quel, une capture inutilisée y partirait en production et
+  // s'ajouterait au poids de la page sans jamais être affichée.
+  if (!ATTENDUS.includes(slug)) {
+    console.log(`  ${theme.padEnd(5)} / ${slug.padEnd(18)} ignoré — hors carrousel`);
+    return;
+  }
+  const r = await traiter(entree, path.join(CIBLE, theme, `${slug}.webp`));
+  presents[theme].add(slug);
+  total++;
+
+  const alerte = themeImpose && mesure !== themeImpose ? '  ⚠ LUMINOSITE INCOHERENTE' : '';
+  // ⚠ Une capture prise a 1x (393 px de large) sera AGRANDIE trois fois pour
+  // atteindre le format de sortie : le texte y devient flou, et ca se voit
+  // d'autant plus que la maquette est le seul visuel du produit sur le site.
+  const flou = r.w < LARGEUR ? `  ⚠ BASSE RESOLUTION (${r.w} px, sera agrandie)` : '';
+  const renomme = slug !== brut ? ` (renomme depuis « ${brut} »)` : '';
+  const note = r.haut ? "barre d'etat retiree" : 'sans barre d\'etat';
+  console.log(
+    `  ${theme.padEnd(5)} / ${(slug + '.webp').padEnd(18)} ${String(r.w).padStart(4)}\u00d7${String(r.h).padEnd(4)} · lum ${lum.toFixed(0).padStart(3)} · ${note}${renomme}${alerte}${flou}`,
+  );
+}
+
+if (parDossier) {
+  for (const theme of ['chaux', 'encre']) {
+    const dossier = path.join(SOURCE, theme);
+    if (!existsSync(dossier)) continue;
+    const fichiers = (await readdir(dossier)).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
+    console.log(`\n  ${theme.toUpperCase()}`);
+    for (const f of fichiers) {
+      try {
+        await traiterUn(path.join(dossier, f), f, theme);
+      } catch (e) {
+        console.error(`  ${f} : ECHEC — ${e instanceof Error ? e.message : e}`);
+      }
+    }
+  }
+} else {
+  const fichiers = (await readdir(SOURCE)).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
+  for (const f of fichiers) {
+    try {
+      await traiterUn(path.join(SOURCE, f), f, null);
+    } catch (e) {
+      console.error(`  ${f} : ECHEC — ${e instanceof Error ? e.message : e}`);
+    }
   }
 }
 
-console.log(`
-  ${total} capture(s) en ${LARGEUR}×${HAUTEUR} dans ${CIBLE}/
-`);
-console.log('  ⚠ Renomme les fichiers SOURCE avec le nom du module (accueil.png,');
-console.log('    finances.png, agenda.png, repas.png, courses.png, todo.png,');
-console.log('    documents.png, evenements.png) puis relance : seul toi sais');
-console.log('    quel écran montre quel module.');
+console.log(`\n  ${total} capture(s) en ${LARGEUR}\u00d7${HAUTEUR} dans ${CIBLE}/`);
+
+/*
+ * ⚠ LE CONTROLE DE COUVERTURE EST LA PARTIE UTILE. Le carrousel compose le
+ * chemin a partir du theme courant : un module qui n'a de capture que dans un
+ * theme afficherait une maquette vide des qu'on bascule. Mieux vaut le savoir
+ * ici qu'en ligne — le composant ne declare donc `fichier` que pour les modules
+ * presents des DEUX cotes.
+ */
+const complets = ATTENDUS.filter((m) => presents.chaux.has(m) && presents.encre.has(m));
+const partiels = ATTENDUS.filter(
+  (m) => presents.chaux.has(m) !== presents.encre.has(m),
+);
+const absents = ATTENDUS.filter((m) => !presents.chaux.has(m) && !presents.encre.has(m));
+const enTrop = [...new Set([...presents.chaux, ...presents.encre])].filter(
+  (m) => !ATTENDUS.includes(m),
+);
+
+console.log(`\n  COUVERTURE DU CARROUSEL`);
+console.log(`    complets (les deux themes) : ${complets.join(', ') || 'aucun'}`);
+if (partiels.length) {
+  console.log(`    ⚠ un seul theme            : ${partiels
+    .map((m) => `${m} (${presents.chaux.has(m) ? 'chaux' : 'encre'} seulement)`)
+    .join(', ')}`);
+}
+if (absents.length) console.log(`    manquants                  : ${absents.join(', ')}`);
+if (enTrop.length) console.log(`    hors carrousel             : ${enTrop.join(', ')}`);
+console.log('');

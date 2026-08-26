@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, lt, ne } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { deconnecterAgenda } from '@/lib/agenda/oauth';
+import { envoyerFoyerEnSuppression } from '@/lib/email/messages';
 import { comptesAutorises, filtrerComptes } from '@/lib/budget/acces';
 import { filtrerRestreints } from '@/lib/visibilite';
 import { idFoyerCourant, utilisateurCourant } from '@/lib/foyer';
@@ -58,6 +59,24 @@ export async function monRoleDansLeFoyer(): Promise<string | null> {
     .where(and(eq(membres.foyerId, foyerId), eq(membres.utilisateurId, user.id)))
     .limit(1);
   return m?.role ?? null;
+}
+
+/**
+ * Le foyer courant compte-t-il d'autres membres que moi ?
+ *
+ * ⚠ Sert à annoncer la bonne conséquence AVANT la suppression : un propriétaire
+ * seul efface tout sur-le-champ, un propriétaire accompagné déclenche un délai
+ * de grâce et prévient les autres. Faire cocher une conséquence qui ne se
+ * produira pas vide la case de son sens.
+ */
+export async function foyerPartage(): Promise<boolean> {
+  const [foyerId, user] = await Promise.all([idFoyerCourant(), utilisateurCourant()]);
+  const autres = await db()
+    .select({ id: membres.id })
+    .from(membres)
+    .where(and(eq(membres.foyerId, foyerId), ne(membres.utilisateurId, user.id)))
+    .limit(1);
+  return autres.length > 0;
 }
 
 /** Rassemble les données du foyer visibles par cette personne, prêtes à sérialiser. */
@@ -284,7 +303,52 @@ export async function supprimerFoyerEtUtilisateur(foyerId: string, utilisateurId
     .limit(1);
 
   if (moi?.role === 'proprietaire') {
-    await d.delete(foyers).where(eq(foyers.id, foyerId)); // cascade sur toutes les tables foyer_id
+    /*
+     * ⚠ SUPPRESSION DIFFÉRÉE QUAND LE FOYER EST PARTAGÉ (26/08/2026).
+     *
+     * La cascade efface TOUT le foyer — budget, documents, agenda — y compris ce
+     * que les autres membres ont saisi. Immédiate, elle ne laissait aucune
+     * chance : en colocation, on ne peut pas présumer de la bonne intention de
+     * chacun, et un départ conflictuel détruisait le travail des autres sans
+     * préavis ni copie.
+     *
+     * ⚠ Le propriétaire, lui, est effacé TOUT DE SUITE (plus bas). Son droit à
+     * l'effacement ne se met pas en attente parce que d'autres ont besoin de
+     * temps. Seul le FOYER survit — sans propriétaire, donc sans personne pour
+     * inviter, renommer ou gérer l'abonnement.
+     *
+     * ⚠ Le foyer reste accessible pendant le délai : `/foyer/compte` et la route
+     * d'export n'appellent pas `exigerAcces()`, l'export fonctionne donc même si
+     * l'abonnement expire entre-temps. Ne pas y ajouter ce verrou.
+     */
+    const autres = await d
+      .select({ email: utilisateurs.email, nom: utilisateurs.nom })
+      .from(membres)
+      .innerJoin(utilisateurs, eq(utilisateurs.id, membres.utilisateurId))
+      .where(and(eq(membres.foyerId, foyerId), ne(membres.utilisateurId, utilisateurId)));
+
+    if (autres.length === 0) {
+      // Personne à prévenir : différer n'aurait aucun sens, et laisserait
+      // traîner des données que quelqu'un a demandé d'effacer.
+      await d.delete(foyers).where(eq(foyers.id, foyerId)); // cascade sur toutes les tables foyer_id
+    } else {
+      const [f] = await d
+        .update(foyers)
+        .set({ suppressionPrevueLe: new Date(Date.now() + DELAI_SUPPRESSION_FOYER) })
+        .where(eq(foyers.id, foyerId))
+        .returning({ nom: foyers.nom, le: foyers.suppressionPrevueLe });
+
+      // ⚠ Un échec d'envoi ne doit pas empêcher l'effacement demandé : le droit
+      // de la personne qui part prime. Le bandeau dans l'app reste le second
+      // canal d'information, et il ne dépend d'aucun service externe.
+      for (const m of autres) {
+        try {
+          await envoyerFoyerEnSuppression(m.email, m.nom, f.nom, f.le!);
+        } catch (e) {
+          console.error('[rgpd] avis de suppression non envoyé', e instanceof Error ? e.stack : e);
+        }
+      }
+    }
   } else {
     // La cascade sur `utilisateurs` emporterait déjà l'appartenance ; on la
     // retire explicitement pour que l'intention soit lisible dans le code.
@@ -293,4 +357,28 @@ export async function supprimerFoyerEtUtilisateur(foyerId: string, utilisateurId
       .where(and(eq(membres.foyerId, foyerId), eq(membres.utilisateurId, utilisateurId)));
   }
   await d.delete(utilisateurs).where(eq(utilisateurs.id, utilisateurId));
+}
+
+/**
+ * Délai laissé aux autres membres pour exporter avant que le foyer ne parte.
+ *
+ * ⚠ Sept jours est un compromis : assez pour qu'un courriel soit lu au retour
+ * d'un week-end, assez court pour que l'effacement demandé reste « sans délai
+ * excessif » au sens du RGPD (qui tolère jusqu'à un mois).
+ */
+export const DELAI_SUPPRESSION_FOYER = 7 * 86_400_000;
+
+/**
+ * Efface les foyers dont le délai de grâce est écoulé. Appelé par le ménage.
+ *
+ * ⚠ C'est ce qui rend la suppression différée RÉELLE. Sans ce passage, un foyer
+ * marqué resterait indéfiniment en base : on aurait promis un effacement à
+ * quelqu'un qui l'a demandé, et conservé ses données à la place.
+ */
+export async function supprimerFoyersEchus(): Promise<number> {
+  const echus = await db()
+    .delete(foyers)
+    .where(lt(foyers.suppressionPrevueLe, new Date()))
+    .returning({ id: foyers.id });
+  return echus.length;
 }

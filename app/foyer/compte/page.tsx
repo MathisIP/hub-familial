@@ -2,7 +2,7 @@ import Link from 'next/link';
 import ZoneSuppression from '@/components/compte/ZoneSuppression';
 import { t } from '@/lib/i18n';
 import { langueCourante } from '@/lib/langue';
-import { monRoleDansLeFoyer } from '@/lib/rgpd';
+import { monRoleDansLeFoyer, foyerPartage } from '@/lib/rgpd';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mon compte — Nestync' };
@@ -17,8 +17,16 @@ export const metadata = { title: 'Mon compte — Nestync' };
  * que le code ne fait plus.
  */
 export default async function PageCompte() {
-  const [langue, role] = await Promise.all([langueCourante(), monRoleDansLeFoyer()]);
+  const [langue, role, partage] = await Promise.all([
+    langueCourante(),
+    monRoleDansLeFoyer(),
+    foyerPartage(),
+  ]);
   const proprio = role === 'proprietaire';
+  // ⚠ Trois cas, pas deux : membre (quitte le foyer), propriétaire seul (efface
+  // tout sur-le-champ), propriétaire d'un foyer partagé (délai de grâce, les
+  // autres prévenus). Annoncer le mauvais cas fait cocher une case pour rien.
+  const proprioPartage = proprio && partage;
   return (
     <>
       <header className="entete">
@@ -45,9 +53,12 @@ export default async function PageCompte() {
       <section className="compte-bloc compte-danger">
         <h2 className="bloc-titre">{t('CPT_SUPPR_TITRE', langue)}</h2>
         <p className="compte-note">
-          {t(proprio ? 'CPT_SUPPR_DESC' : 'CPT_SUPPR_DESC_MEMBRE', langue)}
+          {t(
+            proprioPartage ? 'CPT_SUPPR_DESC_PARTAGE' : proprio ? 'CPT_SUPPR_DESC' : 'CPT_SUPPR_DESC_MEMBRE',
+            langue,
+          )}
         </p>
-        <ZoneSuppression proprietaire={proprio} />
+        <ZoneSuppression proprietaire={proprio} partage={proprioPartage} />
       </section>
 
       <p className="compte-lien-conf">

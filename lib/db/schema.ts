@@ -91,6 +91,22 @@ export const foyers = pgTable('foyers', {
    * AVANT le paiement, le service ne peut pas démarrer avant la fin du délai.
    */
   retractationRenonceeLe: timestamp('retractation_renoncee_le', { withTimezone: true }),
+  /**
+   * Suppression différée du foyer, demandée par son propriétaire.
+   *
+   * ⚠ EXISTE POUR PROTÉGER LES AUTRES MEMBRES. Supprimer son compte quand on est
+   * propriétaire détruit en cascade TOUT le foyer — y compris ce que les autres
+   * ont saisi. En colocation, on ne peut pas présumer de la bonne intention de
+   * chacun : un départ conflictuel effaçait jusqu'ici le budget et les documents
+   * des colocataires, sans préavis ni copie.
+   *
+   * Le propriétaire, lui, est effacé IMMÉDIATEMENT — son droit à l'effacement ne
+   * se met pas en attente. Seul le foyer survit le temps que les autres exportent.
+   *
+   * `null` = foyer normal. Une date = suppression programmée, appliquée par le
+   * ménage quotidien une fois passée.
+   */
+  suppressionPrevueLe: timestamp('suppression_prevue_le', { withTimezone: true }),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

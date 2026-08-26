@@ -294,6 +294,27 @@ export default function PageConditions() {
         d’opposition, dont deux sont exerçables directement depuis « Mon compte » (export et
         suppression définitive).
       </p>
+      {/*
+        ⚠ CETTE CLAUSE DÉCRIT UNE CONSÉQUENCE IRRÉVERSIBLE SUR LES DONNÉES DE
+        TIERS — elle ne peut pas rester tacite. Ajoutée le 26/08/2026 en même
+        temps que le mécanisme qui la rend supportable.
+
+        ⚠ Le délai de sept jours et l'avertissement sont ADOSSÉS À DU CODE
+        (`supprimerFoyerEtUtilisateur`, `envoyerFoyerEnSuppression`,
+        `supprimerFoyersEchus`, `BandeauSuppression`). Les écrire ici sans les
+        tenir serait un engagement non tenu. Toute retouche du délai doit changer
+        `DELAI_SUPPRESSION_FOYER` et ce paragraphe ensemble.
+      */}
+      <p>
+        <strong>Effet de la suppression sur les autres membres.</strong> La suppression du
+        compte du propriétaire d’un foyer entraîne la suppression définitive de ce foyer et
+        de l’ensemble des données qu’il contient, <strong>y compris celles saisies par les
+        autres membres</strong>. Lorsque le foyer compte d’autres membres, ceux-ci en sont
+        informés par courrier électronique et disposent d’un délai de <strong>sept (7)
+        jours</strong> pour exporter les données avant leur effacement ; le compte du
+        propriétaire, lui, est supprimé immédiatement. Un membre non propriétaire qui
+        supprime son compte quitte le foyer sans affecter les données de celui-ci.
+      </p>
 
       <h2>13. Propriété intellectuelle</h2>
       <p>

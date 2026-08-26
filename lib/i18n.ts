@@ -640,6 +640,29 @@ const UI = {
   CPT_EXPORT_BTN: { fr: '⬇ Télécharger toutes mes données', en: '⬇ Download all my data' },
   CPT_EXPORT_JSON: { fr: 'ou le JSON seul', en: 'or the JSON alone' },
   CPT_SUPPR_TITRE: { fr: 'Supprimer mon compte', en: 'Delete my account' },
+  /**
+   * ⚠ Variante du propriétaire d'un foyer PARTAGÉ. Sans elle, on lui annonçait
+   * un effacement immédiat alors qu'un délai de grâce s'ouvre — et surtout on ne
+   * lui disait pas qu'il détruit le travail des autres, ni qu'ils seront
+   * prévenus. Voir `supprimerFoyerEtUtilisateur` (lib/rgpd.ts).
+   */
+  CPT_SUPPR_DESC_PARTAGE: {
+    fr: 'Efface définitivement ton compte. Comme tu es propriétaire d’un foyer partagé, le foyer et TOUTES ses données seront supprimés — y compris ce que les autres membres ont saisi. Ils en seront prévenus par e-mail et garderont sept jours pour exporter leurs données ; ton compte, lui, est effacé immédiatement.',
+    en: 'Permanently deletes your account. As the owner of a shared household, the household and ALL its data will be deleted — including what other members entered. They will be notified by email and will keep seven days to export their data; your own account is deleted immediately.',
+  },
+  CPT_CHECK_PARTAGE: {
+    fr: 'Je comprends que le foyer et les données des autres membres seront supprimés dans sept jours.',
+    en: 'I understand that the household and the other members’ data will be deleted in seven days.',
+  },
+  /** Bandeau affiché aux membres restants pendant le délai de grâce. */
+  SUPPR_BANDEAU: {
+    fr: 'Ce foyer sera supprimé le',
+    en: 'This household will be deleted on',
+  },
+  SUPPR_BANDEAU_B: {
+    fr: 'Exporte tes données depuis « Mon compte » avant cette date.',
+    en: 'Export your data from “My account” before then.',
+  },
   CPT_SUPPR_DESC: {
     fr: 'Efface définitivement ton compte et toutes les données de ton foyer. Cette action est irréversible (droit à l’effacement). Pense à exporter tes données avant si tu veux en garder une copie.',
     en: 'Permanently deletes your account and all your household’s data. This action is irreversible (right to erasure). Remember to export your data first if you want to keep a copy.',

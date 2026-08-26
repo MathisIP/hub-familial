@@ -474,3 +474,61 @@ export async function envoyerAvisReconduction(
 
   return envoyerEmail({ a: email, sujet: objet, texte, html: gabarit(objet, html) });
 }
+
+/**
+ * PRÉVIENT LES AUTRES MEMBRES QU'UN FOYER VA ÊTRE SUPPRIMÉ.
+ *
+ * ⚠ Envoyé quand le PROPRIÉTAIRE supprime son compte alors que d'autres
+ * personnes partagent le foyer. Sa suppression détruit tout en cascade — budget,
+ * documents, agenda — y compris ce que les autres ont saisi.
+ *
+ * ⚠ CE COURRIEL EST LA CONTREPARTIE D'UN DÉLAI DE GRÂCE, il ne sert à rien seul.
+ * Avant, la suppression était immédiate : au moment où le message serait arrivé,
+ * il n'y aurait plus rien à exporter. C'est le report de la suppression qui rend
+ * l'information utile — ne jamais remettre la suppression en immédiat sans
+ * retirer ce message, ce serait promettre une fenêtre qui n'existe pas.
+ *
+ * On ne nomme pas la personne partie : elle a demandé l'effacement de ses
+ * données, l'annoncer à d'autres irait contre ce qu'elle vient d'exercer.
+ */
+export async function envoyerFoyerEnSuppression(
+  email: string,
+  nom: string | null,
+  nomFoyer: string,
+  suppressionLe: Date,
+): Promise<boolean> {
+  const url = urlSite();
+  const quand = suppressionLe.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const objet = `Le foyer « ${nomFoyer} » sera supprimé le ${quand}`;
+
+  const texte =
+    `Bonjour${nom ? ` ${nom}` : ''},\n\n` +
+    `La personne qui gérait le foyer « ${nomFoyer} » vient de supprimer son compte ` +
+    `Nestync. Comme elle en était propriétaire, le foyer et toutes ses données seront ` +
+    `supprimés le ${quand}.\n\n` +
+    `CE QUE TU PEUX FAIRE D'ICI LÀ\n` +
+    `Tu gardes l'accès normal jusqu'à cette date. Depuis « Mon compte », tu peux ` +
+    `exporter l'intégralité des données du foyer en un fichier : ${url}/foyer/compte\n\n` +
+    `Cela comprend le budget, les tâches, les repas, les événements et les cadeaux. ` +
+    `Les documents déposés se téléchargent depuis la section Documents.\n\n` +
+    `Passé le ${quand}, plus rien ne sera récupérable. Tu pourras créer ton propre ` +
+    `foyer et repartir de ton export.\n\n` +
+    `— Nestync`;
+
+  const SAUT = String.fromCharCode(10);
+  const html = texte
+    .split(SAUT + SAUT)
+    .map(
+      (par) =>
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${par
+          .split(SAUT)
+          .join('<br>')}</p>`,
+    )
+    .join('');
+
+  return envoyerEmail({ a: email, nomDestinataire: nom, sujet: objet, texte, html: gabarit(objet, html) });
+}

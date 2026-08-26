@@ -19,7 +19,7 @@ import {
   envoyerBulletinSante,
   envoyerAvisReconduction,
 } from '@/lib/email/messages';
-import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
+import { supprimerFoyerEtUtilisateur, supprimerFoyersEchus } from '@/lib/rgpd';
 import { envoyerRappelsQuotidiens } from '@/lib/notifications/rappels';
 
 /**
@@ -82,6 +82,8 @@ export type RapportMenage = {
   relancesEnvoyees: number;
   /** Avis de reconduction (art. L. 215-1) expédiés ce passage. */
   avisReconduction: number;
+  /** Foyers dont le délai de grâce est écoulé et qui ont été effacés. */
+  foyersEchus: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
   sante?: BulletinSante;
@@ -458,6 +460,10 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   } catch (e) {
     console.error('[maintenance] rappels échoués', e instanceof Error ? e.message : e);
   }
+  // ⚠ Avant les autres suppressions : un foyer dont le délai est écoulé doit
+  // partir même si une étape suivante échoue. On a promis l'effacement à
+  // quelqu'un qui l'a demandé.
+  const foyersEchus = await supprimerFoyersEchus();
   const avisEnvoyes = await envoyerAvisReconductions();
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
@@ -489,6 +495,7 @@ export async function menagePeriodique(): Promise<RapportMenage> {
     rappelsEnvoyes: rappels.envois,
     relancesEnvoyees,
     avisReconduction: avisEnvoyes,
+    foyersEchus,
     comptesSupprimes: supprimes,
     suppressionsIgnorees: ignores,
     sante,

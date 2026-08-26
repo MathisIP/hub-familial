@@ -13,7 +13,13 @@ import { useT } from '@/components/I18nProvider';
  * le foyer, un membre le quitte seulement. On ne fait pas cocher à quelqu'un
  * une conséquence qui ne se produira pas.
  */
-export default function ZoneSuppression({ proprietaire }: { proprietaire: boolean }) {
+export default function ZoneSuppression({
+  proprietaire,
+  partage = false,
+}: {
+  proprietaire: boolean;
+  partage?: boolean;
+}) {
   const tr = useT();
   const [confirme, setConfirme] = useState(false);
 
@@ -21,7 +27,7 @@ export default function ZoneSuppression({ proprietaire }: { proprietaire: boolea
     <form action={supprimerCompte} className="suppr-form">
       <label className="suppr-check">
         <input type="checkbox" checked={confirme} onChange={(e) => setConfirme(e.target.checked)} />
-        <span>{tr(proprietaire ? 'CPT_CHECK' : 'CPT_CHECK_MEMBRE')}</span>
+        <span>{tr(partage ? 'CPT_CHECK_PARTAGE' : proprietaire ? 'CPT_CHECK' : 'CPT_CHECK_MEMBRE')}</span>
       </label>
       <button type="submit" className="bouton bouton-danger" disabled={!confirme}>
         {tr('CPT_SUPPR_BTN')}

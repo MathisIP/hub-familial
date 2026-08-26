@@ -702,6 +702,14 @@ const UI = {
   ABOP_ANNULE: { fr: 'Abonnement annulé.', en: 'Subscription cancelled.' },
   ABO_ESSAI_A: { fr: 'Essai gratuit jusqu’au', en: 'Free trial until' },
   ABO_ESSAI_B: { fr: 'Abonne-toi pour ne pas perdre l’accès.', en: 'Subscribe so you don’t lose access.' },
+  // ⚠ Affichage permanent de la prochaine échéance. Pour les abonnements
+  // MENSUELS, c'est ce qui tient lieu d'information sur la reconduction : la
+  // fenêtre légale de l'article L. 215-1 est impraticable sur un contrat d'un
+  // mois. Ne pas retirer sans lire la clause 7 des conditions.
+  ABO_RECOND_A: { fr: 'Reconduction automatique le', en: 'Renews automatically on' },
+  ABO_RECOND_MENS: { fr: 'pour un mois', en: 'for one month' },
+  ABO_RECOND_AN: { fr: 'pour un an', en: 'for one year' },
+  ABO_RECOND_LIBRE: { fr: 'Tu peux résilier à tout moment d’ici là, en trois clics.', en: 'You can cancel any time before then, in three clicks.' },
   ABO_ESSAI_OUVERT: { fr: 'Essai en cours. Abonne-toi quand tu veux pour pérenniser l’accès.', en: 'Trial in progress. Subscribe whenever you like to keep access.' },
   ABO_SUSPENDU: { fr: 'Ton accès est suspendu : un abonnement actif est requis.', en: 'Your access is suspended: an active subscription is required.' },
   ABO_NON_ACTIVE: { fr: 'La facturation n’est pas activée sur cette instance.', en: 'Billing is not enabled on this instance.' },

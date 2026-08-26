@@ -29,11 +29,13 @@ export type EtatAbonnement = {
   gereParStripe: boolean;
   aDejaPaye: boolean; // possède un client Stripe (peut ouvrir le portail)
   annulationProgrammee: boolean; // résilié, mais actif jusqu'à `finEssai`
+  /** 'mensuel' | 'annuel' | null (aucun abonnement payant). */
+  offre: string | null;
 };
 
 export async function etatAbonnement(): Promise<EtatAbonnement> {
   if (!stripeDisponible()) {
-    return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false, annulationProgrammee: false };
+    return { autorise: true, statut: 'libre', finEssai: null, gereParStripe: false, aDejaPaye: false, annulationProgrammee: false, offre: null };
   }
   // Personne sans foyer : état neutre plutôt qu'une exception, pour que les pages
   // de réglages restent affichables. `exigerAcces` la renvoie vers /bienvenue.
@@ -42,7 +44,7 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
     foyer = await foyerCourant();
   } catch (err) {
     if (err instanceof SansFoyer) {
-      return { autorise: false, statut: 'sans_foyer', finEssai: null, gereParStripe: true, aDejaPaye: false, annulationProgrammee: false };
+      return { autorise: false, statut: 'sans_foyer', finEssai: null, gereParStripe: true, aDejaPaye: false, annulationProgrammee: false, offre: null };
     }
     throw err;
   }
@@ -56,6 +58,11 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
     gereParStripe: true,
     aDejaPaye: !!foyer.stripeCustomerId,
     annulationProgrammee: foyer.annulationProgrammee,
+    // ⚠ Sert l'affichage permanent de la prochaine échéance. Pour les
+    // abonnements MENSUELS, c'est ce qui tient lieu d'information sur la
+    // reconduction : la fenêtre légale de l'article L. 215-1 est impraticable
+    // sur un contrat d'un mois, l'affichage permanent la remplace.
+    offre: foyer.offre,
   };
 }
 
@@ -243,6 +250,22 @@ function mapStatut(s: Stripe.Subscription.Status): string {
   return 'impaye';
 }
 
+/**
+ * Périodicité souscrite, lue sur l'INTERVALLE du tarif.
+ *
+ * ⚠ Surtout pas par comparaison avec `STRIPE_PRICE_ID_ANNUEL` : une hausse de
+ * prix ou une promotion crée un NOUVEL identifiant de tarif, et la comparaison
+ * cesserait alors de reconnaître les annuels — sans rien casser de visible, mais
+ * en éteignant l'avis de reconduction obligatoire. L'intervalle, lui, ne change
+ * pas de nature.
+ */
+function periodicite(sub: Stripe.Subscription): string | null {
+  const intervalle = sub.items?.data?.[0]?.price?.recurring?.interval;
+  if (intervalle === 'year') return 'annuel';
+  if (intervalle === 'month') return 'mensuel';
+  return null;
+}
+
 /** Fin de la période courante (au niveau de l'item depuis l'API Stripe 2025). */
 function finPeriode(sub: Stripe.Subscription): Date | null {
   const item = sub.items?.data?.[0] as unknown as { current_period_end?: number } | undefined;
@@ -259,6 +282,7 @@ async function appliquerAbonnement(sub: Stripe.Subscription): Promise<void> {
     statutAbonnement: mapStatut(sub.status),
     abonnementFin: fin,
     stripeCustomerId: customerId,
+    offre: periodicite(sub),
     // Résiliation demandée : Stripe laisse le statut `active` jusqu'au terme.
     // ⚠ DEUX représentations selon la version d'API : les versions récentes
     // posent `cancel_at` (horodatage d'arrêt) en laissant `cancel_at_period_end`

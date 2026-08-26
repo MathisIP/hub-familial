@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   invitations,
@@ -11,8 +11,14 @@ import {
   documents as tDocuments,
   comptesGoogle,
   foyerAgendas,
+  avisReconduction,
 } from '@/lib/db/schema';
-import { envoyerRelanceInactivite, envoyerBulletinSante } from '@/lib/email/messages';
+import { OFFRES, formatPrix } from '@/lib/offres';
+import {
+  envoyerRelanceInactivite,
+  envoyerBulletinSante,
+  envoyerAvisReconduction,
+} from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur } from '@/lib/rgpd';
 import { envoyerRappelsQuotidiens } from '@/lib/notifications/rappels';
 
@@ -37,6 +43,23 @@ export const INACTIVITE_COMPTE = 3 * 365 * JOUR;
 /** Préavis entre la relance et la suppression effective. */
 export const PREAVIS_SUPPRESSION = 30 * JOUR;
 
+/**
+ * Avance des deux avis de reconduction, en jours avant l'échéance.
+ *
+ * ⚠ SEUL LE PREMIER EST L'AVIS LÉGAL. L'article L. 215-1 impose une information
+ * « au plus tôt trois mois et au plus tard un mois » avant le terme : 45 jours
+ * tombe dans cette fenêtre, 7 jours non. Le second est un filet — il rattrape la
+ * personne dont le premier courriel s'est perdu — et n'a aucune valeur au regard
+ * de l'obligation. Ne jamais supprimer le premier en croyant que le second suffit.
+ *
+ * ⚠ Et ne jamais descendre le premier sous 30 jours : il sortirait de la fenêtre
+ * et l'obligation ne serait plus remplie, sans que rien ne le signale.
+ */
+export const AVIS_RECONDUCTION = [
+  { type: 'legal' as const, jours: 45 },
+  { type: 'rappel' as const, jours: 7 },
+];
+
 /** Nombre maximal de relances par exécution — voir `relancerComptesInactifs`. */
 const RELANCES_PAR_PASSAGE = 50;
 
@@ -57,6 +80,8 @@ export type RapportMenage = {
   /** Rappels de la veille envoyés (appareils touchés). */
   rappelsEnvoyes: number;
   relancesEnvoyees: number;
+  /** Avis de reconduction (art. L. 215-1) expédiés ce passage. */
+  avisReconduction: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
   sante?: BulletinSante;
@@ -259,6 +284,108 @@ export type BulletinSante = {
  * Relevé de l'état du service. **Lecture seule** : ce bulletin observe, il ne
  * corrige rien.
  */
+/**
+ * Avise les abonnés ANNUELS de la reconduction prochaine de leur abonnement.
+ *
+ * ⚠ OBLIGATION LÉGALE, PAS UNE COURTOISIE (article L. 215-1 du Code de la
+ * consommation). À défaut d'information dans la fenêtre, le consommateur peut
+ * résilier gratuitement à tout moment à compter de la reconduction **et se faire
+ * rembourser tout ce qui a été prélevé depuis**. La sanction n'est pas une
+ * amende ponctuelle : c'est un droit qu'il exerce quand il veut, des mois plus
+ * tard s'il le souhaite.
+ *
+ * ⚠ **Les mensuels sont exclus, et c'est délibéré.** Pour un contrat d'un mois,
+ * la fenêtre « au plus tôt 3 mois, au plus tard 1 mois avant » se réduit à
+ * l'instant de la souscription — trois mois avant, le contrat n'existait pas.
+ * L'information leur est donnée au seul moment possible : à la souscription, et
+ * en permanence dans « Mon abonnement ». Envoyer douze avis par an abîmerait la
+ * réputation du domaine et ferait tomber en indésirable les avis annuels, eux
+ * obligatoires — on perdrait le certain pour couvrir le douteux.
+ * ⚠ Point signalé pour la relecture juridique, pas une certitude.
+ *
+ * ⚠ **Les résiliations en cours sont exclues** : il n'y a pas de reconduction à
+ * annoncer, et prévenir d'un prélèvement qui n'aura pas lieu inquiète pour rien.
+ *
+ * ⚠ **Le tampon n'est posé qu'après un envoi réussi.** Si Brevo est en panne, on
+ * retentera demain plutôt que de considérer comme informé quelqu'un qui n'a rien
+ * reçu — le tampon sert de preuve, il ne doit jamais attester d'un envoi qui
+ * n'a pas eu lieu.
+ */
+export async function envoyerAvisReconductions(): Promise<number> {
+  const d = db();
+  const maintenant = Date.now();
+  const plusLoin = new Date(maintenant + AVIS_RECONDUCTION[0].jours * JOUR);
+
+  // Un seul balayage pour les deux avis : la fenêtre la plus large les couvre.
+  const candidats = await d
+    .select({
+      foyerId: tFoyers.id,
+      fin: tFoyers.abonnementFin,
+      email: utilisateurs.email,
+      nom: utilisateurs.nom,
+    })
+    .from(tFoyers)
+    .innerJoin(membres, and(eq(membres.foyerId, tFoyers.id), eq(membres.role, 'proprietaire')))
+    .innerJoin(utilisateurs, eq(utilisateurs.id, membres.utilisateurId))
+    .where(
+      and(
+        eq(tFoyers.offre, 'annuel'),
+        eq(tFoyers.statutAbonnement, 'actif'),
+        eq(tFoyers.annulationProgrammee, false),
+        gt(tFoyers.abonnementFin, new Date(maintenant)),
+        lt(tFoyers.abonnementFin, plusLoin),
+      ),
+    );
+
+  if (candidats.length === 0) return 0;
+
+  // Ce qui est déjà parti, en une requête plutôt qu'une par foyer.
+  const dejaEnvoyes = new Set(
+    (
+      await d
+        .select({
+          foyerId: avisReconduction.foyerId,
+          echeance: avisReconduction.echeance,
+          type: avisReconduction.type,
+        })
+        .from(avisReconduction)
+        .where(
+          inArray(
+            avisReconduction.foyerId,
+            candidats.map((c) => c.foyerId),
+          ),
+        )
+    ).map((a) => `${a.foyerId}|${a.echeance.toISOString()}|${a.type}`),
+  );
+
+  // ⚠ Le montant vient du tarif public, pas de Stripe. Acceptable tant que les
+  // deux coïncident ; le jour où un client garde un ancien tarif, cet avis
+  // annoncerait une somme qu'il ne paiera pas — il faudra alors lire le montant
+  // sur l'abonnement Stripe lui-même.
+  const montant = formatPrix(OFFRES.find((o) => o.id === 'annuel')!.prix);
+
+  let envoyes = 0;
+  for (const c of candidats) {
+    if (!c.fin) continue;
+    const restant = c.fin.getTime() - maintenant;
+
+    for (const avis of AVIS_RECONDUCTION) {
+      if (restant > avis.jours * JOUR) continue;
+      const cle = `${c.foyerId}|${c.fin.toISOString()}|${avis.type}`;
+      if (dejaEnvoyes.has(cle)) continue;
+
+      if (!(await envoyerAvisReconduction(c.email, c.nom, c.fin, montant, avis.type))) continue;
+
+      await d
+        .insert(avisReconduction)
+        .values({ foyerId: c.foyerId, echeance: c.fin, type: avis.type, email: c.email })
+        .onConflictDoNothing();
+      envoyes++;
+    }
+  }
+  return envoyes;
+}
+
 export async function bulletinSante(): Promise<BulletinSante> {
   const d = db();
   const hier = new Date(Date.now() - JOUR);
@@ -331,6 +458,7 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   } catch (e) {
     console.error('[maintenance] rappels échoués', e instanceof Error ? e.message : e);
   }
+  const avisEnvoyes = await envoyerAvisReconductions();
   const relancesEnvoyees = await relancerComptesInactifs();
   const { supprimes, ignores } = await supprimerComptesSansRetour();
   /**
@@ -360,6 +488,7 @@ export async function menagePeriodique(): Promise<RapportMenage> {
     messagesPurges,
     rappelsEnvoyes: rappels.envois,
     relancesEnvoyees,
+    avisReconduction: avisEnvoyes,
     comptesSupprimes: supprimes,
     suppressionsIgnorees: ignores,
     sante,

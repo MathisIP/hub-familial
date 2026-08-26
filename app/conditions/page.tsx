@@ -79,7 +79,25 @@ export default function PageConditions() {
       <ul>
         <li>La création d’un compte s’effectue via une authentification Google. L’Utilisateur est responsable de la confidentialité de son accès.</li>
         <li>L’Utilisateur qui crée le foyer en est le propriétaire : il peut inviter, retirer des membres et gérer l’abonnement.</li>
-        <li>Chaque membre accède à l’intégralité des données du foyer. L’Utilisateur s’engage à n’inviter que des personnes de confiance.</li>
+        {/*
+          ⚠ CETTE CLAUSE DÉCRIT CE QU'ON ACHÈTE — elle doit suivre le produit.
+          Elle affirmait « chaque membre accède à l'intégralité des données du
+          foyer », ce qui est faux depuis le chantier de visibilité par personne
+          (26/08/2026) — et faux dans le mauvais sens, puisque la confidentialité
+          entre membres est un argument de vente.
+
+          ⚠ LES CINQ MÉCANISMES SONT NOMMÉS, choix assumé le 26/08/2026 : un
+          contrat qui décrit précisément ce qu'on achète vaut mieux qu'un contrat
+          prudent. Contrepartie acceptée — si la restriction s'étend un jour à
+          d'autres objets (les tâches, par exemple), CETTE LIGNE DOIT SUIVRE, et
+          la modification sera notifiée aux clients (cf. article 14).
+        */}
+        <li>
+          Chaque membre accède par défaut aux données du foyer. Le propriétaire et les
+          membres peuvent restreindre la visibilité de certains éléments — comptes
+          bancaires, dossiers de documents, agendas — et masquer un cadeau à son
+          destinataire. L’Utilisateur s’engage à n’inviter que des personnes de confiance.
+        </li>
         <li>L’Utilisateur s’engage à ne pas détourner le Service de son objet, ni à y héberger de contenu illicite.</li>
       </ul>
 
@@ -112,6 +130,27 @@ export default function PageConditions() {
           <strong>Résiliation en trois clics</strong> : l’Utilisateur peut résilier à tout moment
           depuis « Mon abonnement », par un procédé aussi simple que la souscription, sans avoir
           à motiver sa demande ni à contacter le service client.
+        </li>
+        {/*
+          ⚠ CETTE CLAUSE EST ADOSSÉE À DU CODE, pas seulement à du texte.
+          `envoyerAvisReconductions()` (lib/maintenance.ts) expédie l'avis à
+          45 jours et un rappel à 7 jours, avec trace en base. L'écrire ici sans
+          l'envoyer serait pire que le silence : un engagement non tenu.
+
+          ⚠ Seuls les ANNUELS sont visés, volontairement. Pour un abonnement
+          mensuel la fenêtre légale (3 mois à 1 mois avant le terme) est
+          impraticable — trois mois avant, le contrat n'existait pas. L'article
+          annonce donc pour eux ce qui est réellement fait : l'information à la
+          souscription et l'affichage permanent de l'échéance.
+        */}
+        <li>
+          <strong>Information avant reconduction</strong> : pour les abonnements annuels,
+          l’éditeur informe l’Utilisateur par courrier électronique, au plus tôt trois mois
+          et au plus tard un mois avant le terme de la période en cours, de sa faculté de ne
+          pas reconduire l’abonnement, conformément à l’article L. 215-1 du Code de la
+          consommation. Pour les abonnements mensuels, la date de reconduction et le montant
+          dû sont communiqués lors de la souscription et affichés en permanence dans l’espace
+          « Mon abonnement ».
         </li>
         <li>La résiliation prend effet au terme de la période en cours. L’accès reste ouvert jusqu’à cette date ; aucune somme n’est remboursée au prorata pour la période entamée, sauf disposition légale contraire.</li>
         <li>L’éditeur peut suspendre un compte en cas de défaut de paiement ou de manquement grave aux présentes, après information de l’Utilisateur.</li>

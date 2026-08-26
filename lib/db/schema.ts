@@ -51,6 +51,20 @@ export const foyers = pgTable('foyers', {
    */
   annulationProgrammee: boolean('annulation_programmee').notNull().default(false),
   /**
+   * Périodicité souscrite : `mensuel` ou `annuel` (`null` tant qu'aucun
+   * abonnement payant n'existe).
+   *
+   * ⚠ Renseignée depuis l'INTERVALLE Stripe (`price.recurring.interval`), pas
+   * par comparaison d'identifiants de tarif : créer un nouveau prix — une hausse,
+   * une promotion — change l'identifiant mais pas l'intervalle. Une comparaison
+   * d'identifiants cesserait silencieusement de reconnaître les annuels, et
+   * l'avis obligatoire ne partirait plus.
+   *
+   * ⚠ Seuls les ANNUELS reçoivent l'avis de reconduction de l'article L. 215-1 :
+   * cette colonne est ce qui les distingue.
+   */
+  offre: text('offre'),
+  /**
    * Prise en main effectuée (nom du foyer choisi, proches invités) ?
    * ⚠ Défaut `true` À DESSEIN : les foyers déjà en service ne doivent pas se
    * voir imposer l'onboarding. Ce sont les foyers NOUVELLEMENT créés qui posent
@@ -962,3 +976,40 @@ export const mouvementsProjet = pgTable('mouvements_projet', {
 });
 
 export type LigneMouvementProjet = typeof mouvementsProjet.$inferSelect;
+
+
+/**
+ * TRACE DES AVIS DE RECONDUCTION (article L. 215-1).
+ *
+ * ⚠ CETTE TABLE EST UNE PREUVE, PAS UN CONFORT TECHNIQUE. En cas de litige,
+ * c'est au professionnel de démontrer qu'il a informé le consommateur dans la
+ * fenêtre légale. Un envoi dont il ne reste aucune trace ne prouve rien : le
+ * client serait fondé à résilier gratuitement et à se faire rembourser tout ce
+ * qui a été prélevé depuis la reconduction.
+ *
+ * ⚠ Elle sert AUSSI d'idempotence. Le ménage quotidien peut être rejoué — une
+ * reprise après incident, deux déclenchements le même jour — et un avis en
+ * double se lit comme une erreur de facturation. L'unicité
+ * `(foyer, échéance, type)` rend le second envoi impossible plutôt
+ * qu'improbable.
+ *
+ * L'adresse servie est conservée telle quelle : la preuve porte sur ce qui a
+ * été envoyé ce jour-là, pas sur l'adresse actuelle du compte, qui peut changer.
+ */
+export const avisReconduction = pgTable(
+  'avis_reconduction',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    /** Date de reconduction visée — ce qui distingue l'avis d'une année sur l'autre. */
+    echeance: timestamp('echeance', { withTimezone: true }).notNull(),
+    /** `legal` (45 j, l'avis obligatoire) ou `rappel` (7 j, filet). */
+    type: text('type').notNull(),
+    /** Adresse réellement servie, gardée comme élément de preuve. */
+    email: text('email').notNull(),
+    envoyeLe: timestamp('envoye_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('avis_reconduction_foyer_echeance_type').on(t.foyerId, t.echeance, t.type)],
+);

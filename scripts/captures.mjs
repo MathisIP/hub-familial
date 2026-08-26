@@ -62,6 +62,24 @@ const HAUTEUR = Math.round(LARGEUR * RATIO);
 const BARRE_ETAT = 170;
 
 /**
+ * Bande de fond ajoutée AU-DESSUS du contenu, en fraction de la largeur.
+ *
+ * ⚠ SANS ELLE, LE COIN ARRONDI DE LA MAQUETTE MANGE LE TITRE DE L'ÉCRAN. Une
+ * fois la barre d'état retirée, le titre (« Budget », « Repas »…) se retrouve
+ * tout en haut à gauche — exactement là où l'écran de la maquette est rogné par
+ * son rayon. On glisse donc une bande de fond, et le coin ronge du vide.
+ *
+ * ⚠ Le fond est PRÉLEVÉ SUR L'IMAGE, jamais écrit en dur : chaux et encre n'ont
+ * pas la même couleur, et une valeur figée trahirait une bande claire en haut
+ * d'une capture sombre.
+ *
+ * ⚠ Autant de pixels sont retirés EN BAS : la hauteur totale ne bouge pas, donc
+ * le rapport de l'écran de maquette non plus. C'est la barre flottante de
+ * l'application qui part — elle n'apporte rien à une vignette.
+ */
+const MARGE_HAUT = 0.085;
+
+/**
  * Hauteurs des captures PRISES SUR L'APPAREIL, barre d'état comprise.
  * ⚠ Une capture faite depuis le mode appareil des outils de développement
  * (1179 × 2556 pour un iPhone 14 Pro) N'A PAS de barre d'état : lui couper
@@ -116,8 +134,34 @@ async function traiter(fichierEntree, fichierSortie) {
     ch = Math.round(w * RATIO);
   }
 
-  await img
-    .extract({ left: cx, top: haut, width: cw, height: ch })
+  // Couleur de fond, prélevée juste sous la barre d'état, à gauche du titre :
+  // c'est toujours du fond, quel que soit l'écran.
+  const echantillon = await sharp(fichierEntree)
+    .extract({ left: Math.round(w * 0.02), top: haut + 4, width: 8, height: 8 })
+    .stats();
+  const fond = {
+    r: Math.round(echantillon.channels[0].mean),
+    g: Math.round(echantillon.channels[1].mean),
+    b: Math.round(echantillon.channels[2].mean),
+    alpha: 1,
+  };
+
+  const marge = Math.round(cw * MARGE_HAUT);
+
+  /*
+   * ⚠ DEUX PASSES, ET C'EST OBLIGATOIRE. sharp applique ses opérations dans un
+   * ordre fixe — extract, puis resize, puis extend — quel que soit l'ordre
+   * d'écriture. Enchaîner `.extend()` avant `.resize()` ajoutait donc la bande
+   * APRÈS le redimensionnement : sortie en 720×1653 au lieu de 720×1560, soit
+   * un rapport faux, que la maquette aurait recadré une seconde fois.
+   * On matérialise donc l'image agrandie avant de la redimensionner.
+   */
+  const avecMarge = await img
+    .extract({ left: cx, top: haut, width: cw, height: ch - marge })
+    .extend({ top: marge, background: fond })
+    .toBuffer();
+
+  await sharp(avecMarge)
     .resize(LARGEUR, HAUTEUR, { fit: 'fill' })
     // ⚠ WebP et non PNG : une capture d'interface est une image de synthèse,
     // que PNG encode sans perte — donc lourdement. À qualité 82 l'œil ne voit

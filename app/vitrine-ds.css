@@ -437,6 +437,14 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
     transform: none;
     transition: none;
     flex: 0 0 auto;
+    /* ⚠ C'EST CETTE LIGNE QUI MANQUAIT. La carte mesure 230 px en bureau,
+       largeur figee dans la regle de base. En mobile la maquette a ete reduite
+       a 150 px mais la carte gardait ses 230 : trois cartes faisaient 714 px
+       dans un ecran de 350, et comme la maquette est centree dans sa carte,
+       les voisines se retrouvaient repoussees hors champ — 8 px depassaient.
+       On voyait donc une carte seule, exactement comme avant.
+       La carte doit mesurer ce que mesure la maquette. */
+    width: 150px;
   }
   /* Les voisines : reduites, estompees, et cliquables pour venir au centre. */
   .nsy-site .nsy-eventail-cote {

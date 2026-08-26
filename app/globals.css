@@ -37,8 +37,14 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-x: clip; /* cf. html : ne jamais rendre <body> scrollable */
+  /* ⚠ PAS DE REPLI `hidden` ICI, ET C'EST DELIBERE.
+     `html` porte deja le meme couple. Le commentaire de `html` explique que
+     `hidden` sur les DEUX imbrique deux conteneurs de defilement et neutralise
+     la molette — c'est arrive une fois. Or le repli etait ecrit sur les deux :
+     tout navigateur qui ignore `clip` retombait donc exactement dans le bug
+     qu'on croyait corrige. Le decoupage de `html` suffit ; `body` ne demande
+     `clip` que la ou il est compris, sans repli qui le rende scrollable. */
+  overflow-x: clip;
   max-width: 100%;
   overscroll-behavior: none;
 }

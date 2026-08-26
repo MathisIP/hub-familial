@@ -140,10 +140,14 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
    * emprisonne le lecteur au milieu de la page — defaut classique, et
    * particulierement penible sur une page longue comme celle-ci.
    *
-   * On decide donc APRES coup, au relachement : le geste ne compte que s'il
-   * est franchement horizontal (deux fois plus large que haut) et assez ample
-   * (48 px). Sans ces deux conditions, un simple defilement du pouce ferait
-   * tourner le carrousel par accident.
+   * On decide donc APRES coup, au relachement.
+   *
+   * ⚠ LES DEUX SEUILS SE PAIENT L'UN L'AUTRE. Trop stricts, il faut
+   * traverser l'ecran pour changer de carte — c'est ce qui a ete constate avec
+   * 48 px et un rapport de 2. Trop laches, un simple defilement du pouce fait
+   * tourner le carrousel par accident, ce qui est bien plus penible. On vise
+   * 28 px, soit environ un pouce de large, et un rapport de 1,3 : le geste
+   * doit rester nettement horizontal sans avoir a etre parfait.
    *
    * Les evenements tactiles ne se declenchent pas a la souris : rien de ceci
    * n'affecte le bureau.
@@ -162,7 +166,7 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
     const t = e.changedTouches[0];
     const dx = t.clientX - d.x;
     const dy = t.clientY - d.y;
-    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    if (Math.abs(dx) < 28 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
     tourner(dx < 0 ? 'avant' : 'arriere');
   };
 

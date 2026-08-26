@@ -340,6 +340,33 @@ body:has(.nsy-site) {
   padding-right: 0;
   padding-bottom: 0;
 }
+
+/* ============ « TIRER POUR ACTUALISER » SUR LE SITE PUBLIC ============
+ * globals.css pose `overscroll-behavior: none` sur `html` ET sur `body` pour
+ * l'application : le rebond de fin de defilement y revelait un fond blanc.
+ * ⚠ Effet de bord : cela desactive aussi le « tirer pour actualiser ».
+ * Acceptable dans l'app — les donnees se rafraichissent par navigation, et un
+ * rechargement au milieu d'une saisie ferait perdre le formulaire en cours.
+ * Inacceptable sur une page publique, ou tirer vers le bas est le reflexe de
+ * tout le monde.
+ *
+ * ⚠ IL FAUT LES DEUX REGLES, PAS SEULEMENT LA PREMIERE. Redonner le rebond
+ * sans corriger le fond ferait apparaitre la couleur de l'APPLICATION derriere
+ * le site pendant le geste (`html { background: var(--page) }`) — on aurait
+ * remplace un fond blanc par un fond rose. Le fond de `html` doit suivre le
+ * theme du SITE, dont les deux valeurs sont recopiees ici : `--fond` est
+ * declare sur `.nsy-site`, donc hors de portee de `html`, qui en est l'ancetre.
+ * ------------------------------------------------------------------ */
+html:has(.nsy-site),
+body:has(.nsy-site) {
+  overscroll-behavior: auto;
+}
+/* ⚠ Le clair est le DÉFAUT, pas un cas parmi deux. `CadreSite` — connexion,
+   mentions légales, CGV, confidentialité, aide — pose `.nsy-site` SANS
+   `data-site-theme` : cibler `[data-site-theme='jour']` aurait laissé ces cinq
+   pages avec le fond de l'application derrière le rebond. */
+html:has(.nsy-site) { background: #E7E9E4; }
+html:has(.nsy-site[data-site-theme='nuit']) { background: #141C26; }
 body:has(.nsy-site) .enveloppe { padding-top: 0; }
 
 /* ====================== ÉVENTAIL DE MODULES ==========================

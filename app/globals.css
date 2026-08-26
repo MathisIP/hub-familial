@@ -19,7 +19,14 @@ html {
   overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* Défilement rigide : pas de rebond d'overscroll (qui révèle un fond blanc). */
+  /* Défilement rigide : pas de rebond d'overscroll (qui révèle un fond blanc).
+     ⚠ Effet de bord assumé pour l'APPLICATION : cela désactive aussi le
+     « tirer pour actualiser ». C'est voulu ici — les données se rafraîchissent
+     par navigation, et un geste de rechargement au milieu d'une saisie ferait
+     perdre le formulaire en cours.
+     ⚠ LE SITE VITRINE, LUI, LE RÉCUPÈRE : voir la règle `html:has(.nsy-site)`
+     dans vitrine-ds.css. Une page publique doit se recharger comme n'importe
+     quelle page web — c'est le réflexe de tout le monde. */
   overscroll-behavior: none;
 }
 

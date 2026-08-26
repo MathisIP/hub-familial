@@ -14,7 +14,8 @@ export const metadata = {
  * de nommer ses hébergeurs. Un lecteur doit pouvoir savoir à qui il a affaire
  * sans lire un contrat.
  *
- * ⚠ À COMPLÉTER dès l'immatriculation, ici ET à l'article 1 des CGV (les deux
+ * ⚠ IMMATRICULATION POSÉE LE 26/08/2026 (Kbis du 25/08). Elle figure ici ET à
+ * l'article 1 des CGV (les deux
  * pages portent la même information, elles doivent rester cohérentes) :
  * numéro SIREN et adresse de l'établissement. Le texte l'annonce plutôt que de
  * laisser un blanc — la page est publique et lue par les évaluateurs Google.
@@ -33,11 +34,23 @@ export default function PageMentionsLegales() {
         individuel.
       </p>
       <p>
-        L’immatriculation de l’activité est en cours. Le <strong>numéro SIREN</strong> et
-        l’<strong>adresse de l’établissement</strong> seront publiés sur cette page dès leur
-        attribution, et au plus tard à l’ouverture des abonnements payants. Le Service
-        n’étant pas encore commercialisé, aucun numéro de TVA intracommunautaire n’est
-        applicable à ce jour.
+        Entrepreneur individuel immatriculé au <strong>Registre du commerce et des
+        sociétés de Tours</strong> sous le numéro <strong>108 793 514 R.C.S. Tours</strong>
+        (SIREN <strong>108 793 514</strong>), depuis le 25 août 2026.
+      </p>
+      <p>
+        <strong>Adresse de l’établissement</strong> : 25 rue du Maréchal Ney, 37100 Tours,
+        France.
+      </p>
+      <p>
+        Activité déclarée : édition de logiciels applicatifs — application Web
+        d’organisation familiale exploitée en ligne (SaaS) et vendue par abonnement.
+      </p>
+      <p>
+        {/* ⚠ Franchise en base de TVA de l’entrepreneur individuel : la mention est
+            OBLIGATOIRE sur les factures et les conditions tant qu’elle s’applique. */}
+        <strong>TVA non applicable, article 293 B du CGI.</strong> Aucun numéro de TVA
+        intracommunautaire n’est donc applicable à ce jour.
       </p>
       <ul>
         <li>Contact : <a href="mailto:contact@nestync.app">contact@nestync.app</a></li>

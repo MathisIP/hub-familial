@@ -41,9 +41,23 @@ const NAV: Item[] = [
   { href: '/foyer/documents', icone: 'documents', cle: 'MOD_DOCUMENTS' },
 ];
 
+/**
+ * ⚠ `/foyer` EST LA RACINE DE L'APPLICATION, PAS UN PRÉFIXE DE SECTION.
+ *
+ * La règle générale — actif si le chemin commence par `href` — marche pour
+ * `/foyer/budget`, mais elle rendait « Accueil » actif sur TOUTES les pages,
+ * puisque `/foyer/todo` commence bien par `/foyer`. Deux onglets s'allumaient
+ * donc en même temps depuis le déménagement du 25/08/2026.
+ *
+ * Même raisonnement qu'avant le déménagement, où le cas particulier portait
+ * sur `/` : une racine se compare par égalité, jamais par préfixe.
+ */
+const RACINES = ['/', '/foyer'];
+
 function estActif(path: string | null, href: string): boolean {
   if (!path) return false;
-  return href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+  if (RACINES.includes(href)) return path === href;
+  return path === href || path.startsWith(href + '/');
 }
 
 /**

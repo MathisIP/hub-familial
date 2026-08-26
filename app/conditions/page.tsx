@@ -42,9 +42,15 @@ export default function PageConditions() {
       <p>
         Le service <strong>Nestync</strong> (ci-après « le Service ») est édité par
         <strong> Mathis INGRAND-PERIGNE</strong>, personne physique agissant à titre
-        individuel. L’immatriculation de l’activité est en cours : le numéro SIREN et
-        l’adresse de l’établissement seront publiés ici dès leur attribution, et au plus
-        tard à l’ouverture des abonnements payants.
+        individuel, immatriculé au Registre du commerce et des sociétés de Tours sous le
+        numéro <strong>108 793 514 R.C.S. Tours</strong> depuis le 25 août 2026.
+        Établissement : <strong>25 rue du Maréchal Ney, 37100 Tours</strong>, France.
+      </p>
+      <p>
+        {/* ⚠ Mention OBLIGATOIRE tant que la franchise en base s’applique — sur les
+            CGV comme sur chaque facture. Elle doit rester cohérente avec les
+            mentions légales, qui portent la même information. */}
+        <strong>TVA non applicable, article 293 B du Code général des impôts.</strong>
       </p>
       <ul>
         <li>Contact : contact@nestync.app</li>

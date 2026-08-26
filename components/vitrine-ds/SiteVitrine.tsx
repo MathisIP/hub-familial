@@ -192,6 +192,14 @@ export default function SiteVitrine() {
             <a href="#tarifs" style={{ ...surtitre, textDecoration: 'none' }}>
               Tarifs
             </a>
+            {/* ⚠ IL MANQUAIT UN CHEMIN POUR LES MEMBRES DÉJÀ INSCRITS. La page
+                ne proposait que « Essayer gratuitement » : quelqu'un qui a déjà
+                un foyer n'avait aucun moyen d'entrer depuis le site, et rien ne
+                le lui disait. Le lien reste discret — le visiteur majoritaire
+                est un prospect, pas un membre. */}
+            <a href="/connexion" style={{ ...surtitre, textDecoration: 'none', color: 'var(--texte)' }}>
+              Se connecter
+            </a>
             <BasculeTheme theme={theme} onBasculer={() => setTheme(theme === 'jour' ? 'nuit' : 'jour')} />
           </nav>
         </div>
@@ -919,6 +927,9 @@ export default function SiteVitrine() {
             <a href="/conditions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Conditions générales</a>
             <a href="/aide" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Contact</a>
             <a href="/rejoindre-foyer" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Rejoindre un foyer</a>
+            {/* ⚠ La barre du haut est masquee sous 767 px : sans ce lien,
+                un membre n'a AUCUN moyen de se connecter depuis un telephone. */}
+            <a href="/connexion" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Se connecter</a>
           </nav>
         </div>
       </footer>

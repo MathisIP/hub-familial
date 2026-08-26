@@ -738,7 +738,9 @@ a { color: var(--link-tx); }
 .rf-ingredients { display: flex; flex-direction: column; gap: .4rem; }
 .rf-ing-entete, .rf-ing-ligne {
   display: grid;
-  grid-template-columns: 1.6fr .8fr 1fr 1.2fr auto;
+  /* ⚠ minmax(0,…) et non 1fr : un élément de grille a min-width:auto, donc
+     un champ de saisie empêche sa colonne de rétrécir et la grille déborde. */
+  grid-template-columns: minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1.2fr) auto;
   gap: .4rem;
   align-items: center;
 }
@@ -2710,7 +2712,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 @media (max-width: 40rem) {
   .rf-ing-entete { display: none; } /* des en-têtes de colonnes sans colonnes */
   .rf-ing-ligne {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
     gap: var(--e-2);
     padding: var(--e-3);
     border: 1px solid var(--line);
@@ -2726,3 +2728,13 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
    Un débordement d'un seul élément décale toute la page, et sur téléphone on
    ne voit pas d'où il vient. */
 html, body { overflow-x: hidden; }
+
+
+/* ⚠ Les champs de l'éditeur de recettes refusaient de rétrécir : un <input>
+   porte une largeur intrinsèque (attribut size implicite) qui devient un
+   plancher dans une grille. Sans ceci, la grille déborde même en deux colonnes
+   — c'est ce qui restait visible sur téléphone après le premier correctif. */
+.rf-ing-ligne input,
+.rf-ing-ligne select,
+.rf-ing-ligne .deroulante,
+.rf-ing-ligne .combo { min-width: 0; max-width: 100%; }

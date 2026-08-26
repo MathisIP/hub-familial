@@ -412,7 +412,32 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   .nsy-site .nsy-eventail-nav { display: none; }
 }
 @media (max-width: 767px) {
-  .nsy-site .nsy-eventail-scene { min-height: 26rem; }
+  /* ⚠ La scene cesse d'etre une scene. Les cartes sont positionnees en
+     absolu et deplacees par des `transform` calcules en JavaScript : aucune
+     regle de feuille ne peut les reprendre. C'est le composant qui n'en rend
+     qu'une (drapeau `compact`) ; ici on remet simplement le flux normal.
+     `min-height: 26rem` etait la seule adaptation mobile — elle reservait de
+     la hauteur a un eventail qui debordait quand meme. */
+  .nsy-site .nsy-eventail-scene {
+    position: static;
+    display: grid;
+    justify-items: center;
+    min-height: 0;
+  }
+  .nsy-site .nsy-eventail-carte {
+    position: static;
+    transform: none;
+    transition: none;
+  }
+  .nsy-site .nsy-eventail-legende {
+    position: static;
+    transform: none;
+    margin-top: var(--e-4);
+    text-align: center;
+  }
+  /* Les fleches restent : sans elles, plus rien ne permet de changer de
+     module puisqu'une seule carte est visible. */
+  .nsy-site .nsy-eventail-nav { display: flex; }
 }
 
 

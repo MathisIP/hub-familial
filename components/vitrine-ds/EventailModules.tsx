@@ -73,12 +73,34 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
   const [centre, setCentre] = useState(pagine ? MOITIE : total >> 1);
   const [survole, setSurvole] = useState<number | null>(null);
   const [mult, setMult] = useState(1);
+  /*
+   * ⚠ EN MOBILE, L'EVENTAIL N'EST PAS REDUIT : IL EST ABANDONNE.
+   *
+   * Sept cartes ouvertes en perspective demandent de la largeur. Sur 390 px
+   * elles se recouvrent, debordent par le haut sur le titre de section, et
+   * leurs legendes inclinees s'empilent en bas — c'est ce qu'on voyait.
+   * Aucun reglage d'echelle ne repare ca : le probleme est la forme meme.
+   *
+   * On affiche donc UNE carte, celle du centre, avec les fleches et les points
+   * qui existent deja. Le geste reste le meme, l'effet disparait.
+   *
+   * ⚠ Ce drapeau ne vaut que sous 767 px : au-dessus, pas une ligne du
+   * rendu ne change. L'eventail est le morceau le mieux reussi de la page en
+   * bureau, il devait rester intact.
+   *
+   * ⚠ Lu au montage, jamais au rendu serveur — comme `mult` juste au-dessus :
+   * une valeur qui differerait entre serveur et client casserait l'hydratation.
+   */
+  const [compact, setCompact] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
 
   /* Le facteur dépend de la largeur : il se lit au montage, jamais au rendu
      serveur (sinon les deux divergeraient et l'hydratation échouerait). */
   useEffect(() => {
-    const relire = () => setMult(facteur(window.innerWidth));
+    const relire = () => {
+      setMult(facteur(window.innerWidth));
+      setCompact(window.innerWidth <= 767);
+    };
     relire();
     window.addEventListener('resize', relire);
     return () => window.removeEventListener('resize', relire);
@@ -121,6 +143,20 @@ export default function EventailModules({ modules }: { modules: ModuleEventail[]
       >
         {modules.map((m, i) => {
           const place = carte.get(i);
+          // ⚠ Le test de compacite passe AVANT le remplisseur invisible :
+          // en mobile il ne doit rester qu'un seul element dans la scene,
+          // remplisseurs compris, sinon la grille garde des trous.
+          if (compact) {
+            if (place !== milieuVisible) return null;
+            return (
+              <figure key={m.titre} className="nsy-eventail-carte">
+                <Mockup largeur={230} rotation={0} alt={m.alt} src={m.src} />
+                <figcaption className="nsy-eventail-legende">
+                  <Pastille fil={m.fil}>{m.titre}</Pastille>
+                </figcaption>
+              </figure>
+            );
+          }
           if (place === undefined) {
             return <div key={m.titre} className="nsy-eventail-carte" style={{ opacity: 0, pointerEvents: 'none' }} aria-hidden="true" />;
           }

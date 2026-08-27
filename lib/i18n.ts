@@ -998,6 +998,14 @@ const UI = {
   CNX_DECOUVRIR: { fr: '← Découvrir Nestync et les tarifs', en: '← Discover Nestync and pricing' },
 
   // Hors ligne
+  /* --- Page 404 --- */
+  NF_TITRE: { fr: 'Cette page n’existe pas', en: 'This page does not exist' },
+  /* ⚠ On dit ce qui a pu se passer, pas « erreur ». Une adresse mal tapée ou un
+     lien périmé n'est pas une panne, et le mot « erreur » ferait croire que
+     l'application est cassée — ce qu'on cherche justement à ne pas laisser
+     penser après avoir vu une page blanche en anglais. */
+  NF_TXT: { fr: 'L’adresse est peut-être mal orthographiée, ou la page a été déplacée. Rien n’est cassé de votre côté.', en: 'The address may be misspelled, or the page has moved. Nothing is broken on your side.' },
+  NF_ACCUEIL: { fr: 'Revenir à l’accueil', en: 'Back to home' },
   HL_TITRE: { fr: 'Hors ligne', en: 'Offline' },
   HL_TXT: { fr: 'Pas de connexion pour le moment. Nestync se rechargera dès que le réseau reviendra. Les pages déjà consultées restent accessibles.', en: 'No connection right now. Nestync will reload as soon as the network is back. Pages you already opened stay available.' },
   HL_REESSAYER: { fr: 'Réessayer', en: 'Retry' },

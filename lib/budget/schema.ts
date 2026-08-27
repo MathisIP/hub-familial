@@ -161,14 +161,32 @@ export const CATEGORIES_DEPENSE = [
   'Divers',
 ] as const;
 
-/** Catégories de revenu — même logique que les dépenses. */
+/**
+ * Catégories de revenu — même logique que les dépenses.
+ *
+ * ⚠ VOLONTAIREMENT GÉNÉRIQUES, LÀ OÙ LA PRODUCTION ÉTAIT NOMINATIVE. Le foyer
+ * d'origine utilisait « Salaire Lou » et « Salaire Mati » : lisible pour deux
+ * personnes, intenable pour une liste commune — il faudrait une catégorie par
+ * prénom et par foyer, c'est-à-dire renoncer à toute liste fixe. C'est le compte
+ * bancaire crédité qui dit de qui vient le salaire, pas la catégorie.
+ *
+ * ⚠ CONSÉQUENCE ASSUMÉE : les revenus déjà enregistrés sous « Salaire Lou »
+ * gardent ce libellé et restent visibles partout, mais ne sont plus proposés à
+ * la saisie. Les reclasser demande un renommage explicite, jamais une
+ * réécriture silencieuse de l'historique.
+ *
+ * ⚠ « Divers » comme pour les dépenses — mais les RAYONS de courses gardent
+ * « Autre », et c'est délibéré : « Divers » est le mot de la comptabilité, pas
+ * celui d'un magasin. Un rayon « Divers » se lirait de travers. Deux domaines,
+ * deux vocabulaires ; ce qui compte est qu'un même domaine n'en ait qu'un.
+ */
 export const CATEGORIES_REVENU = [
   'Salaire',
   'Aides',
   'Remboursement',
   'Prime',
   'Vente',
-  'Autre',
+  'Divers',
 ] as const;
 
 /** Récurrences proposées. Constante : rien à dériver des données. */

@@ -16,6 +16,7 @@ import {
   type Recette,
 } from '@/lib/repas/schema';
 import Astuce from '@/components/Astuce';
+import { RAYONS } from '@/lib/todo/schema';
 import FicheRecette from '@/components/repas/FicheRecette';
 
 /**
@@ -628,12 +629,28 @@ function RecetteForm({
               disabled={occupe}
               ariaLabel={tr('REPAS_ING_UNITE')}
             />
-            <input
-              className="champ"
-              placeholder={tr('REPAS_ING_RAYON')}
-              value={ing.rayon}
-              onChange={(e) => majIngredient(k, 'rayon', e.target.value)}
+            {/*
+              ⚠ LISTE FERMÉE, comme dans les courses — et pour la même raison,
+              renforcée ici. Le rayon d'un ingrédient PART DANS LA LISTE DE
+              COURSES quand on verse la semaine : saisi librement, un
+              « Epicerie » sans accent y créerait un groupe à part, séparé de
+              l'« Épicerie » du reste. La recette contaminerait la liste.
+
+              ⚠ Le rayon actuel est AJOUTÉ aux options s'il n'y figure pas : une
+              recette écrite avant que la liste soit fixée garderait sinon un
+              rayon que le sélecteur ne saurait pas afficher, et la simple
+              ouverture de l'éditeur le remplacerait en silence.
+            */}
+            <Liste
+              valeur={ing.rayon}
+              onChange={(v) => majIngredient(k, 'rayon', v)}
+              options={(ing.rayon && !RAYONS.includes(ing.rayon as (typeof RAYONS)[number])
+                ? [ing.rayon, ...RAYONS]
+                : [...RAYONS]
+              ).map((r) => ({ valeur: r, libelle: r }))}
+              placeholder="—"
               disabled={occupe}
+              ariaLabel={tr('REPAS_ING_RAYON')}
             />
             <button
               type="button"

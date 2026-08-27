@@ -17,7 +17,7 @@ import {
 } from '@/lib/db/schema';
 import { chargerComptes, estAdminComptes } from '@/lib/comptes/service';
 import { OFFRES } from '@/lib/offres';
-import type { ChargeSimulee } from '@/lib/admin/simulation';
+import type { ChargeSimulee } from '@/lib/admin/modele';
 
 /**
  * CONSOLE D'ADMINISTRATION (serveur uniquement) — les chiffres du produit.

@@ -2232,7 +2232,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   display: inline-flex; align-items: center; gap: .4rem;
 }
 .sl-onglet:hover { background: var(--soft); }
-.sl-onglet.actif { background: var(--soft); color: var(--tx); border-color: var(--acc); }
+.sl-onglet.actif { background: var(--soft); color: var(--ink); border-color: var(--acc); }
 .sl-compteur {
   background: var(--head); color: var(--on-acc, #fff);
   border-radius: 999px; padding: 0 .4rem; font-size: .75rem; font-variant-numeric: tabular-nums;
@@ -2383,7 +2383,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   display: inline-flex; align-items: center; gap: .5rem;
   border-bottom: 1px solid transparent;
 }
-.hist-bascule:hover { color: var(--tx); border-bottom-color: var(--line); }
+.hist-bascule:hover { color: var(--ink); border-bottom-color: var(--line); }
 .hist-corps {
   margin-top: .9rem; background: var(--cell); border: 1px solid var(--line);
   border-radius: 1rem; padding: 1.1rem 1.2rem; box-shadow: var(--shadow-soft);
@@ -2395,7 +2395,7 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   padding: .3rem .8rem; border-radius: 999px;
 }
 .hist-onglet:hover { background: var(--soft); }
-.hist-onglet.actif { background: var(--soft); color: var(--tx); border-color: var(--acc); }
+.hist-onglet.actif { background: var(--soft); color: var(--ink); border-color: var(--acc); }
 .hist-onglet:disabled { opacity: .55; cursor: default; }
 .hist-info { margin: 0 0 .7rem; font-size: .85rem; color: var(--muted); }
 .hist-corps .tx-liste { margin: 0; }
@@ -3110,180 +3110,4 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
    pas attirer l'œil plus que le contenu qu'elle efface. */
 .tache-suppr { padding: .2rem .5rem; flex: 0 0 auto; }
 
-/* ══════════════════════════════════════════════════════════════════════
- * CONSOLE D'ADMINISTRATION (/admin)
- *
- * ⚠ CONÇUE POUR UN ÉCRAN LARGE, à dessein : c'est un outil d'exploitation
- * utilisé par une seule personne, assise. La densité y vaut mieux que le
- * confort du pouce. La grille retombe à une colonne sous 60 rem pour rester
- * lisible si l'on réduit la fenêtre — pas pour offrir une version mobile.
- * ══════════════════════════════════════════════════════════════════════ */
-.adm-grille {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
-  gap: var(--e-5);
-  align-items: start;
-}
-.adm-bloc {
-  background: var(--cell); border: 1px solid var(--line);
-  border-radius: 1.1rem; padding: 1.1rem 1.2rem; margin-bottom: var(--e-5);
-  display: flex; flex-direction: column; gap: .8rem;
-}
-.adm-grille > .adm-bloc { margin-bottom: 0; }
 
-.adm-pastille {
-  display: inline-block; margin-left: .5rem; padding: .05rem .5rem;
-  background: var(--over); color: var(--page);
-  border-radius: 999px; font-size: .8rem; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.adm-rien { margin: 0; color: var(--ok-tx); font-size: .95rem; }
-
-.adm-afaire { display: flex; flex-direction: column; gap: .7rem; }
-.adm-afaire p { margin: 0; font-size: .95rem; }
-
-/* --- Chiffres clés --- */
-.adm-chiffres { display: flex; flex-wrap: wrap; gap: 1.4rem; }
-.adm-chiffre { display: flex; flex-direction: column; }
-.adm-v {
-  font-size: 1.5rem; font-weight: 700; line-height: 1.1;
-  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
-}
-.adm-l { font-size: .75rem; color: var(--muted); }
-
-.adm-note { margin: 0; font-size: .84rem; color: var(--muted); line-height: 1.5; }
-.adm-soustitre {
-  margin: 0 0 .3rem; font-size: .68rem; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
-}
-.adm-ok { color: var(--ok-tx); }
-.adm-neg, .adm-urgent { color: var(--over-tx); }
-
-/* --- Répartitions en barres --- */
-.adm-barres { display: flex; flex-direction: column; gap: .3rem; }
-.adm-barre { display: grid; grid-template-columns: 7rem 1fr 2.5rem; gap: .5rem; align-items: center; }
-.adm-barre-lbl { font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adm-barre-piste { height: .5rem; background: var(--head); border-radius: 999px; overflow: hidden; }
-.adm-barre-remplissage { display: block; height: 100%; background: var(--acc); border-radius: 999px; }
-.adm-num { font-variant-numeric: tabular-nums; text-align: right; font-size: .85rem; font-weight: 600; }
-
-/* --- Listes de suivi --- */
-.adm-suivi ul { list-style: none; margin: .2rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
-.adm-suivi li { display: flex; justify-content: space-between; gap: 1rem; font-size: .88rem; }
-.adm-foyer { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.adm-quand { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-/* --- Tableau des volumes --- */
-.adm-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.adm-table td { padding: .3rem 0; border-bottom: 1px solid var(--line); }
-.adm-table tr:last-child td { border-bottom: 0; }
-/* ⚠ Un module à zéro se distingue : c'est l'information, pas une ligne vide. */
-.adm-zero td { color: var(--muted); }
-
-/* ==========================================================================
-   SIMULATEUR (/admin) — la partie hypothétique de la console.
-   ⚠ Volontairement distinct des cartes du dessus : ce qui précède est relevé,
-   ce qui suit est supposé. Bordure en pointillés et fond légèrement décalé —
-   deux blocs identiques finiraient par se confondre, et une projection prise
-   pour un relevé est pire qu'aucune projection.
-   ========================================================================== */
-.sim {
-  border: 1px dashed var(--line);
-  background: color-mix(in srgb, var(--cell) 60%, transparent);
-}
-.sim-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
-.sim-lien {
-  background: none; border: 0; padding: 0; cursor: pointer;
-  font: inherit; font-size: .82rem; color: var(--ACC); text-decoration: underline;
-}
-.sim-grille {
-  display: grid; gap: 1rem; margin-top: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-}
-/* ⚠ minmax(0,…) : sans lui, une longue ligne de charge élargit la colonne et
-   fait déborder la page entière au lieu de se contraindre. */
-.sim-panneau { min-width: 0; }
-.sim-large { grid-column: span 2; }
-@media (max-width: 60rem) { .sim-large { grid-column: span 1; } }
-
-.sim-titre {
-  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
-  font-family: var(--police-titre); font-size: .95rem; font-weight: 600;
-  margin: 0 0 .6rem;
-}
-.sim-champ { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .5rem; font-size: .85rem; }
-.sim-champ input[type='number'] { width: 6rem; }
-.sim-curseur { display: block; }
-.sim-curseur > span { display: block; margin-bottom: .25rem; }
-.sim-curseur input[type='range'] { width: 100%; accent-color: var(--ACC); }
-
-.sim-repere { display: flex; flex-wrap: wrap; gap: .35rem; margin: .4rem 0 .8rem; }
-.sim-repere button {
-  font: inherit; font-size: .76rem; cursor: pointer;
-  padding: .2rem .5rem; border-radius: .5rem;
-  border: 1px solid var(--line); background: var(--cell); color: var(--tx);
-}
-.sim-repere button:hover { border-color: var(--ACC); color: var(--ACC); }
-
-.sim-aide { font-size: .78rem; color: var(--muted); margin: .4rem 0 0; line-height: 1.45; }
-.sim-ajout {
-  font: inherit; font-size: .78rem; cursor: pointer; font-weight: 400;
-  background: none; border: 0; padding: 0; color: var(--ACC); text-decoration: underline;
-}
-
-.sim-liste { list-style: none; margin: .2rem 0 0; padding: 0; display: grid; gap: .3rem; }
-.sim-liste li { display: flex; align-items: center; gap: .4rem; font-size: .82rem; }
-/* ⚠ Décochée, la ligne RESTE lisible : elle doit pouvoir être recochée. Une
-   opacité trop basse la ferait passer pour supprimée. */
-.sim-off { opacity: .5; }
-.sim-lbl { flex: 1 1 auto; min-width: 0; }
-.sim-montant { width: 5.5rem; text-align: right; font-variant-numeric: tabular-nums; }
-.sim-liste input[type='text'], .sim-liste input[type='number'], .sim-liste select {
-  font: inherit; font-size: .82rem; padding: .18rem .4rem;
-  border: 1px solid var(--line); border-radius: .4rem;
-  background: var(--bg); color: var(--tx);
-}
-.sim-tag {
-  font-size: .68rem; padding: .05rem .35rem; border-radius: .4rem;
-  background: var(--line); color: var(--muted); white-space: nowrap;
-}
-.sim-tag-reel { background: color-mix(in srgb, var(--ACC) 18%, transparent); color: var(--ACC_DEEP); }
-.sim-x {
-  font: inherit; cursor: pointer; line-height: 1;
-  background: none; border: 0; padding: 0 .2rem; color: var(--muted);
-}
-.sim-x:hover { color: var(--over-tx); }
-.sim-total { font-size: .85rem; margin: .7rem 0 0; }
-
-.sim-resultat { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); }
-.sim-fort .adm-v { font-size: 1.6rem; }
-
-.sim-paliers { margin-top: 1.25rem; }
-.sim-table th {
-  text-align: left; font-size: .74rem; font-weight: 600; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .04em;
-  padding-bottom: .35rem; border-bottom: 1px solid var(--line);
-}
-.sim-table .adm-num { text-align: right; font-variant-numeric: tabular-nums; }
-/* ⚠ Le palier d'équilibre est LE chiffre qu'on cherche sur cette page : il se
-   repère sans lire le tableau. */
-.sim-franchit td { background: color-mix(in srgb, var(--ACC) 12%, transparent); font-weight: 600; }
-.sim-badge {
-  margin-left: .5rem; font-size: .68rem; font-weight: 400;
-  padding: .05rem .4rem; border-radius: .4rem;
-  background: var(--ACC); color: var(--ON_ACC);
-}
-
-/* --- Conséquences du taux de résiliation --- */
-.sim-consequences { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .3rem; }
-.sim-consequences li {
-  display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
-  font-size: .82rem; padding-bottom: .3rem; border-bottom: 1px solid var(--line);
-}
-.sim-consequences li:last-child { border-bottom: 0; }
-.sim-consequences span { color: var(--muted); }
-.sim-consequences strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* ⚠ « À recruter pour ne pas reculer » est le chiffre le plus souvent absent
-   des projections : il se distingue des deux autres. */
-.sim-souligne strong { color: var(--ACC_DEEP); }
-.sim-recrut { color: var(--muted); }

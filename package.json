@@ -26,7 +26,7 @@
     "verif:agenda": "node --import tsx scripts/verif-agenda-dates.mts",
     "verif:astuce": "node --import tsx scripts/verif-astuce.mts",
     "verif:quantites": "node --import tsx scripts/verif-quantites.mts",
-    "verif:simulation": "node --import tsx scripts/verif-simulation.mts"
+    "verif:eco": "node --import tsx scripts/verif-modele-eco.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

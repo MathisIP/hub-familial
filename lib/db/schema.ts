@@ -1088,3 +1088,42 @@ export const avisReconduction = pgTable(
   },
   (t) => [unique('avis_reconduction_foyer_echeance_type').on(t.foyerId, t.echeance, t.type)],
 );
+
+
+/**
+ * SCÉNARIOS ÉCONOMIQUES — les hypothèses de projection de /admin.
+ *
+ * ⚠ **SANS `foyer_id`, comme `mouvements_projet`.** Ce n'est pas une donnée de
+ * foyer : c'est le travail de prospective du porteur de projet. La garde porte
+ * sur `EMAIL_ADMIN`, pas sur l'appartenance à un foyer.
+ *
+ * ⚠ **UNE HYPOTHÈSE N'EST PAS UNE ÉCRITURE COMPTABLE**, et c'est précisément
+ * pourquoi elle a sa table à elle. Rangée dans `mouvements_projet`, elle rendrait
+ * le solde de /comptes faux sans que rien ne le signale — or c'est la véracité de
+ * ce solde qui fait toute sa valeur. Deux tables séparées, aucune contamination
+ * possible.
+ *
+ * ⚠ **EN BASE ET NON DANS LE NAVIGATEUR.** `localStorage` survit aux sessions
+ * mais pas à un vidage de cache, ni à un changement de navigateur ou de machine.
+ * Une projection sur laquelle on bâtit une stratégie ne peut pas dépendre de ça.
+ *
+ * ⚠ **PLUSIEURS SCÉNARIOS NOMMÉS**, pas un seul jeu de valeurs : comparer
+ * « prudent » et « avec les magasins » suppose de les garder côte à côte. Avec un
+ * enregistrement unique, ouvrir le second efface le premier.
+ */
+export const adminScenarios = pgTable('admin_scenarios', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nom: text('nom').notNull(),
+  // Le jeu complet de paramètres. JSONB plutôt qu'une colonne par réglage : le
+  // modèle gagnera des paramètres, et `normaliserParams` complète les absents.
+  params: jsonb('params').notNull(),
+  // Celui qui s'ouvre par défaut. ⚠ Non contraint à l'unicité en base : le
+  // service s'en charge, et une double activation transitoire vaut mieux qu'une
+  // écriture qui échoue.
+  actif: boolean('actif').notNull().default(false),
+  note: text('note').notNull().default(''),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  majLe: timestamp('maj_le', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type LigneScenario = typeof adminScenarios.$inferSelect;

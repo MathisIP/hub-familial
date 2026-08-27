@@ -1,0 +1,278 @@
+/* ==========================================================================
+   CONSOLE D'ADMINISTRATION — feuille de style dédiée.
+   ==========================================================================
+
+   ⚠ **UN FICHIER À PART, PAS UNE RALLONGE DE `globals.css`.** La console est un
+   outil d'exploitation d'une seule personne, sur un seul écran large : ses
+   règles n'ont rien à faire dans la feuille chargée par tous les foyers, et le
+   mélange avait déjà produit une collision de noms (`.sim-*` à côté des styles
+   du module Repas).
+
+   ⚠ **TOUTES LES COULEURS VIENNENT DES RÔLES DU THÈME**, en minuscules :
+   `--acc`, `--ink`, `--cell`… Les variables CSS sont SENSIBLES À LA CASSE, et
+   c'est exactement ce qui avait rendu la première version illisible — `--ACC`
+   n'existe pas, la déclaration était donc simplement ignorée, sans erreur, sans
+   avertissement, sans que rien ne le signale à la compilation.
+   ========================================================================== */
+
+.nsa {
+  --nsa-r: 12px;
+  --nsa-gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-bottom: 4rem;
+}
+
+/* ---------- Barre de titre + navigation ---------- */
+.nsa-barre {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap;
+  padding-bottom: 18px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--line2);
+}
+.nsa-barre h1 {
+  font-family: var(--police-titre); font-weight: 600;
+  font-size: 1.9rem; line-height: 1.1; margin: 0; letter-spacing: -.01em;
+}
+.nsa-barre p { color: var(--muted); font-size: .85rem; margin: .3rem 0 0; }
+
+.nsa-etiquette {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .75rem; color: var(--muted);
+  padding: .3rem .7rem; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--cell); white-space: nowrap;
+}
+.nsa-pouls { width: 7px; height: 7px; border-radius: 50%; background: var(--ok-tx); }
+
+.nsa-nav { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: 24px; }
+.nsa-nav a {
+  font-size: .85rem; text-decoration: none; color: var(--ink2);
+  padding: .4rem .9rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--cell);
+}
+.nsa-nav a:hover { border-color: var(--acc); color: var(--acc); }
+/* ⚠ `aria-current` plutôt qu'une classe : l'onglet courant doit être annoncé,
+   pas seulement coloré. */
+.nsa-nav a[aria-current='page'] {
+  background: var(--acc); border-color: var(--acc); color: var(--on-acc); font-weight: 600;
+}
+
+/* ---------- Bandeau « à traiter » ---------- */
+.nsa-afaire {
+  background: var(--cell); border: 1px solid var(--line);
+  border-left: 3px solid var(--over);
+  border-radius: var(--nsa-r); padding: 1rem 1.25rem; margin-bottom: 28px;
+}
+.nsa-afaire.nsa-calme { border-left-color: var(--ok-tx); }
+.nsa-afaire-tete { display: flex; align-items: center; gap: .6rem; margin-bottom: .75rem; }
+.nsa-afaire-tete h2 { font-family: var(--police-titre); font-size: .95rem; font-weight: 600; margin: 0; }
+.nsa-compteur {
+  font-size: .7rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: var(--over); color: var(--page); padding: .05rem .5rem; border-radius: 999px;
+}
+.nsa-afaire ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.nsa-afaire li {
+  display: grid; grid-template-columns: 8px 1fr auto; align-items: baseline;
+  gap: .7rem; font-size: .88rem;
+}
+.nsa-point { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); transform: translateY(-2px); }
+.nsa-point.chaud { background: var(--over-tx); }
+.nsa-quand { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Rail de chiffres clés ---------- */
+/* ⚠ Séparé par des FILETS, pas par des boîtes. Une rangée de cartes autour d'un
+   seul nombre chacune est la signature du tableau de bord bricolé. */
+.nsa-rail {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: var(--nsa-r); overflow: hidden; margin-bottom: 28px;
+}
+.nsa-rail > div { padding: 1.1rem 1.2rem; border-left: 1px solid var(--line); min-width: 0; }
+.nsa-rail > div:first-child { border-left: 0; }
+.nsa-lbl {
+  font-size: .65rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; margin-bottom: .45rem;
+}
+.nsa-val {
+  font-size: 1.65rem; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.nsa-ctx { font-size: .74rem; color: var(--muted); margin-top: .4rem; line-height: 1.4; }
+.nsa-ok { color: var(--ok-tx); }
+.nsa-mal { color: var(--over-tx); }
+
+/* ---------- Panneaux ---------- */
+.nsa-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--nsa-gap); align-items: start; }
+.nsa-grille-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--nsa-gap); align-items: start; }
+.nsa-panneau {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: var(--nsa-r); overflow: hidden;
+  display: flex; flex-direction: column; min-width: 0;
+}
+.nsa-panneau + .nsa-panneau { margin-top: var(--nsa-gap); }
+.nsa-tete {
+  display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
+  padding: .8rem 1.2rem; border-bottom: 1px solid var(--line); background: var(--head);
+}
+.nsa-tete h2, .nsa-tete h3 {
+  font-family: var(--police-titre); font-size: .9rem; font-weight: 600; margin: 0;
+}
+.nsa-action {
+  font-size: .75rem; color: var(--acc); text-decoration: none;
+  background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
+}
+.nsa-action:hover { text-decoration: underline; }
+.nsa-corps { padding: 1.1rem 1.2rem; }
+.nsa-note {
+  font-size: .78rem; color: var(--muted); line-height: 1.55;
+  margin: .9rem 0 0; padding-top: .75rem; border-top: 1px dashed var(--line);
+}
+.nsa-note:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Duo / trio de chiffres dans un panneau */
+.nsa-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem; }
+.nsa-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
+.nsa-duo .nsa-val, .nsa-trio .nsa-val { font-size: 1.4rem; }
+.nsa-duo .nsa-lbl, .nsa-trio .nsa-lbl { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; }
+
+/* Barres de répartition */
+.nsa-barres { display: grid; gap: .5rem; }
+.nsa-b { display: grid; grid-template-columns: 6rem 1fr 2.2rem; gap: .7rem; align-items: center; font-size: .82rem; }
+.nsa-b > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nsa-piste { height: 7px; background: var(--soft); border-radius: 999px; overflow: hidden; }
+.nsa-plein { display: block; height: 100%; background: var(--acc); border-radius: 999px; }
+.nsa-plein.doux { background: var(--line2); }
+.nsa-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: .82rem; }
+
+/* Tableaux */
+.nsa-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.nsa-table th {
+  text-align: left; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; padding: 0 0 .5rem; border-bottom: 1px solid var(--line2);
+}
+.nsa-table td { padding: .5rem 0; border-bottom: 1px solid var(--line); }
+.nsa-table tr:last-child td { border-bottom: 0; }
+.nsa-table .nsa-num { font-weight: 500; }
+.nsa-zero td { color: var(--muted); }
+.nsa-defile { overflow-x: auto; }
+
+/* ---------- Cascade comptable ---------- */
+/* ⚠ En cascade et non côte à côte : quatre nombres alignés ne montrent pas
+   qu'ils s'enchaînent. Ici on voit le prix se faire éroder, poste par poste. */
+.nsa-cascade { display: grid; }
+.nsa-cascade > div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .55rem 0; border-bottom: 1px solid var(--line); font-size: .86rem;
+}
+.nsa-cascade > div > span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.nsa-cascade .nsa-final {
+  border-bottom: 0; border-top: 2px solid var(--line2); margin-top: .25rem; padding-top: .8rem;
+}
+.nsa-cascade .nsa-final > span:first-child { font-weight: 600; }
+.nsa-cascade .nsa-final > span:last-child { font-size: 1.3rem; font-weight: 700; }
+.nsa-cascade .nsa-sous { color: var(--muted); font-size: .74rem; font-weight: 400; }
+
+.nsa-verdict {
+  margin-top: .9rem; padding: .7rem .9rem; border-radius: 9px;
+  font-size: .82rem; line-height: 1.5;
+  background: var(--ok-bg); color: var(--ok-tx);
+}
+.nsa-verdict.nsa-mal { background: var(--over-bg); color: var(--over-tx); }
+
+/* ---------- Réglages ---------- */
+.nsa-reglages { display: grid; gap: .1rem; }
+.nsa-reglage {
+  display: grid; grid-template-columns: 1fr 8.5rem; gap: .8rem; align-items: center;
+  padding: .55rem 0; border-bottom: 1px solid var(--line);
+}
+.nsa-reglage:last-child { border-bottom: 0; }
+.nsa-reglage-nom { font-size: .84rem; }
+.nsa-reglage-aide { font-size: .72rem; color: var(--muted); margin-top: .15rem; line-height: 1.4; }
+/* ⚠ La provenance d'une valeur figée est affichée : c'est ainsi qu'on sait où
+   aller la changer. Un paramètre sans source visible devient un nombre magique. */
+.nsa-source {
+  display: inline-block; margin-left: .4rem; font-size: .66rem;
+  padding: .05rem .35rem; border-radius: .35rem;
+  background: var(--soft); color: var(--muted); font-family: ui-monospace, monospace;
+}
+.nsa-champ {
+  font: inherit; font-size: .84rem; padding: .35rem .5rem; width: 100%;
+  border: 1px solid var(--line2); border-radius: 8px;
+  background: var(--field-bg); color: var(--ink);
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.nsa-champ:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+select.nsa-champ, .nsa-reglage select { text-align: left; }
+.nsa-bascule { display: flex; justify-content: flex-end; }
+.nsa-bascule input { width: 1.1rem; height: 1.1rem; accent-color: var(--acc); }
+.nsa-fige { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; font-size: .84rem; }
+
+.nsa-groupe-titre {
+  font-size: .66rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; margin: 1.2rem 0 .4rem;
+}
+.nsa-groupe-titre:first-child { margin-top: 0; }
+
+/* ---------- Leviers ---------- */
+.nsa-leviers { display: grid; gap: .7rem; }
+.nsa-levier {
+  border: 1px solid var(--line); border-left: 3px solid var(--line2);
+  border-radius: 10px; padding: .8rem 1rem; background: var(--cell);
+}
+.nsa-levier.blocage { border-left-color: var(--over); }
+.nsa-levier.action { border-left-color: var(--acc); }
+.nsa-levier.veille { border-left-color: var(--line2); }
+.nsa-levier-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.nsa-levier h3 { font-family: var(--police-titre); font-size: .92rem; font-weight: 600; margin: 0; }
+.nsa-gain {
+  font-variant-numeric: tabular-nums; font-weight: 700; font-size: .95rem;
+  color: var(--ok-tx); white-space: nowrap;
+}
+.nsa-levier p { margin: .4rem 0 0; font-size: .82rem; line-height: 1.55; }
+.nsa-levier .nsa-constat { color: var(--muted); }
+.nsa-rang {
+  display: inline-block; font-size: .62rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; padding: .1rem .45rem; border-radius: .35rem; margin-right: .5rem;
+  background: var(--soft); color: var(--muted); vertical-align: .1em;
+}
+.nsa-levier.blocage .nsa-rang { background: var(--over-bg); color: var(--over-tx); }
+.nsa-levier.action .nsa-rang { background: var(--link-bg); color: var(--acc-deep); }
+
+/* ---------- Paliers ---------- */
+.nsa-table tr.nsa-seuil td { background: var(--link-bg); font-weight: 600; }
+.nsa-badge {
+  margin-left: .5rem; font-size: .64rem; font-weight: 700; letter-spacing: .04em;
+  background: var(--acc); color: var(--on-acc); padding: .1rem .45rem; border-radius: 999px;
+  white-space: nowrap;
+}
+/* ⚠ Un palier hors d'atteinte reste LISIBLE, seulement estompé : il faut voir
+   ce qu'on ne peut pas atteindre, pour savoir de combien on en est loin. */
+.nsa-hors td { opacity: .5; }
+.nsa-jalon td { border-top: 2px dashed var(--acc); }
+
+/* ---------- Scénarios ---------- */
+.nsa-scenarios { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.nsa-scenario {
+  font: inherit; font-size: .8rem; cursor: pointer;
+  padding: .3rem .75rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--cell); color: var(--ink2);
+}
+.nsa-scenario.on { background: var(--acc); border-color: var(--acc); color: var(--on-acc); font-weight: 600; }
+.nsa-scenario:hover { border-color: var(--acc); }
+
+.nsa-pied { margin-top: 2rem; font-size: .74rem; color: var(--muted); }
+
+/* ---------- Adaptation ---------- */
+/* ⚠ La console est CONÇUE pour un écran large — c'est l'outil d'une personne
+   assise. Rien n'est bridé pour autant : un filtre par largeur ne protège rien,
+   `EMAIL_ADMIN` si. On se contente donc de rester lisible. */
+@media (max-width: 1000px) {
+  .nsa-rail { grid-template-columns: repeat(3, 1fr); }
+  .nsa-rail > div:nth-child(4) { border-left: 0; }
+  .nsa-grille, .nsa-grille-3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .nsa-rail { grid-template-columns: repeat(2, 1fr); }
+  .nsa-rail > div:nth-child(odd) { border-left: 0; }
+  .nsa-reglage { grid-template-columns: 1fr 6.5rem; }
+}

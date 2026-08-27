@@ -909,6 +909,20 @@ export const echeances = pgTable(
     date: text('date').notNull().default(''),
     dateIso: text('date_iso'),
     recurrence: text('recurrence').notNull().default('Aucune'),
+    /**
+     * Montant attendu, en euros. `null` = pas de montant renseigné.
+     *
+     * ⚠ NULLABLE, ET PAS `0` PAR DÉFAUT. Toutes les échéances n'ont pas de
+     * montant — « visite médicale annuelle » ou « renouveler la carte d'identité »
+     * sont des rappels de date. Un `0` par défaut afficherait « 0,00 € » partout
+     * et rendrait indiscernable ce qui est gratuit de ce qu'on n'a pas encore
+     * chiffré ; il fausserait aussi tout total qu'on calculerait un jour.
+     *
+     * ⚠ `doublePrecision` comme le reste du module Budget (`transactions.montant`,
+     * `comptes.solde_initial`), et non des centimes entiers. Deux conventions
+     * monétaires dans un même module finiraient par se croiser dans un calcul.
+     */
+    montant: doublePrecision('montant'),
     note: text('note').notNull().default(''),
     /**
      * Compte rattaché — l'échéance hérite alors de SA visibilité. `null` (défaut)

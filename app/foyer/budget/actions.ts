@@ -153,6 +153,7 @@ function champsEcheanceDepuis(formData: FormData): ChampsEcheance {
     recurrence: String(formData.get('recurrence') ?? 'Aucune'),
     note: String(formData.get('note') ?? ''),
     compteId: String(formData.get('compteId') ?? ''),
+    montant: String(formData.get('montant') ?? ''),
   };
 }
 

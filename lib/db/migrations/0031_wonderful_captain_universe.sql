@@ -1,0 +1,1 @@
+ALTER TABLE "echeances" ADD COLUMN "montant" double precision;

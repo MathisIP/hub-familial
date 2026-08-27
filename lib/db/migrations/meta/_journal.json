@@ -218,6 +218,13 @@
       "when": 1787761587616,
       "tag": "0030_swift_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1787816409815,
+      "tag": "0031_wonderful_captain_universe",
+      "breakpoints": true
     }
   ]
 }

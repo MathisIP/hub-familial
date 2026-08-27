@@ -75,6 +75,8 @@ export type Echeance = {
   dateISO: string | null;
   recurrence: string;
   note: string;
+  /** Montant attendu en euros ; `null` = non renseigné (≠ 0 €). */
+  montant: number | null;
   joursRestants: number | null; // null si pas de date
   /**
    * Compte rattaché — l'échéance hérite de sa visibilité. Chaîne vide = échéance
@@ -92,6 +94,8 @@ export type ChampsEcheance = {
   recurrence?: string;
   note?: string;
   compteId?: string | null;
+  /** Saisie libre (« 45,90 », « 45.90 € ») ; vide = pas de montant. */
+  montant?: string;
 };
 
 /** Récurrences proposées. Constante : rien à dériver des données. */

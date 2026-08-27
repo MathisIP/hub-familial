@@ -33,6 +33,7 @@ import {
   aujourdhuiLabel,
   formatEuro,
   joursJusqua,
+  parseEuro,
   versISO,
   type ChampsEcheance,
   type CompteGere,
@@ -335,6 +336,7 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
       dateISO: e.dateIso,
       recurrence: e.recurrence || 'Aucune',
       note: e.note,
+      montant: e.montant ?? null,
       joursRestants: e.dateIso ? joursJusqua(e.dateIso) : null,
       compteId: e.compteId ?? '',
       compte: e.compteId ? (nomParCompte.get(e.compteId) ?? '') : '',
@@ -865,12 +867,28 @@ function champsEcheance(c: ChampsEcheance, compteId: string | null) {
   if (dateLabel && !dateIso) {
     throw new ErreurValidation('La date doit être au format jj/mm/aaaa.');
   }
+  /*
+   * ⚠ VIDE DONNE `null`, PAS `0`. Beaucoup d'échéances sont de simples rappels
+   * de date sans montant ; les enregistrer à zéro afficherait « 0,00 € » partout
+   * et rendrait indiscernable ce qui est gratuit de ce qu'on n'a pas chiffré.
+   *
+   * ⚠ ET UNE SAISIE SANS AUCUN CHIFFRE EST REFUSÉE. `parseEuro` renvoie `0` sur
+   * ce qu'il ne sait pas lire : une faute de frappe se serait enregistrée en
+   * « 0,00 € » sans le moindre signal, et c'est précisément le genre de valeur
+   * fausse qu'on ne relit jamais.
+   */
+  const brutMontant = (c.montant ?? '').trim();
+  if (brutMontant && !/\d/.test(brutMontant)) {
+    throw new ErreurValidation('Le montant doit être un nombre (par exemple 45,90).');
+  }
+
   return {
     libelle,
     date: dateLabel,
     dateIso,
     recurrence: (c.recurrence ?? 'Aucune').trim() || 'Aucune',
     note: (c.note ?? '').trim(),
+    montant: brutMontant ? parseEuro(brutMontant) : null,
     compteId,
   };
 }

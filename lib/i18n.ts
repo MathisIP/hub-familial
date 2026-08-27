@@ -281,6 +281,8 @@ const UI = {
   ECH_LIBELLE_PH: { fr: 'Loyer, assurance…', en: 'Rent, insurance…' },
   ECH_DATE: { fr: 'Date', en: 'Date' },
   ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
+  ECH_MONTANT: { fr: 'Montant', en: 'Amount' },
+  ECH_MONTANT_PH: { fr: 'ex. 45,90 (facultatif)', en: 'e.g. 45.90 (optional)' },
   ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   ECH_COMPTE: { fr: 'Compte', en: 'Account' },
   ECH_COMPTE_CHOISIR: { fr: 'Choisir un compte…', en: 'Pick an account…' },

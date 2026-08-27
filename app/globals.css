@@ -2466,6 +2466,12 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .ge-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
 .ge-infos { display: flex; flex-direction: column; gap: .1rem; min-width: 0; flex: 1 1 9rem; }
 .ge-lib { font-weight: 700; overflow-wrap: anywhere; }
+/* Le montant reste attaché au libellé mais s'en distingue : chiffres alignés,
+   graisse normale — c'est une donnée, pas un titre. */
+.ge-montant {
+  margin-left: .5rem; font-weight: 600; font-size: .9rem;
+  color: var(--link-tx); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 .ge-meta { font-size: .8rem; color: var(--muted); }
 .ge-quand { font-size: .85rem; color: var(--muted); white-space: nowrap; }
 .ge-quand.proche { color: var(--acc-deep); font-weight: 700; }

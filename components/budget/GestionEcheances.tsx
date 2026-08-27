@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import Liste from '@/components/Liste';
 import Astuce from '@/components/Astuce';
+
 import ChampDate from '@/components/ChampDate';
 import { useT } from '@/components/I18nProvider';
 import {
@@ -10,7 +11,7 @@ import {
   modifierEcheanceAction,
   supprimerEcheanceAction,
 } from '@/app/foyer/budget/actions';
-import { RECURRENCES_ECHEANCE, type Echeance } from '@/lib/budget/schema';
+import { RECURRENCES_ECHEANCE, formatEuro, type Echeance } from '@/lib/budget/schema';
 
 /**
  * Gestion des échéances : ajouter, modifier, supprimer.
@@ -57,7 +58,13 @@ export default function GestionEcheances({
             ) : (
               <div className="ge-ligne">
                 <div className="ge-infos">
-                  <span className="ge-lib">{e.libelle}</span>
+                  <span className="ge-lib">
+                    {e.libelle}
+                    {/* ⚠ `!= null` et non une vérité simple : une échéance à
+                        0,00 € est une information (un prélèvement suspendu),
+                        que `e.montant &&` aurait masquée. */}
+                    {e.montant != null && <span className="ge-montant">{formatEuro(e.montant)}</span>}
+                  </span>
                   <span className="ge-meta">
                     {e.date || tr('ECH_SANS_DATE')}
                     {e.recurrence !== 'Aucune' && ` · ↻ ${e.recurrence}`}
@@ -159,6 +166,22 @@ function FormeEcheance({
             <ChampDate
               name="date"
               defaultValue={echeance?.date ?? ''}
+              disabled={enCours}
+            />
+          </label>
+
+          <label className="ge-champ">
+            <span className="ge-lbl">{tr('ECH_MONTANT')}</span>
+            {/* Saisie LIBRE et facultative : « 45,90 » comme « 45.90 € ».
+                ⚠ Laisser vide est un cas normal — beaucoup d'échéances sont de
+                simples rappels de date (visite médicale, papiers à renouveler).
+                Le champ ne porte donc ni `required`, ni valeur par défaut. */}
+            <input
+              className="champ"
+              name="montant"
+              defaultValue={echeance?.montant != null ? String(echeance.montant).replace('.', ',') : ''}
+              placeholder={tr('ECH_MONTANT_PH')}
+              inputMode="decimal"
               disabled={enCours}
             />
           </label>

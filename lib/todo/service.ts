@@ -10,6 +10,7 @@ import {
   STATUT_FAIT,
   STATUTS_DEFAUT,
   PRIORITES_DEFAUT,
+  RAYONS,
   RECURRENCES_DEFAUT,
   aujourdhuiISO,
   construireTache,
@@ -118,7 +119,13 @@ export async function chargerTodo(): Promise<DonneesTodo> {
     priorites: PRIORITES_DEFAUT,
     recurrences: RECURRENCES_DEFAUT,
     categories: distinct(lignesTaches.map((t) => t.categorie)),
-    rayons: distinct(lignesCourses.map((c) => c.rayon)),
+    /*
+     * ⚠ Liste FIXE, plus dérivée des articles saisis. Les rayons déjà employés
+     * qui n'y figurent pas ne disparaissent pas pour autant : `grouperParRayon`
+     * place les rayons hors liste à la fin, donc l'historique reste lisible —
+     * il cesse simplement d'être proposé à la saisie.
+     */
+    rayons: [...RAYONS],
   };
 
   return { taches, courses, parametres };

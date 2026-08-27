@@ -383,7 +383,17 @@ function OngletCourses({
           aria-label={tr('CS_QTE')}
         />
         <Astuce texte={tr('AIDE_QUANTITE')} />
-        <Combobox value={rayon} onChange={setRayon} options={params.rayons} placeholder={tr('TODO_RAYON')} ariaLabel={tr('TODO_RAYON')} />
+        {/* ⚠ Liste FERMÉE, plus une saisie libre : les rayons sont les mêmes
+            pour tout le monde, et « Autre » y est une vraie entrée. En saisie
+            libre, « Epicerie » sans accent devenait un rayon de plus, aussitôt
+            proposé comme suggestion — la liste se nourrissait de ses erreurs. */}
+        <Liste
+          valeur={rayon}
+          onChange={setRayon}
+          options={params.rayons.map((r) => ({ valeur: r, libelle: r }))}
+          placeholder={tr('TODO_RAYON')}
+          ariaLabel={tr('TODO_RAYON')}
+        />
         <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
           {tr('G_AJOUTER')}
         </button>
@@ -502,7 +512,20 @@ function EditionCourse({
         onChange={(e) => setQuantite(e.target.value)}
         aria-label={tr('CS_QTE')}
       />
-      <Combobox value={rayon} onChange={setRayon} options={rayons} placeholder={tr('TODO_RAYON')} ariaLabel={tr('TODO_RAYON')} />
+      {/* ⚠ Le rayon actuel est AJOUTÉ à la liste s'il n'y figure pas : un
+          article rangé avant que la liste soit fixée garderait sinon un rayon
+          que le sélecteur ne saurait pas afficher, et la simple ouverture du
+          formulaire le remplacerait en silence. */}
+      <Liste
+        valeur={rayon}
+        onChange={setRayon}
+        options={(rayons.includes(rayon) || !rayon ? rayons : [rayon, ...rayons]).map((r) => ({
+          valeur: r,
+          libelle: r,
+        }))}
+        placeholder={tr('TODO_RAYON')}
+        ariaLabel={tr('TODO_RAYON')}
+      />
       <button className="bouton" type="submit" disabled={occupe || !article.trim()}>
         {tr('G_OK')}
       </button>

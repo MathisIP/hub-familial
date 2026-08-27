@@ -9,7 +9,6 @@ import {
   echeances as tEch,
   membres as tMembres,
   type LigneCompte,
-  type LigneBudgetCategorie,
   type LigneTransaction,
 } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
@@ -25,6 +24,8 @@ import {
   type AccesComptes,
 } from '@/lib/budget/acces';
 import {
+  CATEGORIES_DEPENSE,
+  CATEGORIES_REVENU,
   MOIS_FR,
   TYPE_DEPENSE,
   TYPE_REVENU,
@@ -136,15 +137,25 @@ function soldesComptes(
   return { soldes, patrimoineNum: r2(patrimoine) };
 }
 
-function construireParametres(
-  comptesRows: LigneCompte[],
-  catsRows: LigneBudgetCategorie[],
-): ParametresSaisie {
+/**
+ * Listes déroulantes de la saisie.
+ *
+ * ⚠ LES CATÉGORIES SONT DES CONSTANTES, PLUS DES LIGNES DE LA TABLE. Celle-ci
+ * n'est remplie par aucun écran — seul le script de démonstration y insère quoi
+ * que ce soit : un foyer créé aujourd'hui n'avait donc **aucune catégorie à
+ * choisir**. La table garde son rôle, qui est de porter le budget mensuel par
+ * catégorie ; ce sont les noms qui deviennent communs à tous les foyers.
+ *
+ * ⚠ Les catégories déjà employées qui ne figurent pas dans la liste restent
+ * VISIBLES dans les jauges et l'historique — elles portent de vraies dépenses.
+ * Elles cessent seulement d'être proposées pour une nouvelle saisie.
+ */
+function construireParametres(comptesRows: LigneCompte[]): ParametresSaisie {
   return {
     comptes: comptesRows.map((c) => c.nom),
     types: [TYPE_DEPENSE, TYPE_REVENU, TYPE_VIREMENT],
-    categoriesDepense: catsRows.filter((c) => c.type === 'depense').map((c) => c.nom),
-    categoriesRevenu: catsRows.filter((c) => c.type === 'revenu').map((c) => c.nom),
+    categoriesDepense: [...CATEGORIES_DEPENSE],
+    categoriesRevenu: [...CATEGORIES_REVENU],
   };
 }
 
@@ -300,13 +311,33 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
     }
   }
 
-  const categories: LigneCategorie[] = catsRows
-    .filter((c) => c.type === 'depense')
-    .map((c) => {
-      const reelNum = r2(reelParCat.get(c.nom) ?? 0);
-      const budgetNum = r2(c.budgetMensuel);
+  /*
+   * Jauges Réel/Budget.
+   *
+   * ⚠ ON PART DES DÉPENSES DU MOIS, plus des seules lignes de `budget_categories`.
+   * Cette table n'est remplie par aucun écran : un foyer créé aujourd'hui n'y a
+   * AUCUNE ligne, et la section entière disparaissait — on pouvait classer ses
+   * dépenses sans jamais les voir classées. On affiche donc toute catégorie qui
+   * porte une dépense ce mois-ci, plus celles qui ont un budget déclaré même
+   * sans dépense (le budget non consommé est une information, pas un vide).
+   *
+   * Le budget vaut 0 quand aucune ligne n'existe : la jauge se lit alors comme
+   * un simple montant dépensé, ce que `Jauge` gère déjà (`budgetNum > 0`).
+   */
+  const budgetParCat = new Map(
+    catsRows.filter((c) => c.type === 'depense').map((c) => [c.nom, c.budgetMensuel]),
+  );
+  const nomsCategories = [
+    ...catsRows.filter((c) => c.type === 'depense').map((c) => c.nom),
+    ...[...reelParCat.keys()].filter((n) => n && !budgetParCat.has(n)),
+  ];
+
+  const categories: LigneCategorie[] = nomsCategories
+    .map((nom) => {
+      const reelNum = r2(reelParCat.get(nom) ?? 0);
+      const budgetNum = r2(budgetParCat.get(nom) ?? 0);
       return {
-        categorie: c.nom,
+        categorie: nom,
         reel: formatEuro(reelNum),
         budget: formatEuro(budgetNum),
         ecart: formatEuro(r2(budgetNum - reelNum)),
@@ -314,7 +345,8 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
         budgetNum,
         depasse: budgetNum > 0 && reelNum > budgetNum,
       };
-    });
+    })
+    .filter((c) => c.reelNum > 0 || c.budgetNum > 0);
 
   // Déjà triées et limitées par la base : rien à retrier ici.
   const transactions: Transaction[] = txRecentes.map((t) => versTransaction(t, acces));
@@ -394,7 +426,7 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
     soldes,
     transactions,
     echeances,
-    parametres: construireParametres(comptesRows, catsRows),
+    parametres: construireParametres(comptesRows),
   };
 }
 
@@ -445,7 +477,7 @@ export async function chargerAccueilBudget(): Promise<AccueilBudget> {
   return {
     soldes,
     soldesHorsEpargne: soldes.filter((s) => !estEpargne(s.compte)),
-    parametres: construireParametres(visibles, catsRows),
+    parametres: construireParametres(visibles),
   };
 }
 
@@ -462,7 +494,7 @@ export async function chargerParametresSaisie(): Promise<ParametresSaisie> {
     (a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime(),
   );
   catsRows.sort((a, b) => a.ordre - b.ordre || a.creeLe.getTime() - b.creeLe.getTime());
-  return construireParametres(visibles, catsRows);
+  return construireParametres(visibles);
 }
 
 /**

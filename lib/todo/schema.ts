@@ -65,6 +65,40 @@ export function sommeQuantites(a: string, b: string): string {
   return `${A} + ${B}`;
 }
 
+/**
+ * RAYONS DE COURSES — liste FIXE, identique pour tous les foyers.
+ *
+ * ⚠ Elle était auparavant DÉRIVÉE des articles déjà saisis, en saisie libre.
+ * Deux conséquences : un foyer qui démarre n'avait aucun rayon proposé, et une
+ * faute de frappe (« Epicerie » sans accent) créait un rayon de plus — qui
+ * apparaissait ensuite comme suggestion, donc se propageait. La liste se
+ * nourrissait de ses propres erreurs, et deux membres du même foyer rangeaient
+ * le même produit à deux endroits.
+ *
+ * ⚠ « Autre » EST UNE VRAIE CATÉGORIE, pas une invitation à écrire. C'est ce qui
+ * permet de fermer la liste sans bloquer personne : ce qui n'entre nulle part a
+ * une place nommée, au lieu de créer un rayon d'un seul article.
+ *
+ * L'ordre est celui d'un magasin, pas l'alphabet : c'est lui qui rend la liste
+ * utile une fois sur place.
+ */
+export const RAYONS = [
+  'Fruits & légumes',
+  'Boucherie',
+  'Poissonnerie',
+  'Crèmerie',
+  'Frais',
+  'Surgelés',
+  'Épicerie',
+  'Boulangerie',
+  'Boissons',
+  'Hygiène',
+  'Entretien',
+  'Bébé',
+  'Animaux',
+  'Autre',
+] as const;
+
 export type Parametres = {
   statuts: string[];
   personnes: string[];

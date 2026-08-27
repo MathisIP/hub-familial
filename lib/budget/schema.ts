@@ -114,6 +114,48 @@ export type ChampsEcheance = {
   montant?: string;
 };
 
+/**
+ * CATÉGORIES DE DÉPENSE — liste FIXE, identique pour tous les foyers.
+ *
+ * ⚠ Elles venaient de la table `budget_categories`, QU'AUCUN ÉCRAN NE REMPLIT :
+ * seul le script de démonstration y insère des lignes. Un foyer créé aujourd'hui
+ * avait donc une liste de catégories **vide** — impossible de classer une
+ * dépense, et la section « par catégorie » du tableau de bord restait absente
+ * sans qu'on comprenne pourquoi.
+ *
+ * ⚠ La table N'EST PAS SUPPRIMÉE : elle porte le BUDGET MENSUEL par catégorie,
+ * qui reste propre à chaque foyer et alimente les jauges Réel/Budget. Ce sont
+ * les NOMS qui deviennent communs, pas les montants.
+ *
+ * ⚠ « Autre » est une vraie catégorie, comme pour les rayons de courses : une
+ * liste fermée n'est acceptable que si ce qui n'entre nulle part a une place.
+ */
+export const CATEGORIES_DEPENSE = [
+  'Logement',
+  'Courses',
+  'Transport',
+  'Santé',
+  'Enfants',
+  'Loisirs',
+  'Restaurant',
+  'Abonnements',
+  'Vêtements',
+  'Assurances',
+  'Impôts',
+  'Cadeaux',
+  'Autre',
+] as const;
+
+/** Catégories de revenu — même logique que les dépenses. */
+export const CATEGORIES_REVENU = [
+  'Salaire',
+  'Aides',
+  'Remboursement',
+  'Prime',
+  'Vente',
+  'Autre',
+] as const;
+
 /** Récurrences proposées. Constante : rien à dériver des données. */
 export const RECURRENCES_ECHEANCE = [
   'Aucune',

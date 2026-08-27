@@ -130,20 +130,35 @@ export type ChampsEcheance = {
  * ⚠ « Autre » est une vraie catégorie, comme pour les rayons de courses : une
  * liste fermée n'est acceptable que si ce qui n'entre nulle part a une place.
  */
+/*
+ * ⚠ CES LIBELLÉS SONT CEUX DÉJÀ EN USAGE EN PRODUCTION, relevés le 27/08/2026,
+ * et non une liste réinventée. Sept des onze différaient de la première version
+ * que j'avais écrite — « Transports » et non « Transport », « Divers » et non
+ * « Autre », « Enfant & crèche » et non « Enfants ». Adopter mes libellés aurait
+ * laissé les dépenses existantes rattachées à des catégories que le menu ne
+ * proposerait plus : visibles dans les graphiques, impossibles à réutiliser.
+ *
+ * Trois ajouts par rapport au relevé — Restaurant, Vêtements, Assurances — qui
+ * manquaient et qu'aucune autre catégorie ne couvre vraiment.
+ *
+ * ⚠ « Divers » TIENT LE RÔLE DE « AUTRE ». Ne pas ajouter les deux : ce serait
+ * offrir deux fourre-tout, et personne ne saurait lequel choisir.
+ */
 export const CATEGORIES_DEPENSE = [
   'Logement',
   'Courses',
-  'Transport',
+  'Transports',
   'Santé',
-  'Enfants',
-  'Loisirs',
+  'Enfant & crèche',
+  'Loisirs & sorties',
   'Restaurant',
-  'Abonnements',
+  'Abonnements & télécom',
   'Vêtements',
   'Assurances',
-  'Impôts',
+  'Impôts & taxes',
   'Cadeaux',
-  'Autre',
+  'Réceptions',
+  'Divers',
 ] as const;
 
 /** Catégories de revenu — même logique que les dépenses. */

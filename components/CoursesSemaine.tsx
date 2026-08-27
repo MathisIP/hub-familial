@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useT } from '@/components/I18nProvider';
+import Liste from '@/components/Liste';
 import ValiderCourses from '@/components/todo/ValiderCourses';
+import { RAYONS } from '@/lib/todo/schema';
 
 
 
@@ -25,6 +27,17 @@ export default function CoursesSemaine() {
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [produit, setProduit] = useState('');
   const [qteProduit, setQteProduit] = useState('');
+  /*
+   * ⚠ LE RAYON MANQUAIT ICI, ET SEULEMENT ICI. Un produit ajouté depuis
+   * l'accueil arrivait sans rayon : il tombait dans le groupe « sans rayon », en
+   * bas de la liste de courses, séparé du reste. On le retrouvait au magasin
+   * après avoir quitté le rayon où il fallait le prendre.
+   *
+   * Vide par défaut, et c'est volontaire : le champ ne doit pas ralentir un
+   * ajout fait à la volée — on note « gel douche » en trois secondes. Le rayon
+   * se choisit si on le veut, et se corrige ensuite dans la liste.
+   */
+  const [rayon, setRayon] = useState('');
   const [occupe, setOccupe] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -40,13 +53,16 @@ export default function CoursesSemaine() {
       const r = await fetch('/api/todo/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ article: art, quantite: qteProduit.trim() }),
+        body: JSON.stringify({ article: art, quantite: qteProduit.trim(), rayon }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.erreur ?? tr('G_ERR_ACTION'));
       setMessage(`« ${art} » ${tr('CS_AJOUTE_SUFFIXE')}`);
       setProduit('');
       setQteProduit('');
+      // ⚠ Le rayon N'EST PAS réinitialisé : on ajoute souvent plusieurs produits
+      // du même rayon à la suite. Le produit et la quantité changent à chaque
+      // fois, pas l'endroit du magasin.
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
     } finally {
@@ -97,6 +113,14 @@ export default function CoursesSemaine() {
             value={qteProduit}
             onChange={(e) => setQteProduit(e.target.value)}
             aria-label={tr('CS_QTE')}
+          />
+          <Liste
+            valeur={rayon}
+            onChange={setRayon}
+            options={RAYONS.map((r) => ({ valeur: r, libelle: r }))}
+            placeholder={tr('TODO_RAYON')}
+            disabled={occupe}
+            ariaLabel={tr('TODO_RAYON')}
           />
           <button className="bouton" type="submit" disabled={occupe || !produit.trim()}>
             {tr('G_AJOUTER')}

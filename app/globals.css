@@ -1666,6 +1666,9 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .cs-ajout { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .3rem 0 1rem; }
 .cs-ajout .champ { flex: 1 1 12rem; min-width: 0; }
 .cs-ajout .cs-ajout-qte { flex: 0 1 6rem; }
+/* ⚠ Le sélecteur de rayon n'est pas un `.champ` : sans règle propre, il prendrait
+   sa largeur naturelle et pousserait le bouton hors de la ligne sur téléphone. */
+.cs-ajout .deroulante { flex: 1 1 9rem; min-width: 0; }
 
 /* Repas : menu du jour en 3 services (entrée / plat / dessert). */
 .jr-services {

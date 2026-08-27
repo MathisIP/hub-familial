@@ -44,6 +44,22 @@ export type Kpis = {
   depenses: string;
   reste: string;
   patrimoine: string;
+  /**
+   * Échéances du mois SÉLECTIONNÉ, montants renseignés uniquement.
+   *
+   * ⚠ SUR LE MOIS DU SÉLECTEUR, comme revenus et dépenses — et non sur le mois
+   * civil réel. Cette tuile est posée au milieu des trois autres : deux
+   * périodes côte à côte dans la même grille donneraient un total qu'on ne peut
+   * pas recouper avec ses voisins, sans que rien ne l'explique.
+   *
+   * ⚠ Calculé sur TOUTES les échéances du mois, pas seulement celles à venir.
+   * La liste éditable, elle, n'affiche que ce qui reste — mais un total du mois
+   * qui exclurait le 3 quand on est le 20 ne serait comparable ni aux dépenses
+   * du mois, ni au mois précédent.
+   */
+  echeances: string;
+  /** Nombre d'échéances du mois sans montant : elles ne sont pas dans le total. */
+  echeancesSansMontant: number;
 };
 
 export type LigneCategorie = {

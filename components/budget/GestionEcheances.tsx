@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import Liste from '@/components/Liste';
 import Astuce from '@/components/Astuce';
 
@@ -39,33 +39,6 @@ export default function GestionEcheances({
   const tr = useT();
   const [edite, setEdite] = useState<string | null>(null);
   const [ajoute, setAjoute] = useState(false);
-
-  /*
-   * Récapitulatif du MOIS EN COURS.
-   *
-   * ⚠ Le mois civil réel, pas celui du sélecteur en haut de page. La liste
-   * d'échéances n'a jamais suivi ce sélecteur — elle montre ce qui vient à
-   * partir d'aujourd'hui. Un total calculé sur un mois choisi ailleurs
-   * porterait donc sur des lignes qui ne sont pas à l'écran : deux périodes
-   * dans le même bloc, et un chiffre qu'on ne peut pas recompter à l'œil.
-   *
-   * ⚠ Ne totalise que ce qui EST ENCORE À VENIR, parce que c'est tout ce que la
-   * liste contient : `chargerBudget` écarte déjà les échéances passées. Le
-   * chiffre répond donc à « ce qu'il me reste à payer ce mois-ci », et non à
-   * « ce que le mois aura coûté » — l'intitulé le dit.
-   */
-  const recap = useMemo(() => {
-    const d = new Date();
-    const cleMois = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const duMois = echeances.filter((e) => e.dateISO?.startsWith(cleMois));
-    let total = 0;
-    let sansMontant = 0;
-    for (const e of duMois) {
-      if (e.montant == null) sansMontant++;
-      else total += e.montant;
-    }
-    return { total, sansMontant, chiffrees: duMois.length - sansMontant };
-  }, [echeances]);
 
   return (
     <section className="ge">
@@ -124,26 +97,11 @@ export default function GestionEcheances({
       </ul>
 
       {/*
-        ⚠ Ne s'affiche QUE s'il y a quelque chose à totaliser. Un « 0,00 € » sur
-        un mois sans échéance chiffrée serait un chiffre faux : il dirait « rien
-        à payer » alors qu'il dit en réalité « rien de renseigné ».
+        ⚠ LE RÉCAPITULATIF A DÉMÉNAGÉ dans la tuile « Échéances » du tableau de
+        bord, en haut de page. Ne pas le remettre ici : il porterait sur le mois
+        civil réel alors que la tuile porte sur le mois sélectionné, et les deux
+        chiffres se contrediraient sur le même écran dès qu'on change de mois.
       */}
-      {(recap.chiffrees > 0 || recap.sansMontant > 0) && (
-        <p className="ge-recap">
-          {recap.chiffrees > 0 && (
-            <span className="ge-recap-total">
-              {tr('ECH_TOTAL_MOIS')} <strong>{formatEuro(recap.total)}</strong>
-            </span>
-          )}
-          {recap.sansMontant > 0 && (
-            <span className="ge-recap-sans">
-              {recap.sansMontant === 1
-                ? tr('ECH_SANS_MONTANT_1')
-                : `${recap.sansMontant} ${tr('ECH_SANS_MONTANT_N')}`}
-            </span>
-          )}
-        </p>
-      )}
 
       {ajoute ? (
         <FormeEcheance comptes={comptes} onFini={() => setAjoute(false)} />

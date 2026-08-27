@@ -33,6 +33,25 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
         <Kpi l={t('BUD_REVENUS', langue)} v={d.kpis.revenus} n={t('BUD_REVENUS_N', langue)} />
         <Kpi l={t('BUD_DEPENSES', langue)} v={d.kpis.depenses} n={t('BUD_DEPENSES_N', langue)} />
         <Kpi l={t('BUD_PATRIMOINE', langue)} v={d.kpis.patrimoine} n={t('BUD_PATRIMOINE_N', langue)} />
+        {/*
+          ⚠ Quatrième tuile, à la place laissée vide par la grille en deux
+          colonnes. Elle porte le MÊME MOIS que Revenus et Dépenses : quatre
+          chiffres côte à côte doivent se recouper, sinon on additionne des
+          périodes différentes sans s'en apercevoir.
+
+          La note dit combien d'échéances du mois n'ont pas de montant — sans
+          elle, un total qui ne correspond pas à la liste passerait pour faux
+          alors qu'il est seulement incomplet.
+        */}
+        <Kpi
+          l={t('BUD_ECHEANCES', langue)}
+          v={d.kpis.echeances}
+          n={
+            d.kpis.echeancesSansMontant > 0
+              ? `${d.kpis.echeancesSansMontant} ${t('BUD_KPI_ECH_SANS', langue)}`
+              : t('BUD_KPI_ECH_N', langue)
+          }
+        />
       </div>
 
       {d.soldes.length > 0 && (

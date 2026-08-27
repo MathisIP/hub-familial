@@ -327,8 +327,15 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
   // commune au foyer et reste visible de tous.
   const nomParCompte = new Map(comptesRows.map((c) => [c.id, c.nom]));
   const auj = aujourdhuiISO();
-  const echeances: Echeance[] = echRows
-    .filter((e) => !e.compteId || nomParCompte.has(e.compteId))
+  /*
+   * ⚠ LE FILTRE DE VISIBILITÉ D'ABORD, ET IL VAUT AUSSI POUR LE TOTAL. Une
+   * échéance rattachée à un compte qu'on n'a pas le droit de voir ne doit pas
+   * plus peser dans un chiffre qu'apparaître dans la liste : un total qui bouge
+   * sans ligne pour l'expliquer révèle l'existence de ce qu'on cache.
+   */
+  const echVisibles = echRows.filter((e) => !e.compteId || nomParCompte.has(e.compteId));
+
+  const echeances: Echeance[] = echVisibles
     .map((e): Echeance => ({
       id: e.id,
       libelle: e.libelle,
@@ -343,6 +350,25 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
     }))
     .filter((e) => e.dateISO === null || e.dateISO >= auj)
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
+
+  /*
+   * Échéances du mois SÉLECTIONNÉ, pour la tuile du tableau de bord.
+   *
+   * ⚠ Sur `echVisibles` et NON sur `echeances` : la liste éditable ne garde que
+   * ce qui reste à venir, alors qu'un total du mois doit compter le mois entier.
+   * Sinon le chiffre fondrait au fil des jours et ne serait comparable ni aux
+   * dépenses affichées à côté, ni au même mois d'une autre année.
+   */
+  const echMois = echVisibles
+    .filter((e) => e.dateIso?.startsWith(cle))
+    .reduce(
+      (acc, e) => {
+        if (e.montant == null) acc.sansMontant++;
+        else acc.total += e.montant;
+        return acc;
+      },
+      { total: 0, sansMontant: 0 },
+    );
 
   const txAnnees = annees
     .map((a) => Number(a.annee))
@@ -361,6 +387,8 @@ export async function chargerBudget(selection?: SelectionMois): Promise<DonneesB
       depenses: formatEuro(r2(depenses)),
       reste: formatEuro(r2(revenus - depenses)),
       patrimoine: formatEuro(patrimoineNum),
+      echeances: formatEuro(r2(echMois.total)),
+      echeancesSansMontant: echMois.sansMontant,
     },
     categories,
     soldes,

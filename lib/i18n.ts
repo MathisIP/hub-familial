@@ -283,13 +283,6 @@ const UI = {
   ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
   ECH_MONTANT: { fr: 'Montant', en: 'Amount' },
   ECH_MONTANT_PH: { fr: 'ex. 45,90 (facultatif)', en: 'e.g. 45.90 (optional)' },
-  ECH_TOTAL_MOIS: { fr: 'Reste à payer ce mois-ci :', en: 'Left to pay this month:' },
-  /* ⚠ Formulé comme un RAPPEL, pas comme une erreur : une échéance sans
-     montant n'a rien d'invalide. Elle signale seulement que ce rappel-là a
-     peut-être sa place dans l'agenda plutôt que dans le budget — et qu'en
-     l'état, elle ne compte pas dans le total affiché juste au-dessus. */
-  ECH_SANS_MONTANT_1: { fr: '1 échéance sans montant (non comptée)', en: '1 item with no amount (not counted)' },
-  ECH_SANS_MONTANT_N: { fr: 'échéances sans montant (non comptées)', en: 'items with no amount (not counted)' },
   ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   ECH_COMPTE: { fr: 'Compte', en: 'Account' },
   ECH_COMPTE_CHOISIR: { fr: 'Choisir un compte…', en: 'Pick an account…' },
@@ -455,6 +448,10 @@ const UI = {
   BUD_DEPENSES_N: { fr: 'toutes catégories', en: 'all categories' },
   BUD_PATRIMOINE: { fr: 'Patrimoine', en: 'Net worth' },
   BUD_PATRIMOINE_N: { fr: 'comptes cumulés', en: 'total across accounts' },
+  BUD_KPI_ECH_N: { fr: 'prélevées ce mois', en: 'due this month' },
+  /* ⚠ Dit pourquoi le total ne colle pas à la liste, plutôt que de laisser
+     croire à une erreur de calcul. */
+  BUD_KPI_ECH_SANS: { fr: 'sans montant, non comptées', en: 'with no amount, not counted' },
   BUD_SOLDES: { fr: 'Soldes des comptes', en: 'Account balances' },
   BUD_PAR_CAT: { fr: 'Dépenses par catégorie', en: 'Spending by category' },
   BUD_MOIS_COURANT: { fr: 'mois en cours', en: 'current month' },

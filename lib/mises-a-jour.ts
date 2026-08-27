@@ -54,6 +54,12 @@ export type Version = {
    *   · **majeur**    (1.x.x → 2.0.0) — un changement de fond dans la façon
    *     d'utiliser l'application, pas une accumulation de petites choses.
    *
+   * ⚠ LE 2.0.0 EST DÉJÀ RÉSERVÉ : ce sera la publication sur l'App Store et le
+   * Play Store. Elle n'aura lieu que si le nombre de clients rend l'opération
+   * neutre financièrement — ce n'est donc pas une date, c'est un seuil. Aucune
+   * accumulation de fonctions ne doit faire passer le premier chiffre d'ici là :
+   * le jour où il change, il doit vouloir dire cette chose-là et rien d'autre.
+   *
    * ⚠ NE JAMAIS RÉUTILISER NI RENUMÉROTER une version publiée. Le numéro sert à
    * désigner une publication dans un échange (« c'est arrivé en 1.1.0 ») : le
    * décaler rendrait faux tout ce qui a été dit avant.

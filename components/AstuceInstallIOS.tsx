@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useT } from '@/components/I18nProvider';
+import { sansNavigation } from '@/components/PiedDePage';
 
 /**
  * Rappel d'installation pour iPhone/iPad. iOS ne propose PAS d'invite automatique
@@ -10,10 +12,25 @@ import { useT } from '@/components/I18nProvider';
  * « Partager → Sur l'écran d'accueil ». Masqué si :
  *   · l'appareil n'est pas iOS ;
  *   · l'app est déjà lancée en mode installé (`navigator.standalone`) ;
- *   · l'utilisateur l'a déjà fermé (mémorisé en localStorage).
+ *   · l'utilisateur l'a déjà fermé (mémorisé en localStorage) ;
+ *   · **on n'est pas encore dans l'application** — voir ci-dessous.
+ *
+ * ⚠ IL S'AFFICHAIT SUR L'ÉCRAN DE CONNEXION, et c'était un contresens. On y
+ * propose d'installer une application à quelqu'un qui n'y est pas encore entré,
+ * et qui n'a peut-être même pas de foyer : l'installer ne lui donnerait qu'un
+ * raccourci vers un écran de connexion. Pire, l'invitation arrive au moment
+ * précis où l'on demande son attention pour autre chose — et sur un téléphone,
+ * elle recouvre le pied de page.
+ *
+ * ⚠ LA RÈGLE EST CELLE DE `sansNavigation`, PAS UNE SECONDE LISTE. Elle décrit
+ * déjà les pages « hors application » : vitrine, connexion, pages légales, et
+ * les parcours en tunnel (arrivée sans foyer, prise en main). C'est exactement
+ * là qu'il ne faut pas proposer d'installer. Une liste parallèle aurait dérivé
+ * à la première page ajoutée.
  */
 export default function AstuceInstallIOS() {
   const tr = useT();
+  const path = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -34,7 +51,9 @@ export default function AstuceInstallIOS() {
     }
   }, []);
 
-  if (!visible) return null;
+  // ⚠ Le test de la page vient APRÈS l'effet, jamais dedans : sortir plus tôt
+  // ferait varier le nombre de hooks entre deux rendus, ce que React refuse.
+  if (!visible || sansNavigation(path)) return null;
 
   function fermer() {
     try {

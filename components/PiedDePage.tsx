@@ -17,6 +17,19 @@ const SANS_NAVIGATION = [
   '/confidentialite',
   '/mentions-legales',
   '/aide',
+  /*
+   * ⚠ AJOUTÉE AVEC LA PAGE elle-même (27/08/2026). `/mises-a-jour` est habillée
+   * par `CadreSite`, qui porte déjà son propre en-tête et son propre pied :
+   * sans cette ligne, un membre connecté y verrait EN PLUS le rail des modules
+   * et le pied de réglages, soit deux navigations superposées sur un écran qui
+   * n'appartient pas à l'application.
+   *
+   * Toute page publique ajoutée au site doit venir ici en même temps — c'est
+   * l'oubli qui se voit le moins, puisqu'on la teste connecté.
+   */
+  '/mises-a-jour',
+  '/test',
+  '/test-proche',
   '/hors-ligne',
   '/rejoindre',
   '/rejoindre-foyer',

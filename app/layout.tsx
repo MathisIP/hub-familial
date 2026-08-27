@@ -138,7 +138,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {connecte && <SideBar />}
         </I18nProvider>
         <EnregistrerSW />
-        <AstuceInstallIOS />
+        {/* ⚠ Réservé aux personnes CONNECTÉES. Proposer d'installer
+            l'application à un visiteur lui offrirait un raccourci vers un écran
+            de connexion. Le composant écarte en plus les parcours en tunnel —
+            arrivée sans foyer, prise en main — via `sansNavigation`. */}
+        {connecte && <AstuceInstallIOS />}
         {/* Mesure d'audience SANS COOKIE (pages vues agrégées, pas de suivi
             inter-sites). Les URL sont anonymisées avant envoi — cf. le composant.
             Déclarée dans la politique de confidentialité. */}

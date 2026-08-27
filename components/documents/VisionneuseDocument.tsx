@@ -39,10 +39,14 @@ import {
  * Ctrl/Cmd+clic et clic du milieu continuent d'ouvrir un onglet, parce que c'est
  * ce qu'un habitué du bureau attend — et parce qu'un `<button>` aurait retiré
  * l'adresse du document aux lecteurs d'écran comme au menu contextuel.
+ *
+ * ⚠ LE TEST A ÉTÉ DÉPLACÉ DANS [lib/pwa.ts] ET CORRIGÉ. Il comparait
+ * `e.button !== 0` : un clic dont `button` n'est pas renseigné — une tape, une
+ * technologie d'assistance — était alors jugé « spécial », l'interception ne se
+ * faisait pas, et le lien naviguait. En mode installé, cette seule différence
+ * transforme un aperçu en impasse.
  */
-export function clicSimple(e: React.MouseEvent): boolean {
-  return !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0);
-}
+export { clicPrincipal as clicSimple } from '@/lib/pwa';
 
 export default function VisionneuseDocument({
   doc,
@@ -57,13 +61,27 @@ export default function VisionneuseDocument({
   const [agrandi, setAgrandi] = useState(false);
 
   /**
-   * iOS ne rend pas les PDF de façon fiable dans une `iframe` : on y obtient
-   * souvent un cadre vide ou une seule page qu'on ne peut pas faire défiler.
-   * Mieux vaut proposer franchement le téléchargement qu'un aperçu qui a l'air
-   * cassé. Le test tolère l'absence de `navigator` (rendu serveur).
+   * Le PDF ne s'affiche en `iframe` que là où c'est FIABLE, c'est-à-dire sur un
+   * navigateur de bureau.
+   *
+   * ⚠ LE TEST ÉTAIT UNE EXCLUSION, ET C'ÉTAIT L'ERREUR. Il disait « partout sauf
+   * iOS » : toute plateforme non essayée passait donc par l'`iframe` par défaut.
+   * Sur **Android**, Chrome ne rend pas un PDF dans un cadre — il le confie au
+   * gestionnaire du système, qui prend la fenêtre entière. En application
+   * installée, il n'y a alors ni onglet à fermer ni barre d'adresse : la seule
+   * sortie est de tuer l'application. Exactement le piège que la visionneuse
+   * avait été écrite pour supprimer, revenu par la porte qu'on avait laissée
+   * ouverte. Signalé en test le 27/08/2026 ; l'iPhone, lui, allait bien.
+   *
+   * Une autorisation explicite vaut mieux qu'une interdiction nominative : la
+   * prochaine plateforme inconnue tombera du bon côté.
+   *
+   * Le test tolère l'absence de `navigator` (rendu serveur).
    */
-  const [surIOS] = useState(
-    () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent),
+  const [pdfEnCadre] = useState(
+    () =>
+      typeof navigator !== 'undefined' &&
+      !/android|iphone|ipad|ipod|mobile|tablet/i.test(navigator.userAgent),
   );
 
   const url = `/api/documents/${doc.id}`;
@@ -86,7 +104,7 @@ export default function VisionneuseDocument({
   }, [onFermer]);
 
   const image = estImage(doc);
-  const pdfAffichable = estPdf(doc) && !surIOS;
+  const pdfAffichable = estPdf(doc) && pdfEnCadre;
 
   /**
    * ⚠ RENDU EN PORTAIL, DIRECTEMENT DANS `document.body`. Une superposition
@@ -150,7 +168,19 @@ export default function VisionneuseDocument({
           {(erreur || (!image && !pdfAffichable)) && (
             <div className="visio-repli">
               <p className="visio-repli-ic" aria-hidden="true">{iconeDocument(doc)}</p>
-              <p>{erreur ? tr('VISIO_ERREUR') : tr('VISIO_PAS_APERCU')}</p>
+              {/*
+                ⚠ TROIS MESSAGES, PAS UN. « Aperçu indisponible pour ce type de
+                fichier » serait FAUX pour un PDF sur téléphone : le type n'y est
+                pour rien, c'est la plateforme. Une explication fausse pousse à
+                chercher un problème dans son fichier — et à réessayer.
+              */}
+              <p>
+                {erreur
+                  ? tr('VISIO_ERREUR')
+                  : estPdf(doc)
+                    ? tr('VISIO_PDF_MOBILE')
+                    : tr('VISIO_PAS_APERCU')}
+              </p>
             </div>
           )}
         </div>

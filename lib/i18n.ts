@@ -403,6 +403,10 @@ const UI = {
   VISIO_TELECHARGER: { fr: '⬇ Télécharger', en: '⬇ Download' },
   VISIO_ZOOM: { fr: 'Toucher pour agrandir', en: 'Tap to zoom' },
   VISIO_ERREUR: { fr: 'Ce document n’a pas pu être affiché. Tu peux le télécharger.', en: 'This document could not be displayed. You can download it.' },
+  /* ⚠ Dit la vraie raison : le PDF n'a rien d'anormal, c'est le telephone qui
+     ne sait pas l'afficher dans un cadre. Sans cette distinction, on croit son
+     fichier abime et on reessaie. */
+  VISIO_PDF_MOBILE: { fr: 'Sur téléphone, les PDF s’ouvrent depuis le téléchargement — le bouton ci-dessous.', en: 'On phones, PDFs open from the download — the button below.' },
   VISIO_PAS_APERCU: { fr: 'Aperçu indisponible pour ce type de fichier.', en: 'No preview available for this file type.' },
   DOC_RECHERCHE_PH: { fr: 'Rechercher un document…', en: 'Search a document…' },
   DOC_AUCUN_RESULTAT: { fr: 'Aucun document ne correspond.', en: 'No matching document.' },

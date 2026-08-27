@@ -23,7 +23,8 @@
     "bac:reset": "npm run db:migrate && npm run bac:garnir",
     "db:migrate:prod": "node scripts/migrer-prod.mjs",
     "verif:date": "node --import tsx scripts/verif-date-saisie.mts",
-    "verif:agenda": "node --import tsx scripts/verif-agenda-dates.mts"
+    "verif:agenda": "node --import tsx scripts/verif-agenda-dates.mts",
+    "verif:astuce": "node --import tsx scripts/verif-astuce.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

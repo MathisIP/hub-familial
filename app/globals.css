@@ -2131,16 +2131,29 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   border: 1px solid var(--line); cursor: help;
 }
 .astuce-btn:hover, .astuce-btn:focus-visible { color: var(--on-acc); background: var(--acc); border-color: var(--acc); }
+/* ⚠ `fixed` ET RENDUE DANS `document.body` (portail, cf. components/Astuce.tsx).
+   En `absolute`, la bulle était centrée sur son « ? » avec 17 rem de large — les
+   trois quarts d'un écran de téléphone — et débordait dès que le bouton se
+   trouvait dans la moitié droite. Sa position est désormais calculée et bornée
+   à l'écran ; `top`/`left` sont posés en ligne par le composant.
+
+   ⚠ `max-width` en `min()` : la borne de 17 rem reste confortable à la lecture
+   sur grand écran, mais ne doit jamais dépasser l'écran lui-même. Sans le
+   second terme, un téléphone étroit se retrouverait avec une bulle plus large
+   que lui, que le calcul ne pourrait plus que tronquer.
+
+   ⚠ `pointer-events: none` : la bulle flotte au-dessus de la page, hors de son
+   « ? ». Sans cela, elle intercepterait le clic destiné à ce qui se trouve
+   dessous, et le survol qui la traverse ferait clignoter l'ouverture. */
 .astuce-bulle {
-  position: absolute; bottom: calc(100% + .45rem); left: 50%; transform: translateX(-50%);
-  z-index: 40; width: max-content; max-width: 17rem;
+  position: fixed;
+  z-index: 40; width: max-content; max-width: min(17rem, calc(100vw - 1rem));
   background: var(--ink); color: var(--page);
   font-size: .8rem; font-weight: 400; line-height: 1.45; text-align: left;
   padding: .55rem .7rem; border-radius: .5rem;
   box-shadow: 0 8px 22px -8px rgba(0,0,0,.45);
+  pointer-events: none;
 }
-/* Près du bord droit : on aligne la bulle à droite pour ne pas deborder. */
-.astuce-bulle.droite { left: auto; right: 0; transform: none; }
 
 /* ===================== INITIALISATION DES COMPTES ===================== */
 .init-comptes {

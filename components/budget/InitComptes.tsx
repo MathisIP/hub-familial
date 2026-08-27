@@ -63,7 +63,7 @@ export default function InitComptes({
           </span>
           <span>
             {tr('INIT_SOLDE')}
-            <Astuce coin="droite" texte={tr('AIDE_SOLDE_ACTUEL')} />
+            <Astuce texte={tr('AIDE_SOLDE_ACTUEL')} />
           </span>
         </div>
 

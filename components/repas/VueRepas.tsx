@@ -110,7 +110,7 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
         ))}
       </ul>
 
-      <ApercuCourses courses={courses} />
+      <ApercuCourses courses={courses} occupe={occupe} action={action} />
     </>
   );
 }
@@ -223,8 +223,44 @@ function JourLigne({
   );
 }
 
-function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses> }) {
+/**
+ * Aperçu de la liste de courses de la semaine, et le bouton qui la verse.
+ *
+ * ⚠ L'AGRÉGATION AFFICHÉE EST CALCULÉE ICI, MAIS CE N'EST PAS ELLE QU'ON ENVOIE.
+ * La route recalcule tout côté serveur à partir du planning enregistré : une
+ * liste construite dans le navigateur et postée telle quelle laisserait à
+ * n'importe qui la possibilité d'écrire ce qu'il veut dans la liste du foyer.
+ * Conséquence à connaître : un changement de menu non encore enregistré apparaît
+ * dans l'aperçu sans partir dans la liste.
+ */
+function ApercuCourses({
+  courses,
+  occupe,
+  action,
+}: {
+  courses: ReturnType<typeof agregerCourses>;
+  occupe: boolean;
+  action: ActionFn;
+}) {
   const tr = useT();
+  const [bilan, setBilan] = useState<{ ajoutes: number; cumules: number } | null>(null);
+
+  /*
+   * ⚠ UN SECOND CLIC CUMULE À NOUVEAU LES QUANTITÉS. `ajouterCoursesEnLot`
+   * additionne ce qui est déjà en liste — c'est le bon comportement quand on
+   * ajoute des courses ponctuelles, mais verser deux fois la même semaine
+   * doublerait les quantités sans rien signaler. Le bouton se remplace donc par
+   * le bilan une fois versé ; on peut recommencer, mais plus par inadvertance.
+   */
+  async function verser() {
+    setBilan(null);
+    await action(async () => {
+      const r = await fetch('/api/courses/semaine', { method: 'POST' });
+      if (r.ok) setBilan(await r.clone().json());
+      return r;
+    });
+  }
+
   if (courses.length === 0) return null;
   // Regroupement par rayon.
   const parRayon = new Map<string, typeof courses>();
@@ -237,6 +273,23 @@ function ApercuCourses({ courses }: { courses: ReturnType<typeof agregerCourses>
     <section className="apercu-courses">
       <h2 className="bloc-titre">{tr('REPAS_APERCU_TITRE')}</h2>
       <p className="apercu-note">{tr('REPAS_APERCU_NOTE')}</p>
+
+      <div className="apercu-actions">
+        {bilan ? (
+          <p className="apercu-bilan">
+            {bilan.ajoutes > 0 && `${bilan.ajoutes} ${tr('AC_AJOUTES')}`}
+            {bilan.ajoutes > 0 && bilan.cumules > 0 && ' · '}
+            {bilan.cumules > 0 && `${bilan.cumules} ${tr('AC_CUMULES')}`}
+            {bilan.ajoutes === 0 && bilan.cumules === 0 && tr('AC_RIEN')}
+            {' · '}
+            <a href="/foyer/todo?onglet=courses">{tr('AC_VOIR')}</a>
+          </p>
+        ) : (
+          <button type="button" className="bouton bouton-action" onClick={verser} disabled={occupe}>
+            {tr('AC_VERSER')}
+          </button>
+        )}
+      </div>
       {[...parRayon.entries()].map(([rayon, items]) => (
         <div className="rayon-groupe" key={rayon}>
           <p className="rayon-titre">{rayon}</p>

@@ -521,6 +521,15 @@ const UI = {
   REPAS_TAB_SEMAINE: { fr: 'Semaine', en: 'Week' },
   REPAS_TAB_RECETTES: { fr: 'Recettes', en: 'Recipes' },
   REPAS_PERS: { fr: 'pers.', en: 'ppl' },
+  /* --- Verser la liste de courses de la semaine --- */
+  AC_VERSER: { fr: 'Ajouter tout à ma liste de courses', en: 'Add everything to my shopping list' },
+  AC_AJOUTES: { fr: 'articles ajoutés', en: 'items added' },
+  /* ⚠ « cumulés » et non « ignorés » : la quantité de l'article deja present a
+     ete ADDITIONNEE, pas mise de cote. Le mot doit le dire, sinon on reverse
+     une seconde fois en croyant rattraper un oubli. */
+  AC_CUMULES: { fr: 'déjà en liste, quantités cumulées', en: 'already listed, quantities merged' },
+  AC_RIEN: { fr: 'Rien à ajouter.', en: 'Nothing to add.' },
+  AC_VOIR: { fr: 'Voir la liste', en: 'View the list' },
   REPAS_APERCU_TITRE: { fr: 'Aperçu des courses de la semaine', en: 'This week’s shopping preview' },
   REPAS_APERCU_NOTE: { fr: 'Somme des ingrédients des dîners planifiés, quantités mises à l’échelle.', en: 'Sum of the planned meals’ ingredients, quantities scaled.' },
   REPAS_NOUVELLE_RECETTE: { fr: 'Nouvelle recette', en: 'New recipe' },

@@ -10,6 +10,7 @@
  * qu'une recette se déforme sans que personne n'ait rien cassé.
  */
 import { parseQuantite, formatQuantite, mettreALechelle } from '../lib/repas/schema.ts';
+import { sommeQuantites, decouperQuantite } from '../lib/todo/schema.ts';
 
 let echecs = 0;
 function verifier(intitule: string, attendu: unknown, obtenu: unknown) {
@@ -74,6 +75,26 @@ console.log('\n  MISE À L’ÉCHELLE — une fraction se multiplie comme un nom
   verifier('1/2 pour 2 → 1 pour 4', 1, mettreALechelle(ing, 2, 4)[0].quantite);
   verifier('1/2 pour 2 → 1/4 pour 1', 0.25, mettreALechelle(ing, 2, 1)[0].quantite);
   verifier('… et 1/4 s’écrit bien', '1/4', formatQuantite(mettreALechelle(ing, 2, 1)[0].quantite));
+}
+
+console.log("\n  CUMUL DANS LA LISTE DE COURSES");
+{
+  /*
+   * ⚠ Le module Courses découpe « nombre + unité » sur du TEXTE. Avant que les
+   * fractions n'existent, « 1/2 » y était lu « 1 » suivi de l'unité « /2 » :
+   * deux demi-citrons donnaient « 2 /2 ». Une quantité qui ne veut rien dire, et
+   * qu'aucun message n'aurait signalée — la liste de courses est justement ce
+   * qu'on relit le moins.
+   */
+  verifier('deux demis font un', '1', sommeQuantites('1/2', '1/2'));
+  verifier('deux quarts font un demi', '1/2', sommeQuantites('1/4', '1/4'));
+  verifier('l’unité est préservée', '1 citron', sommeQuantites('1/2 citron', '1/2 citron'));
+  verifier('entier + fraction', '2', sommeQuantites('1 1/2', '1/2'));
+  verifier('décimales inchangées', '800 g', sommeQuantites('400 g', '400 g'));
+  verifier('unités différentes : on liste', '400 g + 2 L', sommeQuantites('400 g', '2 L'));
+  verifier('quantité vide', '300 g', sommeQuantites('', '300 g'));
+  verifier('⚠ « 1/0 » n’est pas un nombre : on liste', '1/0 + 1/2', sommeQuantites('1/0', '1/2'));
+  verifier('découpage d’une fraction avec unité', { n: 0.5, unite: 'citron' }, decouperQuantite('1/2 citron'));
 }
 
 console.log('');

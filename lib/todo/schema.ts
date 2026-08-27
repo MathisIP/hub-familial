@@ -6,6 +6,14 @@
  * Aucun import serveur ici (fichier importé par le composant client).
  */
 
+/*
+ * ⚠ `formatQuantite` est IMPORTÉ du module Repas, pas recopié. Les deux modules
+ * manipulent les mêmes quantités — une recette verse ses ingrédients dans la
+ * liste de courses — et deux façons d'écrire « 1/2 » finiraient par diverger.
+ * Le fichier visé est pur et n'importe rien : aucun cycle possible.
+ */
+import { formatQuantite } from '@/lib/repas/schema';
+
 // Valeurs métier de référence (listes fixes du module).
 export const STATUT_FAIT = 'Fait';
 export const STATUTS_DEFAUT = ['À faire', 'En cours', 'Fait'];
@@ -40,6 +48,30 @@ export type Course = {
 /** Sépare une quantité texte « 400 g » en { n, unite }. n=null si non chiffré. */
 export function decouperQuantite(q: string): { n: number | null; unite: string } {
   const s = (q ?? '').trim();
+
+  /*
+   * ⚠ LES FRACTIONS D'ABORD, ET DANS CET ORDRE. Les recettes acceptent « 1/2 »
+   * depuis le 27/08/2026, et ces quantités arrivent telles quelles dans la liste
+   * de courses. L'expression décimale seule y lisait « 1 » suivi de l'unité
+   * « /2 » : deux demi-citrons donnaient « 2 /2 », une quantité qui ne veut rien
+   * dire et qu'aucun message n'aurait signalée.
+   *
+   * « 1 1/2 » se teste avant « 1/2 », sans quoi le nombre entier serait pris
+   * pour la quantité entière et « 1/2 » deviendrait une unité.
+   */
+  const mixte = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)\s*(.*)$/);
+  if (mixte) {
+    const d = Number(mixte[3]);
+    if (d !== 0) {
+      return { n: Number(mixte[1]) + Number(mixte[2]) / d, unite: mixte[4].trim() };
+    }
+  }
+  const fraction = s.match(/^(\d+)\s*\/\s*(\d+)\s*(.*)$/);
+  if (fraction) {
+    const d = Number(fraction[2]);
+    if (d !== 0) return { n: Number(fraction[1]) / d, unite: fraction[3].trim() };
+  }
+
   const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/);
   if (!m) return { n: null, unite: s };
   const n = parseFloat(m[1].replace(',', '.'));
@@ -59,8 +91,9 @@ export function sommeQuantites(a: string, b: string): string {
   const da = decouperQuantite(A);
   const db = decouperQuantite(B);
   if (da.n != null && db.n != null && da.unite.toLowerCase() === db.unite.toLowerCase()) {
-    const n = Math.round((da.n + db.n) * 100) / 100;
-    return `${String(n).replace('.', ',')}${da.unite ? ' ' + da.unite : ''}`;
+    // ⚠ Remise en forme par `formatQuantite` : une somme de fractions doit se
+    // relire comme une fraction. « 1/4 » + « 1/4 » vaut « 1/2 », pas « 0,5 ».
+    return `${formatQuantite(da.n + db.n)}${da.unite ? ' ' + da.unite : ''}`;
   }
   return `${A} + ${B}`;
 }

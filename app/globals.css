@@ -3016,3 +3016,13 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 
 /* Zone d'instructions dans l'éditeur de recette. */
 .rf-note { min-height: 5rem; resize: vertical; font-family: inherit; }
+
+/* Verser la liste de courses de la semaine.
+   ⚠ Le bilan REMPLACE le bouton : verser deux fois cumulerait les quantités
+   une seconde fois, sans que rien ne le signale. */
+.apercu-actions { margin: .2rem 0 1rem; }
+.apercu-bilan {
+  margin: 0; font-size: .9rem; color: var(--ok-tx); font-weight: 600;
+  display: flex; flex-wrap: wrap; gap: .3rem; align-items: baseline;
+}
+.apercu-bilan a { color: var(--link-tx); font-weight: 500; }

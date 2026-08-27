@@ -528,6 +528,19 @@ const UI = {
   REPAS_CATEGORIE: { fr: 'Catégorie', en: 'Category' },
   REPAS_TYPE: { fr: 'Type', en: 'Type' },
   REPAS_CHAUDFROID: { fr: 'Chaud/Froid', en: 'Hot/Cold' },
+  /* --- Fiche d'une recette (popup) --- */
+  FR_INGREDIENTS: { fr: 'Ingrédients', en: 'Ingredients' },
+  FR_SANS_INGREDIENT: { fr: 'Aucun ingrédient renseigné.', en: 'No ingredients listed.' },
+  FR_INSTRUCTIONS: { fr: 'Préparation', en: 'Method' },
+  FR_SANS_INSTRUCTION: { fr: 'Aucune instruction pour l’instant — « Modifier » pour en ajouter.', en: 'No method yet — use “Edit” to add one.' },
+  FR_POSER: { fr: 'Mettre au menu', en: 'Add to the menu' },
+  FR_JOUR: { fr: 'Jour', en: 'Day' },
+  FR_SERVICE: { fr: 'Service', en: 'Course' },
+  FR_AJOUTER: { fr: 'Ajouter', en: 'Add' },
+  /* ⚠ Prévient, n'empêche pas : remplacer le plat du mardi est une intention
+     normale ; le faire sans savoir qu'il y en avait un ne l'est pas. */
+  FR_REMPLACE: { fr: 'Remplacera', en: 'Will replace' },
+  FR_POSEE: { fr: 'Ajoutée au menu ✓', en: 'Added to the menu ✓' },
   REPAS_ING_ARTICLE: { fr: 'Article', en: 'Item' },
   REPAS_ING_QTE: { fr: 'Quantité', en: 'Quantity' },
   REPAS_ING_UNITE: { fr: 'Unité', en: 'Unit' },

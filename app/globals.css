@@ -2938,3 +2938,81 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
   padding: .4rem .6rem; font-size: .75rem; color: var(--muted);
   border-top: 1px solid var(--line); font-style: italic;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * FICHE D'UNE RECETTE (popup) — components/repas/FicheRecette.tsx
+ *
+ * ⚠ Rendue en PORTAIL dans `document.body` : un ancêtre en `transform`
+ * redéfinirait le référentiel de `position: fixed` et enfermerait la fiche
+ * dans la carte. Le CSS suppose donc qu'elle est fille de `<body>`.
+ * ══════════════════════════════════════════════════════════════════════ */
+.fr-fond {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(0, 0, 0, .55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  /* ⚠ Le fond ne défile pas avec la page derrière lui : sans cela, faire
+     défiler la fiche sur un téléphone emporte la liste de recettes en dessous
+     et on perd sa place en refermant. */
+  overscroll-behavior: contain;
+}
+.fr-fiche {
+  background: var(--cell); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 1.1rem;
+  padding: 1.2rem 1.3rem;
+  width: 100%; max-width: 34rem;
+  /* La fiche défile en elle-même : une longue recette ne doit pas pousser ses
+     boutons hors de l'écran. */
+  max-height: min(88vh, 46rem); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .5);
+}
+.fr-tete { display: flex; align-items: flex-start; gap: .8rem; }
+.fr-nom {
+  font-family: var(--police-titre), Georgia, serif; font-size: 1.35rem;
+  margin: 0; flex: 1 1 auto; line-height: 1.2;
+}
+.fr-fermer { flex: 0 0 auto; padding: .2rem .55rem; }
+.fr-meta { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; }
+.fr-bloc { display: flex; flex-direction: column; gap: .5rem; }
+.fr-soustitre {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin: 0;
+}
+.fr-ingredients {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: .3rem;
+}
+.fr-ingredients li {
+  display: flex; align-items: baseline; gap: .5rem;
+  padding-bottom: .3rem; border-bottom: 1px solid var(--line);
+}
+.fr-ingredients .i-art { flex: 1 1 auto; }
+.fr-ingredients .i-qte {
+  font-variant-numeric: tabular-nums; color: var(--ink2);
+  font-weight: 600; white-space: nowrap;
+}
+/* ⚠ `pre-wrap` : les instructions se saisissent ligne par ligne. Les fondre en
+   un paragraphe rendrait illisible ce qu'on lit en cuisinant, mains prises. */
+.fr-note { margin: 0; white-space: pre-wrap; line-height: 1.6; }
+.fr-vide { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.fr-poser { border-top: 1px solid var(--line); padding-top: .9rem; }
+.fr-poser-champs { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.fr-poser-champs > * { flex: 1 1 8rem; }
+.fr-avertit { margin: 0; font-size: .85rem; color: var(--over-tx); }
+.fr-pose { margin: 0; font-size: .85rem; color: var(--ok-tx); font-weight: 600; }
+
+.fr-pied { display: flex; justify-content: flex-end; gap: .5rem; }
+
+/* Le nom d'une recette ouvre sa fiche : c'est un bouton, il doit s'en voir. */
+.rc-nom-bouton {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--line2);
+  text-underline-offset: .2em;
+}
+.rc-nom-bouton:hover, .rc-nom-bouton:focus-visible { text-decoration-color: var(--acc); }
+
+/* Zone d'instructions dans l'éditeur de recette. */
+.rf-note { min-height: 5rem; resize: vertical; font-family: inherit; }

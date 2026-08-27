@@ -16,6 +16,7 @@ import {
   type Recette,
 } from '@/lib/repas/schema';
 import Astuce from '@/components/Astuce';
+import FicheRecette from '@/components/repas/FicheRecette';
 
 /**
  * Écran Repas (client). Deux onglets : planning de la semaine (avec nb de
@@ -259,6 +260,35 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
   const tr = useT();
   const langue = useLangue();
   const [edite, setEdite] = useState<string | 'nouvelle' | null>(null);
+  /** Recette dont la fiche est ouverte. */
+  const [fiche, setFiche] = useState<string | null>(null);
+  const recetteFiche = d.recettes.find((r) => r.id === fiche) ?? null;
+
+  /*
+   * Pose une recette sur un service d'un jour.
+   *
+   * ⚠ ON RENVOIE LES TROIS SERVICES DU JOUR, pas seulement celui qu'on change.
+   * La route attend le menu complet : n'envoyer que le service visé effacerait
+   * l'entrée et le dessert du jour — une perte silencieuse, constatée nulle part
+   * avant que quelqu'un ne rouvre son planning.
+   */
+  const poserAuMenu = useCallback(
+    (nomRecette: string, jour: string, service: 'entree' | 'plat' | 'dessert') => {
+      const j = d.semaine.find((x) => x.jour === jour);
+      if (!j) return;
+      action(() =>
+        patch('/api/repas/semaine', {
+          jour,
+          entree: service === 'entree' ? nomRecette : j.entree,
+          plat: service === 'plat' ? nomRecette : j.plat,
+          dessert: service === 'dessert' ? nomRecette : j.dessert,
+          personnes: j.personnes,
+          note: j.note,
+        }),
+      );
+    },
+    [d.semaine, action],
+  );
 
   return (
     <>
@@ -313,7 +343,13 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
           ) : (
             <li key={r.id} className="recette-carte">
               <div className="rc-tete">
-                <span className="rc-nom">{r.nom}</span>
+                {/* ⚠ Un vrai bouton et non un `onClick` sur la carte : la carte
+                    contient déjà « Modifier », et un clic qui ouvrirait la fiche
+                    depuis n'importe où enlèverait toute prévisibilité. Le nom
+                    est ce qu'on vise naturellement pour « voir la recette ». */}
+                <button type="button" className="rc-nom rc-nom-bouton" onClick={() => setFiche(r.id)}>
+                  {r.nom}
+                </button>
                 <span className="rc-meta">
                   {r.categorie && <span className="puce cat-plat">{tEnum(CLE_CATEGORIE_PLAT, r.categorie, langue)}</span>}
                   {r.type && <span className="puce categorie">{tEnum(CLE_TYPE_RECETTE, r.type, langue)}</span>}
@@ -339,6 +375,20 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
           ),
         )}
       </ul>
+
+      {recetteFiche && (
+        <FicheRecette
+          recette={recetteFiche}
+          semaine={d.semaine}
+          occupe={occupe}
+          onFermer={() => setFiche(null)}
+          onAjouterAction={(jour, service) => poserAuMenu(recetteFiche.nom, jour, service)}
+          onModifier={() => {
+            setFiche(null);
+            setEdite(recetteFiche.id);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -557,8 +607,13 @@ function RecetteForm({
         </button>
       </div>
 
-      <input
-        className="champ"
+      {/* ⚠ Zone de TEXTE et non champ d'une ligne : c'est ici que s'écrivent
+          les instructions de préparation, qui se lisent étape par étape. Un
+          champ d'une ligne les acceptait déjà — on ne pouvait simplement ni les
+          relire ni les structurer. */}
+      <textarea
+        className="champ rf-note"
+        rows={4}
         placeholder={tr('REPAS_NOTE_PH')}
         value={note}
         onChange={(e) => setNote(e.target.value)}

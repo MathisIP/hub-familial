@@ -8,6 +8,7 @@ import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID, CLE_JOUR 
 import {
   agregerCourses,
   formatQuantite,
+  parseQuantite,
   PERSONNES_DEFAUT,
   type DonneesRepas,
   type Ingredient,
@@ -385,16 +386,48 @@ function RecetteForm({
     recette && recette.ingredients.length ? recette.ingredients.map((i) => ({ ...i })) : [ingredientVide()],
   );
 
+  /*
+   * Texte SAISI pour chaque quantité, à côté de la valeur numérique.
+   *
+   * ⚠ SANS LUI, ON NE PEUT PAS TAPER UNE FRACTION. Le champ affichait la valeur
+   * reformatée à chaque frappe : après « 1 » puis « / », la lecture donne
+   * « non chiffré », le champ se vide, et le « 2 » n'a plus rien à compléter.
+   * Une fraction est le seul cas où un état intermédiaire de la saisie n'est pas
+   * une valeur valide — il faut donc garder ce que la personne écrit jusqu'à ce
+   * qu'elle ait fini.
+   *
+   * `undefined` = pas encore touché, on affiche la valeur mise en forme.
+   */
+  const [textesQte, setTextesQte] = useState<(string | undefined)[]>([]);
+
   function majIngredient(index: number, champ: keyof Ingredient, valeur: string) {
+    if (champ === 'quantite') {
+      setTextesQte((prev) => {
+        const suivant = [...prev];
+        suivant[index] = valeur;
+        return suivant;
+      });
+    }
     setIngredients((prev) =>
       prev.map((ing, k) =>
         k !== index
           ? ing
           : champ === 'quantite'
-            ? { ...ing, quantite: valeur.trim() === '' ? null : Number(valeur.replace(',', '.')) }
+            ? // ⚠ `parseQuantite` et non `Number` : `Number('1/2')` vaut NaN, et
+              // `parseFloat('1/2')` vaut 1 — les deux se trompent en silence.
+              { ...ing, quantite: parseQuantite(valeur) }
             : { ...ing, [champ]: valeur },
       ),
     );
+  }
+
+  /** À la sortie du champ, on remet le texte en forme (« 0,5 » → « 1/2 »). */
+  function normaliserQte(index: number) {
+    setTextesQte((prev) => {
+      const suivant = [...prev];
+      suivant[index] = undefined;
+      return suivant;
+    });
   }
 
   function soumettre(e: React.FormEvent) {
@@ -479,8 +512,9 @@ function RecetteForm({
               className="champ"
               inputMode="decimal"
               placeholder={tr('REPAS_ING_QTE_PH')}
-              value={ing.quantite == null ? '' : formatQuantite(ing.quantite)}
+              value={textesQte[k] ?? (ing.quantite == null ? '' : formatQuantite(ing.quantite))}
               onChange={(e) => majIngredient(k, 'quantite', e.target.value)}
+              onBlur={() => normaliserQte(k)}
               disabled={occupe}
             />
             <Liste
@@ -501,7 +535,13 @@ function RecetteForm({
             <button
               type="button"
               className="bouton discret rf-suppr"
-              onClick={() => setIngredients((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== k) : prev))}
+              onClick={() => {
+                // Les textes de saisie sont indexés comme les lignes : les
+                // retirer ensemble, sinon la quantité d'une ligne s'afficherait
+                // sur la suivante.
+                setTextesQte((prev) => prev.filter((_, i) => i !== k));
+                setIngredients((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== k) : prev));
+              }}
               disabled={occupe}
               aria-label={tr('REPAS_RETIRER_ING')}
             >
@@ -509,7 +549,10 @@ function RecetteForm({
             </button>
           </div>
         ))}
-        <button type="button" className="bouton discret" onClick={() => setIngredients((prev) => [...prev, ingredientVide()])} disabled={occupe}>
+        <button type="button" className="bouton discret" onClick={() => {
+              setTextesQte((prev) => [...prev, undefined]);
+              setIngredients((prev) => [...prev, ingredientVide()]);
+            }} disabled={occupe}>
           {tr('REPAS_ING_AJOUTER')}
         </button>
       </div>

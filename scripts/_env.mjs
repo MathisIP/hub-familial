@@ -37,6 +37,42 @@ export function connexion({ max = 3 } = {}) {
 }
 
 /**
+ * Client Postgres sur la base de PRODUCTION.
+ *
+ * ⚠ LIT `.env` ET SEULEMENT `.env`, en ignorant `.env.local`. C'est la
+ * convention déjà posée par `scripts/migrer-prod.mjs` : `.env` porte la
+ * production, `.env.local` le bac à sable et l'emporte partout ailleurs.
+ *
+ * ⚠ NE PAS croire qu'il suffit de poser `DATABASE_URL` dans le terminal. Selon
+ * l'outil, `.env.local` est chargé avec `override: true` et écrase la variable —
+ * on croirait viser la production tout en travaillant sur le bac à sable, ce qui
+ * est exactement l'erreur que tout ce dispositif cherche à rendre impossible.
+ *
+ * Le nom du fichier est le seul endroit où la distinction est stable.
+ */
+export function connexionProduction({ max = 1 } = {}) {
+  if (!existsSync('.env')) {
+    console.error('.env introuvable : impossible de viser la production.');
+    process.exit(1);
+  }
+  let url;
+  for (const ligne of readFileSync(".env", "utf8").split(new RegExp("\r?\n"))) {
+    const m = ligne.match(/^DATABASE_URL=(.*)$/);
+    if (m) url = m[1].replace(/^["']|["']$/g, '');
+  }
+  if (!url) {
+    console.error('DATABASE_URL absent de .env.');
+    process.exit(1);
+  }
+  const u = new URL(url);
+  if (u.hostname.endsWith('.neon.tech') && !u.hostname.includes('-pooler')) {
+    const [ep, ...reste] = u.hostname.split('.');
+    u.hostname = [`${ep}-pooler`, ...reste].join('.');
+  }
+  return { sql: postgres(u.toString(), { prepare: false, max }), hote: u.hostname };
+}
+
+/**
  * Refuse d'aller plus loin si la base n'est pas un bac à sable.
  *
  * ⚠ LE GARDE-FOU CENTRAL. Tout script qui écrit des données fictives passe par

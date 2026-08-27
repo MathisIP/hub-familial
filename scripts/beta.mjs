@@ -20,7 +20,7 @@
  * L'accès offert est SANS DATE DE FIN : `abonnement_fin` reste `null`, et
  * `etatAbonnement()` n'applique aucun contrôle de date au statut `offert`.
  */
-import { connexion } from './_env.mjs';
+import { connexion, connexionProduction } from './_env.mjs';
 
 const args = process.argv.slice(2);
 const appliquer = args.includes('--appliquer');
@@ -30,7 +30,18 @@ const emails = args
   .map((a) => a.trim().toLowerCase())
   .filter(Boolean);
 
-const { sql, hote } = connexion({ max: 1 });
+/*
+ * ⚠ SANS `--prod`, ON VISE LE BAC À SABLE — et c'est le bon défaut : la
+ * production ne doit jamais être la cible qu'on atteint par distraction.
+ *
+ * Le piège constaté le 27/08/2026 : chercher un testeur inscrit sur
+ * l'application DÉPLOYÉE en interrogeant la base locale. Le compte n'existe
+ * évidemment pas, et le script répond « jamais connecté » — un message exact
+ * mais qu'on lit comme un défaut de l'application. Le bandeau annonçait
+ * pourtant « BAC À SABLE » deux lignes plus haut.
+ */
+const prod = args.includes('--prod');
+const { sql, hote } = prod ? connexionProduction() : connexion({ max: 1 });
 
 /** Vrai si la base porte le marqueur de bac à sable. */
 async function estBacASable() {
@@ -54,7 +65,27 @@ async function estBacASable() {
 async function resoudre(email) {
   const [u] = await sql`
     select id, nom from utilisateurs where lower(email) = ${email} limit 1`;
-  if (!u) return { etat: 'inconnu' };
+  if (!u) {
+    /*
+     * ⚠ AVANT DE DIRE « JAMAIS CONNECTÉ », ON CHERCHE UNE ADRESSE VOISINE.
+     *
+     * Une faute de frappe et une personne réellement pas encore inscrite
+     * produisaient exactement le même message. Constaté deux fois de suite le
+     * 27/08/2026, dont une avec `ce/lameirao@` au lieu de `ce.lameirao@` — et
+     * une barre oblique est un caractère PARFAITEMENT LÉGAL dans une adresse,
+     * donc aucune validation de format ne l'aurait signalée.
+     *
+     * La comparaison se fait sur la forme réduite aux lettres et aux chiffres :
+     * c'est ce qui rapproche « ce/lameirao » de « ce.lameirao », ou une adresse
+     * saisie avec un point en trop de la vraie.
+     */
+    const voisins = await sql`
+      select email from utilisateurs
+       where regexp_replace(lower(email), '[^a-z0-9@]', '', 'g')
+           = regexp_replace(${email}, '[^a-z0-9@]', '', 'g')
+       limit 3`;
+    return { etat: 'inconnu', voisins: voisins.map((v) => v.email) };
+  }
 
   const lignes = await sql`
     select f.id, f.nom, f.statut_abonnement as statut, f.stripe_customer_id as client,
@@ -114,7 +145,12 @@ try {
     const r = await resoudre(email);
 
     if (r.etat === 'inconnu') {
-      console.log(`  ⏳ ${email.padEnd(32)} jamais connecté — qu'il ouvre l'app une fois, puis relance`);
+      if (r.voisins?.length) {
+        console.log(`  ✱  ${email.padEnd(32)} FAUTE DE FRAPPE ? une adresse très proche existe :`);
+        for (const v of r.voisins) console.log(`     ${' '.repeat(32)} → ${v}`);
+      } else {
+        console.log(`  ⏳ ${email.padEnd(32)} jamais connecté — qu'il ouvre l'app une fois, puis relance`);
+      }
       continue;
     }
     if (r.etat === 'sans_foyer') {

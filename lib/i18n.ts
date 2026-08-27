@@ -407,6 +407,10 @@ const UI = {
      ne sait pas l'afficher dans un cadre. Sans cette distinction, on croit son
      fichier abime et on reessaie. */
   VISIO_PDF_MOBILE: { fr: 'Sur téléphone, les PDF s’ouvrent depuis le téléchargement — le bouton ci-dessous.', en: 'On phones, PDFs open from the download — the button below.' },
+  VISIO_CHARGEMENT: { fr: 'Lecture du fichier…', en: 'Reading the file…' },
+  /* ⚠ Dit POURQUOI, et que le fichier n'a rien d'anormal : c'est sa taille qui
+     ecarte l'apercu, pas son format. */
+  VISIO_TEXTE_LOURD: { fr: 'Fichier trop volumineux pour un aperçu — télécharge-le pour le lire en entier.', en: 'Too large to preview — download it to read in full.' },
   VISIO_PAS_APERCU: { fr: 'Aperçu indisponible pour ce type de fichier.', en: 'No preview available for this file type.' },
   DOC_RECHERCHE_PH: { fr: 'Rechercher un document…', en: 'Search a document…' },
   DOC_AUCUN_RESULTAT: { fr: 'Aucun document ne correspond.', en: 'No matching document.' },

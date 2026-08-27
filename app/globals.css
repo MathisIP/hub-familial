@@ -3026,3 +3026,19 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
   display: flex; flex-wrap: wrap; gap: .3rem; align-items: baseline;
 }
 .apercu-bilan a { color: var(--link-tx); font-weight: 500; }
+
+/* Aperçu d'un fichier texte dans la visionneuse.
+   ⚠ `pre-wrap` et non `pre` : une note écrite sans retours à la ligne
+   déborderait latéralement et forcerait un défilement horizontal sur téléphone,
+   là où on veut justement lire. Les sauts de ligne réels sont préservés. */
+.visio-texte {
+  margin: 0; width: 100%; align-self: stretch;
+  padding: 1rem 1.1rem;
+  /* ⚠ Pile monospace explicite : l'application ne définit que `--police-titre`
+     et `--police-corps`. Référencer une variable inexistante marcherait par
+     repli, mais laisserait croire qu'elle existe à qui relirait la feuille. */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .85rem; line-height: 1.6; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--page);
+}

@@ -72,6 +72,36 @@ export function estPdf(doc: { nom: string; type: string }): boolean {
   return t === 'application/pdf' || doc.nom.toLowerCase().endsWith('.pdf');
 }
 
+/**
+ * Le document est-il du texte affichable tel quel ?
+ *
+ * ⚠ ON SE FIE À L'EXTENSION D'ABORD, pas au type MIME. Le type déclaré au
+ * stockage est **volontairement neutre** — c'est ce qui évite d'apprendre à
+ * l'hébergeur ce que contiennent les fichiers du foyer (cf. lib/stockage). Un
+ * `.txt` arrive donc souvent annoncé comme `application/octet-stream` : ne
+ * regarder que le MIME reviendrait à ne jamais reconnaître un fichier texte.
+ *
+ * ⚠ Liste FERMÉE et courte. Tout ce qui n'y figure pas est proposé au
+ * téléchargement : afficher par erreur un binaire comme du texte remplirait
+ * l'écran de caractères illisibles, ce qui est pire qu'un aperçu absent.
+ */
+export function estTexte(doc: { nom: string; type: string }): boolean {
+  const ext = doc.nom.toLowerCase().split('.').pop() ?? '';
+  if (['txt', 'md', 'csv', 'log', 'json', 'ics', 'yml', 'yaml'].includes(ext)) return true;
+  const t = (doc.type || '').toLowerCase();
+  return t.startsWith('text/') || t === 'application/json';
+}
+
+/**
+ * Au-delà de cette taille, on ne tente pas l'aperçu d'un texte.
+ *
+ * ⚠ Un fichier peut peser jusqu'à 25 Mo (`TAILLE_MAX`). Le rendre d'un bloc dans
+ * la page figerait l'onglet — sur un téléphone, plusieurs secondes sans rien à
+ * l'écran, qu'on lit comme un plantage. 200 Ko couvrent largement une note ou un
+ * relevé ; au-delà, le téléchargement est de toute façon plus commode.
+ */
+export const TAILLE_APERCU_TEXTE = 200 * 1024;
+
 /** Emoji selon le type MIME / l'extension (cohérent avec le reste de l'app). */
 export function iconeDocument(doc: { nom: string; type: string }): string {
   const t = (doc.type || '').toLowerCase();

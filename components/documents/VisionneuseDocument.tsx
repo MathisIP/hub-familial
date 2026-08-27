@@ -6,6 +6,8 @@ import { useT } from '@/components/I18nProvider';
 import {
   estImage,
   estPdf,
+  estTexte,
+  TAILLE_APERCU_TEXTE,
   formatTaille,
   iconeDocument,
   type Document,
@@ -103,6 +105,51 @@ export default function VisionneuseDocument({
     };
   }, [onFermer]);
 
+  /*
+   * APERÇU D'UN FICHIER TEXTE.
+   *
+   * ⚠ Le contenu est RÉCUPÉRÉ, pas mis dans une `iframe`. Un cadre déclencherait
+   * sur Android le même détournement que les PDF — et sur les autres
+   * plateformes, il afficherait le texte sans aucune mise en forme lisible. On
+   * le lit soi-même et on le rend dans la page, où il reste sous notre contrôle.
+   *
+   * ⚠ `textContent` d'un `<pre>` : le texte est INSÉRÉ COMME TEXTE, jamais
+   * interprété. Un document déposé par un membre du foyer contenant des balises
+   * ne doit rien pouvoir exécuter — React s'en charge, mais la règle mérite
+   * d'être écrite là où quelqu'un pourrait être tenté d'un `dangerouslySetInnerHTML`
+   * pour « mieux » rendre un Markdown.
+   */
+  const texte = estTexte(doc);
+  const [contenu, setContenu] = useState<string | null>(null);
+  const [chargement, setChargement] = useState(false);
+
+  useEffect(() => {
+    if (!texte || doc.taille > TAILLE_APERCU_TEXTE) return;
+    let annule = false;
+    setChargement(true);
+    fetch(`/api/documents/${doc.id}`, { cache: 'no-store' })
+      .then((r) => {
+        if (!r.ok) throw new Error('lecture impossible');
+        return r.text();
+      })
+      .then((t) => {
+        if (!annule) setContenu(t);
+      })
+      .catch(() => {
+        if (!annule) setErreur(true);
+      })
+      .finally(() => {
+        if (!annule) setChargement(false);
+      });
+    // ⚠ `annule` : refermer la visionneuse pendant le chargement ne doit pas
+    // provoquer une écriture d'état sur un composant démonté.
+    return () => {
+      annule = true;
+    };
+  }, [texte, doc.id, doc.taille]);
+
+  const texteAffichable = texte && doc.taille <= TAILLE_APERCU_TEXTE && !erreur;
+
   const image = estImage(doc);
   const pdfAffichable = estPdf(doc) && pdfEnCadre;
 
@@ -165,7 +212,15 @@ export default function VisionneuseDocument({
             <iframe className="visio-pdf" src={url} title={doc.nom} />
           )}
 
-          {(erreur || (!image && !pdfAffichable)) && (
+          {texteAffichable && (
+            chargement ? (
+              <p className="visio-repli">{tr('VISIO_CHARGEMENT')}</p>
+            ) : (
+              <pre className="visio-texte">{contenu}</pre>
+            )
+          )}
+
+          {(erreur || (!image && !pdfAffichable && !texteAffichable)) && (
             <div className="visio-repli">
               <p className="visio-repli-ic" aria-hidden="true">{iconeDocument(doc)}</p>
               {/*
@@ -179,7 +234,9 @@ export default function VisionneuseDocument({
                   ? tr('VISIO_ERREUR')
                   : estPdf(doc)
                     ? tr('VISIO_PDF_MOBILE')
-                    : tr('VISIO_PAS_APERCU')}
+                    : texte
+                      ? tr('VISIO_TEXTE_LOURD')
+                      : tr('VISIO_PAS_APERCU')}
               </p>
             </div>
           )}

@@ -283,6 +283,13 @@ const UI = {
   ECH_SANS_DATE: { fr: 'sans date', en: 'no date' },
   ECH_MONTANT: { fr: 'Montant', en: 'Amount' },
   ECH_MONTANT_PH: { fr: 'ex. 45,90 (facultatif)', en: 'e.g. 45.90 (optional)' },
+  ECH_TOTAL_MOIS: { fr: 'Reste à payer ce mois-ci :', en: 'Left to pay this month:' },
+  /* ⚠ Formulé comme un RAPPEL, pas comme une erreur : une échéance sans
+     montant n'a rien d'invalide. Elle signale seulement que ce rappel-là a
+     peut-être sa place dans l'agenda plutôt que dans le budget — et qu'en
+     l'état, elle ne compte pas dans le total affiché juste au-dessus. */
+  ECH_SANS_MONTANT_1: { fr: '1 échéance sans montant (non comptée)', en: '1 item with no amount (not counted)' },
+  ECH_SANS_MONTANT_N: { fr: 'échéances sans montant (non comptées)', en: 'items with no amount (not counted)' },
   ECH_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   ECH_COMPTE: { fr: 'Compte', en: 'Account' },
   ECH_COMPTE_CHOISIR: { fr: 'Choisir un compte…', en: 'Pick an account…' },

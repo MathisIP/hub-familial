@@ -2661,6 +2661,30 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   }
   .bg-grille > .card-bloc { margin-bottom: 0; }
 
+  /* --- Budget : comptes, échéances et partage ---
+     ⚠ Ces trois sections avaient été OUBLIÉES lors de la mise en grille du
+     25/08/2026 : chacune plafonnait à 44 rem et s'empilait à gauche, laissant
+     les deux tiers de l'écran vides. `minmax(30rem, …)` et non 28 : une ligne
+     d'échéance porte un libellé, un montant, une date, une récurrence, un
+     compte et un bouton. */
+  .bg-gestion {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
+    gap: var(--e-5);
+    align-items: start;
+    margin-top: 2rem;
+  }
+  /* ⚠ Sélecteurs explicites plutôt que `> *` : `.gc`/`.ge`/`.pc` portent leur
+     propre `max-width` à la même spécificité, et un `> *` ne l'emporterait que
+     par l'ordre du fichier — une dépendance qu'un déplacement de règle casse
+     sans rien signaler. */
+  .bg-gestion > .gc,
+  .bg-gestion > .ge,
+  .bg-gestion > .pc {
+    max-width: none;
+    margin-top: 0;
+  }
+
   /* --- To-Do : les tâches --- */
   .liste.multi {
     display: grid;
@@ -2850,3 +2874,15 @@ html { overflow-x: hidden; }
   .ag-mois-case { min-height: 3.4rem; }
   .ag-mois-ev { justify-content: flex-start; }
 }
+
+/* Récapitulatif des échéances du mois.
+   ⚠ Séparé de la liste par un filet : c'est une SYNTHÈSE, pas une ligne de plus.
+   Sans la démarcation, on la lit comme une sixième échéance. */
+.ge-recap {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem;
+  margin: 0 0 1rem; padding-top: .8rem; border-top: 1px solid var(--line);
+  font-size: .9rem;
+}
+.ge-recap-total { color: var(--ink2); }
+.ge-recap-total strong { font-variant-numeric: tabular-nums; color: var(--link-tx); }
+.ge-recap-sans { color: var(--muted); font-size: .82rem; }

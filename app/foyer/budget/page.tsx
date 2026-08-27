@@ -83,14 +83,24 @@ export default async function PageBudget({
         <>
           <SelecteurMois selection={d.selection} annees={d.anneesDisponibles} />
           <VueBudget d={d} langue={langue} />
-          <GestionComptes comptes={comptes} />
-          {/* Les échéances ne proposent que les comptes VISIBLES : on ne peut
-              pas rattacher une échéance à un compte qu'on ne voit pas. */}
-          <GestionEcheances
-            echeances={d.echeances}
-            comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
-          />
-          {partage && <PartageComptes comptes={partage.comptes} membres={partage.membres} />}
+          {/*
+            ⚠ CES TROIS SECTIONS SONT REGROUPÉES POUR LES GRANDS ÉCRANS. Elles
+            étaient restées hors du système de grille posé le 25/08/2026 :
+            chacune plafonnait à 44 rem et s'empilait dans une colonne étroite,
+            laissant les deux tiers de l'écran vides — exactement le défaut que
+            ce système avait corrigé partout ailleurs. Le regroupement n'a aucun
+            effet en dessous de 75 rem, où l'empilement reste le bon rendu.
+          */}
+          <div className="bg-gestion">
+            <GestionComptes comptes={comptes} />
+            {/* Les échéances ne proposent que les comptes VISIBLES : on ne peut
+                pas rattacher une échéance à un compte qu'on ne voit pas. */}
+            <GestionEcheances
+              echeances={d.echeances}
+              comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
+            />
+            {partage && <PartageComptes comptes={partage.comptes} membres={partage.membres} />}
+          </div>
           <Historique selection={d.selection} periodeLibelle={d.periode} />
         </>
       );

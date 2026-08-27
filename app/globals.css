@@ -2899,3 +2899,33 @@ html { overflow-x: hidden; }
 .ge-recap-total { color: var(--ink2); }
 .ge-recap-total strong { font-variant-numeric: tabular-nums; color: var(--link-tx); }
 .ge-recap-sans { color: var(--muted); font-size: .82rem; }
+
+/* Tuiles de KPI cliquables (Budget).
+   ⚠ Elles PROMETTAIENT un détail par leur apparence de carte sans le tenir —
+   signalé en test. Devenues des liens, elles doivent aussi le MONTRER : sans
+   affordance, on ne clique que par hasard. */
+a.bg-kpi.lien {
+  position: relative; display: block; text-decoration: none; color: inherit;
+  transition: border-color .15s ease, transform .15s ease;
+}
+a.bg-kpi.lien:hover, a.bg-kpi.lien:focus-visible { border-color: var(--acc); }
+a.bg-kpi.lien:hover { transform: translateY(-1px); }
+.k-fleche {
+  position: absolute; top: .7rem; right: .8rem;
+  color: var(--muted); font-size: 1rem; line-height: 1;
+}
+a.bg-kpi.lien:hover .k-fleche, a.bg-kpi.lien:focus-visible .k-fleche { color: var(--acc); }
+/* ⚠ Le chiffre ne doit jamais passer sous la flèche : il est le contenu, elle
+   n'est qu'un repère. */
+a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
+
+/* Filtres de type de l'historique, sous les onglets de période. */
+.hist-filtres { margin-top: .4rem; }
+
+/* ⚠ Les ancres visées depuis les tuiles ne doivent pas se retrouver collées au
+   bord haut de la fenêtre : le titre de la section resterait sous la barre. */
+#soldes, #echeances, #historique { scroll-margin-top: 1rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}

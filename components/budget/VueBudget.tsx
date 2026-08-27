@@ -30,9 +30,39 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
           <div className={`k-v ${resteNum < 0 ? 'neg' : 'pos'}`}>{d.kpis.reste}</div>
           <div className="k-n">{t('BUD_RESTE_N', langue)}</div>
         </div>
-        <Kpi l={t('BUD_REVENUS', langue)} v={d.kpis.revenus} n={t('BUD_REVENUS_N', langue)} />
-        <Kpi l={t('BUD_DEPENSES', langue)} v={d.kpis.depenses} n={t('BUD_DEPENSES_N', langue)} />
-        <Kpi l={t('BUD_PATRIMOINE', langue)} v={d.kpis.patrimoine} n={t('BUD_PATRIMOINE_N', langue)} />
+        {/*
+          ⚠ LES TUILES SONT DEVENUES DES LIENS. Elles avaient l'air cliquables
+          sans l'être — signalé en test : « ça donne envie de cliquer pour voir
+          le détail ». Une carte encadrée avec un gros chiffre PROMET un détail ;
+          soit on tient la promesse, soit on efface l'apparence. On la tient.
+
+          ⚠ Elles pointent vers ce qui EXISTE DÉJÀ sur la page, jamais vers un
+          panneau nouveau : les soldes, les échéances et l'historique répondent
+          déjà à la question. Dupliquer ces contenus dans une fenêtre aurait créé
+          deux endroits où lire le même chiffre, donc deux endroits à corriger.
+
+          ⚠ Des ancres HTML, pas du JavaScript : ce composant est rendu par le
+          SERVEUR et ne peut porter aucun état. Le lien fonctionne aussi au
+          clavier, au clic-droit et avant l'hydratation.
+        */}
+        <Kpi
+          l={t('BUD_REVENUS', langue)}
+          v={d.kpis.revenus}
+          n={t('BUD_REVENUS_N', langue)}
+          vers="#historique-revenu"
+        />
+        <Kpi
+          l={t('BUD_DEPENSES', langue)}
+          v={d.kpis.depenses}
+          n={t('BUD_DEPENSES_N', langue)}
+          vers="#historique-depense"
+        />
+        <Kpi
+          l={t('BUD_PATRIMOINE', langue)}
+          v={d.kpis.patrimoine}
+          n={t('BUD_PATRIMOINE_N', langue)}
+          vers={d.soldes.length > 0 ? '#soldes' : undefined}
+        />
         {/*
           ⚠ Quatrième tuile, à la place laissée vide par la grille en deux
           colonnes. Elle porte le MÊME MOIS que Revenus et Dépenses : quatre
@@ -51,11 +81,12 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
               ? `${d.kpis.echeancesSansMontant} ${t('BUD_KPI_ECH_SANS', langue)}`
               : t('BUD_KPI_ECH_N', langue)
           }
+          vers="#echeances"
         />
       </div>
 
       {d.soldes.length > 0 && (
-        <section className="card-bloc">
+        <section className="card-bloc" id="soldes">
           <h2 className="section-titre">{t('BUD_SOLDES', langue)}</h2>
           <div className="bg-comptes">
             {d.soldes.map((s, i) => (
@@ -124,13 +155,27 @@ export default function VueBudget({ d, langue = 'fr' }: { d: DonneesBudget; lang
   );
 }
 
-function Kpi({ l, v, n }: { l: string; v: string; n: string }) {
-  return (
-    <div className="bg-kpi">
+/**
+ * Tuile de KPI. Devient un lien vers le détail quand `vers` est fourni.
+ *
+ * ⚠ `vers` est OMIS quand il n'y a rien à montrer — un patrimoine sans compte,
+ * par exemple. Un lien qui n'emmène nulle part est pire que pas de lien : on
+ * clique, rien ne bouge, et on conclut que l'application est cassée.
+ */
+function Kpi({ l, v, n, vers }: { l: string; v: string; n: string; vers?: string }) {
+  const contenu = (
+    <>
       <div className="k-l">{l}</div>
       <div className="k-v">{v}</div>
       <div className="k-n">{n}</div>
-    </div>
+    </>
+  );
+  if (!vers) return <div className="bg-kpi">{contenu}</div>;
+  return (
+    <a className="bg-kpi lien" href={vers}>
+      {contenu}
+      <span className="k-fleche" aria-hidden="true">›</span>
+    </a>
   );
 }
 

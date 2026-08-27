@@ -457,6 +457,9 @@ const UI = {
   BUD_MOIS_COURANT: { fr: 'mois en cours', en: 'current month' },
   /* --- Budget : historique des opérations (replié, bas de page) --- */
   HIST_TITRE: { fr: 'Voir l’historique des opérations', en: 'View transaction history' },
+  HIST_TOUT: { fr: 'Tout', en: 'All' },
+  HIST_REVENUS: { fr: 'Revenus', en: 'Income' },
+  HIST_DEPENSES: { fr: 'Dépenses', en: 'Expenses' },
   HIST_ANNEE: { fr: 'Toute l’année', en: 'Full year' },
   HIST_CHARGEMENT: { fr: 'Chargement…', en: 'Loading…' },
   HIST_OP: { fr: 'opération', en: 'transaction' },

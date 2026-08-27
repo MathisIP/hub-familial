@@ -41,7 +41,7 @@ export default function GestionEcheances({
   const [ajoute, setAjoute] = useState(false);
 
   return (
-    <section className="ge">
+    <section className="ge" id="echeances">
       <h2 className="ge-titre">{tr('ECH_TITRE')}</h2>
 
       {echeances.length === 0 && !ajoute && <p className="ge-vide">{tr('ECH_VIDE')}</p>}

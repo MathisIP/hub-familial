@@ -285,13 +285,16 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
 }
 
 /** Crée un événement dans l'agenda choisi. Renvoie son id. */
-export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
-  const ids = await exigerAgendas();
-  const calendarId = S(n.calendarId) || ids[0].calendarId;
-  // ⚠ UN SEUL chemin de validation, partagé avec `supprimerEvenement`. Cette
-  // fonction faisait auparavant sa propre vérification (`ids.find(...)`) : deux
-  // logiques parallèles à tenir synchronisées, donc l'écriture risquait de
-  // rester ouverte le jour où seule la lecture serait resserrée.
+/**
+ * Client Google prêt à ÉCRIRE dans un agenda du foyer.
+ *
+ * ⚠ UN SEUL CHEMIN DE VALIDATION pour toutes les écritures — ajout, modification,
+ * suppression. `ajouterEvenement` faisait autrefois sa propre vérification
+ * (`ids.find(...)`) : deux logiques parallèles à tenir synchronisées, donc une
+ * écriture qui serait restée ouverte le jour où seule la lecture aurait été
+ * resserrée. Toute nouvelle écriture doit passer par ici.
+ */
+async function clientEcriture(calendarId: string): Promise<calendar_v3.Calendar> {
   const cible = await exigerAgendaDuFoyer(calendarId);
 
   // Google autorise à n'accorder QU'UNE PARTIE des permissions demandées : la
@@ -308,36 +311,130 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
       'L’accès à cet agenda a expiré. Reconnecte ton Google Agenda depuis la page Agenda.',
     );
   }
+  return cal;
+}
 
+/** Champs communs à la création et à la modification (titre, lieu, description). */
+function corpsTexte(n: NouvelEvenement): calendar_v3.Schema$Event {
   const titre = S(n.titre);
   if (!titre) throw new ErreurValidation("Le titre de l'événement est requis.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(n.date)) throw new ErreurValidation('Date invalide (attendu aaaa-mm-jj).');
-
-  const body: calendar_v3.Schema$Event = {
+  return {
     summary: titre,
-    location: S(n.lieu) || undefined,
-    description: S(n.description) || undefined,
+    // ⚠ `null` et non `undefined` : sur une MODIFICATION, `undefined` est omis
+    // du corps envoyé, donc Google conserve l'ancienne valeur. Vider un lieu
+    // serait alors impossible — le champ reviendrait à chaque enregistrement,
+    // et on croirait l'app cassée. `null` efface pour de bon.
+    location: S(n.lieu) || null,
+    description: S(n.description) || null,
   };
+}
 
+/** Bornes de début et de fin, selon qu'il s'agit d'une journée entière ou non. */
+function corpsHoraire(n: NouvelEvenement): calendar_v3.Schema$Event {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(n.date)) {
+    throw new ErreurValidation('Date invalide (attendu aaaa-mm-jj).');
+  }
   if (n.journeeEntiere) {
     const [a, m, j] = n.date.split('-').map(Number);
     const lendemain = new Date(a, m - 1, j + 1);
     const finDate = `${lendemain.getFullYear()}-${String(lendemain.getMonth() + 1).padStart(2, '0')}-${String(lendemain.getDate()).padStart(2, '0')}`;
-    body.start = { date: n.date };
-    body.end = { date: finDate };
-  } else {
-    const hDebut = /^\d{2}:\d{2}$/.test(n.heureDebut ?? '') ? n.heureDebut! : '19:00';
-    let hFin = /^\d{2}:\d{2}$/.test(n.heureFin ?? '') ? n.heureFin! : '';
-    if (!hFin) {
-      const [h, mn] = hDebut.split(':').map(Number);
-      hFin = `${String((h + 1) % 24).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
-    }
-    body.start = { dateTime: `${n.date}T${hDebut}:00`, timeZone: FUSEAU };
-    body.end = { dateTime: `${n.date}T${hFin}:00`, timeZone: FUSEAU };
+    // ⚠ `dateTime: null` en plus de `date` : sur une modification, passer un
+    // événement horaire en journée entière laisserait sinon les deux formes
+    // renseignées, que Google refuse.
+    return { start: { date: n.date, dateTime: null }, end: { date: finDate, dateTime: null } };
+  }
+  const hDebut = /^\d{2}:\d{2}$/.test(n.heureDebut ?? '') ? n.heureDebut! : '19:00';
+  let hFin = /^\d{2}:\d{2}$/.test(n.heureFin ?? '') ? n.heureFin! : '';
+  if (!hFin) {
+    const [h, mn] = hDebut.split(':').map(Number);
+    hFin = `${String((h + 1) % 24).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+  }
+  return {
+    start: { dateTime: `${n.date}T${hDebut}:00`, timeZone: FUSEAU, date: null },
+    end: { dateTime: `${n.date}T${hFin}:00`, timeZone: FUSEAU, date: null },
+  };
+}
+
+export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
+  const ids = await exigerAgendas();
+  const calendarId = S(n.calendarId) || ids[0].calendarId;
+  const cal = await clientEcriture(calendarId);
+
+  const rep = await cal.events.insert({
+    calendarId,
+    requestBody: { ...corpsTexte(n), ...corpsHoraire(n) },
+  });
+  return S(rep.data.id);
+}
+
+/**
+ * Modifie un événement existant, dans son agenda d'origine.
+ *
+ * ⚠ MÊME QUESTION QUE POUR LA SUPPRESSION : « cette date » ou « toute la série ».
+ * On liste avec `singleEvents: true`, donc les identifiants manipulés sont ceux
+ * des OCCURRENCES. Patcher une occurrence ne touche qu'elle — c'est le
+ * comportement attendu par défaut, et Google en fait une exception dans la série.
+ *
+ * ⚠ SUR UNE SÉRIE, ON NE TOUCHE JAMAIS AUX DATES, et ce n'est pas une facilité.
+ * L'occurrence affichée n'est presque jamais la première : quelqu'un qui regarde
+ * le cours de piano du 12 septembre et demande à modifier « toute la série »
+ * verrait, si on écrivait cette date sur l'événement parent, **la série entière
+ * se déplacer au 12 septembre — effaçant toutes les occurrences antérieures**.
+ * Une perte de données silencieuse dans l'agenda d'un foyer. On modifie donc le
+ * titre, le lieu et la description de la série, et on refuse explicitement le
+ * reste plutôt que de le tenter.
+ */
+export async function modifierEvenement(
+  m: NouvelEvenement & { id: string; portee?: PorteeSuppression },
+): Promise<void> {
+  const calendarId = S(m.calendarId);
+  const id = S(m.id);
+  if (!calendarId || !id) throw new ErreurValidation('Agenda et identifiant requis.');
+
+  const cal = await clientEcriture(calendarId);
+  const portee = m.portee ?? 'occurrence';
+
+  if (portee === 'occurrence') {
+    await cal.events.patch({
+      calendarId,
+      eventId: id,
+      requestBody: { ...corpsTexte(m), ...corpsHoraire(m) },
+    });
+    return;
   }
 
-  const rep = await cal.events.insert({ calendarId, requestBody: body });
-  return S(rep.data.id);
+  /*
+   * Toute la série : on vise l'événement PARENT, dont on demande l'identifiant à
+   * Google plutôt que de le faire calculer par le navigateur — une donnée
+   * d'affichage périmée ne doit pas décider ce qu'on modifie. Même précaution
+   * que dans `supprimerEvenement`.
+   */
+  const { data } = await cal.events.get({ calendarId, eventId: id });
+  const parentId = S(data.recurringEventId);
+  if (!parentId) {
+    // Pas une occurrence de série : la portée n'a pas de sens, on traite
+    // l'événement tel quel plutôt que d'échouer sur un détail de vocabulaire.
+    await cal.events.patch({
+      calendarId,
+      eventId: id,
+      requestBody: { ...corpsTexte(m), ...corpsHoraire(m) },
+    });
+    return;
+  }
+
+  const memeDate = S(data.start?.dateTime).slice(0, 10) === m.date || S(data.start?.date) === m.date;
+  const memeHeure =
+    S(data.start?.dateTime).slice(11, 16) === S(m.heureDebut) &&
+    S(data.end?.dateTime).slice(11, 16) === S(m.heureFin);
+  const memeType = !!data.start?.date === !!m.journeeEntiere;
+
+  if (!memeDate || !memeHeure || !memeType) {
+    throw new ErreurValidation(
+      'La date et l’heure d’une série ne se modifient pas ici. Choisis « cette date seulement », ou passe par Google Agenda pour décaler toute la série.',
+    );
+  }
+
+  await cal.events.patch({ calendarId, eventId: parentId, requestBody: corpsTexte(m) });
 }
 
 /**

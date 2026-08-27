@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   chargerAgenda,
   ajouterEvenement,
+  modifierEvenement,
   supprimerEvenement,
 } from '@/lib/agenda/service';
 import type { NouvelEvenement } from '@/lib/agenda/schema';
@@ -24,6 +25,30 @@ export async function POST(req: NextRequest) {
     const n = (await req.json()) as NouvelEvenement;
     const id = await ajouterEvenement(n);
     return NextResponse.json({ ok: true, id });
+  } catch (e) {
+    return reponseErreur(e);
+  }
+}
+
+/**
+ * PATCH /api/agenda — modifie un événement { calendarId, id, portee?, …champs }.
+ *
+ * ⚠ Même périmètre OAuth que la création (`calendar.events`, « consulter et
+ * modifier »), déjà accordé et vérifié : modifier ne demande aucune autorisation
+ * supplémentaire. On supprimait déjà, ce qui est plus destructeur.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const m = (await req.json()) as NouvelEvenement & { id?: string; portee?: string };
+    if (!m.id || !m.calendarId) {
+      return NextResponse.json({ erreur: 'calendarId et id requis.' }, { status: 400 });
+    }
+    await modifierEvenement({
+      ...m,
+      id: m.id,
+      portee: m.portee === 'serie' ? 'serie' : 'occurrence',
+    });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);
   }

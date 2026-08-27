@@ -605,6 +605,22 @@ const UI = {
   AGD_RECUR_Q: { fr: 'Rendez-vous récurrent — que supprimer ?', en: 'Recurring event — what should be deleted?' },
   AGD_RECUR_UNE: { fr: 'Cette date', en: 'This date' },
   AGD_RECUR_SERIE: { fr: 'Toute la série', en: 'The whole series' },
+  /* --- Modification d'un événement --- */
+  AGD_RECUR_MODIF_Q: {
+    fr: 'Rendez-vous récurrent — que modifier ?',
+    en: 'Recurring event — what should be changed?',
+  },
+  /*
+   * ⚠ Dit ce qui est possible, pas ce qui est interdit. Modifier « toute la
+   * série » ne touche qu'au texte : déplacer une série depuis une occurrence du
+   * milieu effacerait toutes les dates antérieures. Plutôt que de laisser
+   * modifier une date pour la refuser ensuite, on annonce le périmètre avant.
+   */
+  AGD_SERIE_TEXTE: {
+    fr: 'Sur toute la série, seuls le titre, le lieu et la description changent. Pour décaler une date, choisis « cette date ».',
+    en: 'Across the whole series, only the title, location and description change. To move a date, choose “this date”.',
+  },
+  AGD_MODIFIER_TITRE: { fr: 'Modifier l’événement', en: 'Edit event' },
 
   // Statuts Événements
   EVS_APLANIFIER: { fr: 'À planifier', en: 'To plan' },

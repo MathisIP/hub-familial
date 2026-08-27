@@ -42,6 +42,10 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   const [ajout, setAjout] = useState(false);
   /** id de l'occurrence dont on demande la portée de suppression (récurrent). */
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
+  /** id de l'occurrence dont on demande la portée de MODIFICATION (récurrent). */
+  const [aChoisirModif, setAChoisirModif] = useState<string | null>(null);
+  /** Événement en cours d'édition, avec la portée retenue. */
+  const [aModifier, setAModifier] = useState<{ e: EvenementAgenda; portee: PorteeSuppression } | null>(null);
 
   const rafraichir = useCallback(async () => {
     const r = await fetch('/api/agenda', { cache: 'no-store' });
@@ -78,6 +82,22 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
       );
     },
     [action],
+  );
+
+  /** Ouvre l'édition, en demandant d'abord la portée si l'événement est récurrent. */
+  const ouvrirModif = useCallback(
+    (e: EvenementAgenda) => {
+      setASupprimer(null);
+      if (e.serieId) {
+        // Même geste que pour la suppression : « modifier » est ambigu tant
+        // qu'on n'a pas dit *quoi*.
+        setAChoisirModif((v) => (v === e.id ? null : e.id));
+        return;
+      }
+      setAChoisirModif(null);
+      setAModifier({ e, portee: 'occurrence' });
+    },
+    [],
   );
 
   const aujourd = aujourdhuiISO();
@@ -134,7 +154,37 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                 {jourComplet(jour, langue)}
               </h2>
               <ul className="liste">
-                {evenements.map((e) => (
+                {evenements.map((e) =>
+                  aModifier?.e.id === e.id ? (
+                    /*
+                      Le formulaire remplace la ligne au lieu de s'ouvrir
+                      ailleurs : on garde l'événement sous les yeux, et la date
+                      du jour au-dessus reste le repère.
+                    */
+                    <li className="ag-event ag-event-edit" key={`${e.calendarId}:${e.id}`}>
+                      <FormAgenda
+                        agendas={d.agendas}
+                        occupe={occupe}
+                        evenement={e}
+                        portee={aModifier.portee}
+                        onAnnulerAction={() => setAModifier(null)}
+                        onEnregistrerAction={(corps) =>
+                          action(() =>
+                            fetch('/api/agenda', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                ...corps,
+                                id: e.id,
+                                calendarId: e.calendarId,
+                                portee: aModifier.portee,
+                              }),
+                            }),
+                          ).then(() => setAModifier(null))
+                        }
+                      />
+                    </li>
+                  ) : (
                   <li className="ag-event" key={`${e.calendarId}:${e.id}`}>
                     <span className="ag-pastille ag-pastille-event" style={{ background: e.couleur }} aria-hidden="true" />
                     <span className="ag-heure">
@@ -151,6 +201,43 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                         </span>
                       )}
                       {/* Récurrent : on demande la portée au lieu de deviner. */}
+                      {aChoisirModif === e.id && (
+                        <span className="ag-portee">
+                          <span className="ag-portee-q">{tr('AGD_RECUR_MODIF_Q')}</span>
+                          <span className="ag-portee-choix">
+                            <button
+                              type="button"
+                              className="bouton discret"
+                              onClick={() => {
+                                setAChoisirModif(null);
+                                setAModifier({ e, portee: 'occurrence' });
+                              }}
+                              disabled={occupe}
+                            >
+                              {tr('AGD_RECUR_UNE')}
+                            </button>
+                            <button
+                              type="button"
+                              className="bouton discret"
+                              onClick={() => {
+                                setAChoisirModif(null);
+                                setAModifier({ e, portee: 'serie' });
+                              }}
+                              disabled={occupe}
+                            >
+                              {tr('AGD_RECUR_SERIE')}
+                            </button>
+                            <button
+                              type="button"
+                              className="bouton discret ag-portee-non"
+                              onClick={() => setAChoisirModif(null)}
+                              disabled={occupe}
+                            >
+                              {tr('G_ANNULER')}
+                            </button>
+                          </span>
+                        </span>
+                      )}
                       {aSupprimer === e.id && (
                         <span className="ag-portee">
                           <span className="ag-portee-q">{tr('AGD_RECUR_Q')}</span>
@@ -184,8 +271,17 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                       )}
                     </span>
                     <button
+                      className="bouton discret ag-modif"
+                      onClick={() => ouvrirModif(e)}
+                      disabled={occupe}
+                      aria-label={`${tr('G_MODIFIER')} ${e.titre}`}
+                    >
+                      ✎
+                    </button>
+                    <button
                       className="bouton discret ag-suppr"
                       onClick={() => {
+                        setAChoisirModif(null);
                         // Événement récurrent : « supprimer » est ambigu tant
                         // qu'on n'a pas dit *quoi*. On ouvre le choix.
                         if (e.serieId) {
@@ -200,7 +296,8 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
                       ✕
                     </button>
                   </li>
-                ))}
+                  ),
+                )}
               </ul>
             </section>
           );
@@ -223,14 +320,33 @@ function grouper(evenements: EvenementAgenda[]): { jour: string; evenements: Eve
 
 /* -------------------------------- FORMULAIRE -------------------------------- */
 
+/**
+ * Formulaire d'événement — sert à la CRÉATION et à la MODIFICATION.
+ *
+ * ⚠ Un seul formulaire pour les deux, à dessein : deux écrans jumeaux auraient
+ * divergé au premier champ ajouté, et l'un des deux aurait fini par ne plus
+ * envoyer ce que l'autre envoie.
+ *
+ * ⚠ SUR UNE SÉRIE, LA DATE ET L'HEURE NE SONT PAS AFFICHÉES. Ce n'est pas une
+ * omission : déplacer une série depuis une occurrence du milieu ferait
+ * disparaître toutes les dates antérieures (cf. `modifierEvenement`). Le serveur
+ * le refuse de toute façon — mais montrer un champ pour ensuite rejeter ce qu'on
+ * y a saisi est la pire des deux options. Les valeurs d'origine sont renvoyées
+ * telles quelles, pour que le contrôle serveur les reconnaisse.
+ */
 function FormAgenda({
   agendas,
   occupe,
+  evenement,
+  portee = 'occurrence',
   onEnregistrerAction,
   onAnnulerAction,
 }: {
   agendas: Agenda[];
   occupe: boolean;
+  /** Événement à modifier ; absent = création. */
+  evenement?: EvenementAgenda;
+  portee?: PorteeSuppression;
   onEnregistrerAction: (corps: {
     calendarId: string; titre: string; date: string; journeeEntiere: boolean;
     heureDebut: string; heureFin: string; lieu: string; description: string;
@@ -238,25 +354,49 @@ function FormAgenda({
   onAnnulerAction: () => void;
 }) {
   const tr = useT();
-  const [calendarId, setCalendarId] = useState(agendas[0]?.id ?? '');
-  const [titre, setTitre] = useState('');
-  const [date, setDate] = useState(aujourdhuiISO());
-  const [journeeEntiere, setJourneeEntiere] = useState(false);
-  const [heureDebut, setHeureDebut] = useState('19:00');
-  const [heureFin, setHeureFin] = useState('20:00');
-  const [lieu, setLieu] = useState('');
-  const [description, setDescription] = useState('');
+  const edition = !!evenement;
+  /** Série : seuls les champs de texte sont modifiables. */
+  const texteSeul = edition && portee === 'serie';
+
+  const [calendarId, setCalendarId] = useState(evenement?.calendarId ?? agendas[0]?.id ?? '');
+  const [titre, setTitre] = useState(evenement?.titre ?? '');
+  const [date, setDate] = useState(evenement?.dateISO ?? aujourdhuiISO());
+  const [journeeEntiere, setJourneeEntiere] = useState(evenement?.journeeEntiere ?? false);
+  const [heureDebut, setHeureDebut] = useState(evenement?.heureDebut || '19:00');
+  const [heureFin, setHeureFin] = useState(evenement?.heureFin || '20:00');
+  const [lieu, setLieu] = useState(evenement?.lieu ?? '');
+  const [description, setDescription] = useState(evenement?.description ?? '');
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
-    onEnregistrerAction({ calendarId, titre, date, journeeEntiere, heureDebut, heureFin, lieu, description });
+    /*
+     * ⚠ Sur une série, on renvoie les valeurs D'ORIGINE, pas celles des états.
+     * Les champs d'heure sont initialisés avec un repli (« 19:00 ») quand
+     * l'événement n'en a pas — ce qui est le cas d'une journée entière. Envoyer
+     * cet état ferait croire au serveur qu'on tente de déplacer la série, et il
+     * refuserait une modification de titre parfaitement légitime. Le repli est
+     * utile à l'affichage, jamais à l'envoi.
+     */
+    const horaire =
+      texteSeul && evenement
+        ? {
+            date: evenement.dateISO,
+            journeeEntiere: evenement.journeeEntiere,
+            heureDebut: evenement.heureDebut,
+            heureFin: evenement.heureFin,
+          }
+        : { date, journeeEntiere, heureDebut, heureFin };
+    onEnregistrerAction({ calendarId, titre, lieu, description, ...horaire });
   }
 
   return (
     <form className="recette-form" onSubmit={soumettre}>
+      {texteSeul && <p className="ag-portee-note">{tr('AGD_SERIE_TEXTE')}</p>}
       <div className="rf-ligne1">
         <input className="champ rf-nom" placeholder={tr('AGD_TITRE_PH')} value={titre} onChange={(e) => setTitre(e.target.value)} disabled={occupe} autoFocus />
-        {agendas.length > 1 && (
+        {/* ⚠ L'agenda d'origine ne se change pas en modification : déplacer un
+            événement d'un calendrier à l'autre est un `move`, pas un `patch`. */}
+        {!edition && agendas.length > 1 && (
           <Liste
             valeur={calendarId}
             onChange={setCalendarId}
@@ -265,32 +405,38 @@ function FormAgenda({
             ariaLabel="Agenda"
           />
         )}
-        <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>
-          <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={occupe} />
-        </label>
-      </div>
-      <div className="rf-ligne1">
-        <label className="ag-checkbox">
-          <input type="checkbox" checked={journeeEntiere} onChange={(e) => setJourneeEntiere(e.target.checked)} disabled={occupe} />
-          <span>{tr('AGD_JOURNEE_ENTIERE')}</span>
-        </label>
-        {!journeeEntiere && (
-          <>
-            <label className="saisie-champ"><span>{tr('AGD_DEBUT')}</span>
-              <input className="champ" type="time" value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} disabled={occupe} />
-            </label>
-            <label className="saisie-champ"><span>{tr('AGD_FIN')}</span>
-              <input className="champ" type="time" value={heureFin} onChange={(e) => setHeureFin(e.target.value)} disabled={occupe} />
-            </label>
-          </>
+        {!texteSeul && (
+          <label className="saisie-champ"><span>{tr('SAISIE_DATE')}</span>
+            <input className="champ" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={occupe} />
+          </label>
         )}
       </div>
+      {!texteSeul && (
+        <div className="rf-ligne1">
+          <label className="ag-checkbox">
+            <input type="checkbox" checked={journeeEntiere} onChange={(e) => setJourneeEntiere(e.target.checked)} disabled={occupe} />
+            <span>{tr('AGD_JOURNEE_ENTIERE')}</span>
+          </label>
+          {!journeeEntiere && (
+            <>
+              <label className="saisie-champ"><span>{tr('AGD_DEBUT')}</span>
+                <input className="champ" type="time" value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} disabled={occupe} />
+              </label>
+              <label className="saisie-champ"><span>{tr('AGD_FIN')}</span>
+                <input className="champ" type="time" value={heureFin} onChange={(e) => setHeureFin(e.target.value)} disabled={occupe} />
+              </label>
+            </>
+          )}
+        </div>
+      )}
       <input className="champ" placeholder={tr('G_LIEU')} value={lieu} onChange={(e) => setLieu(e.target.value)} disabled={occupe} />
       <input className="champ" placeholder={tr('AGD_DESC_PH')} value={description} onChange={(e) => setDescription(e.target.value)} disabled={occupe} />
       <div className="rf-actions">
         <span className="rf-espace" />
         <button type="button" className="bouton discret" onClick={onAnnulerAction} disabled={occupe}>{tr('G_ANNULER')}</button>
-        <button type="submit" className="bouton" disabled={occupe || !titre.trim()}>{tr('G_AJOUTER')}</button>
+        <button type="submit" className="bouton" disabled={occupe || !titre.trim()}>
+          {edition ? tr('G_ENREGISTRER') : tr('G_AJOUTER')}
+        </button>
       </div>
     </form>
   );

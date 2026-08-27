@@ -894,7 +894,15 @@ a { color: var(--link-tx); }
 .ag-corps { display: flex; flex-direction: column; gap: .15rem; flex: 1 1 auto; min-width: 0; }
 .ag-titre { font-weight: 600; }
 .ag-meta { font-size: .8rem; color: var(--muted); }
-.ag-suppr { padding: .2rem .5rem; }
+.ag-suppr, .ag-modif { padding: .2rem .5rem; }
+/* ⚠ Le formulaire d'édition remplace la ligne : il lui faut toute la largeur,
+   sinon il hérite du `flex` de `.ag-event` et se comprime contre l'heure. */
+.ag-event-edit { display: block; padding: .6rem; }
+.ag-portee-note {
+  font-size: .8rem; color: var(--muted);
+  margin: 0 0 .5rem; padding: .45rem .6rem;
+  background: var(--block); border-radius: .5rem;
+}
 .ag-checkbox { display: inline-flex; align-items: center; gap: .4rem; font-size: .9rem; }
 .ag-checkbox input { width: 1.1rem; height: 1.1rem; accent-color: var(--link-tx); }
 .ag-erreur-detail { font-size: .78rem; opacity: .8; margin-top: .4rem; }

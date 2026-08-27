@@ -21,6 +21,22 @@ import {
 /** Vues proposées : la liste « à venir » historique, plus les trois calendriers. */
 type Vue = 'avenir' | VueAgendaMode;
 
+const VUES: Vue[] = ['avenir', 'jour', 'semaine', 'mois'];
+
+/**
+ * Clé de mémorisation de la vue choisie.
+ *
+ * ⚠ `hub-` et non `nestync-` : c'est la convention des préférences existantes
+ * (`hub-theme`, `hub-langue`, `hub-nom`…), conservée malgré le changement de nom
+ * commercial pour ne pas réinitialiser les réglages déjà posés chez les gens.
+ *
+ * ⚠ **`localStorage` et non un cookie.** C'est une préférence d'affichage, propre
+ * à l'appareil — on ne consulte pas son agenda de la même façon sur un téléphone
+ * et sur un écran large. Un cookie serait renvoyé au serveur à chaque requête
+ * pour une information dont le serveur n'a aucun usage.
+ */
+const CLE_VUE = 'hub-agenda-vue';
+
 /** Date ISO (yyyy-mm-dd) → « lundi 4 août » dans la langue courante. */
 function jourComplet(iso: string, langue: IdLangue): string {
   const [a, m, j] = iso.split('-').map(Number);
@@ -66,6 +82,45 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   /** Date de référence des vues calendrier (jour affiché, ou n'importe lequel
       de la semaine / du mois affiché). */
   const [curseur, setCurseur] = useState(aujourdhuiISO());
+
+  /*
+   * Restitue la vue choisie la fois précédente.
+   *
+   * ⚠ EN `useEffect`, JAMAIS À L'INITIALISATION DE L'ÉTAT. Ce composant est
+   * rendu par le serveur, qui n'a pas accès à `localStorage` : lire la
+   * préférence pendant le rendu ferait produire au serveur « à venir » et au
+   * navigateur « mois », c'est-à-dire une erreur d'hydratation. On accepte donc
+   * une image de la vue par défaut le temps d'un souffle — c'est le prix d'une
+   * préférence locale sur une page rendue côté serveur.
+   *
+   * ⚠ LA DATE, ELLE, N'EST PAS MÉMORISÉE, et c'est délibéré. Retrouver son
+   * agenda ouvert sur le mois de mars parce qu'on y avait navigué la semaine
+   * dernière n'est pas un confort : on ouvre un agenda pour voir ce qui vient.
+   * Seule la FORME est une habitude, pas la période.
+   */
+  useEffect(() => {
+    try {
+      const enregistree = localStorage.getItem(CLE_VUE);
+      // Valeur validée contre la liste : une clé bricolée à la main ne doit pas
+      // faire rendre une vue qui n'existe pas.
+      if (enregistree && (VUES as string[]).includes(enregistree)) setVue(enregistree as Vue);
+    } catch {
+      // stockage indisponible (navigation privée, réglage strict) : vue par défaut.
+    }
+  }, []);
+
+  /** Change de vue et mémorise le choix. */
+  const choisirVue = useCallback((v: Vue) => {
+    // Repartir d'aujourd'hui : garder un curseur d'il y a trois mois déposerait
+    // la personne loin de ce qu'elle regardait.
+    setCurseur(aujourdhuiISO());
+    setVue(v);
+    try {
+      localStorage.setItem(CLE_VUE, v);
+    } catch {
+      // sans conséquence : la vue reste choisie pour cette visite.
+    }
+  }, []);
 
   /** Plage à charger pour l'état courant. `null` = les 30 jours à venir. */
   const plage = useMemo(
@@ -184,19 +239,13 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   return (
     <>
       <div className="ag-vues" role="tablist">
-        {(['avenir', 'jour', 'semaine', 'mois'] as Vue[]).map((v) => (
+        {VUES.map((v) => (
           <button
             key={v}
             role="tab"
             className="ag-vue-onglet"
             aria-selected={vue === v}
-            onClick={() => {
-              // Repartir d'aujourd'hui à chaque changement de vue : garder un
-              // curseur d'il y a trois mois déposerait la personne loin de ce
-              // qu'elle regardait.
-              setCurseur(aujourdhuiISO());
-              setVue(v);
-            }}
+            onClick={() => choisirVue(v)}
             disabled={occupe}
           >
             {tr(v === 'avenir' ? 'AGD_VUE_AVENIR' : v === 'jour' ? 'AGD_VUE_JOUR' : v === 'semaine' ? 'AGD_VUE_SEMAINE' : 'AGD_VUE_MOIS')}

@@ -499,6 +499,7 @@ const UI = {
   TODO_TAB_COURSES: { fr: 'Courses', en: 'Shopping' },
   TODO_NOUVELLE_TACHE: { fr: 'Nouvelle tâche…', en: 'New task…' },
   TODO_QUI: { fr: 'Qui ?', en: 'Who?' },
+  TODO_QUI_AUTRE: { fr: 'Ou tape un autre nom', en: 'Or type another name' },
   TODO_PRIORITE: { fr: 'Priorité', en: 'Priority' },
   TODO_CATEGORIE: { fr: 'Catégorie', en: 'Category' },
   TODO_ECHEANCE: { fr: 'Échéance', en: 'Due date' },

@@ -2929,3 +2929,12 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* Indication de saisie libre, en pied de menu déroulant.
+   ⚠ Volontairement PAS un bouton : c'est une indication, pas un choix. Elle doit
+   se distinguer des options au premier coup d'œil, sinon on essaie de cliquer
+   dessus. */
+.combo-note {
+  padding: .4rem .6rem; font-size: .75rem; color: var(--muted);
+  border-top: 1px solid var(--line); font-style: italic;
+}

@@ -16,6 +16,7 @@ export default function Combobox({
   ariaLabel,
   onCommit,
   className,
+  note,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -26,6 +27,15 @@ export default function Combobox({
   /** Appelé quand la saisie est « validée » (perte de focus ou choix d'une suggestion). */
   onCommit?: (v: string) => void;
   className?: string;
+  /**
+   * Phrase affichée en bas du menu, pour dire qu'on peut saisir autre chose.
+   *
+   * ⚠ La saisie libre a TOUJOURS été possible, mais rien ne le disait : on voit
+   * une liste, on en conclut qu'elle est fermée. Signalé en test sur le champ
+   * « Qui » des tâches, où il faut pouvoir assigner quelqu'un d'extérieur au
+   * foyer — la nounou, une grand-mère.
+   */
+  note?: string;
 }) {
   const [ouvert, setOuvert] = useState(false);
 
@@ -59,7 +69,7 @@ export default function Combobox({
           onCommit?.(value);
         }}
       />
-      {ouvert && filtres.length > 0 && (
+      {ouvert && (filtres.length > 0 || !!note) && (
         <ul className="combo-liste" role="listbox">
           {filtres.map((o) => (
             <li key={o}>
@@ -76,6 +86,14 @@ export default function Combobox({
               </button>
             </li>
           ))}
+          {/* ⚠ Ni bouton ni option : c'est une indication, pas un choix. En
+              faire une entrée sélectionnable écrirait « Autre » dans le champ,
+              là où on veut justement que la personne tape un nom. */}
+          {note && (
+            <li className="combo-note" aria-hidden="true">
+              {note}
+            </li>
+          )}
         </ul>
       )}
     </div>

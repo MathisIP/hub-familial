@@ -192,7 +192,17 @@ function OngletTaches({
           onChange={(e) => setTitre(e.target.value)}
           aria-label={tr('TODO_NOUVELLE_TACHE')}
         />
-        <Combobox value={assigne} onChange={setAssigne} options={params.personnes} placeholder={tr('TODO_QUI')} ariaLabel={tr('TODO_QUI')} />
+        {/* Les membres du foyer d'abord, puis les noms déjà employés.
+            `note` dit qu'on peut assigner quelqu'un d'extérieur — la liste
+            ressemble sinon à un choix fermé. */}
+        <Combobox
+          value={assigne}
+          onChange={setAssigne}
+          options={params.personnes}
+          placeholder={tr('TODO_QUI')}
+          ariaLabel={tr('TODO_QUI')}
+          note={tr('TODO_QUI_AUTRE')}
+        />
         <Liste
           valeur={priorite}
           onChange={setPriorite}

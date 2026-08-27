@@ -30,6 +30,32 @@ import {
  * répliquée en base, comme elle l'était pour compenser l'absence d'onEdit Sheets.
  */
 
+/**
+ * Dédoublonne en PRÉSERVANT L'ORDRE reçu.
+ *
+ * ⚠ `distinct` trie, et c'est justement ce qu'il ne faut pas ici : les membres
+ * du foyer doivent rester en tête de la liste « Qui », devant les noms
+ * simplement rencontrés dans d'anciennes tâches. Un tri alphabétique les
+ * mélangerait, et la personne chercherait son conjoint au milieu de la nounou et
+ * d'une faute de frappe d'il y a six mois.
+ *
+ * La comparaison est insensible à la casse : « clara » et « Clara » sont la même
+ * personne, et c'est la forme du foyer — la première rencontrée — qui l'emporte.
+ */
+function dedoublonner(valeurs: string[]): string[] {
+  const vus = new Set<string>();
+  const sortie: string[] = [];
+  for (const v of valeurs) {
+    const t = (v ?? '').trim();
+    if (!t) continue;
+    const cle = t.toLowerCase();
+    if (vus.has(cle)) continue;
+    vus.add(cle);
+    sortie.push(t);
+  }
+  return sortie;
+}
+
 /** Valeurs distinctes non vides d'une colonne, triées. */
 function distinct(valeurs: (string | null)[]): string[] {
   return [...new Set(valeurs.map((v) => (v ?? '').trim()).filter(Boolean))].sort((a, b) =>
@@ -42,9 +68,12 @@ export async function chargerTodo(): Promise<DonneesTodo> {
   const d = db();
   const today = aujourdhuiISO();
 
-  const [lignesTaches, lignesCourses] = await Promise.all([
+  const [lignesTaches, lignesCourses, membres] = await Promise.all([
     d.select().from(tTaches).where(eq(tTaches.foyerId, foyerId)),
     d.select().from(tCourses).where(eq(tCourses.foyerId, foyerId)).orderBy(asc(tCourses.creeLe)),
+    // ⚠ En parallèle des deux autres : une requête concurrente de plus ne coûte
+    // pas un aller-retour de plus, et cette page est déjà sur un chemin sensible.
+    membresDuFoyer(),
   ]);
 
   const taches: Tache[] = lignesTaches.map((r) => construireTache(r, today));
@@ -68,11 +97,24 @@ export async function chargerTodo(): Promise<DonneesTodo> {
     rayon: r.rayon,
   }));
 
-  // Listes : statuts/priorités/récurrences fixes ; personnes/catégories/rayons
-  // dérivées des données existantes (alimentent selects, datalists et filtre).
+  /*
+   * Listes : statuts/priorités/récurrences fixes ; catégories/rayons dérivés des
+   * données existantes.
+   *
+   * ⚠ « QUI » NE SE DÉDUIT PLUS DES SEULES TÂCHES EXISTANTES. La liste sortait
+   * des affectations déjà saisies : dans un foyer qui démarre, elle était donc
+   * VIDE — il fallait taper chaque prénom à la main, et une faute de frappe
+   * créait une deuxième personne pour toujours. Les membres du foyer passent
+   * devant ; les noms déjà employés suivent, pour ne pas perdre l'historique ni
+   * les personnes extérieures au foyer (« Mamie », la nounou) qu'on a assignées
+   * une fois.
+   *
+   * Le champ reste en SAISIE LIBRE (Combobox) : c'est ce qui permet le « autre »
+   * sans en faire une entrée de menu à part.
+   */
   const parametres: Parametres = {
     statuts: STATUTS_DEFAUT,
-    personnes: distinct(lignesTaches.map((t) => t.assigne)),
+    personnes: dedoublonner([...membres.map((m) => m.nom), ...distinct(lignesTaches.map((t) => t.assigne))]),
     priorites: PRIORITES_DEFAUT,
     recurrences: RECURRENCES_DEFAUT,
     categories: distinct(lignesTaches.map((t) => t.categorie)),

@@ -41,6 +41,15 @@ const emails = args
  * pourtant « BAC À SABLE » deux lignes plus haut.
  */
 const prod = args.includes('--prod');
+/*
+ * ⚠ REPORTÉ DANS TOUTES LES COMMANDES QUE LE SCRIPT SUGGÈRE. Sans cela, la
+ * ligne « relance avec --appliquer » proposait une commande SANS `--prod` :
+ * copiée telle quelle après une simulation en production, elle écrivait dans le
+ * bac à sable, et il ne se passait rien sur le compte visé. Un outil qui dicte
+ * la commande suivante doit dicter la bonne — c'est la seule que l'on recopie
+ * sans la relire.
+ */
+const drapeaux = prod ? '--prod ' : '';
 const { sql, hote } = prod ? connexionProduction() : connexion({ max: 1 });
 
 /** Vrai si la base porte le marqueur de bac à sable. */
@@ -129,8 +138,8 @@ try {
       console.log('  Aucun accès offert pour le moment.');
       console.log('');
       console.log('  Pour en accorder un :');
-      console.log('    npm run beta -- alice@exemple.fr            (simulation)');
-      console.log('    npm run beta -- --appliquer alice@exemple.fr');
+      console.log(`    npm run beta -- ${drapeaux}alice@exemple.fr            (simulation)`);
+      console.log(`    npm run beta -- ${drapeaux}--appliquer alice@exemple.fr`);
     } else {
       console.log(`  ${offerts.length} accès offert(s) :`);
       for (const o of offerts) console.log(`    · ${(o.email ?? '(sans propriétaire)').padEnd(32)} ${o.nom}`);
@@ -197,7 +206,9 @@ try {
 
   if (!appliquer) {
     console.log(`  ${aFaire.length} foyer(s) seraient modifiés. Relance avec --appliquer :`);
-    console.log(`    npm run beta -- ${retirer ? '--retirer ' : ''}--appliquer ${emails.join(' ')}`);
+    console.log(
+      `    npm run beta -- ${drapeaux}${retirer ? '--retirer ' : ''}--appliquer ${emails.join(' ')}`,
+    );
     console.log('');
     process.exit(0);
   }

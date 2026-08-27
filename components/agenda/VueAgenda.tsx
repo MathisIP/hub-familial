@@ -1,16 +1,25 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Liste from '@/components/Liste';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { locale, type IdLangue } from '@/lib/i18n';
 import {
   aujourdhuiISO,
+  debutSemaine,
+  decalerJours,
+  decalerMois,
+  fenetreAgenda,
+  grilleMois,
   type Agenda,
   type DonneesAgenda,
   type EvenementAgenda,
   type PorteeSuppression,
+  type VueAgendaMode,
 } from '@/lib/agenda/schema';
+
+/** Vues proposées : la liste « à venir » historique, plus les trois calendriers. */
+type Vue = 'avenir' | VueAgendaMode;
 
 /** Date ISO (yyyy-mm-dd) → « lundi 4 août » dans la langue courante. */
 function jourComplet(iso: string, langue: IdLangue): string {
@@ -47,11 +56,49 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   /** Événement en cours d'édition, avec la portée retenue. */
   const [aModifier, setAModifier] = useState<{ e: EvenementAgenda; portee: PorteeSuppression } | null>(null);
 
+  /*
+   * ⚠ « À venir » RESTE LA VUE PAR DÉFAUT. C'est ce que les gens regardent au
+   * quotidien sur un téléphone — la suite des prochains rendez-vous, sans
+   * navigation. Les trois vues calendrier s'ajoutent ; elles ne la remplacent
+   * pas, sous peine de transformer un coup d'œil en deux gestes.
+   */
+  const [vue, setVue] = useState<Vue>('avenir');
+  /** Date de référence des vues calendrier (jour affiché, ou n'importe lequel
+      de la semaine / du mois affiché). */
+  const [curseur, setCurseur] = useState(aujourdhuiISO());
+
+  /** Plage à charger pour l'état courant. `null` = les 30 jours à venir. */
+  const plage = useMemo(
+    () => (vue === 'avenir' ? null : fenetreAgenda(vue, curseur)),
+    [vue, curseur],
+  );
+
   const rafraichir = useCallback(async () => {
-    const r = await fetch('/api/agenda', { cache: 'no-store' });
+    const url = plage ? `/api/agenda?debut=${plage.debut}&fin=${plage.fin}` : '/api/agenda';
+    const r = await fetch(url, { cache: 'no-store' });
     if (!r.ok) throw new Error((await r.json()).erreur ?? 'Erreur de chargement.');
     setD(await r.json());
-  }, []);
+  }, [plage]);
+
+  /*
+   * Recharge quand la vue ou la période change.
+   *
+   * ⚠ On SAUTE LE PREMIER RENDU : les données de « à venir » arrivent déjà
+   * rendues par le serveur. Refaire l'appel au montage produirait une requête
+   * inutile sur chaque visite, et un bref clignotement de la liste.
+   */
+  const premierRendu = useRef(true);
+  useEffect(() => {
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return;
+    }
+    setOccupe(true);
+    setErreur(null);
+    rafraichir()
+      .catch((e) => setErreur(e instanceof Error ? e.message : String(e)))
+      .finally(() => setOccupe(false));
+  }, [rafraichir]);
 
   const action = useCallback(
     async (fn: () => Promise<Response>) => {
@@ -103,8 +150,75 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
   const aujourd = aujourdhuiISO();
   const groupes = useMemo(() => grouper(d.evenements), [d.evenements]);
 
+  /** Déplace la période affichée d'un cran (sens = −1 ou +1). */
+  const naviguer = useCallback(
+    (sens: number) => {
+      setCurseur((c) => {
+        if (vue === 'jour') return decalerJours(c, sens);
+        if (vue === 'semaine') return decalerJours(c, 7 * sens);
+        return decalerMois(c, sens);
+      });
+    },
+    [vue],
+  );
+
+  /** Intitulé de la période affichée, dans la langue courante. */
+  const periode = useMemo(() => {
+    const fmt = (o: Intl.DateTimeFormatOptions, iso: string) => {
+      const [a, m, j] = iso.split('-').map(Number);
+      return new Intl.DateTimeFormat(locale(langue), o).format(new Date(a, m - 1, j));
+    };
+    if (vue === 'jour') return fmt({ weekday: 'long', day: 'numeric', month: 'long' }, curseur);
+    if (vue === 'mois') return fmt({ month: 'long', year: 'numeric' }, curseur);
+    if (vue === 'semaine') {
+      const lundi = debutSemaine(curseur);
+      const dimanche = decalerJours(lundi, 6);
+      // ⚠ Une semaine chevauche souvent deux mois : afficher « 31 août – 6
+      // septembre » plutôt que le seul mois du lundi, sinon la fin de semaine
+      // paraît manquante.
+      return `${fmt({ day: 'numeric', month: 'short' }, lundi)} – ${fmt({ day: 'numeric', month: 'short' }, dimanche)}`;
+    }
+    return '';
+  }, [vue, curseur, langue]);
+
   return (
     <>
+      <div className="ag-vues" role="tablist">
+        {(['avenir', 'jour', 'semaine', 'mois'] as Vue[]).map((v) => (
+          <button
+            key={v}
+            role="tab"
+            className="ag-vue-onglet"
+            aria-selected={vue === v}
+            onClick={() => {
+              // Repartir d'aujourd'hui à chaque changement de vue : garder un
+              // curseur d'il y a trois mois déposerait la personne loin de ce
+              // qu'elle regardait.
+              setCurseur(aujourdhuiISO());
+              setVue(v);
+            }}
+            disabled={occupe}
+          >
+            {tr(v === 'avenir' ? 'AGD_VUE_AVENIR' : v === 'jour' ? 'AGD_VUE_JOUR' : v === 'semaine' ? 'AGD_VUE_SEMAINE' : 'AGD_VUE_MOIS')}
+          </button>
+        ))}
+      </div>
+
+      {vue !== 'avenir' && (
+        <div className="ag-nav">
+          <button className="bouton discret" onClick={() => naviguer(-1)} disabled={occupe} aria-label={tr('AGD_PRECEDENT')}>
+            ‹
+          </button>
+          <span className="ag-periode">{periode}</span>
+          <button className="bouton discret" onClick={() => naviguer(1)} disabled={occupe} aria-label={tr('AGD_SUIVANT')}>
+            ›
+          </button>
+          <button className="bouton discret ag-aujourdhui" onClick={() => setCurseur(aujourdhuiISO())} disabled={occupe}>
+            {tr('AGD_AUJOURDHUI')}
+          </button>
+        </div>
+      )}
+
       {!ajout && (
         <div className="saisie-barre">
           <button className="bouton" onClick={() => setAjout(true)} disabled={occupe}>
@@ -142,8 +256,26 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
 
       {erreur && <p className="message erreur">{erreur}</p>}
 
-      {groupes.length === 0 ? (
-        <p className="vide">{tr('AGD_AUCUN_1')} {d.jours} {tr('AGD_AUCUN_2')}</p>
+      {/*
+        La vue MOIS est la seule à demander un rendu propre : une grille, pas une
+        liste. Jour et semaine réutilisent le groupage par jour ci-dessous — seule
+        la fenêtre chargée change, ce qui évite trois rendus à maintenir.
+      */}
+      {vue === 'mois' ? (
+        <GrilleMois
+          curseur={curseur}
+          evenements={d.evenements}
+          aujourd={aujourd}
+          langue={langue}
+          onJour={(iso) => {
+            setCurseur(iso);
+            setVue('jour');
+          }}
+        />
+      ) : groupes.length === 0 ? (
+        <p className="vide">
+          {vue === 'avenir' ? `${tr('AGD_AUCUN_1')} ${d.jours} ${tr('AGD_AUCUN_2')}` : tr('AGD_VIDE_PERIODE')}
+        </p>
       ) : (
         groupes.map(({ jour, evenements }) => {
           const rel = relatif(jour, aujourd, tr);
@@ -304,6 +436,91 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
         })
       )}
     </>
+  );
+}
+
+/* --------------------------------- MOIS --------------------------------- */
+
+/**
+ * Grille du mois : une case par jour, les événements en pastilles.
+ *
+ * ⚠ AUCUN SURVOL, ET C'EST STRUCTURANT. Les calendriers de bureau montrent le
+ * détail d'un événement au passage de la souris — geste qui n'existe pas sur un
+ * écran tactile, c'est-à-dire sur l'usage principal de Nestync. Toucher un jour
+ * bascule donc en vue Jour, où l'on peut lire, modifier et supprimer. Une case
+ * de calendrier sur téléphone sert à repérer, pas à agir.
+ */
+function GrilleMois({
+  curseur,
+  evenements,
+  aujourd,
+  langue,
+  onJour,
+}: {
+  curseur: string;
+  evenements: EvenementAgenda[];
+  aujourd: string;
+  langue: IdLangue;
+  onJour: (iso: string) => void;
+}) {
+  const semaines = useMemo(() => grilleMois(curseur), [curseur]);
+  const moisAffiche = curseur.slice(0, 7);
+
+  const parJour = useMemo(() => {
+    const m = new Map<string, EvenementAgenda[]>();
+    for (const e of evenements) {
+      if (!m.has(e.dateISO)) m.set(e.dateISO, []);
+      m.get(e.dateISO)!.push(e);
+    }
+    return m;
+  }, [evenements]);
+
+  // Noms courts des jours, dans la langue courante, en commençant par LUNDI.
+  const entetes = useMemo(() => {
+    const f = new Intl.DateTimeFormat(locale(langue), { weekday: 'short' });
+    // 2026-08-24 est un lundi — point de départ arbitraire mais sûr.
+    return Array.from({ length: 7 }, (_, i) => {
+      const [a, m, j] = decalerJours('2026-08-24', i).split('-').map(Number);
+      return f.format(new Date(a, m - 1, j));
+    });
+  }, [langue]);
+
+  return (
+    <div className="ag-mois">
+      <div className="ag-mois-entete">
+        {entetes.map((j) => (
+          <span key={j} className="ag-mois-jourlbl">{j}</span>
+        ))}
+      </div>
+      {semaines.map((semaine) => (
+        <div className="ag-mois-semaine" key={semaine[0]}>
+          {semaine.map((iso) => {
+            const evs = parJour.get(iso) ?? [];
+            const horsMois = iso.slice(0, 7) !== moisAffiche;
+            return (
+              <button
+                type="button"
+                key={iso}
+                className={`ag-mois-case${horsMois ? ' hors' : ''}${iso === aujourd ? ' aujourd' : ''}`}
+                onClick={() => onJour(iso)}
+                aria-label={`${iso} — ${evs.length}`}
+              >
+                <span className="ag-mois-num">{Number(iso.slice(8, 10))}</span>
+                {/* Trois au plus : au-delà, la case devient illisible sur un
+                    téléphone et le compteur dit l'essentiel. */}
+                {evs.slice(0, 3).map((e) => (
+                  <span className="ag-mois-ev" key={`${e.calendarId}:${e.id}`}>
+                    <span className="ag-mois-point" style={{ background: e.couleur }} />
+                    <span className="ag-mois-titre">{e.titre}</span>
+                  </span>
+                ))}
+                {evs.length > 3 && <span className="ag-mois-plus">+{evs.length - 3}</span>}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
   );
 }
 

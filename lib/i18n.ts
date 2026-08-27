@@ -621,6 +621,15 @@ const UI = {
     en: 'Across the whole series, only the title, location and description change. To move a date, choose “this date”.',
   },
   AGD_MODIFIER_TITRE: { fr: 'Modifier l’événement', en: 'Edit event' },
+  /* --- Vues jour / semaine / mois --- */
+  AGD_VUE_AVENIR: { fr: 'À venir', en: 'Upcoming' },
+  AGD_VUE_JOUR: { fr: 'Jour', en: 'Day' },
+  AGD_VUE_SEMAINE: { fr: 'Semaine', en: 'Week' },
+  AGD_VUE_MOIS: { fr: 'Mois', en: 'Month' },
+  AGD_PRECEDENT: { fr: 'Période précédente', en: 'Previous period' },
+  AGD_SUIVANT: { fr: 'Période suivante', en: 'Next period' },
+  AGD_AUJOURDHUI: { fr: 'Aujourd’hui', en: 'Today' },
+  AGD_VIDE_PERIODE: { fr: 'Rien de prévu sur cette période.', en: 'Nothing planned in this period.' },
 
   // Statuts Événements
   EVS_APLANIFIER: { fr: 'À planifier', en: 'To plan' },

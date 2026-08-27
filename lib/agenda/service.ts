@@ -236,14 +236,35 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
 }
 
 /** Événements à venir sur `jours` jours, fusionnés depuis tous les agendas. */
-export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
+/**
+ * Événements du foyer sur une fenêtre de temps.
+ *
+ * Sans argument : les `jours` à venir (comportement d'origine, celui de la vue
+ * « à venir »). Avec `debut`/`fin` (aaaa-mm-jj) : exactement cette plage, bornes
+ * comprises — ce dont les vues jour, semaine et mois ont besoin.
+ *
+ * ⚠ LA PLAGE EXPLICITE PEUT REGARDER DANS LE PASSÉ, et c'est le but. La fenêtre
+ * par défaut part de l'instant présent ; un mois affiché en entier commence au
+ * lundi précédant le 1er, souvent déjà écoulé. S'en tenir à `timeMin: maintenant`
+ * aurait vidé le début de chaque grille sans que rien ne l'explique.
+ */
+export async function chargerAgenda(
+  fenetre: number | { debut?: string; fin?: string } = 30,
+): Promise<DonneesAgenda> {
+  const jours = typeof fenetre === 'number' ? fenetre : 30;
   // Aucun agenda rattaché : état VIDE, pas une erreur. Un foyer qui n'a pas
   // encore connecté de calendrier n'a rien fait de mal.
   const ids = await agendasDuFoyer();
   if (ids.length === 0) return { evenements: [], agendas: [], jours };
 
-  const maintenant = new Date();
-  const fin = new Date(maintenant.getTime() + jours * 86400000);
+  const plage = typeof fenetre === 'object' && fenetre.debut && fenetre.fin ? fenetre : null;
+  // ⚠ Bornes locales, pas UTC : `new Date('2026-08-24')` serait minuit UTC,
+  // donc le 23 à 22 h en France — la première ligne d'une grille de mois
+  // perdrait ses événements du matin.
+  const maintenant = plage ? new Date(`${plage.debut}T00:00:00`) : new Date();
+  const fin = plage
+    ? new Date(`${plage.fin}T23:59:59`)
+    : new Date(Date.now() + jours * 86400000);
 
   const parAgenda = await Promise.all(
     ids.map(async (a, i): Promise<{ agenda: Agenda; evenements: EvenementAgenda[]; lisible: boolean }> => {
@@ -259,7 +280,10 @@ export async function chargerAgenda(jours = 30): Promise<DonneesAgenda> {
         timeMax: fin.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
-        maxResults: 100,
+        // ⚠ Relevé de 100 à 250 avec les vues mois : un agenda professionnel
+        // dépasse facilement 100 événements sur six semaines, et le dépassement
+        // se serait vu comme une fin de mois vide — pas comme une limite.
+        maxResults: 250,
       });
       const evenements = (rep.data.items ?? [])
         .map((e) => versEvenement(e, id, couleur))

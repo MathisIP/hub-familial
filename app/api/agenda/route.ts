@@ -10,10 +10,25 @@ import { reponseErreur } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-/** GET /api/agenda — événements à venir de l'agenda familial. */
-export async function GET() {
+/**
+ * GET /api/agenda — événements du foyer.
+ *
+ * Sans paramètre : les 30 jours à venir. Avec `?debut=aaaa-mm-jj&fin=aaaa-mm-jj` :
+ * exactement cette plage, ce dont les vues jour, semaine et mois ont besoin.
+ *
+ * ⚠ Les deux bornes sont exigées ensemble et validées : une plage à moitié
+ * renseignée, ou une date fantaisiste, doit retomber sur le comportement par
+ * défaut plutôt que de produire une fenêtre absurde côté Google.
+ */
+const JOUR_ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function GET(req: NextRequest) {
   try {
-    return NextResponse.json(await chargerAgenda());
+    const p = req.nextUrl.searchParams;
+    const debut = p.get('debut') ?? '';
+    const fin = p.get('fin') ?? '';
+    const plage = JOUR_ISO.test(debut) && JOUR_ISO.test(fin) && debut <= fin ? { debut, fin } : 30;
+    return NextResponse.json(await chargerAgenda(plage));
   } catch (e) {
     return reponseErreur(e);
   }

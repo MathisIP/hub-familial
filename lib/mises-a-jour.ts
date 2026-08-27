@@ -43,19 +43,22 @@ export type Version = {
   /** Identifiant d'ancre, stable : on peut pointer une version précise. */
   id: string;
   /**
-   * Numéro de la version, croissant. Le plus grand est le plus récent.
+   * Numéro de version, façon `majeur.mineur.correctif`.
    *
-   * ⚠ UN ENTIER, PAS UN `1.4.2`. Une numérotation à trois chiffres annonce une
-   * distinction majeur/mineur/correctif qui n'a aucun sens ici : Nestync est
-   * livré en continu, personne n'installe une version ni ne reste sur une
-   * ancienne. Prétendre le contraire donnerait un numéro que rien ne détermine —
-   * et qu'il faudrait justifier à chaque publication.
+   * ⚠ TROIS NOMBRES, DONC TROIS PROMESSES. Une numérotation de cette forme
+   * annonce une distinction, et le lecteur la lira comme telle. Pour qu'elle ne
+   * devienne pas décorative, elle se décide ainsi :
    *
-   * ⚠ NE JAMAIS RÉUTILISER NI RENUMÉROTER. Le numéro sert à désigner une
-   * publication dans un échange (« c'est arrivé après la 3 ») : le décaler
-   * rendrait faux tout ce qui a été dit avant.
+   *   · **correctif** (1.1.0 → 1.1.1) — que des corrections, rien de nouveau ;
+   *   · **mineur**    (1.0.0 → 1.1.0) — au moins une fonction qui n'existait pas ;
+   *   · **majeur**    (1.x.x → 2.0.0) — un changement de fond dans la façon
+   *     d'utiliser l'application, pas une accumulation de petites choses.
+   *
+   * ⚠ NE JAMAIS RÉUTILISER NI RENUMÉROTER une version publiée. Le numéro sert à
+   * désigner une publication dans un échange (« c'est arrivé en 1.1.0 ») : le
+   * décaler rendrait faux tout ce qui a été dit avant.
    */
-  numero: number;
+  numero: string;
   /** Date affichée, en toutes lettres. */
   date: string;
   /** Date ISO, pour l'ordre et pour `<time>`. */
@@ -74,8 +77,66 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-08-27-b',
+    numero: '1.1.0',
+    date: '27 août 2026',
+    dateISO: '2026-08-27',
+    titre: 'Suppression des tâches, et trois gestes qui manquaient',
+    resume: 'Sept changements, tous issus des retours reçus depuis la première version.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Une tâche peut enfin être supprimée.',
+        texte:
+          'Une croix au bout de chaque ligne. Jusqu’ici on pouvait la cocher « faite », jamais la retirer — la liste ne faisait que s’allonger.',
+        detail:
+          'Le bouton est présent sur toutes les tâches, pas seulement les faites : une tâche saisie par erreur n’a pas à être cochée avant d’être effacée. Une confirmation est demandée.',
+      },
+      {
+        nature: 'nouveau',
+        titre: '« Retirer les tâches faites » vide la liste d’un coup.',
+        texte:
+          'Le bouton apparaît sous les tâches dès qu’il y en a à retirer, avec leur nombre.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Le bouton qui envoie les ingrédients vers la liste de courses ne disparaît plus.',
+        texte:
+          'Il était rattaché à l’aperçu, lequel s’effaçait entièrement quand il n’y avait rien à rassembler — la fonction devenait alors introuvable, sans qu’on puisse savoir qu’elle existait.',
+        detail:
+          'Quand il n’y a rien à verser, l’application dit maintenant pourquoi : les repas planifiés ne correspondent à aucune recette, ou leurs ingrédients ne sont pas renseignés.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Le rayon d’un ingrédient se choisit dans une liste.',
+        texte:
+          'Il s’écrivait encore à la main alors que les courses étaient passées en liste fixe. Un « Epicerie » sans accent créait un rayon à part dans la liste de courses, séparé de l’« Épicerie » du reste.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'L’invitation à installer l’application ne s’affiche plus sur l’écran de connexion.',
+        texte:
+          'Elle proposait d’installer une application à quelqu’un qui n’y était pas encore entré, et recouvrait le bas de l’écran au moment le moins opportun.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'Ajouter un événement propose la date du jour affiché.',
+        texte:
+          'Si vous consultez le 12 septembre, le nouvel événement part du 12 septembre — et non d’aujourd’hui, qu’il fallait corriger à chaque fois.',
+        detail:
+          'En vue « À venir », qui couvre trente jours et ne désigne aucun jour en particulier, la date reste celle d’aujourd’hui.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'Une adresse inexistante affiche une vraie page.',
+        texte:
+          'On tombait auparavant sur un message en anglais, sur fond blanc, avec des morceaux de l’application autour — de quoi croire à une panne alors qu’il n’y a qu’une adresse mal tapée.',
+      },
+    ],
+  },
+  {
     id: '2026-08-27',
-    numero: 1,
+    numero: '1.0.0',
     date: '27 août 2026',
     dateISO: '2026-08-27',
     titre: 'Première vague de correctifs',

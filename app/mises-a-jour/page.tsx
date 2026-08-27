@@ -40,7 +40,7 @@ export default function PageMisesAJour() {
                   peut ainsi renvoyer quelqu'un vers une publication précise
                   plutôt que vers « la page, quelque part ». */}
               <a className="maj-numero" href={`#${v.id}`}>
-                Nº {v.numero}
+                {v.numero}
               </a>
               <time dateTime={v.dateISO}>{v.date}</time>
             </p>

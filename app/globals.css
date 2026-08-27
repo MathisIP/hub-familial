@@ -3109,3 +3109,73 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
    ⚠ Même traitement que la croix de l'agenda — une action destructrice ne doit
    pas attirer l'œil plus que le contenu qu'elle efface. */
 .tache-suppr { padding: .2rem .5rem; flex: 0 0 auto; }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * CONSOLE D'ADMINISTRATION (/admin)
+ *
+ * ⚠ CONÇUE POUR UN ÉCRAN LARGE, à dessein : c'est un outil d'exploitation
+ * utilisé par une seule personne, assise. La densité y vaut mieux que le
+ * confort du pouce. La grille retombe à une colonne sous 60 rem pour rester
+ * lisible si l'on réduit la fenêtre — pas pour offrir une version mobile.
+ * ══════════════════════════════════════════════════════════════════════ */
+.adm-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  gap: var(--e-5);
+  align-items: start;
+}
+.adm-bloc {
+  background: var(--cell); border: 1px solid var(--line);
+  border-radius: 1.1rem; padding: 1.1rem 1.2rem; margin-bottom: var(--e-5);
+  display: flex; flex-direction: column; gap: .8rem;
+}
+.adm-grille > .adm-bloc { margin-bottom: 0; }
+
+.adm-pastille {
+  display: inline-block; margin-left: .5rem; padding: .05rem .5rem;
+  background: var(--over); color: var(--page);
+  border-radius: 999px; font-size: .8rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.adm-rien { margin: 0; color: var(--ok-tx); font-size: .95rem; }
+
+.adm-afaire { display: flex; flex-direction: column; gap: .7rem; }
+.adm-afaire p { margin: 0; font-size: .95rem; }
+
+/* --- Chiffres clés --- */
+.adm-chiffres { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+.adm-chiffre { display: flex; flex-direction: column; }
+.adm-v {
+  font-size: 1.5rem; font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+}
+.adm-l { font-size: .75rem; color: var(--muted); }
+
+.adm-note { margin: 0; font-size: .84rem; color: var(--muted); line-height: 1.5; }
+.adm-soustitre {
+  margin: 0 0 .3rem; font-size: .68rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+}
+.adm-ok { color: var(--ok-tx); }
+.adm-neg, .adm-urgent { color: var(--over-tx); }
+
+/* --- Répartitions en barres --- */
+.adm-barres { display: flex; flex-direction: column; gap: .3rem; }
+.adm-barre { display: grid; grid-template-columns: 7rem 1fr 2.5rem; gap: .5rem; align-items: center; }
+.adm-barre-lbl { font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-barre-piste { height: .5rem; background: var(--head); border-radius: 999px; overflow: hidden; }
+.adm-barre-remplissage { display: block; height: 100%; background: var(--acc); border-radius: 999px; }
+.adm-num { font-variant-numeric: tabular-nums; text-align: right; font-size: .85rem; font-weight: 600; }
+
+/* --- Listes de suivi --- */
+.adm-suivi ul { list-style: none; margin: .2rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
+.adm-suivi li { display: flex; justify-content: space-between; gap: 1rem; font-size: .88rem; }
+.adm-foyer { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-quand { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* --- Tableau des volumes --- */
+.adm-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.adm-table td { padding: .3rem 0; border-bottom: 1px solid var(--line); }
+.adm-table tr:last-child td { border-bottom: 0; }
+/* ⚠ Un module à zéro se distingue : c'est l'information, pas une ligne vide. */
+.adm-zero td { color: var(--muted); }

@@ -48,6 +48,10 @@ export default function robots(): MetadataRoute.Robots {
         '/rejoindre',
         '/rejoindre-foyer',
         '/comptes',
+        // ⚠ Console d'exploitation : agrégats sur l'ensemble des foyers. Elle
+        // n'a rien à faire dans un index, et `EMAIL_ADMIN` la ferme de toute
+        // façon — cette ligne évite seulement qu'un robot s'y présente.
+        '/admin',
         '/apercu-site',
         // ⚠ Fiches du programme de test : publiques mais NON INDEXABLES. Elles
         // se donnent par lien, à des gens choisis ; les voir remonter dans une

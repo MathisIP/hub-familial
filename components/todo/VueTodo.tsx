@@ -137,6 +137,7 @@ function OngletTaches({
   const [filtrePersonne, setFiltrePersonne] = useState('');
 
   // La valeur « commune » (Les deux / Nous deux) et les personnes individuelles.
+  const nbFaites = taches.filter((t) => t.statut === STATUT_FAIT).length;
   const commun = params.personnes.find((p) => /deux/i.test(p)) ?? '';
   const individus = params.personnes.filter((p) => p !== commun);
 
@@ -174,6 +175,38 @@ function OngletTaches({
     // personne ou le même sujet. Le titre et l'échéance, eux, changent à chaque
     // fois — les garder ferait recopier une date sur la tâche suivante.
     action(() => fetch('/api/todo/taches', json(corps)));
+  }
+
+  /**
+   * Supprime une tâche.
+   *
+   * ⚠ CONFIRMATION EXIGÉE, y compris sur une tâche faite. Le bouton se trouve
+   * au bout d'une ligne, à côté du sélecteur de statut : sur un téléphone, un
+   * pouce mal placé effacerait sans retour possible. Une tâche ne vaut pas une
+   * dépense, mais on ne fait pas disparaître le travail de quelqu'un d'autre
+   * sans un mot.
+   */
+  function supprimer(t: Tache) {
+    if (!confirm(`${tr('TODO_SUPPRIMER')} « ${t.tache} » ?`)) return;
+    action(() =>
+      fetch('/api/todo/taches', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: t.id }),
+      }),
+    );
+  }
+
+  /** Vide toutes les tâches faites d'un coup. */
+  function viderFaites() {
+    if (!confirm(`${tr('TODO_VIDER_FAITES_Q')} (${nbFaites})`)) return;
+    action(() =>
+      fetch('/api/todo/taches', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ faites: true }),
+      }),
+    );
   }
 
   function changerStatut(id: string, statut: string) {
@@ -305,9 +338,33 @@ function OngletTaches({
                 options={params.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_TODO, s, langue) }))}
                 ariaLabel={`Statut de « ${t.tache} »`}
               />
+              {/* ⚠ Toujours présent, pas seulement sur les tâches faites : on
+                  supprime aussi une tâche saisie par erreur, ou devenue sans
+                  objet. La réserver aux « faites » obligerait à cocher une
+                  tâche qu'on n'a jamais faite pour pouvoir l'effacer. */}
+              <button
+                type="button"
+                className="bouton discret tache-suppr"
+                onClick={() => supprimer(t)}
+                disabled={occupe}
+                aria-label={`${tr('TODO_SUPPRIMER')} ${t.tache}`}
+              >
+                ✕
+              </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {/* ⚠ Sous la liste et non dans la barre du haut : c'est une action de fin
+          de parcours, qu'on cherche APRÈS avoir constaté l'accumulation. En
+          haut, elle se serait trouvée à portée de pouce en permanence. */}
+      {nbFaites > 0 && (
+        <div className="courses-actions">
+          <button type="button" className="bouton discret" onClick={viderFaites} disabled={occupe}>
+            {tr('TODO_VIDER_FAITES')} ({nbFaites})
+          </button>
+        </div>
       )}
     </>
   );

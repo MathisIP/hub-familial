@@ -102,6 +102,17 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
     return out;
   }, [d.semaine, d.recettes]);
   const courses = useMemo(() => agregerCourses(platsPlanifies), [platsPlanifies]);
+  /*
+   * ⚠ « Quelque chose est planifié » N'EST PAS « il y a des ingrédients ». Un
+   * jour peut porter du texte libre (« Restaurant »), ou une recette dont les
+   * ingrédients n'ont jamais été saisis : l'agrégat est alors vide alors que la
+   * semaine, elle, est remplie. Sans cette distinction, la section entière
+   * disparaissait — et avec elle le bouton — sans que rien n'explique pourquoi.
+   */
+  const quelqueChosePlanifie = useMemo(
+    () => d.semaine.some((j) => j.entree || j.plat || j.dessert),
+    [d.semaine],
+  );
 
   return (
     <>
@@ -111,7 +122,12 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
         ))}
       </ul>
 
-      <ApercuCourses courses={courses} occupe={occupe} action={action} />
+      <ApercuCourses
+        courses={courses}
+        planifie={quelqueChosePlanifie}
+        occupe={occupe}
+        action={action}
+      />
     </>
   );
 }
@@ -236,10 +252,13 @@ function JourLigne({
  */
 function ApercuCourses({
   courses,
+  planifie,
   occupe,
   action,
 }: {
   courses: ReturnType<typeof agregerCourses>;
+  /** La semaine porte au moins un repas, même sans ingrédient à en tirer. */
+  planifie: boolean;
   occupe: boolean;
   action: ActionFn;
 }) {
@@ -262,7 +281,25 @@ function ApercuCourses({
     });
   }
 
-  if (courses.length === 0) return null;
+  /*
+   * ⚠ ON NE DISPARAÎT QUE SI LA SEMAINE EST VIDE. Le bouton « verser la liste »
+   * vivait à l'intérieur de cet aperçu : quand l'agrégat était vide — texte
+   * libre au menu, recette sans ingrédients — la section entière s'effaçait, et
+   * la fonction devenait introuvable. On ne pouvait même pas savoir qu'elle
+   * existait. Signalé en test : « le bouton n'est pas présent ».
+   *
+   * Une semaine réellement vide, elle, n'a rien à dire : on se tait.
+   */
+  if (!planifie) return null;
+
+  if (courses.length === 0) {
+    return (
+      <section className="apercu-courses">
+        <h2 className="bloc-titre">{tr('REPAS_APERCU_TITRE')}</h2>
+        <p className="apercu-note">{tr('AC_SANS_INGREDIENT')}</p>
+      </section>
+    );
+  }
   // Regroupement par rayon.
   const parRayon = new Map<string, typeof courses>();
   for (const c of courses) {

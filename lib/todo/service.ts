@@ -203,6 +203,50 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
   }
 }
 
+/**
+ * Supprime une tâche.
+ *
+ * ⚠ SUPPRESSION RÉELLE, pas un archivage. Une tâche faite dont on ne veut plus
+ * n'a aucune valeur d'historique : ce n'est ni une dépense, ni un document. La
+ * garder « masquée » créerait une table qui grossit sans fin et une notion de
+ * plus à expliquer.
+ *
+ * ⚠ LE `where` PORTE LE FOYER, toujours. Sans lui, un identifiant deviné —
+ * il transite par le client — effacerait la tâche d'un autre foyer. C'est la
+ * règle d'isolation du projet, et elle n'a pas d'exception pour une suppression.
+ *
+ * ⚠ AUCUNE OCCURRENCE N'EST REGÉNÉRÉE. `changerStatutTache` crée la suivante
+ * quand on coche une tâche récurrente ; supprimer, c'est dire « je n'en veux
+ * plus », pas « c'est fait ». Confondre les deux ferait revenir indéfiniment une
+ * tâche qu'on essaie d'enlever.
+ */
+export async function supprimerTache(id: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .delete(tTaches)
+    .where(and(eq(tTaches.id, id), eq(tTaches.foyerId, foyerId)))
+    .returning({ id: tTaches.id });
+  // Rien de supprimé = tâche inexistante OU d'un autre foyer. Le message ne
+  // distingue pas les deux : le préciser confirmerait l'existence de la seconde.
+  if (res.length === 0) throw new ErreurValidation('Tâche introuvable.');
+}
+
+/**
+ * Supprime toutes les tâches déjà faites du foyer. Renvoie le nombre effacé.
+ *
+ * ⚠ Le pendant de `viderCoursesFaites`, et le geste qui manquait vraiment :
+ * une liste de tâches accumule ses « faites » beaucoup plus vite qu'on ne les
+ * retire une à une.
+ */
+export async function viderTachesFaites(): Promise<number> {
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .delete(tTaches)
+    .where(and(eq(tTaches.foyerId, foyerId), eq(tTaches.statut, STATUT_FAIT)))
+    .returning({ id: tTaches.id });
+  return res.length;
+}
+
 /* ----------------------------- MUTATIONS COURSES ---------------------------- */
 
 /** Ajoute un article à la liste de courses (case décochée). */

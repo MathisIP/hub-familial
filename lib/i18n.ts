@@ -509,6 +509,9 @@ const UI = {
   TODO_TAB_TACHES: { fr: 'Tâches', en: 'Tasks' },
   TODO_TAB_COURSES: { fr: 'Courses', en: 'Shopping' },
   TODO_NOUVELLE_TACHE: { fr: 'Nouvelle tâche…', en: 'New task…' },
+  TODO_SUPPRIMER: { fr: 'Supprimer', en: 'Delete' },
+  TODO_VIDER_FAITES: { fr: 'Retirer les tâches faites', en: 'Remove completed tasks' },
+  TODO_VIDER_FAITES_Q: { fr: 'Supprimer définitivement toutes les tâches faites ?', en: 'Permanently delete all completed tasks?' },
   TODO_QUI: { fr: 'Qui ?', en: 'Who?' },
   TODO_QUI_AUTRE: { fr: 'Ou tape un autre nom', en: 'Or type another name' },
   TODO_PRIORITE: { fr: 'Priorité', en: 'Priority' },
@@ -533,6 +536,9 @@ const UI = {
   REPAS_TAB_RECETTES: { fr: 'Recettes', en: 'Recipes' },
   REPAS_PERS: { fr: 'pers.', en: 'ppl' },
   /* --- Verser la liste de courses de la semaine --- */
+  /* ⚠ Dit POURQUOI il n'y a rien a verser. Sans ce message, la section
+     disparaissait et la fonction devenait introuvable. */
+  AC_SANS_INGREDIENT: { fr: 'Aucun ingrédient à rassembler : les repas planifiés ne correspondent à aucune recette, ou leurs ingrédients ne sont pas renseignés.', en: 'Nothing to gather: the planned meals match no recipe, or their ingredients are missing.' },
   AC_VERSER: { fr: 'Ajouter tout à ma liste de courses', en: 'Add everything to my shopping list' },
   AC_AJOUTES: { fr: 'articles ajoutés', en: 'items added' },
   /* ⚠ « cumulés » et non « ignorés » : la quantité de l'article deja present a

@@ -279,6 +279,10 @@ export default function VueAgenda({ initial }: { initial: DonneesAgenda }) {
         <FormAgenda
           agendas={d.agendas}
           occupe={occupe}
+          /* ⚠ En vue « à venir » il n'y a PAS de jour affiché : cette liste
+             couvre trente jours. On repart donc d'aujourd'hui, seule date que
+             la vue désigne réellement. */
+          dateInitiale={vue === 'avenir' ? aujourdhuiISO() : curseur}
           onAnnulerAction={() => setAjout(false)}
           onEnregistrerAction={(corps) =>
             action(() =>
@@ -605,6 +609,7 @@ function FormAgenda({
   occupe,
   evenement,
   portee = 'occurrence',
+  dateInitiale,
   onEnregistrerAction,
   onAnnulerAction,
 }: {
@@ -613,6 +618,16 @@ function FormAgenda({
   /** Événement à modifier ; absent = création. */
   evenement?: EvenementAgenda;
   portee?: PorteeSuppression;
+  /**
+   * Date proposée à la création.
+   *
+   * ⚠ Le jour AFFICHÉ, pas aujourd'hui. Quelqu'un qui consulte le 12 septembre
+   * et clique « nouvel événement » veut le poser au 12 septembre — c'est la
+   * raison même pour laquelle il a navigué jusque-là. Repartir sur la date du
+   * jour lui fait ressaisir ce qu'il venait d'indiquer, ou pire, crée
+   * l'événement au mauvais endroit sans qu'il s'en aperçoive.
+   */
+  dateInitiale?: string;
   onEnregistrerAction: (corps: {
     calendarId: string; titre: string; date: string; journeeEntiere: boolean;
     heureDebut: string; heureFin: string; lieu: string; description: string;
@@ -626,7 +641,7 @@ function FormAgenda({
 
   const [calendarId, setCalendarId] = useState(evenement?.calendarId ?? agendas[0]?.id ?? '');
   const [titre, setTitre] = useState(evenement?.titre ?? '');
-  const [date, setDate] = useState(evenement?.dateISO ?? aujourdhuiISO());
+  const [date, setDate] = useState(evenement?.dateISO ?? dateInitiale ?? aujourdhuiISO());
   const [journeeEntiere, setJourneeEntiere] = useState(evenement?.journeeEntiere ?? false);
   const [heureDebut, setHeureDebut] = useState(evenement?.heureDebut || '19:00');
   const [heureFin, setHeureFin] = useState(evenement?.heureFin || '20:00');

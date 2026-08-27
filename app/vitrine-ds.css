@@ -1142,3 +1142,55 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   border-radius: 3px;
   white-space: nowrap;
 }
+
+/* =====================================================================
+   PAGE « MISES À JOUR » (/mises-a-jour)
+   ===================================================================== */
+.nsy-site .maj-corps { display: grid; gap: var(--e-8); }
+.nsy-site .maj-version { display: grid; gap: var(--e-4); }
+.nsy-site .maj-date {
+  margin: 0; font-family: var(--font-donnees);
+  font-size: var(--eyebrow); text-transform: uppercase;
+  letter-spacing: var(--ls-eyebrow); color: var(--texte-petit);
+}
+.nsy-site .maj-version > h2 { margin: 0; }
+.nsy-site .maj-resume { margin: 0; }
+
+/* ⚠ La couleur porte la NATURE du changement — corrigé / nouveau / amélioré —
+   et rien d'autre. Elle permet de voir d'un coup d'œil si une version répare ou
+   ajoute, sans lire une ligne. */
+.nsy-site .maj-rubrique {
+  font-family: var(--font-donnees);
+  font-size: var(--eyebrow); font-weight: 600;
+  text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
+  margin: var(--e-5) 0 var(--e-4);
+  padding-top: var(--e-3); border-top: 2px solid var(--trait);
+}
+/* ⚠ Vert ASSOMBRI : `--positif` ne donne que 4,24:1 sur la chaux, sous le seuil
+   AA que la charte s'impose. Même correction locale que les fiches de test. */
+.nsy-site .maj-rubrique.corrige { color: var(--alerte); border-top-color: var(--alerte); }
+.nsy-site .maj-rubrique.nouveau { color: var(--commun-texte); border-top-color: var(--commun-texte); }
+.nsy-site .maj-rubrique.ameliore { color: #2A6B4F; border-top-color: #2A6B4F; }
+
+.nsy-site .maj-entrees {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: var(--e-4);
+}
+.nsy-site .maj-entrees > li {
+  padding-left: var(--e-4); border-left: 1px solid var(--trait);
+  max-width: var(--mesure);
+}
+.nsy-site .maj-entrees strong { color: var(--texte); font-weight: 600; }
+
+/* Précision secondaire : ce qu'on lit après, pas en même temps. */
+.nsy-site .maj-detail {
+  display: block; margin-top: var(--e-2);
+  font-size: var(--petit); color: var(--texte-petit);
+}
+/* ⚠ Ce que le lecteur doit VÉRIFIER chez lui. Une note de version doit
+   distinguer ce qu'on lit de ce qu'on doit faire — sans quoi l'action se noie
+   dans la liste et personne ne la voit. */
+.nsy-site .maj-detail.alerte {
+  color: var(--alerte); background: rgba(176, 58, 52, .09);
+  padding: var(--e-2) var(--e-3); border-radius: 4px;
+}

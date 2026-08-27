@@ -75,6 +75,16 @@ export default async function PageParametres() {
         <p className="compte-note">{t('REG_CONF_DESC', langue)}</p>
         <Link className="bouton reglage-lien" href="/confidentialite">{t('REG_CONF_BTN', langue)}</Link>
       </section>
+
+      {/* ⚠ Après la confidentialité, pas avant : ce sont les pages « autour » du
+          produit. Un membre y va rarement, mais doit pouvoir y aller sans
+          chercher — c'est le seul endroit de l'application où l'on apprend ce
+          qui a changé depuis la dernière fois. */}
+      <section className="compte-bloc">
+        <h2 className="bloc-titre">{t('REG_MAJ_TITRE', langue)}</h2>
+        <p className="compte-note">{t('REG_MAJ_DESC', langue)}</p>
+        <Link className="bouton reglage-lien" href="/mises-a-jour">{t('REG_MAJ_BTN', langue)}</Link>
+      </section>
     </>
   );
 }

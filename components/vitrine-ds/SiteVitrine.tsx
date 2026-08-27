@@ -1013,6 +1013,11 @@ export default function SiteVitrine() {
             <a href="/confidentialite" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Politique de confidentialité</a>
             <a href="/conditions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Conditions générales</a>
             <a href="/aide" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Contact</a>
+            {/* ⚠ Dans la colonne des liens de confiance, pas dans celle du
+                produit : une page de mises à jour rassure un visiteur qui se
+                demande si le produit vit encore, au même titre que les mentions
+                légales lui disent qui est derrière. */}
+            <a href="/mises-a-jour" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Mises à jour</a>
             <a href="/rejoindre-foyer" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Rejoindre un foyer</a>
             {/* ⚠ La barre du haut est masquee sous 767 px : sans ce lien,
                 un membre n'a AUCUN moyen de se connecter depuis un telephone. */}

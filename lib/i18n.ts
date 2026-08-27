@@ -113,6 +113,9 @@ const UI = {
   REG_CONF_TITRE: { fr: 'Confidentialité', en: 'Privacy' },
   REG_CONF_DESC: { fr: 'Comment tes données sont traitées et conservées.', en: 'How your data is processed and stored.' },
   REG_CONF_BTN: { fr: 'Politique de confidentialité', en: 'Privacy policy' },
+  REG_MAJ_TITRE: { fr: 'Mises à jour', en: 'Updates' },
+  REG_MAJ_DESC: { fr: 'Ce qui a changé dans Nestync, version après version.', en: 'What has changed in Nestync, version after version.' },
+  REG_MAJ_BTN: { fr: 'Voir les nouveautés', en: 'See what’s new' },
 
   // Statuts d'abonnement (affichés dans Réglages)
   ABO_LIBRE: { fr: 'Accès libre', en: 'Free access' },

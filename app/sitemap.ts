@@ -28,6 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${base}/`, lastModified: maj, changeFrequency: 'weekly', priority: 1 },
     { url: `${base}/aide`, lastModified: maj, changeFrequency: 'monthly', priority: 0.5 },
+    // ⚠ `weekly` : c'est la page qui bouge le plus souvent du site public.
+    { url: `${base}/mises-a-jour`, lastModified: maj, changeFrequency: 'weekly', priority: 0.4 },
     { url: `${base}/conditions`, lastModified: maj, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${base}/confidentialite`, lastModified: maj, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${base}/mentions-legales`, lastModified: maj, changeFrequency: 'yearly', priority: 0.3 },

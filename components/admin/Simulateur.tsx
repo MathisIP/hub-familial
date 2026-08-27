@@ -42,6 +42,7 @@ type Enregistre = {
   investissements: Investissement[];
   commissionPct: number;
   partViaStorePct: number;
+  resiliationPct: number;
 };
 
 const euros = (c: number) =>
@@ -59,6 +60,10 @@ export default function Simulateur({ chargesReelles, abonnesMensuels, abonnesAnn
     investissements: [],
     commissionPct: 15,
     partViaStorePct: 60,
+    // 4 %/mois = un abonné qui reste un peu plus de deux ans. Hypothèse de
+    // départ prudente pour un produit familial à faible prix ; à ajuster dès
+    // qu'on aura des résiliations réelles à observer.
+    resiliationPct: 4,
   });
   const [charge, setCharge] = useState(false);
 
@@ -103,6 +108,7 @@ export default function Simulateur({ chargesReelles, abonnesMensuels, abonnesAnn
       investissements: [],
       commissionPct: 15,
       partViaStorePct: 60,
+      resiliationPct: 4,
     });
   };
 
@@ -153,6 +159,77 @@ export default function Simulateur({ chargesReelles, abonnesMensuels, abonnesAnn
             Un abonné annuel rapporte <strong>4,16 €</strong> par mois contre 4,99 € au mensuel :
             ce sont les deux mois offerts.
           </p>
+        </div>
+
+        {/* ---------------------------------------------------------------- */}
+        <div className="sim-panneau">
+          <h3 className="sim-titre">Résiliations</h3>
+          <label className="sim-champ sim-curseur">
+            <span>
+              Par mois <strong>{p.resiliationPct} %</strong> de la base
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              step={0.5}
+              value={p.resiliationPct}
+              onChange={(e) => maj({ resiliationPct: Number(e.target.value) })}
+            />
+          </label>
+          <div className="sim-repere">
+            <button type="button" onClick={() => maj({ resiliationPct: 0 })}>Aucune</button>
+            <button type="button" onClick={() => maj({ resiliationPct: 2 })}>2 % (fidèle)</button>
+            <button type="button" onClick={() => maj({ resiliationPct: 5 })}>5 % (courant)</button>
+            <button type="button" onClick={() => maj({ resiliationPct: 10 })}>10 % (difficile)</button>
+          </div>
+
+          <ul className="sim-consequences">
+            <li>
+              <span>Un abonné reste</span>
+              <strong>
+                {r.dureeVieMois === null ? (
+                  'indéfiniment'
+                ) : (
+                  <>
+                    {r.dureeVieMois} mois
+                    {r.dureeVieMois >= 18 && <> ({(r.dureeVieMois / 12).toFixed(1)} ans)</>}
+                  </>
+                )}
+              </strong>
+            </li>
+            <li>
+              <span>Il rapporte en tout</span>
+              <strong>{r.valeurVieCentimes === null ? '—' : eurosPrecis(r.valeurVieCentimes)}</strong>
+            </li>
+            {/*
+              ⚠ LE CHIFFRE QUI MANQUE LE PLUS SOUVENT AUX PROJECTIONS. Atteindre
+              le point mort ne sert à rien si l'on n'y reste pas : ce nombre dit
+              ce qu'il faut recruter chaque mois rien que pour faire du surplace.
+            */}
+            <li className={r.aRecruterParMois > 0 ? 'sim-souligne' : ''}>
+              <span>À recruter pour ne pas reculer</span>
+              <strong>{r.aRecruterParMois} / mois</strong>
+            </li>
+          </ul>
+
+          {/*
+            ⚠ Dire pourquoi le résultat du mois n'a pas bougé quand on tire le
+            curseur. Sans cette phrase, on croit à un bug — c'est au contraire
+            le seul modèle juste : le revenu encaissé ce mois-ci est encaissé.
+          */}
+          <p className="sim-aide">
+            Le résultat mensuel ci-dessous <strong>ne bouge pas</strong> avec ce curseur, et c’est
+            normal : le revenu déjà encaissé l’est. Les résiliations décident de la suite, pas du
+            mois en cours.
+          </p>
+          {p.abonnesAnnuels > 0 && (
+            <p className="sim-aide">
+              ⚠ Tes {p.abonnesAnnuels} abonné{p.abonnesAnnuels > 1 ? 's' : ''} annuel
+              {p.abonnesAnnuels > 1 ? 's' : ''} ne peu{p.abonnesAnnuels > 1 ? 'vent' : 't'} partir
+              qu’au renouvellement : l’érosion réelle est plus lente que ce taux moyen.
+            </p>
+          )}
         </div>
 
         {/* ---------------------------------------------------------------- */}
@@ -428,6 +505,7 @@ export default function Simulateur({ chargesReelles, abonnesMensuels, abonnesAnn
               <th className="adm-num">Revenu net / mois</th>
               <th className="adm-num">Résultat / mois</th>
               <th className="adm-num">Par an</th>
+              <th className="adm-num">À recruter / mois</th>
             </tr>
           </thead>
           <tbody>
@@ -444,6 +522,9 @@ export default function Simulateur({ chargesReelles, abonnesMensuels, abonnesAnn
                 <td className={`adm-num ${x.resultatCentimes < 0 ? 'adm-neg' : 'adm-ok'}`}>
                   {euros(x.resultatCentimes * 12)}
                 </td>
+                {/* ⚠ À lire À CÔTÉ du résultat : c'est ce qui dit si le palier
+                    est atteignable ou seulement souhaitable. */}
+                <td className="adm-num sim-recrut">{x.aRecruterParMois}</td>
               </tr>
             ))}
           </tbody>

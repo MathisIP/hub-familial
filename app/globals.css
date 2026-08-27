@@ -3273,3 +3273,17 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
   padding: .05rem .4rem; border-radius: .4rem;
   background: var(--ACC); color: var(--ON_ACC);
 }
+
+/* --- Conséquences du taux de résiliation --- */
+.sim-consequences { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .3rem; }
+.sim-consequences li {
+  display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
+  font-size: .82rem; padding-bottom: .3rem; border-bottom: 1px solid var(--line);
+}
+.sim-consequences li:last-child { border-bottom: 0; }
+.sim-consequences span { color: var(--muted); }
+.sim-consequences strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* ⚠ « À recruter pour ne pas reculer » est le chiffre le plus souvent absent
+   des projections : il se distingue des deux autres. */
+.sim-souligne strong { color: var(--ACC_DEEP); }
+.sim-recrut { color: var(--muted); }

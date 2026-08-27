@@ -49,6 +49,7 @@ const base: ParamsSimulation = {
   investissements: [],
   commissionPct: 0,
   partViaStorePct: 0,
+  resiliationPct: 0,
 };
 
 console.log('\n  CHARGES — l’annuel se lit au mois');
@@ -175,6 +176,73 @@ console.log('\n  CENTIMES — aucun flottant ne fuit');
   const entiers = [r.revenuBrutCentimes, r.commissionCentimes, r.revenuNetCentimes, r.resultatCentimes];
   verifier('tous les montants sont des entiers', true, entiers.every(Number.isInteger));
   verifier('net + commission = brut', r.revenuBrutCentimes, r.revenuNetCentimes + r.commissionCentimes);
+}
+
+console.log('\n  RÉSILIATION — elle ne touche PAS au résultat du mois');
+{
+  const p = { ...base, abonnesMensuels: 100, charges: [charge('Serveur', 200, 'mensuel')] };
+  const sans = simuler(p);
+  const avec = simuler({ ...p, resiliationPct: 5 });
+  /*
+   * ⚠ LE CONTRÔLE LE PLUS IMPORTANT DE CETTE SECTION. Le revenu encaissé ce
+   * mois-ci est encaissé : retrancher les résiliations du résultat courant
+   * serait un double comptage, et ferait mentir le simulateur dans le sens
+   * pessimiste — l'erreur symétrique de l'oubli de commission. Si ce contrôle
+   * tombe un jour, c'est que quelqu'un a « corrigé » le modèle dans le mauvais
+   * sens.
+   */
+  verifier('le résultat du mois est identique', sans.resultatCentimes, avec.resultatCentimes);
+  verifier('le revenu du mois est identique', sans.revenuNetCentimes, avec.revenuNetCentimes);
+  verifier('le point mort est identique', sans.pointMort, avec.pointMort);
+}
+
+console.log('\n  RÉSILIATION — ce qu’elle change vraiment');
+{
+  const p = { ...base, abonnesMensuels: 100, resiliationPct: 5 };
+  const r = simuler(p);
+  verifier('5 %/mois : un abonné reste 20 mois', 20, r.dureeVieMois);
+  verifier('valeur vie = 4,99 € × 20', 9980, r.valeurVieCentimes);
+  verifier('il faut recruter 5 abonnés/mois pour tenir', 5, r.aRecruterParMois);
+
+  const dur = simuler({ ...p, resiliationPct: 10 });
+  verifier('10 %/mois : dix mois seulement', 10, dur.dureeVieMois);
+  verifier('...et deux fois moins de valeur', 4990, dur.valeurVieCentimes);
+  verifier('...et deux fois plus de recrutement', 10, dur.aRecruterParMois);
+
+  // ⚠ « Infini » se dit, ne se chiffre pas. Un très grand nombre passerait pour
+  // une donnée, alors que c'est l'absence de donnée.
+  verifier('sans résiliation, la durée de vie est indéfinie', null, simuler({ ...p, resiliationPct: 0 }).dureeVieMois);
+  verifier('...et la valeur vie aussi', null, simuler({ ...p, resiliationPct: 0 }).valeurVieCentimes);
+  verifier('...et rien à recruter pour tenir', 0, simuler({ ...p, resiliationPct: 0 }).aRecruterParMois);
+
+  // ⚠ Un demi-abonné ne se recrute pas : on arrondit vers le haut, sinon le
+  // besoin réel est systématiquement sous-estimé.
+  verifier('le recrutement s’arrondit vers le haut', 1, simuler({ ...base, abonnesMensuels: 3, resiliationPct: 5 }).aRecruterParMois);
+  verifier('aucun abonné : rien à recruter', 0, simuler({ ...base, resiliationPct: 5 }).aRecruterParMois);
+}
+
+console.log('\n  RÉSILIATION — la commission ampute aussi la valeur vie');
+{
+  // ⚠ La valeur vie se calcule sur le revenu NET. La calculer sur le brut
+  // surestimerait de 30 % ce qu'un abonné rapporte vraiment — et c'est ce
+  // chiffre qui sert à décider combien on peut dépenser pour l'acquérir.
+  const brut = simuler({ ...base, abonnesMensuels: 100, resiliationPct: 5 });
+  const net = simuler({ ...base, abonnesMensuels: 100, resiliationPct: 5, commissionPct: 30, partViaStorePct: 100 });
+  verifier('sans commission', 9980, brut.valeurVieCentimes);
+  verifier('avec 30 %, la valeur vie fond d’autant', 6986, net.valeurVieCentimes);
+
+  // Le mix compte : un annuel rapporte moins au mois, donc moins sur sa vie.
+  const mixte = simuler({ ...base, abonnesMensuels: 50, abonnesAnnuels: 50, resiliationPct: 5 });
+  verifier('mix moitié-moitié : entre les deux', true, mixte.valeurVieCentimes! < 9980 && mixte.valeurVieCentimes! > 8000);
+  verifier('la base compte les deux types', 5, mixte.aRecruterParMois);
+}
+
+console.log('\n  PALIERS — le recrutement suit le volume');
+{
+  const g = paliers({ ...base, abonnesMensuels: 100, resiliationPct: 5 }, [100, 500]);
+  verifier('100 abonnés : 5 à recruter', 5, g[0].aRecruterParMois);
+  // ⚠ Le chiffre qui refroidit : un gros palier n'est pas un état stable.
+  verifier('500 abonnés : 25 à recruter, chaque mois', 25, g[1].aRecruterParMois);
 }
 
 console.log('');

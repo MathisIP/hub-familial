@@ -74,6 +74,22 @@ export type ParamsSimulation = {
    * ce que le 2.0 coûte réellement.
    */
   partViaStorePct: number;
+  /**
+   * Résiliations mensuelles, en pourcentage de la base (0–100).
+   *
+   * ⚠ **NE SE RETRANCHE PAS DU RÉSULTAT DU MOIS.** Le revenu encaissé ce mois-ci
+   * est encaissé : le soustraire serait un double comptage, et ferait mentir le
+   * simulateur dans le sens pessimiste — l'erreur symétrique de celle qui
+   * consiste à oublier la commission. Ce qu'il change est ailleurs : la **durée
+   * de vie** d'un abonné, sa **valeur totale**, et le nombre d'abonnés à
+   * recruter chaque mois **pour ne pas reculer**.
+   *
+   * ⚠ Taux **moyen sur toute la base**, à dessein. Un abonné annuel ne peut pas
+   * partir en cours d'année : il n'a de fenêtre de sortie qu'au renouvellement.
+   * Plus la part d'annuels est forte, plus l'érosion réelle est lente que ce que
+   * ce curseur laisse croire.
+   */
+  resiliationPct: number;
 };
 
 export type Resultat = {
@@ -95,6 +111,23 @@ export type Resultat = {
   investissementCentimes: number;
   /** Mois de résultat positif pour rembourser les investissements. */
   moisDeRemboursement: number | null;
+
+  /**
+   * Durée de vie moyenne d'un abonné, en mois (1 / taux de résiliation).
+   * `null` quand le taux est nul — « infini » se dit, ne se chiffre pas.
+   */
+  dureeVieMois: number | null;
+  /** Ce que rapporte un abonné sur toute sa durée de vie, commission déduite. */
+  valeurVieCentimes: number | null;
+  /**
+   * Abonnés à recruter chaque mois **pour rester au même niveau**.
+   *
+   * ⚠ Le chiffre qui manque le plus souvent aux projections. Atteindre le point
+   * mort ne sert à rien si l'on n'y reste pas : une base de 500 abonnés à 5 %
+   * de résiliation exige 25 recrutements mensuels rien que pour faire du
+   * surplace.
+   */
+  aRecruterParMois: number;
 };
 
 export type Palier = {
@@ -103,6 +136,15 @@ export type Palier = {
   resultatCentimes: number;
   /** Premier palier où le résultat cesse d'être négatif. */
   franchit: boolean;
+  /**
+   * Recrutements mensuels nécessaires pour tenir ce palier.
+   *
+   * ⚠ Sans cette colonne, le tableau laisse croire qu'un palier élevé est un
+   * état stable qu'il suffit d'atteindre. Il faut le regarder à côté du
+   * résultat : c'est là qu'on voit si l'objectif est atteignable ou seulement
+   * souhaitable.
+   */
+  aRecruterParMois: number;
 };
 
 const prix = (id: 'mensuel' | 'annuel') => OFFRES.find((o) => o.id === id)!.prix;
@@ -166,6 +208,23 @@ export function simuler(p: ParamsSimulation): Resultat {
         ? null
         : 0;
 
+  /*
+   * ⚠ RÉSILIATION : elle n'intervient NULLE PART au-dessus. Le résultat du mois
+   * en cours ne la connaît pas, et c'est volontaire — le revenu encaissé ce
+   * mois-ci est encaissé. Elle ne décide que de l'avenir : combien de temps un
+   * abonné reste, ce qu'il rapporte en tout, et combien il faut en recruter
+   * pour ne pas reculer.
+   */
+  const churn = borne(p.resiliationPct, 0, 100) / 100;
+  const base = mensuels + annuels;
+
+  const dureeVieMois = churn > 0 ? Math.round(1 / churn) : null;
+  // Revenu mensuel moyen par abonné, tous types confondus : un annuel et un
+  // mensuel ne rapportent pas pareil, la moyenne doit refléter le mix réel.
+  const netMoyenParAbonne = base > 0 ? revenuNet / base : parAbonne;
+  const valeurVieCentimes = dureeVieMois === null ? null : Math.round(netMoyenParAbonne * dureeVieMois);
+  const aRecruterParMois = Math.ceil(base * churn);
+
   return {
     revenuBrutCentimes: revenuBrut,
     commissionCentimes,
@@ -177,6 +236,9 @@ export function simuler(p: ParamsSimulation): Resultat {
     resteAvantPointMort,
     investissementCentimes: investissement,
     moisDeRemboursement,
+    dureeVieMois,
+    valeurVieCentimes,
+    aRecruterParMois,
   };
 }
 
@@ -202,6 +264,7 @@ export function paliers(p: ParamsSimulation, echelons: number[]): Palier[] {
       revenuNetCentimes: r.revenuNetCentimes,
       resultatCentimes: r.resultatCentimes,
       franchit,
+      aRecruterParMois: r.aRecruterParMois,
     };
   });
 }

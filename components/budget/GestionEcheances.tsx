@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import Liste from '@/components/Liste';
 import Astuce from '@/components/Astuce';
+import ChampDate from '@/components/ChampDate';
 import { useT } from '@/components/I18nProvider';
 import {
   ajouterEcheanceAction,
@@ -153,12 +154,11 @@ function FormeEcheance({
 
           <label className="ge-champ">
             <span className="ge-lbl">{tr('ECH_DATE')}</span>
-            <input
-              className="champ"
+            {/* Les « / » sont posés automatiquement (voir ChampDate) : le pavé
+                numérique de beaucoup de téléphones n'en propose pas. */}
+            <ChampDate
               name="date"
               defaultValue={echeance?.date ?? ''}
-              placeholder="jj/mm/aaaa"
-              inputMode="numeric"
               disabled={enCours}
             />
           </label>

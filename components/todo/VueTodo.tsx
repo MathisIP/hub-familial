@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import Liste from '@/components/Liste';
 import Combobox from '@/components/Combobox';
+import ChampDate from '@/components/ChampDate';
 import { useT } from '@/components/I18nProvider';
 import { useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE } from '@/lib/i18n';
@@ -212,14 +213,14 @@ function OngletTaches({
         {/* ⚠ Champ TEXTE et non `type="date"` : l'échéance est stockée en
             « jj/mm/aaaa », format hérité du classeur d'origine. Un sélecteur de
             date renverrait « aaaa-mm-jj » et les tâches se trieraient de
-            travers sans que rien ne le signale. */}
-        <input
+            travers sans que rien ne le signale.
+            Les « / » sont posés automatiquement — voir ChampDate. */}
+        <ChampDate
           className="champ champ-echeance"
           placeholder={tr('TODO_ECHEANCE_PH')}
           value={echeance}
-          onChange={(e) => setEcheance(e.target.value)}
-          aria-label={tr('TODO_ECHEANCE')}
-          inputMode="numeric"
+          onChange={setEcheance}
+          ariaLabel={tr('TODO_ECHEANCE')}
         />
         <Liste
           valeur={recurrence}

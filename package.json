@@ -21,7 +21,8 @@
     "bac:init": "node scripts/bac-init.mjs",
     "bac:garnir": "node scripts/demo-seed.mjs",
     "bac:reset": "npm run db:migrate && npm run bac:garnir",
-    "db:migrate:prod": "node scripts/migrer-prod.mjs"
+    "db:migrate:prod": "node scripts/migrer-prod.mjs",
+    "verif:date": "node --import tsx scripts/verif-date-saisie.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

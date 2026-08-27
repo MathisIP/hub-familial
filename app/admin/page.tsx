@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { chargerAdmin, type Repartition, type FoyerAsuivre } from '@/lib/admin/service';
+import Simulateur from '@/components/admin/Simulateur';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Administration — Nestync' };
@@ -214,6 +215,19 @@ export default async function PageAdmin() {
           </p>
         </section>
       </div>
+
+      {/*
+        ⚠ LE SIMULATEUR VIENT EN DERNIER, ET HORS DE LA GRILLE. Tout ce qui
+        précède est vrai ; ce qui suit est hypothétique. Les mêmes chiffres, dans
+        les mêmes cartes, à quelques centimètres d'écart, finiraient par se
+        confondre — et une projection prise pour un relevé est pire qu'aucune
+        projection.
+      */}
+      <Simulateur
+        chargesReelles={a.chargesReelles}
+        abonnesMensuels={a.abonnesMensuels}
+        abonnesAnnuels={a.abonnesAnnuels}
+      />
     </>
   );
 }

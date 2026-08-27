@@ -17,6 +17,7 @@ import {
 } from '@/lib/db/schema';
 import { chargerComptes, estAdminComptes } from '@/lib/comptes/service';
 import { OFFRES } from '@/lib/offres';
+import type { ChargeSimulee } from '@/lib/admin/simulation';
 
 /**
  * CONSOLE D'ADMINISTRATION (serveur uniquement) — les chiffres du produit.
@@ -97,6 +98,17 @@ export type TableauAdmin = {
   foyersActifs30j: number;
   foyersJamaisVenus: number;
   volumes: Repartition[];
+
+  /**
+   * Charges récurrentes réelles, prêtes à amorcer le simulateur.
+   *
+   * ⚠ Le simulateur DOIT partir de la réalité. Une page blanche ferait ressaisir
+   * des chiffres déjà connus, donc les ferait ressaisir de mémoire — et une
+   * projection bâtie sur des charges approximatives ne vaut pas mieux que
+   * l'intuition qu'elle prétend remplacer. Elles restent modifiables : ce n'est
+   * qu'un point de départ, jamais une écriture.
+   */
+  chargesReelles: ChargeSimulee[];
 };
 
 const JOUR = 86_400_000;
@@ -262,6 +274,23 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
   const prixAnnuel = Math.round((OFFRES.find((o) => o.id === 'annuel')?.prix ?? 0) * 100);
   const mrr = mensuels * prixMensuel + Math.round((annuels * prixAnnuel) / 12);
 
+  /*
+   * ⚠ On ne retient que les DÉPENSES RÉCURRENTES ENCORE ACTIVES. Une dépense
+   * unique déjà payée ne pèse pas sur le mois prochain, et un abonnement arrêté
+   * (`fin` dépassée, d'où le `actif` de la ligne) ne pèse plus du tout : les inclure
+   * gonflerait le point mort de charges qu'on ne paie plus.
+   */
+  const chargesReelles: ChargeSimulee[] = (comptesProjet?.lignes ?? [])
+    .filter((l) => l.sens === 'depense' && l.recurrence !== null && l.actif && l.montantCentimes !== null)
+    .map((l) => ({
+      id: l.id,
+      libelle: l.libelle,
+      montantCentimes: l.montantCentimes as number,
+      periode: l.recurrence as 'mensuel' | 'annuel',
+      active: true,
+      reelle: true,
+    }));
+
   const charge = comptesProjet?.chargeMensuelleCentimes ?? 0;
   const pointMort = prixMensuel > 0 ? Math.ceil(charge / prixMensuel) : 0;
   const abonnesEquivalents = prixMensuel > 0 ? Math.floor(mrr / prixMensuel) : 0;
@@ -321,6 +350,7 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
 
     foyersActifs30j: actifs[0].n,
     foyersJamaisVenus: jamaisVenus[0].n,
+    chargesReelles,
     volumes: [
       { libelle: 'Opérations', n: nbTx[0].n },
       { libelle: 'Tâches', n: nbTaches[0].n },

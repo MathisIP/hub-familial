@@ -3179,3 +3179,97 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 .adm-table tr:last-child td { border-bottom: 0; }
 /* ⚠ Un module à zéro se distingue : c'est l'information, pas une ligne vide. */
 .adm-zero td { color: var(--muted); }
+
+/* ==========================================================================
+   SIMULATEUR (/admin) — la partie hypothétique de la console.
+   ⚠ Volontairement distinct des cartes du dessus : ce qui précède est relevé,
+   ce qui suit est supposé. Bordure en pointillés et fond légèrement décalé —
+   deux blocs identiques finiraient par se confondre, et une projection prise
+   pour un relevé est pire qu'aucune projection.
+   ========================================================================== */
+.sim {
+  border: 1px dashed var(--line);
+  background: color-mix(in srgb, var(--cell) 60%, transparent);
+}
+.sim-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.sim-lien {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: .82rem; color: var(--ACC); text-decoration: underline;
+}
+.sim-grille {
+  display: grid; gap: 1rem; margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+/* ⚠ minmax(0,…) : sans lui, une longue ligne de charge élargit la colonne et
+   fait déborder la page entière au lieu de se contraindre. */
+.sim-panneau { min-width: 0; }
+.sim-large { grid-column: span 2; }
+@media (max-width: 60rem) { .sim-large { grid-column: span 1; } }
+
+.sim-titre {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  font-family: var(--police-titre); font-size: .95rem; font-weight: 600;
+  margin: 0 0 .6rem;
+}
+.sim-champ { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .5rem; font-size: .85rem; }
+.sim-champ input[type='number'] { width: 6rem; }
+.sim-curseur { display: block; }
+.sim-curseur > span { display: block; margin-bottom: .25rem; }
+.sim-curseur input[type='range'] { width: 100%; accent-color: var(--ACC); }
+
+.sim-repere { display: flex; flex-wrap: wrap; gap: .35rem; margin: .4rem 0 .8rem; }
+.sim-repere button {
+  font: inherit; font-size: .76rem; cursor: pointer;
+  padding: .2rem .5rem; border-radius: .5rem;
+  border: 1px solid var(--line); background: var(--cell); color: var(--tx);
+}
+.sim-repere button:hover { border-color: var(--ACC); color: var(--ACC); }
+
+.sim-aide { font-size: .78rem; color: var(--muted); margin: .4rem 0 0; line-height: 1.45; }
+.sim-ajout {
+  font: inherit; font-size: .78rem; cursor: pointer; font-weight: 400;
+  background: none; border: 0; padding: 0; color: var(--ACC); text-decoration: underline;
+}
+
+.sim-liste { list-style: none; margin: .2rem 0 0; padding: 0; display: grid; gap: .3rem; }
+.sim-liste li { display: flex; align-items: center; gap: .4rem; font-size: .82rem; }
+/* ⚠ Décochée, la ligne RESTE lisible : elle doit pouvoir être recochée. Une
+   opacité trop basse la ferait passer pour supprimée. */
+.sim-off { opacity: .5; }
+.sim-lbl { flex: 1 1 auto; min-width: 0; }
+.sim-montant { width: 5.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+.sim-liste input[type='text'], .sim-liste input[type='number'], .sim-liste select {
+  font: inherit; font-size: .82rem; padding: .18rem .4rem;
+  border: 1px solid var(--line); border-radius: .4rem;
+  background: var(--bg); color: var(--tx);
+}
+.sim-tag {
+  font-size: .68rem; padding: .05rem .35rem; border-radius: .4rem;
+  background: var(--line); color: var(--muted); white-space: nowrap;
+}
+.sim-tag-reel { background: color-mix(in srgb, var(--ACC) 18%, transparent); color: var(--ACC_DEEP); }
+.sim-x {
+  font: inherit; cursor: pointer; line-height: 1;
+  background: none; border: 0; padding: 0 .2rem; color: var(--muted);
+}
+.sim-x:hover { color: var(--over-tx); }
+.sim-total { font-size: .85rem; margin: .7rem 0 0; }
+
+.sim-resultat { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.sim-fort .adm-v { font-size: 1.6rem; }
+
+.sim-paliers { margin-top: 1.25rem; }
+.sim-table th {
+  text-align: left; font-size: .74rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+  padding-bottom: .35rem; border-bottom: 1px solid var(--line);
+}
+.sim-table .adm-num { text-align: right; font-variant-numeric: tabular-nums; }
+/* ⚠ Le palier d'équilibre est LE chiffre qu'on cherche sur cette page : il se
+   repère sans lire le tableau. */
+.sim-franchit td { background: color-mix(in srgb, var(--ACC) 12%, transparent); font-weight: 600; }
+.sim-badge {
+  margin-left: .5rem; font-size: .68rem; font-weight: 400;
+  padding: .05rem .4rem; border-radius: .4rem;
+  background: var(--ACC); color: var(--ON_ACC);
+}

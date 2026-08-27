@@ -36,7 +36,13 @@ export default function PageMisesAJour() {
         {VERSIONS.map((v) => (
           <article className="maj-version" key={v.id} id={v.id}>
             <p className="maj-date">
-              <time dateTime={v.dateISO}>Version du {v.date}</time>
+              {/* ⚠ Le numéro est un LIEN vers l'ancre de sa propre version : on
+                  peut ainsi renvoyer quelqu'un vers une publication précise
+                  plutôt que vers « la page, quelque part ». */}
+              <a className="maj-numero" href={`#${v.id}`}>
+                Nº {v.numero}
+              </a>
+              <time dateTime={v.dateISO}>{v.date}</time>
             </p>
             <h2>{v.titre}</h2>
             <p className="maj-resume">{v.resume}</p>

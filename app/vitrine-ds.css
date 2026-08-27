@@ -1194,3 +1194,14 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   color: var(--alerte); background: rgba(176, 58, 52, .09);
   padding: var(--e-2) var(--e-3); border-radius: 4px;
 }
+
+/* Numéro de version : un repère, pas un titre. */
+.nsy-site .maj-date { display: flex; align-items: baseline; gap: var(--e-3); }
+.nsy-site .maj-numero {
+  color: var(--commun-texte); font-weight: 600; text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.nsy-site .maj-numero:hover { text-decoration: underline; }
+/* ⚠ `scroll-margin-top` : sans lui, l'ancre colle le titre au bord haut de la
+   fenêtre et l'on ne voit plus à quoi il appartient. */
+.nsy-site .maj-version { scroll-margin-top: var(--e-5); }

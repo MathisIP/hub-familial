@@ -12,6 +12,10 @@
  * page est publique — un prospect la lit aussi, et y jugera le soin apporté au
  * produit autant que les corrections elles-mêmes.
  *
+ * ⚠ POUR PUBLIER UNE VERSION : ajouter une entrée EN TÊTE de `VERSIONS`, avec le
+ * numéro suivant et la date du jour. Ne jamais modifier ni renuméroter les
+ * précédentes — elles ont été lues, et certaines ont peut-être été citées.
+ *
  * ⚠ AUCUN NOM DE PERSONNE. Les corrections viennent des testeurs, et on le dit
  * globalement ; citer quelqu'un dans une page publique n'a été demandé par
  * personne.
@@ -38,6 +42,20 @@ export type Changement = {
 export type Version = {
   /** Identifiant d'ancre, stable : on peut pointer une version précise. */
   id: string;
+  /**
+   * Numéro de la version, croissant. Le plus grand est le plus récent.
+   *
+   * ⚠ UN ENTIER, PAS UN `1.4.2`. Une numérotation à trois chiffres annonce une
+   * distinction majeur/mineur/correctif qui n'a aucun sens ici : Nestync est
+   * livré en continu, personne n'installe une version ni ne reste sur une
+   * ancienne. Prétendre le contraire donnerait un numéro que rien ne détermine —
+   * et qu'il faudrait justifier à chaque publication.
+   *
+   * ⚠ NE JAMAIS RÉUTILISER NI RENUMÉROTER. Le numéro sert à désigner une
+   * publication dans un échange (« c'est arrivé après la 3 ») : le décaler
+   * rendrait faux tout ce qui a été dit avant.
+   */
+  numero: number;
   /** Date affichée, en toutes lettres. */
   date: string;
   /** Date ISO, pour l'ordre et pour `<time>`. */
@@ -57,6 +75,7 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 export const VERSIONS: Version[] = [
   {
     id: '2026-08-27',
+    numero: 1,
     date: '27 août 2026',
     dateISO: '2026-08-27',
     titre: 'Première vague de correctifs',

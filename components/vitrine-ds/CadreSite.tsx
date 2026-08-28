@@ -96,6 +96,7 @@ export default function CadreSite({
         */}
         <nav aria-label="Le produit">
           <Link href="/decouvrir">Découvrir Nestync</Link>
+          <Link href="/demonstration">Essayer sans compte</Link>
           <Link href="/tarifs">Tarifs</Link>
           <Link href="/questions">Questions fréquentes</Link>
           <Link href="/mises-a-jour">Mises à jour</Link>

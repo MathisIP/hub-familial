@@ -1342,3 +1342,185 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   color: var(--texte);
 }
 .nsy-site .liste-option { border-radius: var(--rayon); }
+
+/* ══════════════════ PAGE DE DÉMONSTRATION (/demonstration) ══════════════════
+ * ⚠ LA PAGE PREND L'ÉCRAN, LE TEXTE NON. Les outils ont besoin de place ; la
+ * prose reste illisible au-delà de soixante-dix caractères. C'est pourquoi le
+ * cadre s'élargit et les paragraphes gardent leur mesure.
+ *
+ * ⚠ Les couleurs viennent des rôles du site — `--commun`, `--corail`, `--ambre`,
+ * `--ciel`, `--alerte`. Aucune valeur écrite en dur : la page doit suivre le
+ * thème jour/nuit comme le reste de la vitrine.
+ * ========================================================================== */
+.nsy-site .nsy-demo { display: grid; gap: 0; }
+
+.nsy-demo-bloc { margin-top: var(--e-8); padding-top: var(--e-7); border-top: 1px solid var(--trait); }
+.nsy-demo-bloc:first-child { margin-top: var(--e-5); padding-top: 0; border-top: 0; }
+.nsy-site .nsy-demo-bloc h2 {
+  font-family: var(--font-display); font-variation-settings: var(--wonk);
+  font-weight: 400; font-size: clamp(1.6rem, 3vw, 2.25rem);
+  line-height: 1.1; letter-spacing: -.015em; margin: 0 0 var(--e-2);
+}
+.nsy-demo-eyebrow {
+  font-family: var(--font-donnees); font-size: var(--eyebrow);
+  text-transform: uppercase; letter-spacing: var(--ls-eyebrow);
+  color: var(--texte-petit); margin: 0 0 var(--e-3);
+}
+.nsy-demo-intro { margin: 0 0 var(--e-5); max-width: 58ch; color: var(--texte-doux); }
+
+.nsy-demo-cadre {
+  background: var(--surface); border: 1px solid var(--trait);
+  border-radius: var(--rayon); padding: clamp(18px, 2.5vw, 28px);
+}
+/* La semaine a une largeur naturelle ; la liste, elle, s'étale. */
+.nsy-demo-duo {
+  display: grid; grid-template-columns: minmax(340px, .9fr) minmax(0, 1.4fr);
+  gap: var(--e-7); align-items: start;
+}
+@media (max-width: 900px) { .nsy-demo-duo { grid-template-columns: 1fr; } }
+
+.nsy-demo-titre {
+  font-family: var(--font-donnees); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--texte-petit); margin: 0 0 var(--e-3);
+}
+.nsy-demo-barre { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); flex-wrap: wrap; }
+.nsy-demo-note {
+  margin: var(--e-4) 0 0; padding-top: var(--e-3); border-top: 1px dashed var(--trait);
+  font-size: var(--petit); line-height: 1.6; color: var(--texte-doux);
+}
+.nsy-demo-msg { margin-top: 0; }
+.nsy-demo-pied { margin-top: var(--e-7); font-size: var(--petit); color: var(--texte-petit); }
+
+.nsy-site .nsy-demo-btn {
+  background: var(--commun); color: var(--sur-commun); border-color: var(--commun); font-weight: 600;
+}
+.nsy-site .nsy-demo-btn:hover { opacity: .85; }
+.nsy-site .nsy-demo-mini { font-size: 12px; padding: 5px 10px; }
+
+/* --- Planning : trois services par jour --- */
+.nsy-plan { display: grid; gap: 4px; }
+.nsy-plan-tete, .nsy-plan-jour {
+  display: grid; grid-template-columns: 2.7rem repeat(3, minmax(0, 1fr)); gap: 6px; align-items: center;
+}
+.nsy-plan-tete span {
+  font-family: var(--font-donnees); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--texte-petit); text-align: center;
+}
+.nsy-plan-tete span:first-child { text-align: left; }
+.nsy-plan-j {
+  font-family: var(--font-donnees); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--texte-petit);
+}
+.nsy-site .nsy-plan-jour select { width: 100%; min-width: 0; padding: 7px 8px; font-size: 13.5px; }
+
+.nsy-demo-convives { margin-top: var(--e-4); display: flex; align-items: center; gap: var(--e-4); flex-wrap: wrap; }
+.nsy-compteur { display: inline-flex; align-items: center; gap: var(--e-3); }
+.nsy-site .nsy-compteur button { width: 34px; height: 34px; padding: 0; line-height: 1; font-size: 17px; }
+.nsy-compteur-val { font-family: var(--font-donnees); font-size: 17px; min-width: 3ch; text-align: center; }
+
+/* --- Liste de courses : les rayons en COLONNES, pas en pile ---
+   ⚠ Vingt articles empilés font une colonne deux fois plus haute que la
+   semaine d'à côté, et le cadre paraît à moitié vide. */
+.nsy-rayons {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 4px 30px; align-content: start;
+}
+.nsy-rayons > div { break-inside: avoid; margin-bottom: var(--e-4); }
+.nsy-rayon {
+  font-family: var(--font-donnees); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--texte-petit); margin: 0 0 4px;
+}
+.nsy-site ul.nsy-liste { list-style: none; margin: 0; padding: 0; }
+.nsy-site ul.nsy-liste li {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e-3);
+  padding: 7px 0; border-bottom: 1px solid var(--trait); font-size: var(--petit);
+}
+.nsy-site ul.nsy-liste li:last-child { border-bottom: 0; }
+.nsy-qte { font-family: var(--font-donnees); font-size: 13px; color: var(--texte-petit); white-space: nowrap; }
+.nsy-coche { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
+.nsy-site .nsy-coche input { width: 16px; height: 16px; padding: 0; accent-color: var(--commun); flex: none; }
+.nsy-fait { text-decoration: line-through; opacity: .45; }
+.nsy-neg { color: var(--alerte); }
+
+.nsy-ajout {
+  display: grid; grid-template-columns: minmax(0, 1.5fr) 5rem minmax(0, 7rem) minmax(0, 1.2fr) auto;
+  gap: 8px; margin: var(--e-3) 0 var(--e-4);
+}
+@media (max-width: 760px) { .nsy-ajout { grid-template-columns: 1fr 1fr; } }
+.nsy-site .nsy-ajout input, .nsy-site .nsy-ajout select { padding: 8px 10px; font-size: 14px; }
+
+/* --- Éditeur de recette : une ligne par ingrédient ---
+   ⚠ Pleine largeur : quatre champs par ingrédient n'entrent pas dans une
+   colonne, et c'est le rayon PAR ingrédient qui fait la valeur de la liste. */
+.nsy-recette { margin-top: var(--e-5); padding-top: var(--e-5); border-top: 1px solid var(--trait); }
+.nsy-recette summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--font-donnees); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--commun);
+}
+.nsy-recette summary::-webkit-details-marker { display: none; }
+.nsy-recette-corps { margin-top: var(--e-4); }
+.nsy-recette-tete { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; max-width: 520px; }
+.nsy-ing, .nsy-ing-tete {
+  display: grid; grid-template-columns: minmax(0, 2fr) 5rem minmax(0, 7rem) minmax(0, 1.4fr) 2rem;
+  gap: 8px; align-items: center;
+}
+.nsy-ing { margin-bottom: 8px; }
+.nsy-ing-tete { margin-bottom: 6px; }
+.nsy-ing-tete span {
+  font-family: var(--font-donnees); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--texte-petit);
+}
+@media (max-width: 760px) {
+  .nsy-ing { grid-template-columns: 1fr 1fr; }
+  .nsy-ing-tete { display: none; }
+}
+.nsy-site .nsy-ing input, .nsy-site .nsy-ing select { padding: 8px 10px; font-size: 14px; }
+.nsy-site .nsy-ing-x {
+  background: none; border: 0; padding: 0; color: var(--texte-petit); font-size: 17px; line-height: 1;
+}
+.nsy-site .nsy-ing-x:hover { color: var(--alerte); }
+.nsy-recette-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: var(--e-3); }
+
+/* --- Agenda --- */
+.nsy-bascule { display: inline-flex; border: 1px solid var(--trait); border-radius: var(--rayon); overflow: hidden; }
+.nsy-site .nsy-bascule button { border: 0; border-radius: 0; background: var(--fond-alt); padding: 8px 16px; }
+.nsy-site .nsy-bascule button + button { border-left: 1px solid var(--trait); }
+.nsy-site .nsy-bascule button.on { background: var(--commun); color: var(--sur-commun); font-weight: 600; }
+
+.nsy-mois { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.nsy-semaine { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.nsy-case-tete {
+  font-family: var(--font-donnees); font-size: 10px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--texte-petit); text-align: center; padding-bottom: 6px; margin: 0;
+}
+.nsy-case {
+  min-height: 66px; background: var(--fond-alt); border: 1px solid transparent;
+  padding: 5px 6px; border-radius: var(--rayon); min-width: 0;
+}
+.nsy-case-haute { min-height: 150px; }
+.nsy-case.hors { opacity: .38; }
+.nsy-case.auj { border-color: var(--commun); }
+.nsy-case-n { font-family: var(--font-donnees); font-size: 11px; color: var(--texte-petit); }
+.nsy-ev {
+  display: block; margin-top: 3px; padding: 1px 4px; border-radius: 2px; font-size: 10.5px;
+  color: var(--sur-commun); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nsy-ev-plus { display: block; margin-top: 2px; font-family: var(--font-donnees); font-size: 9.5px; color: var(--texte-petit); }
+.nsy-site ul.nsy-jour li { gap: var(--e-3); justify-content: flex-start; }
+.nsy-h { font-family: var(--font-donnees); font-size: 13px; color: var(--texte-petit); min-width: 4.5rem; }
+
+/* --- Budget --- */
+.nsy-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: var(--e-4); margin-bottom: var(--e-5); }
+.nsy-kpi-v { font-family: var(--font-donnees); font-size: 1.5rem; letter-spacing: -.02em; }
+.nsy-kpi-l {
+  font-family: var(--font-donnees); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .11em; color: var(--texte-petit); margin-top: 4px;
+}
+.nsy-jauge { margin: var(--e-3) 0; }
+.nsy-jauge-tete { display: flex; justify-content: space-between; gap: 10px; font-size: var(--petit); margin-bottom: 5px; }
+.nsy-piste { display: block; height: 7px; background: var(--fond-alt); border-radius: 999px; overflow: hidden; }
+.nsy-plein { display: block; height: 100%; border-radius: 999px; background: var(--commun); }
+.nsy-plein.over { background: var(--alerte); }
+.nsy-champs { display: grid; gap: 10px; }
+.nsy-paire { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

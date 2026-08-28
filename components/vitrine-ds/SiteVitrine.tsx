@@ -238,7 +238,7 @@ export default function SiteVitrine() {
               en faisant defiler ; « Se connecter » est le seul chemin d'entree
               pour quelqu'un qui a deja un foyer.
             */}
-            <a href="#demonstration" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
+            <a href="/demonstration" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
               Démonstration
             </a>
             {/* ⚠ Vers la PAGE et non l'ancre : la page /tarifs existe depuis le
@@ -1104,6 +1104,7 @@ export default function SiteVitrine() {
           */}
           <nav aria-label="Le produit" style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
             <a href="/decouvrir" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Découvrir Nestync</a>
+            <a href="/demonstration" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Essayer sans compte</a>
             <a href="/tarifs" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Tarifs</a>
             <a href="/questions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Questions fréquentes</a>
             {/* ⚠ Déplacée depuis la colonne légale : on y cherche ce que le

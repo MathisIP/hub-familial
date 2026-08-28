@@ -233,7 +233,53 @@ export default function PageConditions() {
           dû sont communiqués lors de la souscription et affichés en permanence dans l’espace
           « Mon abonnement ».
         </li>
-        <li>La résiliation prend effet au terme de la période en cours. L’accès reste ouvert jusqu’à cette date ; aucune somme n’est remboursée au prorata pour la période entamée, sauf disposition légale contraire.</li>
+        <li>
+          La résiliation prend effet au terme de la période en cours. L’accès reste ouvert
+          jusqu’à cette date, et la période déjà payée n’est pas remboursée au prorata —{' '}
+          <strong>sauf dans les trois cas suivants</strong>, où elle l’est :
+        </li>
+        {/*
+          ⚠ CETTE LISTE A ÉTÉ ÉCRITE LE 28/08/2026 PARCE QUE LA CLAUSE ÉTAIT
+          FAUSSE. Elle disait « aucune somme n'est remboursée au prorata […]
+          sauf disposition légale contraire » : la réserve finale est exacte mais
+          creuse, et elle faisait porter au consommateur la charge de connaître
+          l'exception. Une clause qui énonce la règle défavorable en toutes
+          lettres et cache la favorable derrière une formule générale s'expose
+          à la qualification de clause abusive.
+
+          ⚠ Le premier cas est imposé par l'article L. 215-1 du code de la
+          consommation, alinéas 2 et 3 : à défaut d'avis de reconduction envoyé
+          dans la fenêtre légale, le consommateur « peut mettre GRATUITEMENT un
+          terme au contrat, à tout moment à compter de la date de reconduction »,
+          et les avances versées après la dernière reconduction « sont
+          remboursées dans un délai de trente jours à compter de la date de
+          résiliation, déduction faite des sommes correspondant, jusqu'à
+          celle-ci, à l'exécution du contrat » — c'est-à-dire au prorata.
+          Nestync envoie cet avis (voir ci-dessus, trace en base) : ce cas ne
+          devrait pas se produire. Il doit tout de même être écrit.
+
+          ⚠ Le troisième cas rend le contrat COHÉRENT AVEC LUI-MÊME : l'article 16
+          promet déjà le remboursement du non-couru en cas de fermeture du
+          Service. Un contrat qui se contredit d'un article à l'autre s'interprète
+          contre celui qui l'a rédigé (art. 1190 du code civil).
+        */}
+        <li>
+          <strong>Défaut d’information avant reconduction</strong> : si l’avis prévu à l’alinéa
+          précédent n’a pas été adressé dans les conditions de l’article L. 215-1 du Code de
+          la consommation, l’Utilisateur peut mettre fin au contrat gratuitement, à tout moment
+          à compter de la date de reconduction. Les sommes versées d’avance depuis cette
+          reconduction lui sont remboursées dans les <strong>trente jours</strong> suivant la
+          résiliation, déduction faite de ce qui correspond au service effectivement fourni.
+        </li>
+        <li>
+          <strong>Rétractation</strong> : dans le cadre du droit de rétractation de quatorze
+          jours (article 8), selon les modalités qui y sont décrites.
+        </li>
+        <li>
+          <strong>Cessation du Service</strong> : si l’éditeur met fin au Service, la fraction
+          de la période payée et non courue est remboursée sans démarche de l’Utilisateur
+          (article 16).
+        </li>
         <li>L’éditeur peut suspendre un compte en cas de défaut de paiement ou de manquement grave aux présentes, après information de l’Utilisateur.</li>
       </ul>
 

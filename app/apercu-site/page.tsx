@@ -9,7 +9,10 @@ import SiteVitrine from '@/components/vitrine-ds/SiteVitrine';
  * l'état de facturation. L'authentification du middleware suffit à la garder
  * privée.
  *
- * Le site actuellement en ligne reste `components/vitrine/Vitrine.tsx`, servi
+ * ⚠ OBSOLETE depuis le 26/08/2026 : `SiteVitrine` est servi par `/` et
+ * l'ancienne vitrine a été supprimée le 28/08. Cette page fait doublon avec
+ * l'accueil ; la retirer quand plus rien ne pointe dessus.
+ * Le site autrefois en ligne était `components/vitrine/Vitrine.tsx`, servi
  * par `app/page.tsx` aux visiteurs non connectés. Rien n'est remplacé tant que
  * cet aperçu n'est pas validé.
  */

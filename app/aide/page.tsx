@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { auth } from '@/auth';
 import FormulaireContact from '@/components/aide/FormulaireContact';
 import CadreSite from '@/components/vitrine-ds/CadreSite';
+import ListeQuestions from '@/components/vitrine-ds/ListeQuestions';
 
 export const metadata = {
   title: 'Aide et contact — Nestync',
@@ -130,14 +131,10 @@ export default async function PageAide() {
       </p>
 
       <h2>Questions fréquentes</h2>
-      <div className="aide-faq">
-        {QUESTIONS.map((item) => (
-          <details className="aide-item" key={item.q}>
-            <summary>{item.q}</summary>
-            <div className="aide-reponse">{item.r}</div>
-          </details>
-        ))}
-      </div>
+      {/* ⚠ MEME COMPOSANT QUE L'ACCUEIL depuis le 28/08/2026. Cette page avait
+          son propre rendu (cartes bordées) : passer de l'accueil à l'aide
+          changeait l'apparence du site en un clic. */}
+      <ListeQuestions questions={QUESTIONS} />
 
       <h2>Nous écrire</h2>
       <p>

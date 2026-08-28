@@ -84,14 +84,31 @@ export default function CadreSite({
       </main>
 
       <footer className="nsy-cadre-pied">
-        {/* Les mêmes liens que le pied de la vitrine : où qu'on soit, on
-            retrouve les mêmes portes. */}
-        <nav>
+        {/*
+          ⚠ LES MÊMES PORTES QUE LA VITRINE, dans le même ordre : produit,
+          légal, accès. Un bas de page qui change de contenu d'une page à l'autre
+          oblige à le relire à chaque fois.
+
+          ⚠ Ce pied-là n'avait AUCUN lien de produit ni d'accès : depuis les
+          mentions légales, il n'existait aucun chemin vers les tarifs ni vers la
+          connexion. Sur téléphone, où la barre du haut est masquée, c'était une
+          impasse.
+        */}
+        <nav aria-label="Le produit">
+          <Link href="/decouvrir">Découvrir Nestync</Link>
+          <Link href="/tarifs">Tarifs</Link>
+          <Link href="/questions">Questions fréquentes</Link>
+          <Link href="/mises-a-jour">Mises à jour</Link>
+        </nav>
+        <nav aria-label="Informations légales">
           <Link href="/mentions-legales">Mentions légales</Link>
           <Link href="/confidentialite">Politique de confidentialité</Link>
           <Link href="/conditions">Conditions générales</Link>
           <Link href="/aide">Aide et contact</Link>
-          <Link href="/mises-a-jour">Mises à jour</Link>
+        </nav>
+        <nav aria-label="Accéder à mon foyer">
+          <Link href="/connexion">Se connecter</Link>
+          <Link href="/rejoindre-foyer">Rejoindre un foyer</Link>
         </nav>
         <span>Éditeur français · Données hébergées en Europe</span>
       </footer>

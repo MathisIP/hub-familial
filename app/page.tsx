@@ -20,8 +20,14 @@ import './vitrine-ds.css';
  * ⚠ LE NOUVEAU SITE EST SERVI ICI DEPUIS LE 26/08/2026. Il a vécu deux jours
  * sur `/apercu-site`, le temps d'être validé — mais la bascule avait été
  * oubliée au moment du déploiement : la production servait encore l'ancienne
- * vitrine, sur mobile comme sur bureau. `components/vitrine/Vitrine.tsx` reste
- * dans le dépôt tant que le nouveau n'a pas fait ses preuves en ligne.
+ * vitrine, sur mobile comme sur bureau.
+ *
+ * ⚠ L'ANCIENNE VITRINE A ÉTÉ SUPPRIMÉE LE 28/08/2026 (`components/vitrine/`).
+ * Elle n'était plus servie depuis le 26/08 mais restait dans le dépôt, avec son
+ * propre bas de page et ses propres textes : toute recherche dans le code en
+ * renvoyait deux versions, et il fallait à chaque fois se demander laquelle
+ * comptait. L'oubli est arrivé — une analyse du bas de page a démarré sur le
+ * mauvais fichier. `git log` la conserve si besoin.
  *
  * ⚠ LES POLICES SONT POSÉES ICI. `SiteVitrine` est un composant client :
  * `next/font` ne peut pas y être appelé. Sans ce pont, le site s'afficherait

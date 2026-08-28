@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { Bouton, Pastille, Mockup, type Fil } from '@/components/vitrine-ds/Primitives';
 import EventailModules from '@/components/vitrine-ds/EventailModules';
 import EnTravaux from '@/components/vitrine-ds/EnTravaux';
+import ListeQuestions from '@/components/vitrine-ds/ListeQuestions';
+// ⚠ Source unique : la page /questions lit la même liste.
+import { QUESTIONS_SITE } from '@/lib/questions-site';
 // ⚠ Les montants viennent de lib/offres.ts, JAMAIS recopies ici. Ils sont
 // deja lus par les conditions generales et servent de reference aux tarifs
 // Stripe : un prix ecrit en dur sur la vitrine finirait par annoncer autre
@@ -59,6 +62,21 @@ export default function SiteVitrine() {
    * la bascule elle-meme, dit ce qu'on recommande.
    */
   const [formule, setFormule] = useState<'annuel' | 'mensuel'>('annuel');
+
+  /*
+   * ⚠ CE QUE COUTE UN FOYER, PAR MOIS, SELON LA FORMULE CHOISIE.
+   *
+   * La simulation de cout affichait 4,16 € en dur, sans bascule et sans
+   * mention : or 4,16 € est le tarif ANNUEL ramene au mois. Un visiteur qui
+   * souscrivait au mois payait 4,99 €, soit 20 % de plus que le chiffre qu'on
+   * venait de lui montrer — une inexactitude commerciale, pas une coquille.
+   *
+   * ⚠ `parMois` VIENT DE lib/offres.ts, il n'est pas recalcule ici. Le prix
+   * annuel divise a la main serait un troisieme endroit ou le tarif pourrait
+   * diverger, apres la vitrine et les conditions generales.
+   */
+  const offreChoisie = formule === 'annuel' ? ANNUEL : MENSUEL;
+  const parMoisAffiche = offreChoisie.parMois;
 
   /* Mise à l'échelle : c'est exactement ce que fait le module Repas. */
   const ech = (v: number) => (v * convives) / BASE_CONVIVES;
@@ -686,6 +704,33 @@ export default function SiteVitrine() {
               Une personne paie, invite les autres membres du foyer, et ils accèdent à tout
               gratuitement. Pas de tarif par utilisateur, pas de compte à recréer à chaque arrivée.
             </p>
+            {/*
+              ⚠ LA MEME BASCULE QUE CELLE DES TARIFS, sur le MEME etat. Deux
+              selecteurs independants finiraient par afficher deux formules
+              differentes sur une seule page — le visiteur ne saurait plus
+              lequel decide du montant qu'il lit.
+              ⚠ Elle est REPETEE ici parce que la section des tarifs est plus
+              bas : une bascule hors de l'ecran ne se decouvre pas, et le
+              montant semblerait fige.
+            */}
+            <div className="nsy-bascule" role="group" aria-label="Périodicité de l'abonnement">
+              <button
+                type="button"
+                className={formule === 'annuel' ? 'nsy-bascule-choix actif' : 'nsy-bascule-choix'}
+                aria-pressed={formule === 'annuel'}
+                onClick={() => setFormule('annuel')}
+              >
+                Annuel
+              </button>
+              <button
+                type="button"
+                className={formule === 'mensuel' ? 'nsy-bascule-choix actif' : 'nsy-bascule-choix'}
+                aria-pressed={formule === 'mensuel'}
+                onClick={() => setFormule('mensuel')}
+              >
+                Mensuel
+              </button>
+            </div>
           </div>
           <div style={{ ...carte, padding: 'clamp(24px,3vw,36px)' }}>
             <div
@@ -706,7 +751,12 @@ export default function SiteVitrine() {
                     — paie l&apos;abonnement
                   </span>
                 </span>
-                <span style={mono(12)}>4,16 €/mois</span>
+                {/* ⚠ LE MONTANT SUIT LA FORMULE CHOISIE, il n'est plus fige.
+                    Il affichait 4,16 € quelle que soit la bascule : or 4,16 € est
+                    le tarif ANNUEL ramene au mois. Un visiteur qui souscrivait au
+                    mois payait 4,99 €, soit 20 % de plus que le chiffre qu'on
+                    venait de lui montrer. */}
+                <span style={mono(12)}>{formatPrix(parMoisAffiche)}/mois</span>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 14 }}>
@@ -727,9 +777,21 @@ export default function SiteVitrine() {
                 Total du foyer
               </span>
               <span style={{ ...mono(22, 'var(--texte)'), fontWeight: 300, fontVariantNumeric: 'tabular-nums' }}>
-                4,16 €/mois
+                {formatPrix(parMoisAffiche)}/mois
               </span>
             </div>
+            {/*
+              ⚠ LA MENTION N'APPARAIT QUE POUR L'ANNUEL, et elle est
+              INDISPENSABLE : sans elle, « 4,16 €/mois » se lit comme un prix
+              mensuel alors que rien ne se paie au mois dans cette formule. Le
+              mensuel, lui, affiche son vrai prix et n'a rien a expliquer.
+            */}
+            {formule === 'annuel' && (
+              <p style={{ ...mono(11), margin: 0, lineHeight: 1.5 }}>
+                Prix annuel ramené au mois — {formatPrix(ANNUEL.prix)} facturés une fois par an,
+                soit deux mois offerts.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -895,51 +957,29 @@ export default function SiteVitrine() {
           sort de période d'essai. Un avis, une note ou un logo de presse
           inventé ici serait faux — et vérifiable. Si elle est encore vide à la
           mise en ligne, la RETIRER plutôt que la meubler. */}
-      <section id="temoignages" style={section('base')}>
-        <div style={{ ...contenu, display: 'grid', gap: 'clamp(24px,3vw,40px)' }}>
-          <div style={{ display: 'grid', gap: 16, maxWidth: '52ch' }}>
-            <p style={surtitre}>Ils l&apos;utilisent</p>
-            <h2 style={h2}>Ce que les foyers en disent.</h2>
-          </div>
-          {/* ⚠ NOTE INTERNE — commentaire, JAMAIS une prop. Nestync sort d'essai :
-              aucun foyer ne l'utilise depuis assez longtemps pour en parler
-              honnêtement. Aucun avis, aucune note, aucun logo de presse ne sera
-              inventé pour occuper la place.
-              À recueillir : deux à trois phrases sur un usage précis, avec
-              prénom, ville et composition du foyer — auprès de vrais
-              utilisateurs. Si la section est encore vide au lancement, la
-              RETIRER plutôt que la meubler. */}
-          <EnTravaux
-            quoi="Les premiers retours"
-            publique="Les premiers foyers utilisateurs témoigneront ici."
-          />
-        </div>
-      </section>
+      {/* ======================== Témoignages : RETIRÉS =====================
+          ⚠ SECTION SUPPRIMÉE LE 28/08/2026, en appliquant l'instruction que le
+          code portait déjà : « si elle est encore vide au lancement, la RETIRER
+          plutôt que la meubler ». Un bandeau « les premiers foyers
+          témoigneront ici » dit « personne ne l'utilise » bien plus fort qu'une
+          absence de section, et il occupait une place de choix entre la preuve
+          de confiance et la FAQ.
+
+          À RÉTABLIR quand deux ou trois vrais retours existeront : deux à trois
+          phrases sur un usage précis, avec prénom, ville et composition du
+          foyer. ⚠ Rien d'inventé, jamais — un témoignage fabriqué est une
+          pratique commerciale trompeuse, et il se vérifie. */}
 
       {/* =============================== FAQ ============================= */}
       <section id="faq" style={section('alt')}>
         <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 'clamp(28px,3.5vw,44px)' }}>
           <h2 style={h2}>Questions fréquentes</h2>
-          <div style={{ display: 'grid', borderTop: '1px solid var(--trait)' }}>
-            {FAQ.map(([q, r]) => (
-              <details key={q} style={{ borderBottom: '1px solid var(--trait)', padding: '18px 0' }}>
-                <summary
-                  style={{
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-corps)',
-                    fontSize: 'clamp(1rem,1.4vw,1.125rem)',
-                    lineHeight: 1.4,
-                    listStyle: 'none',
-                  }}
-                >
-                  {q}
-                </summary>
-                <p style={{ margin: '12px 0 0', maxWidth: '64ch', fontFamily: 'var(--font-corps)', fontSize: 16, lineHeight: 1.65, color: 'var(--texte-doux)' }}>
-                  {r}
-                </p>
-              </details>
-            ))}
-          </div>
+          {/* ⚠ EN COMPOSANT PARTAGÉ depuis le 28/08/2026, et en CLASSES plutôt
+              qu'en styles en ligne : ces objets de style JavaScript étaient hors
+              de portée de toute règle de feuille, donc de tout point de rupture.
+              Le rendu n'a pas changé — c'est celui-ci qui a été retenu pour les
+              trois pages, la page d'aide s'y aligne. */}
+          <ListeQuestions questions={QUESTIONS_SITE} />
         </div>
       </section>
 
@@ -1002,28 +1042,36 @@ export default function SiteVitrine() {
               Données hébergées en Europe
             </span>
           </div>
-          {/* Le gabarit livrait des ancres inertes ; ces pages existent. */}
-          <nav style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
-            <a href="#demonstration" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Découvrir Nestync</a>
-            <a href="#tarifs" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Tarifs</a>
-            <a href="#faq" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Questions fréquentes</a>
+          {/*
+            ⚠ QUATRE COLONNES DEPUIS LE 28/08/2026, et surtout QUE DES PAGES.
+            Le bas de page livrait trois ancres (`#demonstration`, `#tarifs`,
+            `#faq`) : elles ne fonctionnent que sur l'accueil, alors que ce bas
+            de page est présent sur tout le site. Depuis les mentions légales ou
+            la page d'aide, un visiteur cliquait dans le vide.
+
+            ⚠ Les liens d'accès ont leur PROPRE colonne, à droite : mêlés aux
+            mentions légales, « Se connecter » et « Rejoindre un foyer » se
+            perdaient au milieu de liens qu'on ne lit qu'une fois.
+          */}
+          <nav aria-label="Le produit" style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
+            <a href="/decouvrir" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Découvrir Nestync</a>
+            <a href="/tarifs" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Tarifs</a>
+            <a href="/questions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Questions fréquentes</a>
+            {/* ⚠ Déplacée depuis la colonne légale : on y cherche ce que le
+                produit DEVIENT, pas qui l'édite. */}
+            <a href="/mises-a-jour" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Mises à jour</a>
           </nav>
-          <nav style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
+          <nav aria-label="Informations légales" style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
             <a href="/mentions-legales" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Mentions légales</a>
             <a href="/confidentialite" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Politique de confidentialité</a>
             <a href="/conditions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Conditions générales</a>
-            {/* ⚠ « Contact » seul faisait croire à un simple formulaire : la page est
-                d'abord une FAQ, et celui qui cherche de l'aide ne cliquait pas. */}
             <a href="/aide" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Aide et contact</a>
-            {/* ⚠ Dans la colonne des liens de confiance, pas dans celle du
-                produit : une page de mises à jour rassure un visiteur qui se
-                demande si le produit vit encore, au même titre que les mentions
-                légales lui disent qui est derrière. */}
-            <a href="/mises-a-jour" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Mises à jour</a>
-            <a href="/rejoindre-foyer" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Rejoindre un foyer</a>
-            {/* ⚠ La barre du haut est masquee sous 767 px : sans ce lien,
-                un membre n'a AUCUN moyen de se connecter depuis un telephone. */}
+          </nav>
+          <nav aria-label="Accéder à mon foyer" style={{ display: 'grid', gap: 10, fontFamily: 'var(--font-corps)', fontSize: 15 }}>
+            {/* ⚠ La barre du haut est masquée sous 767 px : sans ces liens, un
+                membre n'a AUCUN moyen de se connecter depuis un téléphone. */}
             <a href="/connexion" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Se connecter</a>
+            <a href="/rejoindre-foyer" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Rejoindre un foyer</a>
           </nav>
         </div>
       </footer>
@@ -1168,29 +1216,5 @@ const ENGAGEMENTS: [string, string][] = [
   ['Éditeur français', 'Une petite équipe, joignable, sans levée de fonds.'],
 ];
 
-const FAQ: [string, string][] = [
-  ["Faut-il une carte bancaire pour l'essai ?", 'Non. Les 30 jours démarrent sans moyen de paiement, et rien ne se déclenche à la fin de l’essai si vous ne faites rien.'],
-  ['Les autres membres du foyer doivent-ils payer ?', 'Non. Un seul abonnement couvre tout le foyer : la personne qui paie invite les autres, qui accèdent à tous les modules gratuitement.'],
-  ['Nestync se connecte-t-il à ma banque ?', 'Jamais. Aucun identifiant bancaire n’est demandé et aucune agrégation de comptes n’est proposée. Vous saisissez ce que vous voulez suivre.'],
-  ['Comment se passe la résiliation ?', 'En trois clics dans les réglages, sans e-mail à envoyer ni justification à donner. L’accès continue jusqu’à la fin de la période payée.'],
-  ['Où sont hébergées mes données ?', 'En Europe, sous régime RGPD, sans transfert hors UE. L’export complet et la suppression définitive sont accessibles dans les réglages.'],
-  ['La liste de courses se remplit-elle vraiment toute seule ?', 'Oui. On place des recettes dans le planning, on indique le nombre de convives, et les ingrédients arrivent dans la liste rangés par rayon, quantités ajustées et doublons additionnés.'],
-  ["Peut-on l'utiliser à deux sans enfants ?", 'Oui. Le foyer peut compter deux personnes comme cinq. Les modules qui ne vous servent pas se rangent hors de l’accueil.'],
-  /*
-   * ⚠ CETTE RÉPONSE ÉTAIT UN TEXTE DE CHANTIER, EN PRODUCTION, jusqu'au
-   * 28/08/2026 : « Emplacement à compléter : préciser iOS, Android… ». Sur une
-   * page qui doit convaincre, un aveu de brouillon coûte plus cher qu'une
-   * fonction manquante.
-   *
-   * ⚠ Elle dit la vérité SANS S'EXCUSER. Nestync n'est pas sur les magasins, et
-   * c'est une absence réelle — mais l'installation depuis le navigateur a de
-   * vrais avantages, qu'il serait absurde de taire pour présenter la situation
-   * comme un manque. Ne pas transformer cette réponse en promesse datée : le
-   * lancement sur les stores dépend d'un seuil de clients, pas d'un calendrier.
-   */
-  [
-    'Sur quels appareils fonctionne l’application ?',
-    'Sur iPhone, iPad, Android, Mac et PC — Nestync s’installe directement depuis votre navigateur, en deux gestes, et s’ouvre ensuite comme n’importe quelle application, avec son icône sur l’écran d’accueil. Il n’y a rien à télécharger sur l’App Store ou le Play Store : vous n’attendez aucune validation de mise à jour, et vous n’accordez aucune autorisation à un magasin d’applications. Des versions publiées sur ces magasins viendront ; elles sont annoncées sur la page des mises à jour.',
-  ],
-];
+
 

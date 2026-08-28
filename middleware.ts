@@ -13,7 +13,15 @@ export { auth as middleware } from '@/auth';
  *    déclenché par une machine ; ces trois routes portent leur propre garde-fou
  *    (signature Stripe, `CRON_SECRET`) ;
  *  - les pages publiques : /connexion, /conditions (CGV-CGU), /confidentialite,
- *    /mentions-legales, /aide, /mises-a-jour, /hors-ligne ;
+ *    /mentions-legales, /aide, /mises-a-jour, /decouvrir, /tarifs, /questions,
+ *    /hors-ligne ;
+ *
+ * ⚠ TOUTE NOUVELLE PAGE PUBLIQUE DOIT ETRE AJOUTEE ICI **ET** DANS
+ * `app/sitemap.ts`. La posture est le refus par defaut : oublier une exclusion
+ * rend la page inaccessible (visible, donc signale), l'inverse exposerait des
+ * donnees de foyer (silencieux). C'est le bon sens d'echec, mais il faut y
+ * penser — /decouvrir, /tarifs et /questions ont ete créées le 28/08/2026 et
+ * redirigeaient vers la connexion tant qu'elles n'y figuraient pas.
  *    ⚠ Les notes de version sont PUBLIQUES a dessein : ce qui bouge dans un
  *    produit se lit aussi comme un signe de vitalite. Les enfermer derriere la
  *    connexion en priverait ceux qu'elles rassureraient le plus.
@@ -56,5 +64,5 @@ export const config = {
    *
    * En ajoutant un type d'actif servi depuis `public/`, l'ajouter ICI aussi.
    */
-  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|mises-a-jour|test$|test-proche$|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|jpe?g|webp|avif|ico|svg|webmanifest)).*)'],
+  matcher: ['/((?!$|api/auth|api/stripe|api/maintenance|connexion|conditions|confidentialite|mentions-legales|aide|mises-a-jour|decouvrir|tarifs|questions|test$|test-proche$|hors-ligne|robots.txt|sitemap.xml|sw.js|_next/static|_next/image|.*\\.(?:png|jpe?g|webp|avif|ico|svg|webmanifest)).*)'],
 };

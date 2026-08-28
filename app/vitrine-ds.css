@@ -449,7 +449,16 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
 /* ⚠ `prefers-reduced-motion` : NON NÉGOCIABLE selon la charte. L'éventail se
    défait en une grille sage — la superposition n'a aucun sens sans mouvement,
    et une carte pivotée de 21° sans transition est juste illisible. */
-@media (prefers-reduced-motion: reduce) {
+/* ⚠ RESTREINT AUX ÉCRANS QUI REÇOIVENT RÉELLEMENT L'ÉVENTAIL (28/08/2026).
+   Sans `min-width`, ces règles s'appliquaient aussi au CARROUSEL, dont les
+   cartes sont posées en absolu et écartées par un `translateX` : le
+   `transform: none !important` les ramenait toutes au même point, les sept
+   captures empilées l'une sur l'autre. Le défaut existait déjà sur téléphone.
+
+   La leçon est générale : `prefers-reduced-motion` doit retirer le MOUVEMENT,
+   jamais la MISE EN PAGE. Ici le `transform` n'est pas un effet, c'est ce qui
+   place les cartes — le supprimer ne calme rien, il casse. */
+@media (prefers-reduced-motion: reduce) and (min-width: 1024px) {
   .nsy-site .nsy-eventail-scene {
     position: static; display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -458,7 +467,21 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   .nsy-site .nsy-eventail-carte { position: static; transform: none !important; transition: none; }
   .nsy-site .nsy-eventail-nav { display: none; }
 }
-@media (max-width: 767px) {
+/* En carrousel, on coupe la TRANSITION et rien d'autre : les cartes gardent
+   leur place, elles cessent seulement d'y glisser. */
+@media (prefers-reduced-motion: reduce) and (max-width: 1023px) {
+  .nsy-site .nsy-eventail-carte { transition: none; }
+}
+/* ⚠ 1023 px, EN ACCORD AVEC `LARGEUR_CARROUSEL` DE EventailModules.tsx.
+   Ces deux seuils sont UN SEUL seuil, écrit à deux endroits, et ils doivent
+   bouger ensemble. Le composant décide s'il rend l'éventail ou le carrousel ;
+   ces règles donnent au carrousel sa scène. Les désaccorder est pire que les
+   laisser tous les deux faux : le balisage compact tomberait en flux normal,
+   sans scène ni positionnement absolu — sept captures empilées à la verticale.
+   ⚠ Modifié le 28/08/2026, de 767 à 1023 : une tablette recevait l'éventail
+   sans la largeur qu'il exige, et ses cartes montaient et descendaient sans
+   logique apparente. */
+@media (max-width: 1023px) {
   /* ⚠ La scene cesse d'etre une scene. Les cartes sont positionnees en
      absolu et deplacees par des `transform` calcules en JavaScript : aucune
      regle de feuille ne peut les reprendre. C'est le composant qui n'en rend
@@ -601,10 +624,20 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   border-top: 1px solid var(--trait);
   background: var(--fond-alt);
   padding: var(--e-6) clamp(20px, 5vw, 96px);
+  /* ⚠ TROIS COLONNES DE LIENS + la ligne de mention, comme la vitrine
+     (28/08/2026). Auparavant une seule rangée de liens légaux : ni tarifs, ni
+     connexion depuis une page intérieure, donc une impasse sur téléphone où la
+     barre du haut est masquée.
+     `min(100%, 200px)` et non `200px` : sous cette largeur, la seconde forme
+     ferait déborder la page au lieu de laisser la colonne se rétrécir. */
   display: grid;
-  gap: var(--e-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--e-5);
+  align-items: start;
 }
-.nsy-site .nsy-cadre-pied nav { display: flex; flex-wrap: wrap; gap: var(--e-5); }
+/* La ligne de mention repasse sous les colonnes, sur toute la largeur. */
+.nsy-site .nsy-cadre-pied > span { grid-column: 1 / -1; }
+.nsy-site .nsy-cadre-pied nav { display: grid; gap: var(--e-2); }
 .nsy-site .nsy-cadre-pied a {
   font-family: var(--font-corps);
   font-size: var(--petit);
@@ -728,25 +761,62 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
 }
 .nsy-site .nsy-lien-mono:hover { text-decoration: underline; }
 
-/* --- Page d'aide : la FAQ repliable --- */
-.nsy-site .aide-faq { display: grid; gap: var(--e-3); }
-.nsy-site .aide-item {
-  border: 1px solid var(--trait);
-  border-radius: var(--rayon);
-  background: var(--surface);
-  padding: 0;
+/* --- Questions repliables : UN SEUL rendu pour tout le site ---
+ * ⚠ Il y en avait DEUX jusqu'au 28/08/2026 : des cartes bordées sur la page
+ * d'aide, des lignes séparées par des filets sur l'accueil. Le visiteur passait
+ * de l'une à l'autre en un clic et voyait le site changer d'apparence, au moment
+ * précis où il jauge le sérieux du produit. C'est le rendu de l'ACCUEIL qui a
+ * été retenu : plus sobre, et c'est la page que tout le monde voit en premier.
+ * Cf. components/vitrine-ds/ListeQuestions.tsx.
+ */
+.nsy-site .nsy-questions {
+  display: grid;
+  border-top: 1px solid var(--trait);
 }
-.nsy-site .aide-item summary {
+.nsy-site .nsy-question {
+  border-bottom: 1px solid var(--trait);
+  padding: var(--e-3) 0;
+}
+.nsy-site .nsy-question summary {
   cursor: pointer;
   list-style: none;
-  padding: var(--e-4) var(--e-5);
   font-family: var(--font-corps);
-  font-size: var(--corps);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.4;
   color: var(--texte);
+  /* Espace à droite pour le chevron, qui est en absolu. */
+  padding-right: var(--e-6);
+  position: relative;
 }
-.nsy-site .aide-item summary::-webkit-details-marker { display: none; }
-.nsy-site .aide-reponse { padding: 0 var(--e-5) var(--e-5); }
-.nsy-site .aide-reponse p { margin: 0; }
+.nsy-site .nsy-question summary::-webkit-details-marker { display: none; }
+/* ⚠ UN INDICATEUR VISIBLE EST NÉCESSAIRE. `list-style: none` retire la
+   flèche native : sans rien à la place, plus rien ne dit que la ligne s'ouvre,
+   et la réponse devient introuvable. */
+.nsy-site .nsy-question summary::after {
+  content: '';
+  position: absolute;
+  right: var(--e-2);
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--texte-petit);
+  border-bottom: 1.5px solid var(--texte-petit);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform var(--duree-micro) var(--courbe);
+}
+.nsy-site .nsy-question[open] summary::after {
+  transform: translateY(-20%) rotate(-135deg);
+}
+.nsy-site .nsy-question-reponse {
+  margin-top: var(--e-3);
+  max-width: 64ch;
+  font-family: var(--font-corps);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--texte-doux);
+}
+.nsy-site .nsy-question-reponse p { margin: 0 0 var(--e-3); }
+.nsy-site .nsy-question-reponse p:last-child { margin-bottom: 0; }
 
 /* --- Messages de formulaire --- */
 .nsy-site .message {
@@ -1205,3 +1275,28 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
 /* ⚠ `scroll-margin-top` : sans lui, l'ancre colle le titre au bord haut de la
    fenêtre et l'on ne voit plus à quoi il appartient. */
 .nsy-site .maj-version { scroll-margin-top: var(--e-5); }
+
+/* --- Captures de la page de présentation (/decouvrir) ---
+ * ⚠ `minmax(min(100%, 180px), 1fr)` et non `minmax(180px, 1fr)` : sous 180 px
+ * de large, la seconde forme force une colonne plus large que son conteneur et
+ * fait déborder la page horizontalement. Le `min()` laisse la colonne se
+ * rétrécir quand l'écran l'exige. */
+.nsy-site .nsy-presse-captures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: var(--e-5);
+  margin: var(--e-5) 0;
+}
+.nsy-site .nsy-presse-captures figure { margin: 0; }
+.nsy-site .nsy-presse-captures img {
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  display: block;
+}
+.nsy-site .nsy-presse-captures figcaption {
+  margin-top: var(--e-2);
+  font-family: var(--font-donnees);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--texte-petit);
+}

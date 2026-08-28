@@ -50,12 +50,34 @@ const POSITIONS = [
   { rot: ANGLE_MAX, echelle: 0.7756, x: 30, y: 7.3, z: 1 },
 ];
 
-/** L'éventail se resserre sur les petits écrans, sinon il déborde. */
+/**
+ * Largeur en dessous de laquelle on sert le CARROUSEL et non l'éventail.
+ *
+ * ⚠ **1023 ET NON 767 (28/08/2026).** Une tablette recevait l'éventail — sept
+ * cartes disposées en arc, chacune positionnée en absolu avec sa rotation et son
+ * décalage vertical — réduit à 75 %, sans la largeur horizontale qu'il exige.
+ * Les arcs se chevauchaient et les cartes semblaient monter et descendre sans
+ * logique. C'est un défaut de CONCEPTION, pas de style : l'éventail a besoin de
+ * place pour se déployer, aucune valeur d'échelle ne remplace cette place.
+ *
+ * ⚠ Penser au PORTRAIT : une tablette moderne dépasse 800 px dans ce sens, elle
+ * tombait donc du mauvais côté dans les deux orientations.
+ */
+const LARGEUR_CARROUSEL = 1023;
+
+/**
+ * L'éventail se resserre sur les écrans étroits, sinon il déborde.
+ *
+ * ⚠ Les paliers sous 1024 px ne servent plus qu'au bref instant précédant la
+ * première mesure : au-delà de ce seuil c'est le carrousel qui rend les cartes.
+ * Ils sont conservés parce qu'un rendu initial à pleine échelle sur un écran
+ * étroit provoquerait un débordement horizontal visible avant l'effet.
+ */
 function facteur(largeur: number) {
   if (largeur < 480) return 0.28;
   if (largeur < 640) return 0.38;
   if (largeur < 768) return 0.5;
-  if (largeur < 1024) return 0.75;
+  if (largeur <= LARGEUR_CARROUSEL) return 0.75;
   return 1;
 }
 
@@ -134,7 +156,7 @@ export default function EventailModules({
   useEffect(() => {
     const relire = () => {
       setMult(facteur(window.innerWidth));
-      setCompact(window.innerWidth <= 767);
+      setCompact(window.innerWidth <= LARGEUR_CARROUSEL);
     };
     relire();
     window.addEventListener('resize', relire);

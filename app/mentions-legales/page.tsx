@@ -66,8 +66,33 @@ export default function PageMentionsLegales() {
         Les <strong>données des foyers</strong> (base de données) sont hébergées par{' '}
         <strong>Neon Inc.</strong> dans une région située dans l’
         <strong>Union européenne</strong> (Francfort, Allemagne) —{' '}
-        <a href="https://neon.tech">neon.tech</a>. Les <strong>fichiers</strong> déposés dans
-        le module Documents sont stockés sur l’infrastructure de Vercel, en accès privé.
+        <a href="https://neon.tech">neon.tech</a>.
+      </p>
+      {/*
+        ⚠ CE PARAGRAPHE DISAIT « stockés sur l'infrastructure de Vercel » jusqu'au
+        28/08/2026, alors que les fichiers sont chez OVHcloud depuis le 08/08.
+        Ce n'était pas une coquille : c'est une mention OBLIGATOIRE (art. 6 III
+        de la LCEN, art. 13 du RGPD) portant sur les données les plus sensibles
+        du produit — baux, carnets de santé, papiers d'identité. Un lecteur
+        doit pouvoir savoir chez qui ses documents dorment.
+
+        ⚠ LE REPLI EST NOMMÉ LUI AUSSI, à dessein. `lib/stockage/index.ts`
+        bascule sur Vercel Blob si les variables `OVH_S3_*` manquent : taire ce
+        cas rendrait la mention fausse le jour où il se produirait, sans que
+        personne ne s'en aperçoive. Une mention légale décrit ce que le code
+        PEUT faire, pas seulement ce qu'il fait aujourd'hui.
+      */}
+      <p>
+        Les <strong>fichiers</strong> déposés dans le module Documents sont stockés par{' '}
+        <strong>OVH SAS</strong>, 2 rue Kellermann, 59100 Roubaix, France —{' '}
+        <a href="https://www.ovhcloud.com">ovhcloud.com</a> — sur une infrastructure de
+        stockage objet située à <strong>Paris</strong>, répartie sur trois zones de
+        disponibilité et certifiée ISO 27001, ISO 27017, ISO 27018, ISO 27701 ainsi que{' '}
+        <strong>HDS</strong> (hébergement de données de santé). Ces fichiers sont{' '}
+        <strong>chiffrés</strong> (AES-256-GCM) avant d’être transmis à l’hébergeur, qui n’en
+        connaît ni le contenu, ni le nom d’origine, ni le type. À défaut de configuration
+        OVHcloud, le stockage bascule sur l’infrastructure de <strong>Vercel Inc.</strong>, en
+        accès privé et selon les mêmes règles de chiffrement.
       </p>
       <p>
         Le traitement des paiements est assuré par <strong>Stripe Payments Europe, Ltd.</strong>,

@@ -1012,7 +1012,9 @@ export default function SiteVitrine() {
             <a href="/mentions-legales" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Mentions légales</a>
             <a href="/confidentialite" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Politique de confidentialité</a>
             <a href="/conditions" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Conditions générales</a>
-            <a href="/aide" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Contact</a>
+            {/* ⚠ « Contact » seul faisait croire à un simple formulaire : la page est
+                d'abord une FAQ, et celui qui cherche de l'aide ne cliquait pas. */}
+            <a href="/aide" style={{ color: 'var(--texte-petit)', textDecoration: 'none' }}>Aide et contact</a>
             {/* ⚠ Dans la colonne des liens de confiance, pas dans celle du
                 produit : une page de mises à jour rassure un visiteur qui se
                 demande si le produit vit encore, au même titre que les mentions
@@ -1174,6 +1176,21 @@ const FAQ: [string, string][] = [
   ['Où sont hébergées mes données ?', 'En Europe, sous régime RGPD, sans transfert hors UE. L’export complet et la suppression définitive sont accessibles dans les réglages.'],
   ['La liste de courses se remplit-elle vraiment toute seule ?', 'Oui. On place des recettes dans le planning, on indique le nombre de convives, et les ingrédients arrivent dans la liste rangés par rayon, quantités ajustées et doublons additionnés.'],
   ["Peut-on l'utiliser à deux sans enfants ?", 'Oui. Le foyer peut compter deux personnes comme cinq. Les modules qui ne vous servent pas se rangent hors de l’accueil.'],
-  ['Sur quels appareils fonctionne l’application ?', 'Emplacement à compléter : préciser iOS, Android et l’accès web selon ce qui est réellement disponible aujourd’hui.'],
+  /*
+   * ⚠ CETTE RÉPONSE ÉTAIT UN TEXTE DE CHANTIER, EN PRODUCTION, jusqu'au
+   * 28/08/2026 : « Emplacement à compléter : préciser iOS, Android… ». Sur une
+   * page qui doit convaincre, un aveu de brouillon coûte plus cher qu'une
+   * fonction manquante.
+   *
+   * ⚠ Elle dit la vérité SANS S'EXCUSER. Nestync n'est pas sur les magasins, et
+   * c'est une absence réelle — mais l'installation depuis le navigateur a de
+   * vrais avantages, qu'il serait absurde de taire pour présenter la situation
+   * comme un manque. Ne pas transformer cette réponse en promesse datée : le
+   * lancement sur les stores dépend d'un seuil de clients, pas d'un calendrier.
+   */
+  [
+    'Sur quels appareils fonctionne l’application ?',
+    'Sur iPhone, iPad, Android, Mac et PC — Nestync s’installe directement depuis votre navigateur, en deux gestes, et s’ouvre ensuite comme n’importe quelle application, avec son icône sur l’écran d’accueil. Il n’y a rien à télécharger sur l’App Store ou le Play Store : vous n’attendez aucune validation de mise à jour, et vous n’accordez aucune autorisation à un magasin d’applications. Des versions publiées sur ces magasins viendront ; elles sont annoncées sur la page des mises à jour.',
+  ],
 ];
 

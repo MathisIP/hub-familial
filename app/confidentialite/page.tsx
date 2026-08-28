@@ -15,6 +15,30 @@ export const metadata = { title: 'Politique de confidentialité — Nestync' };
  * réintroduire de mention « gabarit » ni de champ à compléter — ce serait un
  * motif de rejet. Une relecture juridique reste recommandée avant la vente.
  */
+
+/**
+ * TÉMOINS DÉPOSÉS SUR L'APPAREIL — liste exhaustive, hors cookie de session.
+ *
+ * ⚠ **CETTE LISTE EST UNE DÉCLARATION LÉGALE, PAS UNE DOCUMENTATION.** Elle doit
+ * correspondre exactement à ce que le code pose. Le texte annonçait deux
+ * préférences quand il y en avait six : l'écart s'est creusé en ajoutant la
+ * mémoire de la vue d'agenda sans rouvrir ce fichier.
+ *
+ * ⚠ Aucun n'est publicitaire et aucun ne suit l'utilisateur d'un site à l'autre :
+ * ils relèvent tous du confort demandé par la personne elle-même, donc exemptés
+ * de consentement — mais pas de déclaration.
+ *
+ * ⚠ Le cookie de session d'authentification n'y figure pas : il est décrit dans
+ * la phrase qui précède, comme strictement nécessaire.
+ */
+const TEMOINS: [string, string, string][] = [
+  ['hub-theme', 'le thème choisi (clair ou nuit)', 'jusqu’à effacement, sur l’appareil'],
+  ['hub-neon', 'l’effet lumineux de l’interface, activé ou non', 'jusqu’à effacement, sur l’appareil'],
+  ['hub-nom', 'le prénom affiché sur l’accueil, si vous l’avez personnalisé', 'jusqu’à effacement, sur l’appareil'],
+  ['hub-langue', 'la langue de l’interface', 'cookie, 1 an'],
+  ['hub-agenda-vue', 'la vue d’agenda préférée (jour, semaine ou mois)', 'jusqu’à effacement, sur l’appareil'],
+  ['hub-install-ios', 'le fait que vous ayez fermé le rappel d’installation sur iPhone', 'jusqu’à effacement, sur l’appareil'],
+];
 export default async function PageConfidentialite() {
   const langue = await langueCourante();
   return (
@@ -69,6 +93,24 @@ export default async function PageConfidentialite() {
 
       <h2>{t('CONF_S6_T', langue)}</h2>
       <p>{t('CONF_S6_P', langue)}</p>
+      {/*
+        ⚠ LISTE EXHAUSTIVE, ET ELLE DOIT LE RESTER (28/08/2026). Ce paragraphe
+        annonçait « deux préférences (thème, langue) » alors que six témoins
+        étaient réellement posés. Aucun n'est publicitaire et aucun n'exige de
+        consentement — l'inexactitude ne portait donc pas sur le droit applicable,
+        mais sur une mention obligatoire (art. 13 du RGPD), ce qui suffit.
+        ⚠ TOUT NOUVEAU `localStorage` OU COOKIE SE DÉCLARE ICI. C'est la vue
+        agenda (`hub-agenda-vue`), ajoutée sans repasser par ce texte, qui a
+        révélé l'écart.
+      */}
+      <ul>
+        {TEMOINS.map(([cle, role, duree]) => (
+          <li key={cle}>
+            <code>{cle}</code> — {role} <em>({duree})</em>
+          </li>
+        ))}
+      </ul>
+      <p>{t('CONF_S6_P3', langue)}</p>
       <p>{t('CONF_S6_P2', langue)}</p>
 
       <h2>{t('CONF_S7_T', langue)}</h2>

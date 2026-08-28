@@ -90,7 +90,7 @@ export default function CadreSite({
           <Link href="/mentions-legales">Mentions légales</Link>
           <Link href="/confidentialite">Politique de confidentialité</Link>
           <Link href="/conditions">Conditions générales</Link>
-          <Link href="/aide">Contact</Link>
+          <Link href="/aide">Aide et contact</Link>
           <Link href="/mises-a-jour">Mises à jour</Link>
         </nav>
         <span>Éditeur français · Données hébergées en Europe</span>

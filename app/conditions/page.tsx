@@ -71,7 +71,15 @@ export default function PageConditions() {
         <li>Contact : contact@nestync.app</li>
         <li>Directeur de la publication : Mathis INGRAND-PERIGNE</li>
         <li>Hébergement de l’application : Vercel Inc.</li>
-        <li>Hébergement des données : Neon, région Union européenne</li>
+        <li>Hébergement de la base de données : Neon Inc., région Union européenne</li>
+        {/*
+          ⚠ AJOUTÉE LE 28/08/2026. Cette liste omettait l'hébergeur des fichiers,
+          et les mentions légales en désignaient un autre (Vercel) que celui
+          réellement utilisé depuis le 08/08 (OVHcloud). Deux documents
+          contractuels qui se contredisent sur le lieu de stockage des documents
+          d'un foyer, c'est pire qu'un seul qui se tait.
+        */}
+        <li>Hébergement des fichiers du module Documents : OVH SAS, Paris, France</li>
       </ul>
 
       <h2>2. Objet</h2>

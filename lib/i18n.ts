@@ -944,8 +944,18 @@ const UI = {
   CONF_S5_LI2: { fr: 'Message envoyé depuis la page d’aide : conservé 1 an, puis effacé.' },
   CONF_S5_LI3: { fr: 'Invitation non acceptée : effacée au bout de 90 jours.' },
   CONF_S6_T: { fr: '6. Cookies et mesure d’audience' },
+  /**
+   * ⚠ DISAIT « deux préférences (thème, langue) » JUSQU'AU 28/08/2026, alors que
+   * six témoins étaient réellement posés. L'énumération en toutes lettres a été
+   * remplacée par un renvoi à la liste exhaustive affichée juste en dessous
+   * (`TEMOINS` dans app/confidentialite/page.tsx) : un texte qui compte lui-même
+   * ses éléments se périme au premier ajout, en silence.
+   */
   CONF_S6_P: {
-    fr: 'Le Service n’utilise qu’un cookie de session strictement nécessaire à l’authentification, plus deux préférences stockées sur ton appareil (thème, langue). Aucun traceur publicitaire n’est déposé et aucune donnée n’est revendue.',
+    fr: 'Le Service n’utilise qu’un cookie de session strictement nécessaire à l’authentification, plus les préférences d’affichage ci-dessous, conservées sur ton appareil. Aucun traceur publicitaire n’est déposé, aucun profil n’est constitué et aucune donnée n’est revendue.',
+  },
+  CONF_S6_P3: {
+    fr: 'Aucune de ces préférences ne permet de te suivre d’un site à l’autre : elles ne servent qu’à retrouver tes réglages sur cet appareil. Les effacer (vidage des données du site dans ton navigateur) remet simplement l’affichage à ses valeurs par défaut, sans rien perdre de tes données de foyer.',
   },
   CONF_S6_P2: {
     fr: 'Une mesure d’audience (Vercel Web Analytics) compte les pages vues afin d’améliorer le Service. Elle ne dépose AUCUN cookie, ne crée aucun profil et ne permet pas de te suivre d’un site à l’autre. Les adresses de pages sont en outre anonymisées avant envoi : les paramètres d’URL sont supprimés et les identifiants remplacés, de sorte qu’aucun contenu de ton foyer n’est transmis.',

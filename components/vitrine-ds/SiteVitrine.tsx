@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Bouton, Pastille, Mockup, type Fil } from '@/components/vitrine-ds/Primitives';
+import { Bouton, Pastille, Mockup, BlocChiffre, type Fil } from '@/components/vitrine-ds/Primitives';
 import EventailModules from '@/components/vitrine-ds/EventailModules';
-import EnTravaux from '@/components/vitrine-ds/EnTravaux';
 import ListeQuestions from '@/components/vitrine-ds/ListeQuestions';
 // ⚠ Source unique : la page /questions lit la même liste.
 import { QUESTIONS_SITE } from '@/lib/questions-site';
@@ -635,16 +634,64 @@ export default function SiteVitrine() {
               ce n&apos;est pas un talent d&apos;organisation — c&apos;est une charge.
             </p>
           </div>
-          {/* ⚠ NOTE INTERNE — commentaire, JAMAIS une prop. Trois données doivent
-              chiffrer ici la charge mentale, l'empilement d'applications et les
-              échéances oubliées. Rien ne se publie sans SOURCE et ANNÉE : un
-              chiffre sur la vie domestique se vérifie en une recherche, et c'est
-              le premier qu'un journaliste ira contrôler.
-              À fournir pour chacun : la valeur, l'organisme source, l'année. */}
-          <EnTravaux
-            quoi="Les chiffres du problème"
-            publique="Des données sourcées viendront ici étayer ce constat."
-          />
+          {/*
+            ⚠ TROIS DONNÉES, CHACUNE AVEC SON ORGANISME ET SON ANNÉE (28/08/2026).
+            `BlocChiffre` exige `source` et `annee` : c'est volontaire, un chiffre
+            sur la vie domestique se vérifie en une recherche et c'est le premier
+            qu'un journaliste ira contrôler.
+
+            ⚠ **NE PAS CITER L'INSEE SUR LES TÂCHES DOMÉSTIQUES.** Les seules
+            données publiées viennent de l'enquête *Emploi du temps* 2009-2010 ;
+            l'édition 2025-2026 était encore en collecte en août 2026. Citer
+            « INSEE » ici reviendrait à publier un chiffre de seize ans sur un
+            sujet qui a bougé. C'est la première piste écartée, et elle reviendra
+            à l'esprit : la noter évite de refaire la recherche.
+
+            ⚠ L'ANGLE « EMPILEMENT D'APPLICATIONS » A ÉTÉ ABANDONNÉ, faute de
+            source. Aucune étude française sérieuse ne mesure le nombre
+            d'applications qu'un foyer utilise pour s'organiser ; les « 90 apps
+            installées » qui circulent viennent de blogs sans méthodologie. Le
+            baromètre de l'Arcep mesure en revanche les APPAREILS, ce qui dit la
+            même chose plus solidement : l'organisation d'un foyer est éparpillée
+            sur onze écrans qui ne se parlent pas.
+            ⚠ Sa section « multiplication des usages » (32 % de cumul) porte sur
+            la VIDÉO À LA DEMANDE : ne pas la reprendre ici, ce serait un
+            détournement que l'ouverture du rapport suffit à défaire.
+
+            ⚠ Le troisième angle d'origine — les échéances oubliées — reste sans
+            source à ce jour. Il n'a pas été remplacé par une approximation.
+          */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))',
+              gap: 'clamp(28px,4vw,56px)',
+            }}
+          >
+            <BlocChiffre
+              eyebrow="La charge n'est pas partagée"
+              chiffre="65"
+              unite="%"
+              libelle="des femmes en couple déclarent que la charge familiale du quotidien — tâches, enfants, budget — repose essentiellement sur elles. Contre 4 % sur leur partenaire."
+              source="Ifop pour News RSE"
+              annee="2024"
+            />
+            <BlocChiffre
+              eyebrow="Tout est éparpillé"
+              chiffre="11,2"
+              libelle="appareils numériques par foyer connecté, dont 8,4 réellement utilisés. L'organisation du foyer se disperse sur des écrans qui ne se parlent pas."
+              source="CRÉDOC pour l'Arcep, l'Arcom, le CGE et l'ANCT"
+              annee="2026"
+            />
+            <BlocChiffre
+              eyebrow="Et pourtant on cherche"
+              chiffre="69"
+              unite="%"
+              libelle="ont déjà cherché ou envisagent « une meilleure planification et priorisation des tâches au sein du foyer » pour alléger leur charge mentale."
+              source="Ifop pour News RSE"
+              annee="2024"
+            />
+          </div>
         </div>
       </section>
 

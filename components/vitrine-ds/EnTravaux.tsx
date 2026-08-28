@@ -1,3 +1,17 @@
+/**
+ * ⚠ PLUS AUCUN APPEL DEPUIS LE 28/08/2026 — et c'est le résultat recherché :
+ * le site public ne porte plus un seul bandeau « Bientôt ». Les deux qui
+ * restaient ont été traités, chacun à sa manière : la section « Le problème » a
+ * reçu ses trois données sourcées, la section « Témoignages » a été retirée
+ * faute de vrais retours.
+ *
+ * ⚠ LE FICHIER EST CONSERVÉ À DESSEIN, contrairement à l'ancienne vitrine
+ * supprimée le même jour. Ce n'est pas du code mort mais une RÈGLE outillée :
+ * quand une section n'est pas prête, on affiche un vide assumé plutôt qu'un
+ * contenu inventé. Un vide se remarque et se corrige ; un faux témoignage se
+ * publie et se retourne contre celui qui l'a écrit.
+ */
+
 import type { ReactNode } from 'react';
 
 /**

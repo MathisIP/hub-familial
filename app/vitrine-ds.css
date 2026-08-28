@@ -1300,3 +1300,45 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   line-height: 1.45;
   color: var(--texte-petit);
 }
+
+/* ── Le menu déroulant de l'application, replacé dans la charte du site ──
+ * ⚠ **BUG DE COULEUR CORRIGÉ LE 28/08/2026.** Le sélecteur « De quoi
+ * s'agit-il ? » de la page d'aide n'est pas un `<select>` natif mais le
+ * composant `Liste` de l'application, stylé dans `globals.css` avec les jetons
+ * de l'APPLICATION (`--cell`, `--ink`, `--acc`…). Or ces jetons suivent
+ * `data-theme` posé sur `<html>` : un visiteur dont le thème d'application est
+ * « nuit » voyait un menu bleu nuit au milieu d'une page claire en chaux.
+ *
+ * ⚠ C'EST LE PIÈGE ANNONCÉ EN TÊTE DE CE FICHIER, dans l'autre sens. On avait
+ * pris soin que le site ne déteigne pas sur l'application ; personne n'avait
+ * regardé ce qui se passe quand un composant de l'application est réutilisé
+ * DANS le site. Tout composant partagé posé sur une page publique doit être
+ * repeint ici — le vérifier avant d'en réutiliser un autre.
+ *
+ * Redéfinir les jetons sur `.deroulante` suffit : les règles de `globals.css`
+ * les lisent, elles n'ont pas besoin d'être réécrites. Une variable est le seul
+ * point d'entrée qui n'exige pas de gagner une bataille de spécificité.
+ */
+.nsy-site .deroulante {
+  --cell: var(--fond-alt);
+  --champ: var(--fond-alt);
+  --line: var(--trait);
+  --muted: var(--texte-petit);
+  --acc: var(--commun);
+  --acc-deep: var(--commun-texte);
+  display: block;
+  color: var(--texte);
+}
+.nsy-site .liste-bouton {
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  font-family: var(--font-corps);
+  font-size: var(--corps);
+  color: var(--texte);
+}
+.nsy-site .liste-panneau {
+  border-radius: var(--rayon);
+  background: var(--fond-alt);
+  color: var(--texte);
+}
+.nsy-site .liste-option { border-radius: var(--rayon); }

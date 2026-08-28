@@ -47,7 +47,7 @@ export default function PageDecouvrir() {
     <CadreSite
       surtitre="Présentation"
       titre="Découvrir Nestync"
-      chapeau="Ce qu’est le service, ce qui le distingue, et qui l’édite — sans argumentaire."
+      chapeau="Ce qu’est le service, ce qui le distingue, et qui l’édite."
       large
     >
       <h2>En deux phrases</h2>
@@ -90,9 +90,19 @@ export default function PageDecouvrir() {
       <p>
         Nestync s’installe depuis le navigateur, sur iPhone, iPad, Android, Mac et PC, et s’ouvre
         ensuite comme une application ordinaire. Il n’y a rien à télécharger sur l’App Store ou le
-        Play Store aujourd’hui : aucune validation de mise à jour à attendre, aucune autorisation
-        à accorder à un magasin. Des versions publiées sur ces magasins viendront ; elles seront
-        annoncées sur la page des <Link href="/mises-a-jour">mises à jour</Link>.
+        Play Store : aucune validation de mise à jour à attendre, aucune autorisation à accorder
+        à un magasin.
+        {/*
+          ⚠ NE RIEN PROMETTRE SUR LES MAGASINS. Ce paragraphe annonçait
+          « des versions publiées sur ces magasins viendront » : c'est un
+          engagement, et il n'en est pas un. La publication dépend d'un seuil de
+          clients qui rende l'opération neutre financièrement, et le compte
+          développeur Apple coûte 99 € par an avant le premier abonné. Une
+          feuille de route écrite au futur de l'indicatif se lit comme une
+          promesse — y compris par quelqu'un qui s'abonne à cause d'elle.
+        */}
+        Une publication sur ces magasins est à l’étude, sans calendrier ni garantie ; toute
+        évolution sera annoncée sur la page des <Link href="/mises-a-jour">mises à jour</Link>.
       </p>
 
       <h2>Modèle économique</h2>
@@ -140,8 +150,18 @@ export default function PageDecouvrir() {
       </div>
 
       <h2>Nous contacter</h2>
+      {/*
+        ⚠ DEUX ADRESSES, ET C'EST VOULU. Une demande presse ou partenariat n'a
+        ni le même délai ni la même priorité qu'une question d'utilisateur : les
+        mêler dans une seule boîte revient à traiter la première en dernier.
+        L'adresse générale reste indiquée pour tout le reste.
+      */}
       <p>
-        Pour toute demande — presse, partenariat, question sur le produit —{' '}
+        <strong>Presse et partenariats</strong> :{' '}
+        <a href="mailto:presse@nestync.app">presse@nestync.app</a>.
+      </p>
+      <p>
+        Pour toute autre demande — question sur le produit, difficulté technique —{' '}
         <a href="mailto:contact@nestync.app">contact@nestync.app</a>, ou le formulaire de la page{' '}
         <Link href="/aide">Aide et contact</Link>. Les questions les plus posées ont leur réponse
         sur la page <Link href="/questions">Questions fréquentes</Link>.

@@ -241,7 +241,9 @@ export default function SiteVitrine() {
             <a href="#demonstration" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
               Démonstration
             </a>
-            <a href="#tarifs" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
+            {/* ⚠ Vers la PAGE et non l'ancre : la page /tarifs existe depuis le
+              28/08/2026, elle est indexable et se partage par lien. */}
+            <a href="/tarifs" className="nsy-nav-ancre" style={{ ...surtitre, textDecoration: 'none' }}>
               Tarifs
             </a>
             {/* ⚠ IL MANQUAIT UN CHEMIN POUR LES MEMBRES DÉJÀ INSCRITS. La page

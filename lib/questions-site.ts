@@ -35,10 +35,16 @@ const BRUT: [string, string][] = [
    * vrais avantages, qu'il serait absurde de taire pour présenter la situation
    * comme un manque. Ne pas transformer cette réponse en promesse datée : le
    * lancement sur les stores dépend d'un seuil de clients, pas d'un calendrier.
+   *
+   * ⚠ ET NE RIEN PROMETTRE NON PLUS AU FUTUR DE L'INDICATIF. « Des versions
+   * viendront » se lit comme un engagement, y compris par quelqu'un qui
+   * s'abonne à cause de lui. La publication dépend d'un seuil de clients qui
+   * rende l'opération neutre, et le compte développeur Apple coûte 99 € par an
+   * avant le premier abonné.
    */
   [
     'Sur quels appareils fonctionne l’application ?',
-    'Sur iPhone, iPad, Android, Mac et PC — Nestync s’installe directement depuis votre navigateur, en deux gestes, et s’ouvre ensuite comme n’importe quelle application, avec son icône sur l’écran d’accueil. Il n’y a rien à télécharger sur l’App Store ou le Play Store : vous n’attendez aucune validation de mise à jour, et vous n’accordez aucune autorisation à un magasin d’applications. Des versions publiées sur ces magasins viendront ; elles sont annoncées sur la page des mises à jour.',
+    'Sur iPhone, iPad, Android, Mac et PC — Nestync s’installe directement depuis votre navigateur, en deux gestes, et s’ouvre ensuite comme n’importe quelle application, avec son icône sur l’écran d’accueil. Il n’y a rien à télécharger sur l’App Store ou le Play Store : vous n’attendez aucune validation de mise à jour, et vous n’accordez aucune autorisation à un magasin d’applications. Une publication sur ces magasins est à l’étude, sans calendrier ni garantie — toute évolution sera annoncée sur la page des mises à jour.',
   ],
 ];
 /** Les questions de l'accueil et de la page `/questions`. */

@@ -83,6 +83,95 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-08-28',
+    numero: '1.2.0',
+    date: '28 août 2026',
+    dateISO: '2026-08-28',
+    titre: 'Un site qu’on peut essayer, et des textes qui disent vrai',
+    resume:
+      'Une page pour essayer Nestync sans créer de compte, trois nouvelles pages publiques, et une relecture complète des documents légaux.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Une page pour essayer Nestync sans créer de compte.',
+        texte:
+          'Sur nestync.app/demonstration : composez une semaine de repas et regardez la liste de courses se remplir, basculez l’agenda du jour à la semaine ou au mois, saisissez une dépense et voyez les soldes bouger.',
+        detail:
+          'Ce ne sont pas des images : les calculs sont ceux de l’application elle-même. Rien n’y est enregistré, aucun compte n’est créé.',
+      },
+      {
+        nature: 'nouveau',
+        titre: 'Trois nouvelles pages : Découvrir, Tarifs, Questions fréquentes.',
+        texte:
+          'Chacune existe pour elle-même et se partage par lien. Auparavant, ces liens du bas de page renvoyaient à des sections de l’accueil — depuis n’importe quelle autre page, ils ne menaient nulle part.',
+        detail:
+          'La page Découvrir présente le service sans argumentaire commercial, avec des captures libres d’usage et un contact dédié.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Le carrousel des modules fonctionne enfin sur tablette.',
+        texte:
+          'Les captures se chevauchaient et semblaient monter et descendre sans raison. Les tablettes reçoivent désormais le même carrousel que les téléphones, au lieu d’un éventail conçu pour les grands écrans.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'La simulation de coût affiche le prix de la formule choisie.',
+        texte:
+          'Elle indiquait 4,16 € sans préciser qu’il s’agissait du tarif annuel ramené au mois. Quelqu’un qui souscrivait au mois payait 4,99 €, soit 20 % de plus que le chiffre affiché.',
+        detail:
+          'Un sélecteur mensuel / annuel a été ajouté, et la mention « prix annuel ramené au mois » apparaît quand elle s’applique.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Les mentions légales nomment le bon hébergeur pour vos documents.',
+        texte:
+          'Elles désignaient encore Vercel. Vos fichiers sont hébergés depuis le 8 août chez OVHcloud, à Paris, sur une infrastructure certifiée ISO 27001 et HDS — et ils sont chiffrés avant d’y être transmis.',
+        detail:
+          'L’hébergeur ne connaît ni le contenu de vos fichiers, ni leur nom d’origine, ni leur type. Les conditions générales portent désormais la même information.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'La politique de confidentialité liste tous les témoins déposés sur votre appareil.',
+        texte:
+          'Elle en annonçait deux, il y en a six : thème, langue, effet lumineux, prénom affiché, vue d’agenda préférée, et le rappel d’installation sur iPhone. Chacun est désormais nommé, avec son rôle et sa durée.',
+        detail:
+          'Aucun n’est publicitaire et aucun ne permet de vous suivre d’un site à l’autre. C’est l’exactitude de la déclaration qui était en défaut, pas le respect de votre vie privée.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Refonte des conditions générales, à la suite d’erreurs retrouvées à la relecture.',
+        texte:
+          'Plusieurs clauses ont été reprises pour décrire exactement ce que fait le service.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'La question « sur quels appareils ? » a enfin sa réponse.',
+        texte:
+          'Nestync s’installe depuis le navigateur sur iPhone, iPad, Android, Mac et PC, et s’ouvre ensuite comme une application ordinaire — sans rien télécharger sur un magasin d’applications.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Le menu de la page d’aide s’affichait en sombre sur fond clair.',
+        texte:
+          'Le sélecteur « De quoi s’agit-il ? » empruntait les couleurs de l’application au lieu de celles du site. Le même défaut touchait plusieurs champs de saisie et les cases à cocher.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'Le bas de page est réorganisé en colonnes.',
+        texte:
+          'Le produit, les informations légales et l’accès à votre foyer sont séparés. « Se connecter » et « Rejoindre un foyer » sont enfin visibles depuis toutes les pages, y compris sur téléphone où le menu du haut est masqué.',
+        detail:
+          '« Contact » s’appelle désormais « Aide et contact » : la page est d’abord une foire aux questions, et celui qui cherchait de l’aide ne cliquait pas.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'La page d’accueil s’appuie sur des données sourcées.',
+        texte:
+          'La section qui décrit le problème citait des chiffres à venir. Elle en porte maintenant trois, chacun avec son organisme et son année.',
+      },
+    ],
+  },
+  {
     id: '2026-08-27-b',
     numero: '1.1.0',
     date: '27 août 2026',

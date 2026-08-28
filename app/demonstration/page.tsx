@@ -38,7 +38,7 @@ export default function PageDemonstration() {
 
       <p className="nsy-demo-pied">
         Rien de ce que vous faites ici n’est enregistré : cette page ne crée aucun compte et ne
-        conserve rien. Pour de vrai, l’essai dure 30 jours sans carte bancaire —{' '}
+        conserve rien. Pour vous convaincre : l’essai dure 30 jours sans carte bancaire —{' '}
         <Link href="/connexion">commencer</Link>, ou lire d’abord les{' '}
         <Link href="/tarifs">tarifs</Link> et les{' '}
         <Link href="/questions">questions fréquentes</Link>.

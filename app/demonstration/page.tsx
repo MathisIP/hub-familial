@@ -32,7 +32,7 @@ export default function PageDemonstration() {
       surtitre="Démonstration"
       titre="Essayez avant de créer un compte."
       chapeau="Trois fonctions de Nestync, manipulables ici même, sur un foyer fictif. Les calculs sont ceux de l’application — pas une imitation."
-      large
+      pleineLargeur
     >
       <Demonstration />
 

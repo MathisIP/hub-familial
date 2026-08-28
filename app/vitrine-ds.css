@@ -864,8 +864,17 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
 .nsy-site .bouton-primaire:disabled { opacity: .45; cursor: not-allowed; }
 
 /* Champs hérités : mêmes règles que `.nsy-champ`. */
+/* ⚠ `input:not([type])` EST INDISPENSABLE ICI. Un champ écrit `<input value=… />`
+   sans attribut `type` se comporte comme du texte mais n'est PAS visé par
+   `input[type="text"]` : il retombait alors sur les règles de l'application,
+   dont les jetons suivent le thème de l'APP — d'où des champs bleu nuit au
+   milieu d'une page claire en chaux. Constaté sur la démonstration le
+   28/08/2026, exactement le même piège que le menu déroulant de la page d'aide. */
+.nsy-site input:not([type]),
 .nsy-site input[type="text"],
 .nsy-site input[type="email"],
+.nsy-site input[type="number"],
+.nsy-site input[type="search"],
 .nsy-site textarea,
 .nsy-site select,
 .nsy-site .champ {
@@ -1524,3 +1533,45 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
 .nsy-plein.over { background: var(--alerte); }
 .nsy-champs { display: grid; gap: 10px; }
 .nsy-paire { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+
+/* ── Correctifs de la page de démonstration (28/08/2026) ──────────────────
+ * Trois règles du site débordaient sur les outils de cette page. Les corriger
+ * ici plutôt que dans le composant : ce sont des collisions de feuille, pas des
+ * choix de mise en page.
+ */
+
+/* ⚠ COLONNE PLEINE LARGEUR pour une page qui porte un OUTIL et non un texte.
+   `large` plafonne à 60rem, ce qui laissait des marges vides de part et d'autre
+   d'un planning et d'une liste de courses. La prose, elle, garde sa mesure —
+   les paragraphes sont déjà bornés par `--mesure`. */
+.nsy-site .nsy-cadre-corps.pleine { max-width: min(1560px, 94vw); }
+
+/* ⚠ `.nsy-site label` met TOUT libellé en petites capitales monospace. C'est
+   juste pour un formulaire, absurde pour un article de liste de courses : les
+   noms s'affichaient « POMMES DE TERRE » en mono. La case à cocher est un
+   `<label>` par nécessité — c'est ce qui rend le texte cliquable — donc on
+   rétablit la typographie courante à l'intérieur. */
+.nsy-site .nsy-coche {
+  font-family: var(--font-corps);
+  font-size: var(--petit);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--texte);
+}
+
+/* ⚠ Une case à cocher n'est pas un champ de saisie : le rembourrage et le fond
+   hérités des champs la déformaient en carré plein. */
+.nsy-site input[type="checkbox"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  width: 16px; height: 16px; padding: 0; min-width: 0;
+  background: none; border: 0; accent-color: var(--commun);
+}
+
+/* ⚠ Les onglets inactifs de la bascule héritaient de la couleur des boutons du
+   site et devenaient illisibles sur leur propre fond. On pose la couleur des
+   deux états plutôt que de compter sur l'héritage. */
+.nsy-site .nsy-bascule button { color: var(--texte); }
+.nsy-site .nsy-bascule button:hover { color: var(--commun); }
+.nsy-site .nsy-bascule button.on { color: var(--sur-commun); }

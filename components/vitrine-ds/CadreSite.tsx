@@ -27,6 +27,7 @@ export default function CadreSite({
   surtitre,
   chapeau,
   large = false,
+  pleineLargeur = false,
   children,
 }: {
   /** Titre de la page, en Fraunces. */
@@ -37,6 +38,15 @@ export default function CadreSite({
   chapeau?: string;
   /** Élargit la colonne : pour les pages à formulaire plutôt qu'à texte. */
   large?: boolean;
+  /**
+   * Colonne PLEINE LARGEUR — réservée aux pages qui portent un OUTIL et non un
+   * texte (la démonstration).
+   *
+   * ⚠ Ne jamais l'employer pour de la prose : au-delà de soixante-dix
+   * caractères par ligne, un paragraphe cesse d'être lisible. Les paragraphes
+   * restent d'ailleurs bornés par `--mesure`, même ici.
+   */
+  pleineLargeur?: boolean;
   children: ReactNode;
 }) {
   const surtitreStyle: CSSProperties = {
@@ -68,7 +78,7 @@ export default function CadreSite({
         </Link>
       </header>
 
-      <main className={`nsy-cadre-corps${large ? ' large' : ''}`}>
+      <main className={`nsy-cadre-corps${pleineLargeur ? ' pleine' : large ? ' large' : ''}`}>
         <div className="nsy-cadre-entete">
           {surtitre && <p style={surtitreStyle}>{surtitre}</p>}
           <h1 className="ns-display-l" style={{ margin: 0 }}>

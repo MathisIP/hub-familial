@@ -1560,13 +1560,34 @@ body:has(.nsy-site) .enveloppe { padding-top: 0; }
   color: var(--texte);
 }
 
-/* ⚠ Une case à cocher n'est pas un champ de saisie : le rembourrage et le fond
-   hérités des champs la déformaient en carré plein. */
+/* ⚠⚠ `color-scheme` — LA VRAIE CAUSE DES CASES À COCHER NOIRES.
+ *
+ * `lib/themes.ts` émet `color-scheme: dark` dans le bloc du thème `nuit`, posé
+ * sur `<html>` par l'APPLICATION. Le site vit à l'intérieur de ce document sans
+ * jamais réinitialiser la propriété : le navigateur dessinait donc TOUS les
+ * contrôles natifs — cases à cocher, flèches de menu, barres de défilement — en
+ * mode sombre, au milieu d'une page claire en chaux. Une case non cochée y
+ * apparaît comme un carré plein foncé.
+ *
+ * ⚠ Aucune règle de couleur ne pouvait corriger ça : `color-scheme` ne se
+ * combat pas avec `background` ou `accent-color`, il change le rendu natif que
+ * le navigateur applique AVANT nos déclarations. La première tentative
+ * (`appearance: auto` + fond transparent) n'a donc rien changé.
+ *
+ * ⚠ C'est la TROISIÈME fuite du thème de l'application vers le site en une
+ * journée, après le menu déroulant de la page d'aide et les champs de saisie.
+ * Le principe est le même à chaque fois : `.nsy-site` borne les JETONS, pas ce
+ * que `<html>` impose. Toute propriété héritée du document doit être remise à
+ * sa valeur ici — et il faut y penser avant, pas après.
+ */
+.nsy-site { color-scheme: light; }
+.nsy-site[data-site-theme="nuit"] { color-scheme: dark; }
+
+/* Une case à cocher n'est pas un champ de saisie : le rembourrage et le fond
+   hérités des champs la déformaient. */
 .nsy-site input[type="checkbox"] {
-  appearance: auto;
-  -webkit-appearance: checkbox;
   width: 16px; height: 16px; padding: 0; min-width: 0;
-  background: none; border: 0; accent-color: var(--commun);
+  border: 0; accent-color: var(--commun);
 }
 
 /* ⚠ Les onglets inactifs de la bascule héritaient de la couleur des boutons du

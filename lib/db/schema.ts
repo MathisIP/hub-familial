@@ -43,7 +43,17 @@ export type RoleMembre = (typeof ROLES_MEMBRE)[number];
  * dedans, et rien en base ne dirait qu'ils ont été offerts. Le statut porte
  * l'intention ; une date lointaine ne l'aurait pas portée.
  */
-export const STATUTS_ABONNEMENT = ['essai', 'actif', 'offert', 'impaye', 'annule'] as const;
+/**
+ * Statuts d'abonnement d'un foyer.
+ *
+ * ⚠ `offert` et `admin` ouvrent tous deux l'accès SANS DATE DE FIN, mais ils ne
+ * se confondent pas : `offert` designe un testeur remercié, `admin` le foyer du
+ * porteur du projet. La distinction n'a aucun effet sur l'accès — elle sert à
+ * ne pas MENTIR dans les comptes : un foyer `admin` compté parmi les abonnés
+ * gonflerait le revenu récurrent, décalerait le point mort, et compté parmi les
+ * accès offerts ferait croire à un testeur de plus.
+ */
+export const STATUTS_ABONNEMENT = ['essai', 'actif', 'offert', 'admin', 'impaye', 'annule'] as const;
 export type StatutAbonnement = (typeof STATUTS_ABONNEMENT)[number];
 
 /** Un client : un foyer. Porte ses préférences et l'état de son abonnement. */

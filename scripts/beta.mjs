@@ -5,6 +5,7 @@
  *   npm run beta -- alice@x.fr bob@y.fr           → SIMULATION (n'écrit rien)
  *   npm run beta -- --appliquer alice@x.fr        → accorde pour de bon
  *   npm run beta -- --retirer --appliquer alice@x.fr
+ *   npm run beta -- --admin --prod --appliquer moi@x.fr  → foyer administrateur
  *
  * ⚠ CE SCRIPT VISE LA PRODUCTION, contrairement à `bac:garnir` et consorts. Il
  * n'appelle donc PAS `exigerBacASable()` — ce serait absurde, les testeurs ont
@@ -25,6 +26,17 @@ import { connexion, connexionProduction } from './_env.mjs';
 const args = process.argv.slice(2);
 const appliquer = args.includes('--appliquer');
 const retirer = args.includes('--retirer');
+/*
+ * ⚠ `--admin` POSE LE STATUT `admin` AU LIEU DE `offert`.
+ *
+ * Les deux ouvrent l'accès sans date de fin, et ne se distinguent QUE dans les
+ * comptes : un foyer `admin` est celui du porteur du projet, il ne doit figurer
+ * ni parmi les abonnés payants — il gonflerait le revenu récurrent et
+ * décalerait le point mort — ni parmi les accès offerts, où il ferait croire à
+ * un testeur de plus. C'est une question d'honnêteté des chiffres, pas d'accès.
+ */
+const modeAdmin = args.includes('--admin');
+const STATUT_CIBLE = modeAdmin ? 'admin' : 'offert';
 const emails = args
   .filter((a) => !a.startsWith('--'))
   .map((a) => a.trim().toLowerCase())
@@ -49,7 +61,7 @@ const prod = args.includes('--prod');
  * la commande suivante doit dicter la bonne — c'est la seule que l'on recopie
  * sans la relire.
  */
-const drapeaux = prod ? '--prod ' : '';
+const drapeaux = (prod ? '--prod ' : '') + (modeAdmin ? '--admin ' : '');
 const { sql, hote } = prod ? connexionProduction() : connexion({ max: 1 });
 
 /** Vrai si la base porte le marqueur de bac à sable. */
@@ -183,16 +195,16 @@ try {
       console.log(`  ⤫  ${email.padEnd(32)} abonnement PAYANT en cours — à annuler côté Stripe d'abord`);
       continue;
     }
-    if (retirer && f.statut !== 'offert') {
-      console.log(`  ·  ${email.padEnd(32)} n'a pas d'accès offert (statut « ${f.statut} ») — rien à retirer`);
+    if (retirer && f.statut !== 'offert' && f.statut !== 'admin') {
+      console.log(`  ·  ${email.padEnd(32)} n'a pas d'accès permanent (statut « ${f.statut} ») — rien à retirer`);
       continue;
     }
-    if (!retirer && f.statut === 'offert') {
-      console.log(`  ✓  ${email.padEnd(32)} accès déjà offert sur « ${f.nom} »`);
+    if (!retirer && f.statut === STATUT_CIBLE) {
+      console.log(`  ✓  ${email.padEnd(32)} déjà en « ${STATUT_CIBLE} » sur « ${f.nom} »`);
       continue;
     }
 
-    const action = retirer ? 'RETIRER' : 'OFFRIR';
+    const action = retirer ? 'RETIRER' : modeAdmin ? 'PASSER EN ADMIN' : 'OFFRIR';
     console.log(`  →  ${email.padEnd(32)} ${action} sur « ${f.nom} » (statut actuel : ${f.statut})`);
     aFaire.push({ email, foyer: f });
   }
@@ -230,11 +242,13 @@ try {
     } else {
       await sql`
         update foyers
-           set statut_abonnement = 'offert',
+           set statut_abonnement = ${STATUT_CIBLE},
                abonnement_fin = null,
                annulation_programmee = false
          where id = ${foyer.id}`;
-      console.log(`  ✅ ${email} — accès offert, sans date de fin (« ${foyer.nom} »)`);
+      console.log(
+        `  ✅ ${email} — ${modeAdmin ? 'foyer administrateur' : 'accès offert'}, sans date de fin (« ${foyer.nom} »)`,
+      );
     }
   }
   console.log('');

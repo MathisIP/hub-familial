@@ -56,7 +56,10 @@ export default function BoutonsAbonnement({ etat }: { etat: EtatAbonnement }) {
    * payant tant qu'il n'a pas été retiré (`npm run beta -- --retirer`). C'est le
    * bon sens de la contrainte — on ne fait pas payer quelqu'un par accident.
    */
-  const peutAcheter = etat.statut !== 'actif' && etat.statut !== 'offert';
+  // ⚠ Ne jamais proposer de payer ce qui est déjà donné : ni à un testeur
+  // (`offert`), ni au foyer du porteur du projet (`admin`).
+  const peutAcheter =
+    etat.statut !== 'actif' && etat.statut !== 'offert' && etat.statut !== 'admin';
 
   return (
     <div className="abo-actions">

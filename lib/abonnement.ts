@@ -61,7 +61,12 @@ export async function etatAbonnement(): Promise<EtatAbonnement> {
    * de se retrouver devant une porte fermée sans explication.
    */
   const autorise =
-    foyer.statutAbonnement === 'actif' || foyer.statutAbonnement === 'offert' || essaiValide;
+    foyer.statutAbonnement === 'actif' ||
+    foyer.statutAbonnement === 'offert' ||
+    // ⚠ `admin` autorise comme `offert`, sans contrôle de date : c'est le foyer
+    // du porteur du projet. Il s'en distingue UNIQUEMENT dans les comptes.
+    foyer.statutAbonnement === 'admin' ||
+    essaiValide;
   return {
     autorise,
     statut: foyer.statutAbonnement,

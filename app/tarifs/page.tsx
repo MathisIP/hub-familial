@@ -102,8 +102,17 @@ export default function PageTarifs() {
             r: 'L’accès aux modules se ferme, mais vos données ne sont pas supprimées : l’export complet reste disponible, et reprendre un abonnement les retrouve intactes.',
           },
           {
+            /*
+              ⚠ LA RÉPONSE DÉPEND DU SENS, et l'ancienne version n'en donnait
+              qu'un : « le changement prend effet au terme de la période en cours »
+              était faux pour le passage au tarif supérieur, qui est immédiat.
+              Le portail Stripe est réglé ainsi (vérifié par l'API le 29/08/2026) :
+              prorata facturé immédiatement à la hausse, report en fin de période
+              à la baisse (`decreasing_item_amount`, `shortening_interval`).
+              ⚠ Si ce réglage change dans Stripe, CETTE RÉPONSE DOIT SUIVRE.
+            */
             q: 'Puis-je changer de formule en cours de route ?',
-            r: 'Oui, depuis « Mon abonnement ». Le changement prend effet au terme de la période en cours.',
+            r: 'Oui, depuis « Mon abonnement ». Du mensuel vers l’annuel, le changement est immédiat : ce qui reste de votre mois en cours vous est crédité, et seule la différence est facturée. De l’annuel vers le mensuel, votre année va à son terme et la nouvelle formule prend le relais ensuite — rien n’est perdu.',
           },
         ]}
       />

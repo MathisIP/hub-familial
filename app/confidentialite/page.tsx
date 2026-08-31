@@ -38,6 +38,7 @@ const TEMOINS: [string, string, string][] = [
   ['hub-langue', 'la langue de l’interface', 'cookie, 1 an'],
   ['hub-agenda-vue', 'la vue d’agenda préférée (jour, semaine ou mois)', 'jusqu’à effacement, sur l’appareil'],
   ['hub-install-ios', 'le fait que vous ayez fermé le rappel d’installation sur iPhone', 'jusqu’à effacement, sur l’appareil'],
+  ['nsy-origine', 'le canal (ex. un réseau social) par lequel vous êtes arrivé sur le site, si le lien suivi le précisait', 'cookie, 1 an'],
 ];
 export default async function PageConfidentialite() {
   const langue = await langueCourante();
@@ -56,10 +57,12 @@ export default async function PageConfidentialite() {
         <li>{t('CONF_S2_LI2', langue)}</li>
         <li>{t('CONF_S2_LI3', langue)}</li>
         <li>{t('CONF_S2_LI4', langue)}</li>
+        <li>{t('CONF_S2_LI5', langue)}</li>
       </ul>
 
       <h2>{t('CONF_S3_T', langue)}</h2>
       <p>{t('CONF_S3_P', langue)}</p>
+      <p>{t('CONF_S3_ORIGINE', langue)}</p>
       {/*
         ⚠ Greffé sur la section « base légale » plutôt qu'en section propre : le
         consentement parental EST une question de base légale, et créer une

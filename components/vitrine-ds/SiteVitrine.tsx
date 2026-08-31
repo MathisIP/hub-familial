@@ -947,11 +947,13 @@ export default function SiteVitrine() {
             }}
           >
             <li>— Tout le foyer inclus, sans supplément</li>
-            {/* ⚠ LE NOMBRE SUIT LE CARROUSEL. Il annoncait sept modules alors que
-                les conditions generales en listaient huit, cadeaux compris : la
-                vitrine promettait moins que le contrat. Compter les cartes du
-                carrousel SANS « Accueil », qui est un ecran, pas un module. */}
-            <li>— Les huit modules, sans option payante</li>
+            {/* ⚠ LE NOMBRE SUIT LES CGV (article 3), PAS LE CARROUSEL (30/08/2026).
+                Le carrousel affiche Tâches (« To-do ») et Courses comme deux
+                cartes visuelles séparées, alors que les CGV les vendent comme UN
+                SEUL module (« tâches et courses ») ; compter les cartes donne donc
+                huit alors que le contrat en promet sept. Les deux textes doivent
+                dire la même chose : « sept », le chiffre contractuel. */}
+            <li>— Les sept modules, sans option payante</li>
             <li>— Résiliation en trois clics, à tout moment</li>
           </ul>
         </div>
@@ -1218,7 +1220,14 @@ const PILIERS: { fil: Fil; etiquette: string; titre: string; texte: string }[] =
   },
 ];
 
-/** Les huit modules réels, dans l'ordre du gabarit. */
+/**
+ * Les huit CARTES du carrousel (Accueil + les 7 modules vendus), dans l'ordre
+ * du gabarit. ⚠ « Huit » compte les cartes affichées, pas les modules
+ * contractuels : Tâches et Courses sont deux cartes ici mais UN SEUL module
+ * dans les CGV (article 3) — ne jamais recompter ces cartes pour annoncer un
+ * nombre de modules ailleurs sur le site (voir le commentaire du 30/08/2026
+ * plus haut dans ce fichier, à l'endroit où ce piège a déjà été fait une fois).
+ */
 /*
  * ⚠ `fichier` EST UN SLUG, PAS UN CHEMIN. Le chemin complet depend du theme
  * du site (`/captures/chaux/...` ou `/captures/encre/...`), et le theme change
@@ -1246,7 +1255,14 @@ const MODULES: {
   { fil: 'ambre', titre: 'Repas', texte: 'On pose les recettes, les quantités suivent.', alt: 'Repas : le planning de la semaine et le nombre de convives par repas', rotation: -3 , fichier: 'repas'},
   { fil: 'ambre', titre: 'Courses', texte: 'Rangée par rayon, cochée à deux en magasin.', alt: 'Courses : la liste déduite des repas, rangée par rayon', rotation: 3, fichier: 'courses' },
   { fil: 'ciel', titre: 'To-do', texte: "Qui s'en occupe, visible sans avoir à le demander.", alt: 'To-do : les tâches du foyer, assignées par personne', rotation: -2 , fichier: 'todo'},
-  { fil: 'ciel', titre: 'Documents', texte: 'Assurances, attestations, échéances à ne pas manquer.', alt: 'Documents : les papiers importants du foyer et leurs échéances', rotation: 2 , fichier: 'documents'},
+  /*
+   * ⚠ NE PLUS PROMETTRE D'ÉCHÉANCES ICI (30/08/2026). Disait « échéances à ne
+   * pas manquer » alors que ce module n'en suit aucune (vérifié dans
+   * lib/documents/schema.ts avant d'écrire /module-documents, qui dit
+   * explicitement l'inverse) — deux pages du même site se contredisaient sur
+   * ce que fait le produit. Le suivi d'échéance vit dans le module Budget.
+   */
+  { fil: 'ciel', titre: 'Documents', texte: 'Assurances, attestations, papiers d’identité : rangés et chiffrés.', alt: 'Documents : les papiers importants du foyer, rangés par dossier', rotation: 2 , fichier: 'documents'},
   { fil: 'sauge', titre: 'Événements', texte: "Recevoir sans y penser trois soirs d'affilée.", alt: "Événements : la préparation d'une réception, invités et à-faire", rotation: -3 , fichier: 'evenements'},
   /*
    * ⚠ Le texte porte ce que le module a de PARTICULIER : un cadeau peut etre

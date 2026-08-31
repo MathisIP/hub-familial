@@ -878,7 +878,7 @@ const UI = {
   // Politique de confidentialité (gabarit)
   CONF_RETOUR: { fr: 'Retour' },
   CONF_TITRE: { fr: 'Politique de confidentialité' },
-  CONF_MAJ: { fr: 'Dernière mise à jour : 13 août 2026' },
+  CONF_MAJ: { fr: 'Dernière mise à jour : 30 août 2026' },
   CONF_LANGUE: { fr: 'Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.' },
   CONF_S1_T: { fr: '1. Responsable du traitement' },
   CONF_S1_P: {
@@ -897,9 +897,22 @@ const UI = {
   CONF_S2_LI4: {
     fr: 'Google Agenda (facultatif) : si tu connectes ton agenda, Nestync lit les calendriers que tu as choisi de partager avec ton foyer et peut y créer des événements à ta demande. Détail complet en section 9.',
   },
+  /**
+   * ⚠ AJOUTÉE LE 30/08/2026, en même temps que la fonctionnalité elle-même
+   * (`CaptureOrigine.tsx`, `foyers.origine`/`origine_declaree`). Le cookie
+   * `nsy-origine` figurait déjà dans la liste des témoins (section 6), mais la
+   * DONNÉE — conservée en base, pas seulement le cookie qui la transporte —
+   * n'était déclarée nulle part ici : l'article 13 du RGPD impose les deux.
+   */
+  CONF_S2_LI5: {
+    fr: 'Origine de ton foyer (facultatif) : si tu es arrivé via un lien identifié (ex. une publication sur un réseau social) ou si tu as répondu à la question posée lors de la prise en main, Nestync conserve ce canal — pour savoir quelles publications donnent envie d’essayer le Service, jamais pour te profiler individuellement.',
+  },
   CONF_S3_T: { fr: '3. Finalités et base légale' },
   CONF_S3_P: {
     fr: 'Ces données sont traitées uniquement pour fournir le Service (organiser la vie du foyer). La base légale est l’exécution du contrat qui te lie au Service, et ton consentement pour l’accès facultatif à Google Agenda (révocable à tout moment). La connexion Google sert à t’identifier ; le Service ne demande jamais accès à tes fichiers ni à tes e-mails.',
+  },
+  CONF_S3_ORIGINE: {
+    fr: 'L’origine de ton foyer (section 2) est traitée sur la base de notre intérêt légitime à savoir par quels canaux Nestync se fait connaître — une mesure agrégée, jamais un profil individuel ni une donnée transmise à un tiers. Tu peux t’y opposer à tout moment en écrivant à contact@nestync.app.',
   },
   // ⚠ Contrepartie de l'article 4 des CGV, qui recueille la déclaration du
   // parent. Les deux textes se lisent ensemble : retoucher l'un impose de relire

@@ -23,7 +23,7 @@ export const metadata = {
 export default function PageMentionsLegales() {
   return (
     <CadreSite surtitre="Informations légales" titre="Mentions légales">
-      <p className="doc-maj">Dernière mise à jour : 13 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 30 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <h2>1. Éditeur du service</h2>

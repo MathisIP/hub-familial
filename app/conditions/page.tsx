@@ -14,12 +14,11 @@ export const metadata = {
  * rétractation (et sa renonciation pour un service à exécution immédiate),
  * reconduction et résiliation « en trois clics », garanties légales, médiation.
  *
- * ⚠ DEUX ÉLÉMENTS RESTENT À PUBLIER, tous deux annoncés dans le texte plutôt que
- * laissés en champ à compléter (le document doit se lire comme un vrai document
- * juridique, pas comme un brouillon — il est public et lu par les évaluateurs
- * Google) :
- *   · article 15 : médiateur de la consommation, à désigner (obligatoire en B2C).
- * Faire relire l'ensemble par un professionnel avant d'ouvrir les abonnements.
+ * ⚠ MÉDIATEUR DÉSIGNÉ LE 29/08/2026 (article 15) — MCP MEDIATION, texte recopié
+ * mot pour mot du courrier de confirmation d'adhésion (voir le commentaire à
+ * l'article 15). Faire relire l'ensemble par un professionnel avant d'ouvrir les
+ * abonnements reste recommandé, mais le dernier point bloquant identifié en
+ * interne est levé.
  *
  * ⚠ RELECTURE COMPLÈTE DU 26/08/2026 — sept points corrigés, chacun documenté
  * par un commentaire à l'endroit concerné. QUATRE articles sont ADOSSÉS À DU
@@ -43,7 +42,7 @@ export default function PageConditions() {
 
   return (
     <CadreSite surtitre="Le contrat" titre="Conditions générales de vente et d’utilisation">
-      <p className="doc-maj">Dernière mise à jour : 27 août 2026</p>
+      <p className="doc-maj">Dernière mise à jour : 30 août 2026</p>
       <p className="doc-langue">Nestync est proposé en France, aux consommateurs résidant en France. Ce document n’existe qu’en français : seule cette version fait foi.</p>
 
       <p className="doc-avertissement">
@@ -421,10 +420,29 @@ export default function PageConditions() {
       <h2>15. Médiation et droit applicable</h2>
       <p>
         En cas de litige, l’Utilisateur s’adresse d’abord à contact@nestync.app.
-        À défaut d’accord amiable, il peut recourir gratuitement à un médiateur de la
-        consommation. Conformément à l’article L. 612-1 du Code de la consommation, un
-        médiateur sera désigné et ses coordonnées publiées ici avant l’ouverture des
-        abonnements payants.
+        {/*
+          ⚠ TEXTE CONTRACTUEL, RECOPIÉ MOT POUR MOT (29/08/2026). Ce paragraphe
+          provient du courrier de confirmation d'adhésion envoyé par MCP MEDIATION
+          après signature de la convention de médiation — ce n'est pas une clause
+          rédigée par nous mais le texte que le médiateur impose à ses adhérents.
+          Les références L. 611-1 / R. 612-1 viennent telles quelles de ce courrier :
+          NE PAS LES « CORRIGER » vers L. 616-1 / R. 616-1 même si ces derniers
+          semblent plus exacts au regard du Code de la consommation — c'est au
+          site de s'aligner sur le texte du médiateur, pas l'inverse. Fichier
+          source : « Texte de cgv pour la médiation.txt ».
+        */}
+        Conformément aux dispositions des articles L. 611-1 et R. 612-1 et suivants du Code de
+        la consommation concernant le règlement amiable des litiges : lorsque le consommateur a
+        adressé une réclamation écrite au professionnel et qu’il n’a pas obtenu satisfaction ou
+        de réponse dans un délai de deux mois, il peut soumettre gratuitement sa réclamation au
+        médiateur de la consommation. Le médiateur doit être saisi dans le délai maximal d’un an
+        à compter de la réclamation initiale.
+      </p>
+      <p>
+        Le médiateur <strong>MCP MEDIATION</strong> peut être saisi directement en ligne à
+        l’adresse suivante : <a href="https://www.mcpmediation.org">www.mcpmediation.org</a>, ou
+        par courrier à : Médiation de la Consommation et Patrimoine — 12 Square Desnouettes —
+        75015 Paris.
         {/*
           ⚠ NE PAS REMETTRE LA PLATEFORME EUROPÉENNE DE RÈGLEMENT EN LIGNE DES
           LITIGES. Elle est FERMÉE : le règlement (UE) 2024/3228 du 19 décembre

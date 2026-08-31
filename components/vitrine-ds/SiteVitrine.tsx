@@ -180,7 +180,15 @@ export default function SiteVitrine() {
     padding: 'var(--pad-section-v) var(--pad-section-h)',
     transition: 'background 300ms var(--courbe), color 300ms var(--courbe)',
   });
-  const contenu: React.CSSProperties = { maxWidth: 1440, margin: '0 auto' };
+  /*
+   * ⚠ LARGEUR FLUIDE, PAS UN PALIER FIXE (30/08/2026). `maxWidth: 1440` laissait
+   * ~480px de vide de chaque côté sur un écran de 2400px — le contenu restait
+   * physiquement petit à l'échelle de l'écran, ce qui obligeait à zoomer le
+   * navigateur à 125-150% pour lire confortablement. `min(92vw, 1920px)`
+   * s'étire avec CHAQUE taille d'écran au lieu de sauter d'un palier à l'autre,
+   * et le plafond à 1920px évite un mur de texte sur les très grands écrans.
+   */
+  const contenu: React.CSSProperties = { maxWidth: 'min(92vw, 1920px)', margin: '0 auto' };
 
   return (
     <div

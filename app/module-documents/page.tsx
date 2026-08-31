@@ -39,8 +39,15 @@ export default function PageDocuments() {
       chapeau="Un bail, un carnet de santé, une attestation : déposés une fois, retrouvés en un geste, et illisibles pour quiconque n’est pas du foyer — y compris l’hébergeur."
     >
       <div style={{ margin: '0 0 32px' }}>
+        {/*
+          ⚠ POINTE VERS `documents.webp`, PAS `module-documents.webp`
+          (30/08/2026). Un fichier `module-documents.webp` n'a jamais existé
+          dans public/captures/chaux/ — l'image cassait silencieusement (le
+          `alt` s'affichait à la place). `documents.webp` existe déjà et
+          montre le même module, utilisé par le carrousel de l'accueil.
+        */}
         <Image
-          src="/captures/chaux/module-documents.webp?v=2"
+          src="/captures/chaux/documents.webp?v=2"
           alt="Le module Documents : des fichiers rangés par dossier"
           width={300}
           height={620}

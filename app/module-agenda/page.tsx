@@ -34,8 +34,15 @@ export default function PageAgenda() {
       chapeau="Chacun garde son agenda Google. Nestync les affiche ensemble, une couleur par personne, sans jamais rien recopier à la main."
     >
       <div style={{ margin: '0 0 32px' }}>
+        {/*
+          ⚠ POINTE VERS `agenda.webp`, PAS `module-agenda.webp` (30/08/2026).
+          Un fichier `module-agenda.webp` n'a jamais existé dans
+          public/captures/chaux/ — l'image cassait silencieusement (le
+          `alt` s'affichait à la place). `agenda.webp` existe déjà et montre
+          le même module, utilisé par le carrousel de l'accueil.
+        */}
         <Image
-          src="/captures/chaux/module-agenda.webp?v=2"
+          src="/captures/chaux/agenda.webp?v=2"
           alt="Le module Agenda : la semaine du foyer, une couleur par personne"
           width={300}
           height={620}

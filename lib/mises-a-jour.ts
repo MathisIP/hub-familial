@@ -83,6 +83,53 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-08-30',
+    numero: '1.3.0',
+    date: '30 août 2026',
+    dateISO: '2026-08-30',
+    titre: 'Un médiateur désigné, et des textes qui disent vrai',
+    resume:
+      'Le médiateur de la consommation est nommé, deux textes du site qui se contredisaient sont corrigés, et le site occupe mieux les grands écrans.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Un médiateur de la consommation est désigné dans les conditions générales.',
+        texte:
+          'L’article 15 annonçait qu’un médiateur serait nommé avant l’ouverture des abonnements. C’est fait : MCP Médiation, joignable directement en ligne ou par courrier.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Le site annonçait huit modules, il y en a sept.',
+        texte:
+          'Le tableau de bord de l’accueil comptait pour un module à part dans une des pages du site. Les conditions générales et la page Tarifs, elles, ont toujours compté juste.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Documents ne surveille aucune échéance — une phrase du site laissait croire le contraire.',
+        texte:
+          'Le carrousel de l’accueil promettait un rappel avant l’expiration d’une assurance ; ce n’est pas ce que fait ce module. Pour un rappel avant une date à ne pas manquer, c’est le module Budget qui s’en charge, avec ses propres échéances.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'La politique de confidentialité précise l’origine déclarée à la création d’un foyer.',
+        texte:
+          'Comment vous avez connu Nestync (un lien suivi, ou une réponse donnée à la création du foyer) fait désormais partie des données décrites en toutes lettres, avec sa finalité.',
+      },
+      {
+        nature: 'corrige',
+        titre: 'Les premières captures du site portaient une bande de couleur parasite en haut et en bas.',
+        texte:
+          'Un reste de l’outil ayant servi à les prendre, visible surtout sur grand écran. Corrigé sur les neuf captures du site.',
+      },
+      {
+        nature: 'ameliore',
+        titre: 'Le site occupe mieux l’espace sur les grands écrans.',
+        texte:
+          'Il restait confiné à une largeur fixe, entouré d’un vide grandissant à mesure que l’écran s’élargit — au point de devoir zoomer pour lire confortablement. Le contenu s’étire désormais avec la taille de l’écran.',
+      },
+    ],
+  },
+  {
     id: '2026-08-28',
     numero: '1.2.0',
     date: '28 août 2026',

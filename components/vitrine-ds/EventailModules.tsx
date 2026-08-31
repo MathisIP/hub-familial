@@ -302,6 +302,16 @@ export default function EventailModules({
                 zIndex: base.z,
                 transitionDelay: `${Math.abs(place - milieuVisible) * 20}ms`,
                 cursor: pagine && place !== milieuVisible ? 'pointer' : 'default',
+                /*
+                 * ⚠ FLOU CROISSANT AVEC LA DISTANCE AU CENTRE (30/08/2026). Les
+                 * captures sont nettes à l'échelle 1 ; réduites à ~0.78-0.93 par
+                 * le `scale()` CSS ci-dessus, leur texte se crénèle visiblement
+                 * (l'aliasing du downscale, pas un défaut des fichiers). Comme
+                 * ces cartes ne sont de toute façon pas censées retenir l'œil —
+                 * seule la carte centrale se lit vraiment — un flou léger cache
+                 * le crénelage au lieu de le laisser paraître pour un bogue.
+                 */
+                filter: place === survole || place === milieuVisible ? 'none' : `blur(${Math.min(1.6, 0.55 * Math.abs(place - milieuVisible))}px)`,
               }}
             >
               <Mockup largeur={230} rotation={0} alt={m.alt} src={capture(m)} />

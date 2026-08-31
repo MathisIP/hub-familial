@@ -94,9 +94,10 @@ export async function inviterOnboardingAction(
 }
 
 /** Étape 3 : clôturer la prise en main et entrer dans l'app. */
-export async function terminerOnboardingAction(): Promise<void> {
+export async function terminerOnboardingAction(formData?: FormData): Promise<void> {
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
-  await terminerOnboarding(foyer.id, user.id);
+  const origineDeclaree = formData?.get('origineDeclaree');
+  await terminerOnboarding(foyer.id, user.id, typeof origineDeclaree === 'string' && origineDeclaree ? origineDeclaree : undefined);
   redirect('/');
 }
 

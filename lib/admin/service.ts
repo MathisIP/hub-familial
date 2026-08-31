@@ -98,6 +98,14 @@ export type TableauAdmin = {
   foyersActifs30j: number;
   foyersJamaisVenus: number;
   volumes: Repartition[];
+  /**
+   * D'où viennent les foyers — deux sources fusionnées en une seule répartition
+   * (`origine` technique, la lecture UTM, prime sur `origineDeclaree` quand les
+   * deux existent : elle vient d'un clic réel, pas d'une réponse au clavier).
+   * `« Sans source connue »` regroupe les deux `null` — la majorité des foyers
+   * antérieurs à cette fonctionnalité.
+   */
+  parOrigine: Repartition[];
 
   /**
    * Charges récurrentes réelles, prêtes à amorcer le simulateur.
@@ -152,6 +160,7 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
     jamaisVenus,
     vol,
     comptesProjet,
+    origines,
   ] = await Promise.all([
     d
       .select({ statut: tFoyers.statutAbonnement, n: count() })
@@ -251,6 +260,11 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
     // ⚠ Peut être `null` si `COMPTES_FICHIER` n'a jamais été synchronisé : la
     // console doit rester utile sans la comptabilité.
     chargerComptes().catch(() => null),
+
+    // D'où viennent les foyers. Les deux colonnes voyagent brutes ; la fusion
+    // (origine technique prioritaire) se fait après, en JS — un CASE SQL pour
+    // ça serait moins lisible que la même logique en 3 lignes.
+    d.select({ origine: tFoyers.origine, origineDeclaree: tFoyers.origineDeclaree }).from(tFoyers),
   ]);
 
   const parStatut = statuts
@@ -303,6 +317,18 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
   }
 
   const [nbTx, nbTaches, nbCourses, nbRecettes, nbDocs, nbEv, nbAgendas] = vol;
+
+  // `origine` est `source|medium|campagne` (cf. CaptureOrigine.tsx) : seul le
+  // premier segment sert de libellé, capitalisé pour l'affichage.
+  const compteurOrigine = new Map<string, number>();
+  for (const f of origines) {
+    const brut = f.origine?.split('|')[0] || f.origineDeclaree || null;
+    const libelle = brut ? brut.charAt(0).toUpperCase() + brut.slice(1) : 'Sans source connue';
+    compteurOrigine.set(libelle, (compteurOrigine.get(libelle) ?? 0) + 1);
+  }
+  const parOrigine = [...compteurOrigine.entries()]
+    .map(([libelle, n]) => ({ libelle, n }))
+    .sort((a, b) => b.n - a.n);
 
   return {
     foyers: total,
@@ -360,5 +386,6 @@ export async function chargerAdmin(): Promise<TableauAdmin | null> {
       { libelle: 'Réceptions', n: nbEv[0].n },
       { libelle: 'Agendas rattachés', n: nbAgendas[0].n },
     ],
+    parOrigine,
   };
 }

@@ -209,9 +209,20 @@ export async function accepterInvitation(
 }
 
 /** Clôture la prise en main : le foyer est configuré, on n'y revient plus. */
-export async function terminerOnboarding(foyerId: string, appelantId: string): Promise<void> {
+/**
+ * Clôture la prise en main. `origineDeclaree` est la réponse (facultative) à
+ * « Comment avez-vous connu Nestync ? » — `undefined` si la question a été
+ * passée, auquel cas la colonne reste inchangée plutôt qu'écrasée à `null`.
+ */
+export async function terminerOnboarding(
+  foyerId: string,
+  appelantId: string,
+  origineDeclaree?: string,
+): Promise<void> {
   exigerProprietaire(await roleDe(foyerId, appelantId));
-  await db().update(foyers).set({ onboardingFait: true }).where(eq(foyers.id, foyerId));
+  const valeurs: { onboardingFait: true; origineDeclaree?: string } = { onboardingFait: true };
+  if (origineDeclaree) valeurs.origineDeclaree = origineDeclaree;
+  await db().update(foyers).set(valeurs).where(eq(foyers.id, foyerId));
 }
 
 /* ==================== DEMANDES D'ADHÉSION (sens inverse) ==================== */

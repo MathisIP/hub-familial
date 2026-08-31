@@ -130,6 +130,27 @@ export const foyers = pgTable('foyers', {
    * ménage quotidien une fois passée.
    */
   suppressionPrevueLe: timestamp('suppression_prevue_le', { withTimezone: true }),
+  /**
+   * D'où vient ce foyer — deux sources indépendantes, jamais fusionnées en une
+   * seule colonne : ce ne sont pas la même mesure.
+   *
+   * `origine` (technique, silencieuse) : lue dans le cookie `nsy-origine` posé
+   * par `CaptureOrigine` (composant client, layout racine) à la première visite
+   * du site, à partir des paramètres `utm_source`/`utm_medium`/`utm_campaign` de
+   * l'URL. Écrite UNE SEULE FOIS, à la création du foyer (`foyerCourant`) — la
+   * première touche gagne, jamais la dernière avant conversion.
+   *
+   * `origineDeclaree` (déclarative, demandée) : réponse à la question optionnelle
+   * de `/demarrage` (« Comment avez-vous connu Nestync ? »), skippable. Utile
+   * pour ce que l'UTM ne capture pas — un lien copié-collé à la main, un
+   * bouche-à-oreille, une publication sans lien traçable.
+   *
+   * `null` dans les deux cas = pas de source connue (foyers antérieurs à cette
+   * fonctionnalité, ou personne qui a fermé le premier onglet sans cliquer un
+   * lien marqué, ou qui a passé la question).
+   */
+  origine: text('origine'),
+  origineDeclaree: text('origine_declaree'),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 

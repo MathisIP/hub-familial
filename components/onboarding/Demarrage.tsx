@@ -62,8 +62,10 @@ export default function Demarrage({
       {etape === 3 && (
         <EtapeFin
           nbInvites={invitations.length}
-          onTerminer={async () => {
-            await terminerOnboardingAction();
+          onTerminer={async (origineDeclaree) => {
+            const fd = new FormData();
+            if (origineDeclaree) fd.set('origineDeclaree', origineDeclaree);
+            await terminerOnboardingAction(fd);
             router.refresh();
           }}
         />
@@ -189,8 +191,21 @@ const MODULES = [
   { e: '🗂️', n: 'Documents', d: 'papiers du foyer, rangés et privés' },
 ];
 
-function EtapeFin({ nbInvites, onTerminer }: { nbInvites: number; onTerminer: () => void }) {
+/**
+ * Question facultative, jamais bloquante : « Passer » et « Ouvrir mon tableau
+ * de bord » mènent au même endroit, avec ou sans réponse choisie.
+ */
+const ORIGINES = ['TikTok', 'Instagram', 'Pinterest', 'Threads', 'Autre'];
+
+function EtapeFin({
+  nbInvites,
+  onTerminer,
+}: {
+  nbInvites: number;
+  onTerminer: (origineDeclaree?: string) => void;
+}) {
   const [enCours, setEnCours] = useState(false);
+  const [origineDeclaree, setOrigineDeclaree] = useState('');
 
   return (
     <section className="onb-carte">
@@ -216,11 +231,28 @@ function EtapeFin({ nbInvites, onTerminer }: { nbInvites: number; onTerminer: ()
         Le thème, la langue et l’effet néon se règlent dans <strong>Réglages</strong>.
       </p>
 
+      <div className="onb-origine">
+        <label htmlFor="onb-origine-select">
+          Comment as-tu connu Nestync ? <span className="onb-facultatif">(facultatif)</span>
+        </label>
+        <select
+          id="onb-origine-select"
+          className="champ"
+          value={origineDeclaree}
+          onChange={(e) => setOrigineDeclaree(e.target.value)}
+        >
+          <option value="">— Préférer ne pas répondre —</option>
+          {ORIGINES.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      </div>
+
       <button
         type="button"
         className="bouton bouton-primaire onb-final"
         disabled={enCours}
-        onClick={() => { setEnCours(true); onTerminer(); }}
+        onClick={() => { setEnCours(true); onTerminer(origineDeclaree || undefined); }}
       >
         {enCours ? 'Ouverture…' : 'Ouvrir mon tableau de bord'}
       </button>

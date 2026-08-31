@@ -2066,6 +2066,10 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .onb-champ { font-size: 1.05rem; }
 .onb-actions { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; margin-top: 1.2rem; }
 .onb-aide { font-size: .85rem; color: var(--muted); margin: 1rem 0 0; line-height: 1.5; }
+.onb-origine { margin: 1.2rem 0 0; display: flex; flex-direction: column; gap: .4rem; }
+.onb-origine label { font-size: .88rem; font-weight: 600; }
+.onb-facultatif { font-weight: 400; color: var(--muted); }
+.onb-origine select { max-width: 20rem; }
 
 /* Invitations en cours */
 .onb-invites { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; gap: .45rem; }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { db, baseDisponible } from '@/lib/db';
@@ -150,6 +151,9 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
   const finEssai = new Date(Date.now() + ESSAI_JOURS * 86400000);
   const utilisateurId = u.id;
   const nomUtilisateur = u.nom;
+  // Cookie posé par `CaptureOrigine` (composant client, layout racine) à la
+  // première visite du site — lu ici UNE SEULE FOIS, à la création du foyer.
+  const origine = (await cookies()).get('nsy-origine')?.value || null;
   return d.transaction(async (tx) => {
     const [f] = await tx
       .insert(foyers)
@@ -160,6 +164,7 @@ export const foyerCourant = cache(async (): Promise<Foyer> => {
         // Nouveau foyer → prise en main à faire (nom, invitations). Les foyers
         // déjà en service gardent `true` (défaut de la colonne).
         onboardingFait: false,
+        origine,
       })
       .returning();
     await tx.insert(membres).values({ foyerId: f.id, utilisateurId, role: 'proprietaire' });

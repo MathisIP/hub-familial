@@ -242,6 +242,20 @@ export default async function PageAdmin() {
 
         <section className="nsa-panneau">
           <div className="nsa-tete">
+            <h2>Origine</h2>
+            <span className="nsa-quand">par quel canal</span>
+          </div>
+          <div className="nsa-corps">
+            <Barres lignes={a.parOrigine} total={a.foyers} />
+            <p className="nsa-note">
+              Lien avec <code>utm_source</code> (technique) ou réponse à « Comment as-tu connu
+              Nestync ? » lors de la prise en main. « Sans source connue » regroupe les deux.
+            </p>
+          </div>
+        </section>
+
+        <section className="nsa-panneau">
+          <div className="nsa-tete">
             <h2>Ce que contient le produit</h2>
             <span className="nsa-quand">{a.foyersJamaisVenus} foyer(s) jamais utilisé(s)</span>
           </div>

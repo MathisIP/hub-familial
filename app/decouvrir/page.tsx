@@ -105,6 +105,19 @@ export default function PageDecouvrir() {
         évolution sera annoncée sur la page des <Link href="/mises-a-jour">mises à jour</Link>.
       </p>
 
+      <h2>Deux modules en détail</h2>
+      {/*
+        ⚠ RENVOI VERS LES DEUX PAGES-MODULE, pas une liste des sept. Ce sont
+        les deux qui ont une page dédiée à ce jour, créées pour un lien à
+        partager sur des publications ciblées (organisation des papiers,
+        agenda familial). Ne pas en faire une table des matières du produit.
+      */}
+      <p>
+        Deux modules ont leur page à part : <Link href="/module-documents">Documents</Link>, pour
+        ranger et protéger les papiers du foyer, et <Link href="/module-agenda">Agenda</Link>, pour
+        réunir les calendriers de chacun sans jamais rien recopier.
+      </p>
+
       <h2>Modèle économique</h2>
       <p>
         Abonnement payant, sans publicité et sans revente de données :{' '}

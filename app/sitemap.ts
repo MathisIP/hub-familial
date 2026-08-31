@@ -31,6 +31,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Page d'essai sans compte : forte intention, on la met haut.
     { url: `${base}/demonstration`, lastModified: maj, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/tarifs`, lastModified: maj, changeFrequency: 'monthly', priority: 0.7 },
+    // Pages de module : intention de recherche ciblée (« organisation papiers », « agenda familial »).
+    { url: `${base}/module-documents`, lastModified: maj, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/module-agenda`, lastModified: maj, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/questions`, lastModified: maj, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/aide`, lastModified: maj, changeFrequency: 'monthly', priority: 0.5 },
     // ⚠ `weekly` : c'est la page qui bouge le plus souvent du site public.

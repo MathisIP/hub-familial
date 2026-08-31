@@ -65,3 +65,18 @@ export async function chargerComptes(): Promise<Bilan | null> {
   const lignes = await db().select().from(mouvementsProjet);
   return bilan(lignes.map(versMouvement));
 }
+
+/**
+ * Même bilan, SANS le contrôle d'accès par session.
+ *
+ * ⚠ RÉSERVÉE À `lib/maintenance.ts` (tâche planifiée serveur, aucune session
+ * HTTP à vérifier — `estAdminComptes()` y renverrait toujours `false` et
+ * casserait silencieusement le bulletin quotidien). Le nom dit explicitement
+ * ce qu'elle contourne : ne JAMAIS l'appeler depuis une route API ou une page,
+ * où une session existe et doit être vérifiée.
+ */
+export async function chargerComptesSansGarde(): Promise<Bilan | null> {
+  if (!baseDisponible()) return null;
+  const lignes = await db().select().from(mouvementsProjet);
+  return bilan(lignes.map(versMouvement));
+}

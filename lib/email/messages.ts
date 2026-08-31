@@ -41,10 +41,11 @@ function gabarit(
   corps: string,
   bouton?: { texte: string; url: string },
   pied: string = PIED_UTILISATEUR,
+  largeurMax: number = 520,
 ): string {
   return `<!doctype html>
 <html lang="fr"><body style="margin:0;padding:24px;background:#faf7f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2c2430">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:32px">
+  <div style="max-width:${largeurMax}px;margin:0 auto;background:#fff;border-radius:16px;padding:32px">
     <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:${MARQUE}">Nestync</p>
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3">${titre}</h1>
     ${corps}
@@ -173,6 +174,11 @@ export async function envoyerMessageContact(m: {
   });
 }
 
+/** Centimes → « 1 234,50 € », pour le bulletin (mêmes règles que /admin). */
+function euros(centimes: number): string {
+  return (centimes / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+}
+
 /**
  * Bulletin de santé quotidien, envoyé à l'adresse de contact.
  *
@@ -180,6 +186,12 @@ export async function envoyerMessageContact(m: {
  * qu'en cas de problème ne se distinguerait pas d'un bulletin qui n'arrive plus
  * du tout — panne du service d'e-mail, tâche planifiée qui ne s'exécute plus,
  * clé expirée. Le silence quotidien devient alors lui-même le signal.
+ *
+ * ⚠ REFONTE DU 30/08/2026 — trois sections (Argent / À faire / Produit) en plus
+ * de l'existant, mêmes chiffres et mêmes formules que la console `/admin`
+ * (lib/admin/service.ts), calculés côté tâche planifiée dans
+ * `bulletinSante()` (lib/maintenance.ts) puisque `chargerAdmin()` est gardé
+ * par une session HTTP qu'un cron n'a jamais.
  */
 export async function envoyerBulletinSante(b: {
   foyers: number;
@@ -192,20 +204,54 @@ export async function envoyerBulletinSante(b: {
   calendriersPartages: number;
   latenceBaseMs: number;
   alertes: string[];
+  abonnesPayants: number;
+  abonnesMensuels: number;
+  abonnesAnnuels: number;
+  essaisEnCours: number;
+  mrrCentimes: number;
+  arrCentimes: number;
+  chargeMensuelleCentimes: number;
+  pointMort: number;
+  essaisQuiExpirentBientot: number;
+  impayes: number;
+  origineSemaine: { libelle: string; n: number }[];
   invitationsPurgees: number;
   messagesPurges: number;
   relancesEnvoyees: number;
   comptesSupprimes: number;
   suppressionsIgnorees: number;
 }): Promise<boolean> {
-  const destination = process.env.EMAIL_EXPEDITEUR;
+  /*
+   * ⚠ VOLONTAIREMENT SÉPARÉE DE `EMAIL_EXPEDITEUR` (30/08/2026). Cette dernière
+   * sert DEUX rôles à la fois — adresse d'ENVOI technique de tous les mails de
+   * l'app (lib/email/index.ts, `sender.email`) ET destination des messages de
+   * contact (`envoyerMessageContact`) — la réutiliser pour le bulletin aurait
+   * mélangé un troisième rôle dans une variable déjà surchargée. Repli sur
+   * `EMAIL_EXPEDITEUR` si `EMAIL_RAPPORTS` n'est pas posée : le bulletin ne doit
+   * jamais cesser de partir faute de config, surtout que son silence est
+   * lui-même le signal d'alerte (voir le commentaire de la fonction).
+   */
+  const destination = process.env.EMAIL_RAPPORTS || process.env.EMAIL_EXPEDITEUR;
   if (!destination) return false;
 
   const alerte = b.alertes.length > 0;
   const jour = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
 
-  const lignes = [
+  const argent = [
+    ['Abonnés payants', `${b.abonnesPayants} (${b.abonnesMensuels} mensuels, ${b.abonnesAnnuels} annuels)`],
+    ['Revenu récurrent (MRR)', euros(b.mrrCentimes)],
+    ['Projection annuelle (ARR)', euros(b.arrCentimes)],
+    ['Charges récurrentes', euros(b.chargeMensuelleCentimes) + ' / mois'],
+    ['Point mort', `${b.pointMort} abonné${b.pointMort > 1 ? 's' : ''} mensuel${b.pointMort > 1 ? 's' : ''}`],
+  ];
+  const aFaire = [
+    ['Essais expirant sous 10 j', String(b.essaisQuiExpirentBientot)],
+    ['Foyers en impayé', String(b.impayes)],
+    ['Messages reçus (24 h)', String(b.messages24h)],
+  ];
+  const produit = [
     ['Foyers', `${b.foyers} (+${b.nouveauxFoyers24h} en 24 h)`],
+    ['Dont en essai', String(b.essaisEnCours)],
     ['Utilisateurs', `${b.utilisateurs} (+${b.nouveauxUtilisateurs24h} en 24 h)`],
     ['Documents stockés', String(b.documents)],
     // ⚠ Deux chiffres distincts, longtemps confondus sous « Agendas connectés » :
@@ -214,9 +260,9 @@ export async function envoyerBulletinSante(b: {
     // donnait un compteur qui ne mesurait pas ce qu'il annonçait.
     ['Comptes Google reliés', String(b.agendasConnectes)],
     ['Calendriers partagés', String(b.calendriersPartages)],
-    ['Messages reçus (24 h)', String(b.messages24h)],
     ['Réponse de la base', `${b.latenceBaseMs} ms`],
   ];
+  const origine = b.origineSemaine.map((o) => [o.libelle, String(o.n)]);
   const menage = [
     ['Invitations purgées', String(b.invitationsPurgees)],
     ['Messages purgés', String(b.messagesPurges)],
@@ -225,12 +271,15 @@ export async function envoyerBulletinSante(b: {
     ['Suppressions écartées', String(b.suppressionsIgnorees)],
   ];
 
+  const versTexte = (rows: string[][]) => rows.map(([k, v]) => `${k.padEnd(28)} ${v}`).join('\n');
   const texte =
     `Nestync — bulletin du ${jour}\n\n` +
     (alerte ? `⚠ ALERTES\n${b.alertes.map((a) => `  · ${a}`).join('\n')}\n\n` : 'Aucune alerte.\n\n') +
-    lignes.map(([k, v]) => `${k.padEnd(24)} ${v}`).join('\n') +
-    `\n\nMénage\n` +
-    menage.map(([k, v]) => `${k.padEnd(24)} ${v}`).join('\n');
+    `Argent\n${versTexte(argent)}\n\n` +
+    `À faire\n${versTexte(aFaire)}\n\n` +
+    `Produit\n${versTexte(produit)}\n\n` +
+    (origine.length > 0 ? `Origine des foyers (7 j)\n${versTexte(origine)}\n\n` : '') +
+    `Ménage\n${versTexte(menage)}`;
 
   const tableau = (rows: string[][]) =>
     rows
@@ -240,25 +289,53 @@ export async function envoyerBulletinSante(b: {
       )
       .join('');
 
+  const section = (titre: string, rows: string[][]) =>
+    rows.length === 0
+      ? ''
+      : `<p style="margin:22px 0 6px;font-size:12px;font-weight:700;color:#9b8f96;text-transform:uppercase;letter-spacing:.05em">${titre}</p>
+         <table style="border-collapse:collapse;width:100%">${tableau(rows)}</table>`;
+
+  // Trois chiffres clés, visibles sans lire le détail — la promesse du résumé en tête.
+  const resume = `
+    <div style="display:flex;gap:10px;margin:0 0 22px;flex-wrap:wrap">
+      ${[
+        ['MRR', euros(b.mrrCentimes)],
+        ['Abonnés payants', String(b.abonnesPayants)],
+        ['Foyers', String(b.foyers)],
+      ]
+        .map(
+          ([libelle, valeur]) => `
+        <div style="flex:1 1 140px;background:#faf7f5;border-radius:10px;padding:12px 14px">
+          <p style="margin:0 0 2px;font-size:20px;font-weight:700;color:${MARQUE}">${valeur}</p>
+          <p style="margin:0;font-size:11px;color:#9b8f96;text-transform:uppercase;letter-spacing:.04em">${libelle}</p>
+        </div>`,
+        )
+        .join('')}
+    </div>`;
+
   return envoyerEmail({
     a: destination,
     sujet: `${alerte ? '⚠ ' : ''}Nestync — bulletin du ${jour}`,
     texte,
     html: gabarit(
       `Bulletin du ${jour}`,
-      `${
-        alerte
-          ? `<div style="margin:0 0 18px;padding:12px 14px;background:#fdf0ec;border-radius:8px;border-left:4px solid #c0392b">
-               <p style="margin:0 0 6px;font-weight:700;color:#b3543f">À regarder</p>
-               ${b.alertes.map((a) => `<p style="margin:0;font-size:14px;line-height:1.5">${a}</p>`).join('')}
-             </div>`
-          : '<p style="margin:0 0 18px;font-size:14px;color:#7a6f78">Aucune alerte.</p>'
-      }
-       <table style="border-collapse:collapse;width:100%">${tableau(lignes)}</table>
-       <p style="margin:20px 0 6px;font-size:12px;font-weight:700;color:#9b8f96;text-transform:uppercase;letter-spacing:.05em">Ménage</p>
-       <table style="border-collapse:collapse;width:100%">${tableau(menage)}</table>`,
+      `${resume}
+       ${
+         alerte
+           ? `<div style="margin:0 0 18px;padding:12px 14px;background:#fdf0ec;border-radius:8px;border-left:4px solid #c0392b">
+                <p style="margin:0 0 6px;font-weight:700;color:#b3543f">À regarder</p>
+                ${b.alertes.map((a) => `<p style="margin:0;font-size:14px;line-height:1.5">${a}</p>`).join('')}
+              </div>`
+           : '<p style="margin:0 0 18px;font-size:14px;color:#7a6f78">Aucune alerte.</p>'
+       }
+       ${section('Argent', argent)}
+       ${section('À faire', aFaire)}
+       ${section('Produit', produit)}
+       ${section('Origine des foyers (7 derniers jours)', origine)}
+       ${section('Ménage', menage)}`,
       undefined, // pas de bouton : ce relevé ne mène nulle part
       PIED_INTERNE,
+      560, // un peu plus large que le gabarit standard : plusieurs sections à aérer
     ),
   });
 }

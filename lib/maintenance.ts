@@ -21,6 +21,7 @@ import {
 } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur, supprimerFoyersEchus } from '@/lib/rgpd';
 import { envoyerRappelsQuotidiens } from '@/lib/notifications/rappels';
+import { chargerComptesSansGarde } from '@/lib/comptes/service';
 
 /**
  * MÉNAGE PÉRIODIQUE (serveur, déclenché par la tâche planifiée Vercel).
@@ -336,6 +337,21 @@ export type BulletinSante = {
   calendriersPartages: number;
   latenceBaseMs: number;
   alertes: string[];
+  /* --- Argent (30/08/2026) : mêmes formules que /admin (lib/admin/service.ts),
+     recopiées ici plutôt qu'importées — chargerAdmin() est gardé par une
+     session HTTP qu'une tâche planifiée n'a jamais. --- */
+  abonnesPayants: number;
+  abonnesMensuels: number;
+  abonnesAnnuels: number;
+  essaisEnCours: number;
+  mrrCentimes: number;
+  arrCentimes: number;
+  chargeMensuelleCentimes: number;
+  pointMort: number;
+  essaisQuiExpirentBientot: number;
+  impayes: number;
+  /** D'où viennent les foyers créés dans les 7 derniers jours, triés décroissant. */
+  origineSemaine: { libelle: string; n: number }[];
 };
 
 /**
@@ -444,9 +460,14 @@ export async function envoyerAvisReconductions(): Promise<number> {
   return envoyes;
 }
 
+/** Fenêtre de relance d'un essai : au-delà, rien à faire aujourd'hui (même seuil que /admin). */
+const ESSAI_BIENTOT_JOURS = 10;
+
 export async function bulletinSante(): Promise<BulletinSante> {
   const d = db();
   const hier = new Date(Date.now() - JOUR);
+  const semaine = new Date(Date.now() - 7 * JOUR);
+  const essaiBientot = new Date(Date.now() + ESSAI_BIENTOT_JOURS * JOUR);
 
   const debut = Date.now();
   const [
@@ -458,6 +479,12 @@ export async function bulletinSante(): Promise<BulletinSante> {
     documents,
     agendas,
     calendriers,
+    statuts,
+    offresParStatut,
+    essaisQuiExpirent,
+    impayes,
+    origines,
+    comptesProjet,
   ] = await Promise.all([
     d.select({ n: sql<number>`count(*)::int` }).from(tFoyers),
     d.select({ n: sql<number>`count(*)::int` }).from(utilisateurs_),
@@ -467,8 +494,54 @@ export async function bulletinSante(): Promise<BulletinSante> {
     d.select({ n: sql<number>`count(*)::int` }).from(tDocuments),
     d.select({ n: sql<number>`count(*)::int` }).from(comptesGoogle),
     d.select({ n: sql<number>`count(*)::int` }).from(foyerAgendas),
+    d.select({ statut: tFoyers.statutAbonnement, n: sql<number>`count(*)::int` }).from(tFoyers).groupBy(tFoyers.statutAbonnement),
+    d
+      .select({ offre: tFoyers.offre, n: sql<number>`count(*)::int` })
+      .from(tFoyers)
+      .where(eq(tFoyers.statutAbonnement, 'actif'))
+      .groupBy(tFoyers.offre),
+    d
+      .select({ n: sql<number>`count(*)::int` })
+      .from(tFoyers)
+      .where(
+        and(
+          eq(tFoyers.statutAbonnement, 'essai'),
+          sql`${tFoyers.abonnementFin} is not null`,
+          lt(tFoyers.abonnementFin, essaiBientot),
+        ),
+      ),
+    d.select({ n: sql<number>`count(*)::int` }).from(tFoyers).where(eq(tFoyers.statutAbonnement, 'impaye')),
+    d
+      .select({ origine: tFoyers.origine, origineDeclaree: tFoyers.origineDeclaree })
+      .from(tFoyers)
+      .where(gt(tFoyers.creeLe, semaine)),
+    chargerComptesSansGarde().catch(() => null),
   ]);
   const latenceBaseMs = Date.now() - debut;
+
+  const parStatut = statuts.map((s) => ({ libelle: s.statut, n: s.n }));
+  const mensuels = offresParStatut.find((o) => o.offre === 'mensuel')?.n ?? 0;
+  const annuels = offresParStatut.find((o) => o.offre === 'annuel')?.n ?? 0;
+  const abonnesPayants = parStatut.find((s) => s.libelle === 'actif')?.n ?? 0;
+  const essaisEnCours = parStatut.find((s) => s.libelle === 'essai')?.n ?? 0;
+
+  // ⚠ MRR : l'annuel est ramené au mois — même formule qu'/admin (lib/admin/service.ts).
+  const prixMensuel = Math.round((OFFRES.find((o) => o.id === 'mensuel')?.prix ?? 0) * 100);
+  const prixAnnuel = Math.round((OFFRES.find((o) => o.id === 'annuel')?.prix ?? 0) * 100);
+  const mrrCentimes = mensuels * prixMensuel + Math.round((annuels * prixAnnuel) / 12);
+  const chargeMensuelleCentimes = comptesProjet?.chargeMensuelleCentimes ?? 0;
+  const pointMort = prixMensuel > 0 ? Math.ceil(chargeMensuelleCentimes / prixMensuel) : 0;
+
+  // Même fusion que le panneau « Origine » d'/admin : technique prioritaire sur déclaratif.
+  const compteurOrigine = new Map<string, number>();
+  for (const f of origines) {
+    const brut = f.origine?.split('|')[0] || f.origineDeclaree || null;
+    const libelle = brut ? brut.charAt(0).toUpperCase() + brut.slice(1) : 'Sans source connue';
+    compteurOrigine.set(libelle, (compteurOrigine.get(libelle) ?? 0) + 1);
+  }
+  const origineSemaine = [...compteurOrigine.entries()]
+    .map(([libelle, n]) => ({ libelle, n }))
+    .sort((a, b) => b.n - a.n);
 
   const b: BulletinSante = {
     foyers: foyers[0].n,
@@ -479,6 +552,17 @@ export async function bulletinSante(): Promise<BulletinSante> {
     documents: documents[0].n,
     agendasConnectes: agendas[0].n,
     calendriersPartages: calendriers[0].n,
+    abonnesPayants,
+    abonnesMensuels: mensuels,
+    abonnesAnnuels: annuels,
+    essaisEnCours,
+    mrrCentimes,
+    arrCentimes: mrrCentimes * 12,
+    chargeMensuelleCentimes,
+    pointMort,
+    essaisQuiExpirentBientot: essaisQuiExpirent[0].n,
+    impayes: impayes[0].n,
+    origineSemaine,
     latenceBaseMs,
     alertes: [],
   };
@@ -491,6 +575,9 @@ export async function bulletinSante(): Promise<BulletinSante> {
   }
   if (b.latenceBaseMs > SEUILS.latenceBaseMs) {
     b.alertes.push(`base lente : ${b.latenceBaseMs} ms pour 7 comptages (seuil : ${SEUILS.latenceBaseMs} ms)`);
+  }
+  if (b.impayes > 0) {
+    b.alertes.push(`${b.impayes} foyer${b.impayes > 1 ? 's' : ''} en impayé`);
   }
   return b;
 }

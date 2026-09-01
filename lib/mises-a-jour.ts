@@ -83,6 +83,25 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-01',
+    numero: '1.3.1',
+    date: '1er septembre 2026',
+    dateISO: '2026-09-01',
+    titre: 'Une coupure du service, résolue',
+    resume:
+      'Une migration des données côté serveur ne s’est pas déroulée correctement et a rendu le service inaccessible pendant plusieurs heures. C’est corrigé, et rien n’a été perdu.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Le service a été inaccessible pendant plusieurs heures.',
+        texte:
+          'Une migration des données côté serveur ne s’est pas appliquée correctement, ce qui a bloqué l’accès à l’application dans son ensemble.',
+        detail: 'Aucune donnée n’a été perdue. Le service est de nouveau pleinement accessible.',
+        alerte: true,
+      },
+    ],
+  },
+  {
     id: '2026-08-30',
     numero: '1.3.0',
     date: '30 août 2026',

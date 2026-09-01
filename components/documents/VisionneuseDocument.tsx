@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/components/I18nProvider';
+import { estIos } from '@/lib/pwa';
 import {
   estImage,
   estPdf,
@@ -122,6 +123,47 @@ export default function VisionneuseDocument({
   const texte = estTexte(doc);
   const [contenu, setContenu] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
+  const [telechargement, setTelechargement] = useState(false);
+
+  /**
+   * ⚠ SUR IOS UNIQUEMENT : `<a download>` est ignoré par Safari (voir
+   * `lib/pwa.ts`). On récupère le fichier nous-mêmes et on passe par
+   * `navigator.share()`, qui propose « Enregistrer dans Fichiers » — la vraie
+   * façon d'obtenir un enregistrement sur cette plateforme.
+   *
+   * ⚠ `preventDefault()` DOIT ÊTRE SYNCHRONE, avant tout `await`. Un clic non
+   * empêché continue de naviguer pendant qu'on récupère le fichier ; à ce
+   * moment-là le `preventDefault()` d'un callback async arrive trop tard, le
+   * navigateur a déjà suivi le lien. On empêche donc la navigation dès qu'on
+   * sait qu'on est sur iOS, PUIS on décide quoi faire du clic.
+   */
+  function telecharger(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (!estIos()) return; // comportement natif du lien, inchangé partout ailleurs
+    e.preventDefault();
+    (async () => {
+      setTelechargement(true);
+      try {
+        const fichier = new File(
+          [await (await fetch(url)).blob()],
+          doc.nom,
+          { type: doc.type || 'application/octet-stream' },
+        );
+        if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [fichier] })) {
+          await navigator.share({ files: [fichier] });
+        } else {
+          // iOS ancien sans partage de fichiers : seul repli possible, ouvrir
+          // le document — pire que l'enregistrement direct, mais pas pire que
+          // le comportement qu'on corrige.
+          window.open(url, '_blank');
+        }
+      } catch {
+        // Annulation par la personne, ou échec réseau : rien à signaler, le
+        // fichier reste consultable dans la visionneuse.
+      } finally {
+        setTelechargement(false);
+      }
+    })();
+  }
 
   useEffect(() => {
     if (!texte || doc.taille > TAILLE_APERCU_TEXTE) return;
@@ -247,12 +289,21 @@ export default function VisionneuseDocument({
             ⚠ Toujours présent, même quand l'aperçu s'affiche : c'est le seul
             moyen d'obtenir le fichier à sa définition d'origine, et le recours
             quand l'aperçu échoue. `?dl=1` demande à la route un
-            `Content-Disposition: attachment`, donc l'enregistrement plutôt que
-            l'affichage — sur iPhone, la feuille de partage s'ouvre sans que
-            l'application soit quittée.
+            `Content-Disposition: attachment` — respecté par tous les
+            navigateurs SAUF Safari iOS, qui l'ignore et ouvre le fichier au
+            lieu de l'enregistrer (signalé le 01/09/2026). Sur iOS, `onClick`
+            intercepte le clic et passe par `navigator.share()` à la place —
+            voir `telecharger()` ci-dessus et `lib/pwa.ts`. Ailleurs, le lien
+            suit son comportement natif, inchangé.
           */}
-          <a className="bouton" href={`${url}?dl=1`} download={doc.nom}>
-            {tr('VISIO_TELECHARGER')}
+          <a
+            className="bouton"
+            href={`${url}?dl=1`}
+            download={doc.nom}
+            onClick={telecharger}
+            aria-busy={telechargement}
+          >
+            {telechargement ? tr('VISIO_TELECHARGEMENT_EN_COURS') : tr('VISIO_TELECHARGER')}
           </a>
           <button type="button" className="bouton bouton-primaire" onClick={onFermer}>
             {tr('G_FERMER')}

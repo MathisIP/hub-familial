@@ -47,3 +47,19 @@ export function clicPrincipal(e: {
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
   return e.button == null || e.button === 0;
 }
+
+/**
+ * Safari iOS ignore `download` sur un `<a>` — quel que soit le
+ * `Content-Disposition` renvoyé par le serveur, il OUVRE le fichier au lieu de
+ * proposer un enregistrement. Signalé le 01/09/2026 : le bouton « Télécharger »
+ * de la visionneuse (`VisionneuseDocument.tsx`) ouvrait le PDF au lieu de
+ * l'enregistrer, sur iPhone uniquement.
+ *
+ * ⚠ CE N'EST PAS UN BUG SERVEUR. La route (`app/api/documents/[id]/route.ts`)
+ * envoie bien `attachment` avec `?dl=1` — c'est le comportement de Safari qui
+ * l'ignore. Chrome/Firefox/Android le respectent.
+ */
+export function estIos(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}

@@ -404,6 +404,7 @@ const UI = {
   DOC_LIEN_ONGLET: { fr: 'Tous mes documents →', en: 'All my documents →' },
   DOC_AJOUTE_SUFFIXE: { fr: 'document(s) ajouté(s) dans « Fichiers non classés ».', en: 'document(s) added to “Unsorted files”.' },
   VISIO_TELECHARGER: { fr: '⬇ Télécharger', en: '⬇ Download' },
+  VISIO_TELECHARGEMENT_EN_COURS: { fr: 'Préparation…', en: 'Preparing…' },
   VISIO_ZOOM: { fr: 'Toucher pour agrandir', en: 'Tap to zoom' },
   VISIO_ERREUR: { fr: 'Ce document n’a pas pu être affiché. Tu peux le télécharger.', en: 'This document could not be displayed. You can download it.' },
   /* ⚠ Dit la vraie raison : le PDF n'a rien d'anormal, c'est le telephone qui

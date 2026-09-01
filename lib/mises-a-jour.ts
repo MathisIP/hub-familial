@@ -83,6 +83,23 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-01-2',
+    numero: '1.3.2',
+    date: '1er septembre 2026',
+    dateISO: '2026-09-01',
+    titre: 'Télécharger un document depuis un iPhone',
+    resume:
+      'Le bouton « Télécharger » d’un document ouvrait le fichier au lieu de proposer de l’enregistrer, sur iPhone.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Télécharger un document depuis un iPhone proposait de l’ouvrir, pas de l’enregistrer.',
+        texte:
+          'Le bouton « Télécharger » de la visionneuse ouvrait le PDF au lieu de proposer la feuille de partage iOS. C’est désormais elle qui s’ouvre, avec la possibilité d’enregistrer dans Fichiers.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01',
     numero: '1.3.1',
     date: '1er septembre 2026',

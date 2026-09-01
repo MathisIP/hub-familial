@@ -294,6 +294,23 @@ export async function cocherCourse(id: string, fait: boolean): Promise<void> {
 }
 
 /**
+ * Retire un seul article, quel que soit son état (coché ou non).
+ *
+ * ⚠ Le pendant manquant de `viderCoursesFaites` — celui-ci vide en masse les
+ * articles cochés, mais rien ne permettait de retirer un article ajouté par
+ * erreur ou devenu inutile sans d'abord le cocher (et donc le mêler à un
+ * « vider » qui n'était pas voulu au même moment).
+ */
+export async function supprimerCourse(id: string): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const res = await db()
+    .delete(tCourses)
+    .where(and(eq(tCourses.id, id), eq(tCourses.foyerId, foyerId)))
+    .returning({ id: tCourses.id });
+  if (res.length === 0) throw new ErreurValidation('Article introuvable.');
+}
+
+/**
  * Ajoute plusieurs articles d'un coup (cases décochées). Un même article (libellé
  * insensible à la casse) déjà présent — dans la liste OU dans le lot — n'ajoute
  * PAS une nouvelle ligne : sa QUANTITÉ monte (somme des quantités quand elles sont

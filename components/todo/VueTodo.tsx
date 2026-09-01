@@ -419,6 +419,18 @@ function OngletCourses({
     action(() => fetch('/api/todo/courses', { method: 'DELETE' }));
   }
 
+  /**
+   * ⚠ AJOUTÉ LE 01/09/2026. Le seul moyen de retirer un article était de le
+   * cocher puis « Vider les cochés » — en masse, jamais un seul à la fois, et
+   * ça mêlait un article ajouté par erreur à ceux réellement achetés.
+   * Confirmation demandée : au doigt sur mobile, un article à côté d'une case
+   * à cocher est facile à toucher par erreur.
+   */
+  function supprimer(id: string, libelle: string) {
+    if (!window.confirm(tr('TODO_CONFIRMER_SUPPRESSION').replace('{article}', libelle))) return;
+    action(() => fetch('/api/todo/courses', { ...json({ id }), method: 'DELETE' }));
+  }
+
   // Regroupement par rayon, dans l'ordre déclaré dans Paramètres.
   const groupes = useMemo(() => grouperParRayon(courses, params.rayons), [courses, params.rayons]);
 
@@ -501,6 +513,14 @@ function OngletCourses({
                         disabled={occupe}
                       >
                         {tr('G_MODIFIER')}
+                      </button>
+                      <button
+                        className="bouton discret course-suppr"
+                        onClick={() => supprimer(c.id, c.article)}
+                        disabled={occupe}
+                        aria-label={`${tr('G_SUPPRIMER')} ${c.article}`}
+                      >
+                        🗑
                       </button>
                     </li>
                   ),

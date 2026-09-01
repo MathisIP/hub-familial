@@ -461,6 +461,8 @@ a { color: var(--link-tx); }
 }
 .course.faite .course-qte { opacity: .6; }
 .course-mod { font-size: .78rem; padding: .28rem .6rem; flex: none; }
+.course-suppr { font-size: .9rem; padding: .28rem .5rem; flex: none; line-height: 1; }
+.course-suppr:hover, .course-suppr:focus-visible { color: var(--over-tx); }
 /* Champ « quantité » plus étroit dans le formulaire d'ajout/édition. */
 .ajout .champ-qte { flex: 0 1 8.5rem; }
 .ajout.course-edit { margin-bottom: 0; }

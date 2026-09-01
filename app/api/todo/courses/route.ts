@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { ajouterCourse, cocherCourse, modifierCourse, viderCoursesFaites } from '@/lib/todo/service';
+import { ajouterCourse, cocherCourse, modifierCourse, supprimerCourse, viderCoursesFaites } from '@/lib/todo/service';
 import { reponseErreur } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -55,9 +55,26 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-/** DELETE /api/todo/courses — retire tous les articles cochés. */
-export async function DELETE() {
+/**
+ * DELETE /api/todo/courses — retire un article, ou tous les articles cochés.
+ *
+ * ⚠ DEUX COMPORTEMENTS SUR LA MÊME ROUTE, DISTINGUÉS PAR LE CORPS. Un corps
+ * `{ id }` retire CET article précis, coché ou non ; un appel sans corps (ou
+ * un corps vide) garde le comportement historique — vider tout ce qui est
+ * coché. Pas de nouvelle route pour ne pas dupliquer la sémantique DELETE.
+ */
+export async function DELETE(req: NextRequest) {
   try {
+    let id: string | undefined;
+    try {
+      ({ id } = (await req.json()) as { id?: string });
+    } catch {
+      // Corps absent ou vide : comportement historique (vider les cochés).
+    }
+    if (typeof id === 'string' && id !== '') {
+      await supprimerCourse(id);
+      return NextResponse.json({ ok: true });
+    }
     const retires = await viderCoursesFaites();
     return NextResponse.json({ ok: true, retires });
   } catch (e) {

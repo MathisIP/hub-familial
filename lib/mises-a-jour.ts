@@ -83,6 +83,23 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-01-4',
+    numero: '1.3.3',
+    date: '1er septembre 2026',
+    dateISO: '2026-09-01',
+    titre: 'Retirer un article de la liste de courses',
+    resume:
+      'Un article de la liste de courses se retire désormais d’un geste, sans passer par la case à cocher.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Retirer un seul article de la liste de courses.',
+        texte:
+          'Chaque article a désormais un bouton pour le retirer directement, en plus du crayon pour le modifier. Auparavant, seul « Vider les cochés » permettait d’en enlever — en bloc, jamais un seul à la fois.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01-2',
     numero: '1.3.2',
     date: '1er septembre 2026',

@@ -531,6 +531,10 @@ const UI = {
   TODO_LISTE_VIDE: { fr: 'Liste vide. Ajoute un article ci-dessus.', en: 'Empty list. Add an item above.' },
   TODO_RETIRER_1: { fr: 'Retirer les', en: 'Remove the' },
   TODO_RETIRER_2: { fr: 'article(s) coché(s)', en: 'checked item(s)' },
+  TODO_CONFIRMER_SUPPRESSION: {
+    fr: 'Retirer « {article} » de la liste de courses ?',
+    en: 'Remove “{article}” from the shopping list?',
+  },
 
   // Repas
   REPAS_TAB_SEMAINE: { fr: 'Semaine', en: 'Week' },

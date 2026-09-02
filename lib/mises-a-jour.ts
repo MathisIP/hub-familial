@@ -83,12 +83,13 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
-    // ⚠ NUMÉRO À CONFIRMER AU MOMENT DE LA FUSION DANS `main`. Branche
-    // feature/modifier-tache-clic, indépendante de fix/suppression-article-
-    // courses (1.3.3) et feature/repas-midi (1.4.0), toutes deux pas encore
-    // fusionnées : le numéro définitif dépend de l'ordre réel de fusion.
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.5. La séquence des
+    // correctifs 1.3.x continue pour cette version et celles à venir, plutôt
+    // que d'incrémenter le chiffre mineur comme le voudrait la règle générale
+    // (une vraie fonctionnalité = mineur) — décision explicite, à reposer en
+    // question à chaque nouvelle version plutôt qu'à appliquer par défaut.
     id: '2026-09-02-2',
-    numero: '1.4.0',
+    numero: '1.3.5',
     date: '2 septembre 2026',
     dateISO: '2026-09-02',
     titre: 'Modifier une tâche en un clic',

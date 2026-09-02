@@ -13,6 +13,7 @@ import {
   type DonneesRepas,
   type Ingredient,
   type JourRepas,
+  type Moment,
   type Recette,
 } from '@/lib/repas/schema';
 import Astuce from '@/components/Astuce';
@@ -89,8 +90,20 @@ function trouverRecette(nom: string, recettes: Recette[]): Recette | undefined {
 /* =============================== SEMAINE =============================== */
 
 function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boolean; action: ActionFn }) {
+  const tr = useT();
+  /*
+   * ⚠ ONGLET GLOBAL, PAS UN DOUBLEMENT DES 7 LIGNES (02/09/2026). `d.semaine`
+   * porte les 14 combinaisons jour × moment ; l'écran n'en affiche que 7 à la
+   * fois, celles du moment actif. C'est ce qui garde le planning « sympa » —
+   * une liste par écran, jamais deux menus empilés sur la même ligne.
+   */
+  const [moment, setMoment] = useState<Moment>('soir');
+  const joursDuMoment = useMemo(() => d.semaine.filter((j) => j.moment === moment), [d.semaine, moment]);
+
   // Aperçu des courses : agrège les recettes des 3 services (entrée/plat/dessert)
-  // de chaque jour, mises à l'échelle du nombre de personnes du jour.
+  // de CHAQUE REPAS planifié, midi et soir ensemble — pas seulement l'onglet
+  // affiché. Un repas planifié à midi compte pour la liste de courses même
+  // quand on regarde l'onglet « Soir ».
   const platsPlanifies = useMemo(() => {
     const out: { ingredients: Recette['ingredients']; base: number; personnes: number }[] = [];
     for (const j of d.semaine) {
@@ -116,9 +129,28 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
 
   return (
     <>
+      <div className="tabs tabs-moment" role="tablist" aria-label={tr('REPAS_MOMENT_LABEL')}>
+        <button
+          className="tab"
+          role="tab"
+          aria-selected={moment === 'midi'}
+          onClick={() => setMoment('midi')}
+        >
+          ☀️ {tr('REPAS_MOMENT_MIDI')}
+        </button>
+        <button
+          className="tab"
+          role="tab"
+          aria-selected={moment === 'soir'}
+          onClick={() => setMoment('soir')}
+        >
+          🌙 {tr('REPAS_MOMENT_SOIR')}
+        </button>
+      </div>
+
       <ul className="liste">
-        {d.semaine.map((j) => (
-          <JourLigne key={j.jour} jour={j} recettes={d.recettes} occupe={occupe} action={action} />
+        {joursDuMoment.map((j) => (
+          <JourLigne key={`${j.jour}-${j.moment}`} jour={j} recettes={d.recettes} occupe={occupe} action={action} />
         ))}
       </ul>
 
@@ -166,6 +198,7 @@ function JourLigne({
     action(() =>
       patch('/api/repas/semaine', {
         jour: jour.jour,
+        moment: jour.moment,
         entree: prochain.entree,
         plat: prochain.plat,
         dessert: prochain.dessert,
@@ -356,20 +389,26 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
   const recetteFiche = d.recettes.find((r) => r.id === fiche) ?? null;
 
   /*
-   * Pose une recette sur un service d'un jour.
+   * Pose une recette sur un service d'un jour ET d'un moment.
    *
    * ⚠ ON RENVOIE LES TROIS SERVICES DU JOUR, pas seulement celui qu'on change.
    * La route attend le menu complet : n'envoyer que le service visé effacerait
    * l'entrée et le dessert du jour — une perte silencieuse, constatée nulle part
    * avant que quelqu'un ne rouvre son planning.
+   *
+   * ⚠ `moment` FAIT PARTIE DE LA CLÉ DE RECHERCHE (02/09/2026). `d.semaine`
+   * porte deux lignes par jour depuis l'ajout du midi ; chercher par le seul
+   * `jour` retomberait arbitrairement sur la première trouvée (souvent le
+   * midi, listé en premier) au lieu du moment réellement visé dans la fiche.
    */
   const poserAuMenu = useCallback(
-    (nomRecette: string, jour: string, service: 'entree' | 'plat' | 'dessert') => {
-      const j = d.semaine.find((x) => x.jour === jour);
+    (nomRecette: string, jour: string, moment: Moment, service: 'entree' | 'plat' | 'dessert') => {
+      const j = d.semaine.find((x) => x.jour === jour && x.moment === moment);
       if (!j) return;
       action(() =>
         patch('/api/repas/semaine', {
           jour,
+          moment,
           entree: service === 'entree' ? nomRecette : j.entree,
           plat: service === 'plat' ? nomRecette : j.plat,
           dessert: service === 'dessert' ? nomRecette : j.dessert,
@@ -473,7 +512,7 @@ function EditeurRecettes({ d, occupe, action }: { d: DonneesRepas; occupe: boole
           semaine={d.semaine}
           occupe={occupe}
           onFermer={() => setFiche(null)}
-          onAjouterAction={(jour, service) => poserAuMenu(recetteFiche.nom, jour, service)}
+          onAjouterAction={(jour, moment, service) => poserAuMenu(recetteFiche.nom, jour, moment, service)}
           onModifier={() => {
             setFiche(null);
             setEdite(recetteFiche.id);

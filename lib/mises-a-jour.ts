@@ -83,6 +83,30 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    // ⚠ NUMÉRO À CONFIRMER AU MOMENT DE LA FUSION DANS `main`. Cette branche
+    // (feature/repas-midi) est indépendante de fix/suppression-article-courses
+    // (1.3.3, pas encore fusionnée) : le numéro définitif dépend de l'ordre
+    // réel de fusion. Une vraie fonctionnalité incrémente le chiffre du
+    // milieu (mineur), pas le dernier.
+    id: '2026-09-02',
+    numero: '1.4.0',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Un repas de midi, en plus du soir',
+    resume:
+      'La planification de la semaine distingue désormais midi et soir, avec un menu propre à chacun.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Planifier un repas de midi, en plus de celui du soir.',
+        texte:
+          'Un onglet « Midi / Soir » au-dessus du planning de la semaine bascule entre les deux — chaque jour garde un menu propre à chaque moment, sans les afficher l’un sur l’autre.',
+        detail:
+          'La liste de courses reste unique : elle réunit les repas de midi et du soir de la semaine.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01-2',
     numero: '1.3.2',
     date: '1er septembre 2026',

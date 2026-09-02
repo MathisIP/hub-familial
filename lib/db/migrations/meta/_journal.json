@@ -239,6 +239,13 @@
       "when": 1788206383992,
       "tag": "0033_long_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1788318524918,
+      "tag": "0034_easy_madelyne_pryor",
+      "breakpoints": true
     }
   ]
 }

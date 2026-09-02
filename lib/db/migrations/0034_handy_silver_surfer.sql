@@ -1,0 +1,1 @@
+ALTER TABLE "cadeaux" ADD COLUMN "lien" text DEFAULT '' NOT NULL;

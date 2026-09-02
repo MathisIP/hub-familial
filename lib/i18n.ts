@@ -391,6 +391,10 @@ const UI = {
     fr: 'L’événement auquel se rattache ce cadeau : « Noël 2026 », « Anniversaire de Léa »… Saisis librement : une nouvelle occasion est créée si elle n’existe pas, et les cadeaux sont regroupés par occasion.',
     en: 'The event this gift belongs to: “Christmas 2026”, “Léa’s birthday”… Type freely: a new occasion is created if it doesn’t exist, and gifts are grouped by occasion.',
   },
+  AIDE_LIEN_CADEAU: {
+    fr: 'Un lien vers la page du cadeau (boutique en ligne, fiche produit…). Il devient cliquable dans la liste, à condition de commencer par http:// ou https://.',
+    en: 'A link to the gift’s page (online shop, product page…). It becomes clickable in the list, as long as it starts with http:// or https://.',
+  },
 
   // Documents (fichiers du foyer, stockage propre)
   DOC_TITRE: { fr: '🗂️ Documents', en: '🗂️ Documents' },
@@ -634,7 +638,13 @@ const UI = {
   CAD_BUDGET_PH: { fr: 'Budget prévu (€)', en: 'Planned budget (€)' },
   CAD_PRIX_PH: { fr: 'Prix payé (€)', en: 'Price paid (€)' },
   CAD_OFFERT_PAR: { fr: 'Offert par', en: 'Given by' },
-  CAD_OU_PH: { fr: 'Où / lien', en: 'Where / link' },
+  /*
+   * ⚠ DISAIT « Où / lien » JUSQU'AU 02/09/2026. Le champ ne rendait jamais un
+   * lien collé ici cliquable — un vrai champ `lien` existe désormais
+   * (CAD_LIEN_PH), celui-ci redevient ce qu'il a toujours été : le magasin.
+   */
+  CAD_OU_PH: { fr: 'Où (magasin)', en: 'Where (shop)' },
+  CAD_LIEN_PH: { fr: 'Lien vers le cadeau (https://…)', en: 'Link to the gift (https://…)' },
   CAD_PRIX_PAYE_PH: { fr: 'Prix payé (€)', en: 'Price paid (€)' },
   CAD_PARTAGE: { fr: 'Cadeau à plusieurs', en: 'Group gift' },
   CAD_COUT_PH: { fr: 'Coût total (€)', en: 'Total cost (€)' },

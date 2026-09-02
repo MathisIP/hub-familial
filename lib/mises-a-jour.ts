@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-02-3',
+    numero: '1.3.6',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Un lien vers le cadeau, cliquable',
+    resume: 'Le champ « Où » d’un cadeau accepte désormais un lien, qui devient cliquable dans la liste.',
+    changements: [
+      {
+        nature: 'ameliore',
+        titre: 'Un lien vers le cadeau devient cliquable dans la liste.',
+        texte:
+          'Un nouveau champ dédié accueille l’adresse de la page du cadeau (boutique en ligne, fiche produit…). Une fois enregistré, le nom du cadeau devient un lien qui ouvre directement cette page.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01-2',
     numero: '1.3.2',
     date: '1er septembre 2026',

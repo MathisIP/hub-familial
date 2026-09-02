@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Liste from '@/components/Liste';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_CATEGORIE_PLAT, CLE_TYPE_RECETTE, CLE_CHAUD_FROID, CLE_JOUR } from '@/lib/i18n';
-import { formatQuantite, type JourRepas, type Recette } from '@/lib/repas/schema';
+import { formatQuantite, type JourRepas, type Moment, type Recette } from '@/lib/repas/schema';
 
 /** Service d'un menu de jour, et la catégorie de recette qui lui correspond. */
 const SERVICES = [
@@ -43,8 +43,8 @@ export default function FicheRecette({
   semaine: JourRepas[];
   occupe: boolean;
   onFermer: () => void;
-  /** Pose la recette sur un jour et un service. */
-  onAjouterAction: (jour: string, service: 'entree' | 'plat' | 'dessert') => void;
+  /** Pose la recette sur un jour, un moment et un service. */
+  onAjouterAction: (jour: string, moment: Moment, service: 'entree' | 'plat' | 'dessert') => void;
   onModifier: () => void;
 }) {
   const tr = useT();
@@ -59,6 +59,12 @@ export default function FicheRecette({
     SERVICES.find((s) => s.cat === recette.categorie)?.cle ?? 'plat';
 
   const [jour, setJour] = useState(semaine[0]?.jour ?? '');
+  /**
+   * ⚠ AJOUTÉ LE 02/09/2026, en même temps que le moment lui-même. `semaine`
+   * porte désormais une ligne midi et une ligne soir par jour — sans ce
+   * sélecteur, on ne pouvait viser que le premier moment trouvé.
+   */
+  const [moment, setMoment] = useState<Moment>('soir');
   const [service, setService] = useState<'entree' | 'plat' | 'dessert'>(serviceParDefaut);
   const [pose, setPose] = useState(false);
 
@@ -71,8 +77,8 @@ export default function FicheRecette({
 
   if (typeof document === 'undefined') return null;
 
-  /** Ce qui occupe déjà ce service, ce jour-là — pour prévenir avant d'écraser. */
-  const occupePar = semaine.find((j) => j.jour === jour)?.[service] ?? '';
+  /** Ce qui occupe déjà ce service, ce jour et ce moment-là — pour prévenir avant d'écraser. */
+  const occupePar = semaine.find((j) => j.jour === jour && j.moment === moment)?.[service] ?? '';
 
   return createPortal(
     <div
@@ -147,9 +153,28 @@ export default function FicheRecette({
                 setJour(v);
                 setPose(false);
               }}
-              options={semaine.map((j) => ({ valeur: j.jour, libelle: tEnum(CLE_JOUR, j.jour, langue) }))}
+              // ⚠ DÉDOUBLONNÉ SUR LE JOUR (02/09/2026). `semaine` porte une ligne
+              // midi et une ligne soir par jour ; sans ce filtre, chaque jour
+              // apparaissait deux fois dans la liste.
+              options={[...new Map(semaine.map((j) => [j.jour, j])).values()].map((j) => ({
+                valeur: j.jour,
+                libelle: tEnum(CLE_JOUR, j.jour, langue),
+              }))}
               disabled={occupe}
               ariaLabel={tr('FR_JOUR')}
+            />
+            <Liste
+              valeur={moment}
+              onChange={(v) => {
+                setMoment(v as Moment);
+                setPose(false);
+              }}
+              options={[
+                { valeur: 'midi', libelle: tr('REPAS_MOMENT_MIDI') },
+                { valeur: 'soir', libelle: tr('REPAS_MOMENT_SOIR') },
+              ]}
+              disabled={occupe}
+              ariaLabel={tr('REPAS_MOMENT_LABEL')}
             />
             <Liste
               valeur={service}
@@ -170,7 +195,7 @@ export default function FicheRecette({
               className="bouton bouton-action"
               disabled={occupe || !jour}
               onClick={() => {
-                onAjouterAction(jour, service);
+                onAjouterAction(jour, moment, service);
                 setPose(true);
               }}
             >

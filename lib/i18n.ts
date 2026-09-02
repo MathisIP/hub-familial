@@ -539,6 +539,9 @@ const UI = {
   // Repas
   REPAS_TAB_SEMAINE: { fr: 'Semaine', en: 'Week' },
   REPAS_TAB_RECETTES: { fr: 'Recettes', en: 'Recipes' },
+  REPAS_MOMENT_LABEL: { fr: 'Moment de la journée', en: 'Time of day' },
+  REPAS_MOMENT_MIDI: { fr: 'Midi', en: 'Lunch' },
+  REPAS_MOMENT_SOIR: { fr: 'Soir', en: 'Dinner' },
   REPAS_PERS: { fr: 'pers.', en: 'ppl' },
   /* --- Verser la liste de courses de la semaine --- */
   /* ⚠ Dit POURQUOI il n'y a rien a verser. Sans ce message, la section

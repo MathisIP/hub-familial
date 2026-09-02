@@ -1408,6 +1408,10 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   background: linear-gradient(155deg, var(--acc), var(--acc-deep)); color: var(--on-acc);
   border-bottom-color: transparent; box-shadow: 0 6px 14px -8px var(--acc-deep);
 }
+/* Switch secondaire (ex. midi/soir du planning repas) : plus discret que
+   l'onglet principal, pour ne pas rivaliser avec lui visuellement. */
+.tabs-moment { display: inline-flex; width: auto; margin: 0 0 var(--e-4); padding: .2rem; gap: .2rem; }
+.tabs-moment .tab { padding: .35rem .8rem; font-size: .88rem; }
 
 /* Titres d'éléments (recette, événement, occasion) en serif. */
 .rc-nom, .ev-nom, .occ-nom {

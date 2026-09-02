@@ -8,6 +8,7 @@ import {
   CATEGORIES_PLAT,
   CHAUD_FROID,
   JOURS,
+  MOMENTS,
   TYPES_RECETTE,
   UNITES,
   agregerCourses,
@@ -16,6 +17,7 @@ import {
   type DonneesRepas,
   type Ingredient,
   type JourRepas,
+  type Moment,
   type Recette,
 } from '@/lib/repas/schema';
 
@@ -48,20 +50,24 @@ export async function chargerRepas(): Promise<DonneesRepas> {
     bebePasGoute: r.bebePasGoute,
   }));
 
-  // Planning : on complète les 7 jours (ceux sans ligne prennent les défauts).
-  // `plat` retombe sur l'ancien `diner` (compat des plannings d'avant la refonte).
-  const parJour = new Map(lignesSem.map((s) => [s.jour, s]));
-  const semaine: JourRepas[] = JOURS.map((jour): JourRepas => {
-    const s = parJour.get(jour);
-    return {
-      jour,
-      entree: s ? s.entree : '',
-      plat: s ? s.plat || s.diner : '',
-      dessert: s ? s.dessert : '',
-      note: s ? s.note : '',
-      personnes: personnesValides(s?.personnes),
-    };
-  });
+  // Planning : on complète les 7 jours × 2 moments (les combinaisons sans
+  // ligne prennent les défauts). `plat` retombe sur l'ancien `diner` (compat
+  // des plannings d'avant la refonte des 3 services, tous « soir »).
+  const parJourMoment = new Map(lignesSem.map((s) => [`${s.jour}|${s.moment}`, s]));
+  const semaine: JourRepas[] = JOURS.flatMap((jour) =>
+    MOMENTS.map((moment): JourRepas => {
+      const s = parJourMoment.get(`${jour}|${moment}`);
+      return {
+        jour,
+        moment,
+        entree: s ? s.entree : '',
+        plat: s ? s.plat || s.diner : '',
+        dessert: s ? s.dessert : '',
+        note: s ? s.note : '',
+        personnes: personnesValides(s?.personnes),
+      };
+    }),
+  );
 
   return {
     recettes,
@@ -74,9 +80,15 @@ export async function chargerRepas(): Promise<DonneesRepas> {
 }
 
 /**
- * Liste de courses agrégée pour la semaine planifiée : pour chaque jour dont le
- * dîner correspond à une recette, met les ingrédients à l'échelle (personnes du
- * jour) et fusionne le tout. Utilisée par le bouton d'accueil (aperçu + envoi).
+ * Liste de courses agrégée pour la semaine planifiée : pour chaque repas dont
+ * un service correspond à une recette, met les ingrédients à l'échelle
+ * (personnes de ce repas) et fusionne le tout. Utilisée par le bouton
+ * d'accueil (aperçu + envoi).
+ *
+ * ⚠ MIDI ET SOIR ENSEMBLE, SANS DISTINCTION (02/09/2026). `semaine` porte
+ * maintenant les deux moments par jour ; cette fonction ne filtre pas dessus
+ * volontairement — un repas planifié reste un repas planifié, la liste de
+ * courses doit refléter tout ce qui est prévu dans la semaine.
  */
 export async function listeCoursesSemaine(): Promise<{ articles: ArticleCourse[]; diners: number }> {
   const { recettes, semaine } = await chargerRepas();
@@ -173,10 +185,17 @@ export type ChampsJour = {
   note?: string;
 };
 
-/** Définit le menu d'un jour (entrée/plat/dessert, upsert sur foyer+jour). */
-export async function definirJour(jour: string, c: ChampsJour): Promise<void> {
+/**
+ * Définit le menu d'un jour pour UN moment (midi ou soir), upsert sur
+ * foyer+jour+moment. `moment` par défaut `'soir'` : un appelant qui ne le
+ * précise pas garde le comportement d'avant cette colonne.
+ */
+export async function definirJour(jour: string, c: ChampsJour, moment: Moment = 'soir'): Promise<void> {
   if (!(JOURS as readonly string[]).includes(jour)) {
     throw new ErreurValidation(`Jour invalide : ${jour}.`);
+  }
+  if (!(MOMENTS as readonly string[]).includes(moment)) {
+    throw new ErreurValidation(`Moment invalide : ${moment}.`);
   }
   const foyerId = await idFoyerCourant();
   const plat = (c.plat ?? '').trim();
@@ -190,6 +209,6 @@ export async function definirJour(jour: string, c: ChampsJour): Promise<void> {
   };
   await db()
     .insert(tSemaine)
-    .values({ foyerId, jour, ...valeurs })
-    .onConflictDoUpdate({ target: [tSemaine.foyerId, tSemaine.jour], set: valeurs });
+    .values({ foyerId, jour, moment, ...valeurs })
+    .onConflictDoUpdate({ target: [tSemaine.foyerId, tSemaine.jour, tSemaine.moment], set: valeurs });
 }

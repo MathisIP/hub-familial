@@ -83,6 +83,31 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.4, PAS 1.4.0. Malgré
+    // la règle générale (une vraie fonctionnalité incrémente le chiffre du
+    // milieu), il a choisi de continuer la séquence des correctifs 1.3.x pour
+    // celle-ci et les suivantes. Ne pas « corriger » vers un mineur sans lui
+    // reposer la question — c'est justement ce qu'il a demandé de refaire à
+    // chaque prochaine version : lui demander comment il veut l'annoncer.
+    id: '2026-09-02',
+    numero: '1.3.4',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Un repas de midi, en plus du soir',
+    resume:
+      'La planification de la semaine distingue désormais midi et soir, avec un menu propre à chacun.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Planifier un repas de midi, en plus de celui du soir.',
+        texte:
+          'Un onglet « Midi / Soir » au-dessus du planning de la semaine bascule entre les deux — chaque jour garde un menu propre à chaque moment, sans les afficher l’un sur l’autre.',
+        detail:
+          'La liste de courses reste unique : elle réunit les repas de midi et du soir de la semaine.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01-4',
     numero: '1.3.3',
     date: '1er septembre 2026',

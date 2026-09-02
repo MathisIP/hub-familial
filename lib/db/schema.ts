@@ -629,6 +629,13 @@ export const semaine = pgTable(
       .notNull()
       .references(() => foyers.id, { onDelete: 'cascade' }),
     jour: text('jour').notNull(), // Lundi … Dimanche
+    /**
+     * ⚠ AJOUTÉ LE 02/09/2026 — un jour peut désormais porter DEUX menus :
+     * midi et soir. `'soir'` en défaut pour que les lignes déjà en base (avant
+     * cette colonne) restent exactement ce qu'elles étaient : un dîner, sans
+     * migration de données à écrire.
+     */
+    moment: text('moment').notNull().default('soir'),
     // Menu du jour en 3 services. `diner` (historique) reste comme repli du `plat`.
     entree: text('entree').notNull().default(''),
     plat: text('plat').notNull().default(''),
@@ -639,7 +646,9 @@ export const semaine = pgTable(
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique('semaine_foyer_jour').on(t.foyerId, t.jour),
+    // ⚠ ÉTENDUE AU MOMENT (02/09/2026) : un jour a maintenant droit à une
+    // ligne « midi » ET une ligne « soir », plus une seule.
+    unique('semaine_foyer_jour_moment').on(t.foyerId, t.jour, t.moment),
     index('semaine_foyer_idx').on(t.foyerId),
   ],
 );

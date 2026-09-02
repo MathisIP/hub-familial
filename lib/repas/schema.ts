@@ -26,6 +26,15 @@
  */
 export const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'] as const;
 
+/**
+ * ⚠ AJOUTÉS LE 02/09/2026. Un jour a désormais deux menus possibles, choisis
+ * par un onglet GLOBAL au-dessus du planning — pas un doublement des 7 lignes
+ * à l'écran. `'soir'` reste le défaut : c'est ce que portaient déjà toutes
+ * les semaines planifiées avant cette fonctionnalité.
+ */
+export const MOMENTS = ['midi', 'soir'] as const;
+export type Moment = (typeof MOMENTS)[number];
+
 export const UNITES = [
   'g', 'kg', 'ml', 'L', 'pièce(s)', 'c. à soupe', 'c. à café',
   'pincée', 'sachet', 'boîte', 'tranche(s)',
@@ -64,6 +73,7 @@ export type Service = (typeof SERVICES)[number];
 
 export type JourRepas = {
   jour: string; // Lundi … Dimanche — identifiant du jour
+  moment: Moment; // midi ou soir
   entree: string; // nom de recette (ou texte libre)
   plat: string;
   dessert: string;
@@ -73,6 +83,12 @@ export type JourRepas = {
 
 export type DonneesRepas = {
   recettes: Recette[];
+  /**
+   * ⚠ 14 ENTRÉES POSSIBLES, PAS 7 (02/09/2026) : un jour ↔ moment par ligne
+   * (Lundi midi, Lundi soir, Mardi midi, …). Le composant filtre sur le
+   * `moment` de l'onglet actif, ce tableau ne le fait pas — il porte
+   * TOUJOURS les deux moments, complets.
+   */
   semaine: JourRepas[];
   unites: string[];
   types: string[];

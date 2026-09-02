@@ -83,6 +83,26 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    // ⚠ NUMÉRO À CONFIRMER AU MOMENT DE LA FUSION DANS `main`. Branche
+    // feature/modifier-tache-clic, indépendante de fix/suppression-article-
+    // courses (1.3.3) et feature/repas-midi (1.4.0), toutes deux pas encore
+    // fusionnées : le numéro définitif dépend de l'ordre réel de fusion.
+    id: '2026-09-02-2',
+    numero: '1.4.0',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Modifier une tâche en un clic',
+    resume: 'Cliquer le titre d’une tâche ouvre désormais son édition, sans passer par une suppression.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Modifier une tâche en cliquant sur son titre.',
+        texte:
+          'Le titre, la personne assignée, la priorité, la catégorie, l’échéance et la récurrence se modifient directement, sans supprimer la tâche pour la recréer.',
+      },
+    ],
+  },
+  {
     id: '2026-09-01-2',
     numero: '1.3.2',
     date: '1er septembre 2026',

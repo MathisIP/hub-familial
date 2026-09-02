@@ -412,6 +412,16 @@ a { color: var(--link-tx); }
 .tache.retard { border-color: var(--over-tx); }
 
 .tache .titre-tache { font-weight: 600; flex: 1 1 12rem; }
+/* Le titre-bouton reprend le style du span qu'il remplace, plus un signal
+   d'interactivité discret : la ligne entière ne doit pas avoir l'air d'un
+   bouton, seul le titre l'est. */
+.titre-tache-bouton {
+  background: none; border: 0; padding: 0; margin: 0; font: inherit; text-align: left;
+  color: inherit; cursor: pointer; border-radius: .3rem;
+}
+.titre-tache-bouton:hover, .titre-tache-bouton:focus-visible {
+  text-decoration: underline; text-underline-offset: .18em;
+}
 .tache .meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
 
 .puce {
@@ -464,6 +474,7 @@ a { color: var(--link-tx); }
 /* Champ « quantité » plus étroit dans le formulaire d'ajout/édition. */
 .ajout .champ-qte { flex: 0 1 8.5rem; }
 .ajout.course-edit { margin-bottom: 0; }
+.ajout.tache-edit { margin-bottom: 0; }
 
 .rayon-groupe { margin-bottom: var(--e-5); }
 .rayon-titre {

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   ajouterTache,
   changerStatutTache,
+  modifierTache,
   supprimerTache,
   viderTachesFaites,
   type NouvelleTache,
@@ -24,14 +25,29 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** PATCH /api/todo/taches — change le statut d'une tâche { id, statut }. */
+/**
+ * PATCH /api/todo/taches — deux gestes distincts sur la même route :
+ *  - { id, statut } change le statut (régénère l'occurrence suivante si
+ *    la tâche est récurrente et passe à « Fait » — voir changerStatutTache) ;
+ *  - { id, ...champs } modifie les champs descriptifs (titre, assigné,
+ *    priorité, catégorie, échéance, récurrence, note), jamais le statut.
+ * `statut` distingue les deux : sa présence prime, pour ne jamais faire
+ * silencieusement les deux à la fois sur un corps mal formé.
+ */
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, statut } = (await req.json()) as { id?: string; statut?: string };
-    if (typeof id !== 'string' || id === '' || !statut?.trim()) {
-      return NextResponse.json({ erreur: 'Paramètres { id, statut } requis.' }, { status: 400 });
+    const { id, statut, ...champs } = (await req.json()) as { id?: string; statut?: string } & Record<
+      string,
+      unknown
+    >;
+    if (typeof id !== 'string' || id === '') {
+      return NextResponse.json({ erreur: 'Paramètre { id } requis.' }, { status: 400 });
     }
-    await changerStatutTache(id, statut);
+    if (typeof statut === 'string' && statut.trim()) {
+      await changerStatutTache(id, statut);
+      return NextResponse.json({ ok: true });
+    }
+    await modifierTache(id, champs);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return reponseErreur(e);

@@ -135,6 +135,7 @@ function OngletTaches({
   const [echeance, setEcheance] = useState('');
   const [recurrence, setRecurrence] = useState('');
   const [filtrePersonne, setFiltrePersonne] = useState('');
+  const [edite, setEdite] = useState<string | null>(null);
 
   // La valeur « commune » (Les deux / Nous deux) et les personnes individuelles.
   const nbFaites = taches.filter((t) => t.statut === STATUT_FAIT).length;
@@ -309,50 +310,80 @@ function OngletTaches({
         </p>
       ) : (
         <ul className="liste multi">
-          {tachesAffichees.map((t) => (
-            <li
-              key={t.id}
-              className={`tache${t.statut === STATUT_FAIT ? ' faite' : ''}${t.enRetard ? ' retard' : ''}`}
-            >
-              <span className="titre-tache">{t.tache}</span>
-              <span className="meta">
-                {t.priorite && (
-                  <span className={`puce prio-${accent(t.priorite)}`}>{tEnum(CLE_PRIORITE, t.priorite, langue)}</span>
-                )}
-                {t.assigne && <span className="puce assigne">{t.assigne}</span>}
-                {t.categorie && <span className="puce categorie">{t.categorie}</span>}
-                {t.echeanceLabel && (
-                  <span className={`puce echeance${t.enRetard ? ' retard' : ''}`}>
-                    {t.enRetard ? '⚠ ' : ''}{t.echeanceLabel}
-                  </span>
-                )}
-                {t.recurrence && t.recurrence !== 'Aucune' && (
-                  <span className="puce categorie">↻ {t.recurrence}</span>
-                )}
-              </span>
-              <Liste
-                className="statut"
-                valeur={t.statut}
-                disabled={occupe}
-                onChange={(v) => changerStatut(t.id, v)}
-                options={params.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_TODO, s, langue) }))}
-                ariaLabel={`Statut de « ${t.tache} »`}
-              />
-              {/* ⚠ Toujours présent, pas seulement sur les tâches faites : on
-                  supprime aussi une tâche saisie par erreur, ou devenue sans
-                  objet. La réserver aux « faites » obligerait à cocher une
-                  tâche qu'on n'a jamais faite pour pouvoir l'effacer. */}
-              <button
-                type="button"
-                className="bouton discret tache-suppr"
-                onClick={() => supprimer(t)}
-                disabled={occupe}
-                aria-label={`${tr('TODO_SUPPRIMER')} ${t.tache}`}
+          {tachesAffichees.map((t) =>
+            edite === t.id ? (
+              <li key={t.id}>
+                <EditionTache
+                  tache={t}
+                  params={params}
+                  occupe={occupe}
+                  onAnnuler={() => setEdite(null)}
+                  onEnregistrer={(corps) =>
+                    action(() =>
+                      fetch('/api/todo/taches', { ...json({ id: t.id, ...corps }), method: 'PATCH' }),
+                    ).then(() => setEdite(null))
+                  }
+                />
+              </li>
+            ) : (
+              <li
+                key={t.id}
+                className={`tache${t.statut === STATUT_FAIT ? ' faite' : ''}${t.enRetard ? ' retard' : ''}`}
               >
-                ✕
-              </button>
-            </li>
-          ))}
+                {/*
+                  ⚠ CLIQUER LE TITRE OUVRE L'ÉDITION (02/09/2026). Le statut et
+                  la suppression restent leurs propres contrôles, à part : un
+                  `<button>` autour de toute la ligne aurait imbriqué un
+                  `<select>` et un second bouton dans un bouton, invalide en
+                  HTML et confus au clavier. Seul le titre déclenche l'édition.
+                */}
+                <button
+                  type="button"
+                  className="titre-tache titre-tache-bouton"
+                  onClick={() => setEdite(t.id)}
+                  disabled={occupe}
+                >
+                  {t.tache}
+                </button>
+                <span className="meta">
+                  {t.priorite && (
+                    <span className={`puce prio-${accent(t.priorite)}`}>{tEnum(CLE_PRIORITE, t.priorite, langue)}</span>
+                  )}
+                  {t.assigne && <span className="puce assigne">{t.assigne}</span>}
+                  {t.categorie && <span className="puce categorie">{t.categorie}</span>}
+                  {t.echeanceLabel && (
+                    <span className={`puce echeance${t.enRetard ? ' retard' : ''}`}>
+                      {t.enRetard ? '⚠ ' : ''}{t.echeanceLabel}
+                    </span>
+                  )}
+                  {t.recurrence && t.recurrence !== 'Aucune' && (
+                    <span className="puce categorie">↻ {t.recurrence}</span>
+                  )}
+                </span>
+                <Liste
+                  className="statut"
+                  valeur={t.statut}
+                  disabled={occupe}
+                  onChange={(v) => changerStatut(t.id, v)}
+                  options={params.statuts.map((s) => ({ valeur: s, libelle: tEnum(CLE_STATUT_TODO, s, langue) }))}
+                  ariaLabel={`Statut de « ${t.tache} »`}
+                />
+                {/* ⚠ Toujours présent, pas seulement sur les tâches faites : on
+                    supprime aussi une tâche saisie par erreur, ou devenue sans
+                    objet. La réserver aux « faites » obligerait à cocher une
+                    tâche qu'on n'a jamais faite pour pouvoir l'effacer. */}
+                <button
+                  type="button"
+                  className="bouton discret tache-suppr"
+                  onClick={() => supprimer(t)}
+                  disabled={occupe}
+                  aria-label={`${tr('TODO_SUPPRIMER')} ${t.tache}`}
+                >
+                  ✕
+                </button>
+              </li>
+            ),
+          )}
         </ul>
       )}
 
@@ -367,6 +398,110 @@ function OngletTaches({
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Édition inline d'une tâche (titre, assigné, priorité, catégorie, échéance,
+ * récurrence) — mêmes champs que le formulaire d'ajout, même motif que
+ * `EditionCourse` plus bas. Le statut ne s'édite PAS ici : il reste le
+ * sélecteur dédié de la ligne normale (`changerStatut`), seul chemin qui
+ * régénère une occurrence récurrente.
+ */
+function EditionTache({
+  tache,
+  params,
+  occupe,
+  onAnnuler,
+  onEnregistrer,
+}: {
+  tache: Tache;
+  params: Parametres;
+  occupe: boolean;
+  onAnnuler: () => void;
+  onEnregistrer: (corps: {
+    tache: string;
+    assigne: string;
+    categorie: string;
+    priorite: string;
+    echeanceLabel: string;
+    recurrence: string;
+  }) => void;
+}) {
+  const tr = useT();
+  const langue = useLangue();
+  const [titre, setTitre] = useState(tache.tache);
+  const [assigne, setAssigne] = useState(tache.assigne);
+  const [priorite, setPriorite] = useState(tache.priorite);
+  const [categorie, setCategorie] = useState(tache.categorie);
+  const [echeance, setEcheance] = useState(tache.echeanceLabel);
+  const [recurrence, setRecurrence] = useState(tache.recurrence);
+
+  function soumettre(e: React.FormEvent) {
+    e.preventDefault();
+    if (!titre.trim()) return;
+    onEnregistrer({
+      tache: titre.trim(),
+      assigne,
+      categorie,
+      priorite,
+      echeanceLabel: echeance,
+      recurrence: recurrence || 'Aucune',
+    });
+  }
+
+  return (
+    <form className="ajout tache-edit" onSubmit={soumettre}>
+      <input
+        className="champ"
+        value={titre}
+        onChange={(e) => setTitre(e.target.value)}
+        aria-label={tr('TODO_NOUVELLE_TACHE')}
+        autoFocus
+      />
+      <Combobox
+        value={assigne}
+        onChange={setAssigne}
+        options={params.personnes}
+        placeholder={tr('TODO_QUI')}
+        ariaLabel={tr('TODO_QUI')}
+        note={tr('TODO_QUI_AUTRE')}
+      />
+      <Liste
+        valeur={priorite}
+        onChange={setPriorite}
+        options={params.priorites.map((p) => ({ valeur: p, libelle: tEnum(CLE_PRIORITE, p, langue) }))}
+        placeholder={tr('TODO_PRIORITE')}
+        ariaLabel={tr('TODO_PRIORITE')}
+      />
+      <Combobox
+        value={categorie}
+        onChange={setCategorie}
+        options={params.categories}
+        placeholder={tr('TODO_CATEGORIE')}
+        ariaLabel={tr('TODO_CATEGORIE')}
+      />
+      <ChampDate
+        className="champ champ-echeance"
+        placeholder={tr('TODO_ECHEANCE_PH')}
+        value={echeance}
+        onChange={setEcheance}
+        ariaLabel={tr('TODO_ECHEANCE')}
+      />
+      <Liste
+        valeur={recurrence}
+        onChange={setRecurrence}
+        options={params.recurrences.map((r) => ({ valeur: r, libelle: r }))}
+        placeholder={tr('TODO_RECURRENCE')}
+        ariaLabel={tr('TODO_RECURRENCE')}
+      />
+      <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
+        {tr('G_OK')}
+      </button>
+      <button type="button" className="bouton discret" onClick={onAnnuler} disabled={occupe}>
+        {tr('G_ANNULER')}
+      </button>
+    </form>
   );
 }
 

@@ -83,12 +83,28 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
-    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.4, PAS 1.4.0. Malgré
-    // la règle générale (une vraie fonctionnalité incrémente le chiffre du
-    // milieu), il a choisi de continuer la séquence des correctifs 1.3.x pour
-    // celle-ci et les suivantes. Ne pas « corriger » vers un mineur sans lui
-    // reposer la question — c'est justement ce qu'il a demandé de refaire à
-    // chaque prochaine version : lui demander comment il veut l'annoncer.
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.5. La séquence des
+    // correctifs 1.3.x continue pour cette version et celles à venir, plutôt
+    // que d'incrémenter le chiffre mineur comme le voudrait la règle générale
+    // (une vraie fonctionnalité = mineur) — décision explicite, à reposer en
+    // question à chaque nouvelle version plutôt qu'à appliquer par défaut.
+    id: '2026-09-02-2',
+    numero: '1.3.5',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Modifier une tâche en un clic',
+    resume: 'Cliquer le titre d’une tâche ouvre désormais son édition, sans passer par une suppression.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Modifier une tâche en cliquant sur son titre.',
+        texte:
+          'Le titre, la personne assignée, la priorité, la catégorie, l’échéance et la récurrence se modifient directement, sans supprimer la tâche pour la recréer.',
+      },
+    ],
+  },
+  {
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.4, PAS 1.4.0.
     id: '2026-09-02',
     numero: '1.3.4',
     date: '2 septembre 2026',

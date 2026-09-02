@@ -204,6 +204,51 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
 }
 
 /**
+ * Modifie les champs descriptifs d'une tâche (titre, assigné, priorité,
+ * catégorie, échéance, récurrence, note) — jamais le statut.
+ *
+ * ⚠ LE STATUT N'EST VOLONTAIREMENT PAS ICI. `changerStatutTache` porte la
+ * logique de régénération des tâches récurrentes (une tâche cochée « Fait »
+ * engendre la suivante) : la dupliquer ici, ou pire, l'oublier en laissant
+ * cette fonction toucher aussi au statut, créerait deux chemins qui peuvent
+ * diverger. Modifier le titre d'une tâche ne doit jamais, par accident,
+ * engendrer une occurrence.
+ */
+export async function modifierTache(
+  id: string,
+  champs: {
+    tache?: string;
+    assigne?: string;
+    categorie?: string;
+    priorite?: string;
+    echeanceLabel?: string;
+    recurrence?: string;
+    note?: string;
+  },
+): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const set: Partial<typeof tTaches.$inferInsert> = {};
+  if (champs.tache !== undefined) {
+    const titre = champs.tache.trim();
+    if (!titre) throw new ErreurValidation('Le titre de la tâche est requis.');
+    set.tache = titre;
+  }
+  if (champs.assigne !== undefined) set.assigne = champs.assigne.trim();
+  if (champs.categorie !== undefined) set.categorie = champs.categorie.trim();
+  if (champs.priorite !== undefined) set.priorite = champs.priorite.trim();
+  if (champs.echeanceLabel !== undefined) set.echeance = champs.echeanceLabel.trim();
+  if (champs.recurrence !== undefined) set.recurrence = champs.recurrence.trim() || 'Aucune';
+  if (champs.note !== undefined) set.note = champs.note.trim();
+  if (Object.keys(set).length === 0) return;
+  const res = await db()
+    .update(tTaches)
+    .set(set)
+    .where(and(eq(tTaches.id, id), eq(tTaches.foyerId, foyerId)))
+    .returning({ id: tTaches.id });
+  if (res.length === 0) throw new ErreurValidation('Tâche introuvable.');
+}
+
+/**
  * Supprime une tâche.
  *
  * ⚠ SUPPRESSION RÉELLE, pas un archivage. Une tâche faite dont on ne veut plus

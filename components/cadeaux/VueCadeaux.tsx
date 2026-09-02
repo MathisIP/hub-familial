@@ -7,6 +7,7 @@ import { useT, useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_STATUT_CADEAU } from '@/lib/i18n';
 import { formatEuro } from '@/lib/argent';
 import {
+  estLienValide,
   estProche,
   STATUT_OFFERT,
   type Cadeau,
@@ -110,7 +111,26 @@ export default function VueCadeaux({ initial }: { initial: DonneesCadeaux }) {
               ) : (
                 <li key={c.id} className={`cadeau${c.statut === STATUT_OFFERT ? ' offert' : ''}`}>
                   <div className="cad-principal">
-                    <span className="cad-idee">{c.idee}</span>
+                    {/*
+                      ⚠ LIEN CLIQUABLE UNIQUEMENT S'IL EST VALIDE (02/09/2026).
+                      `estLienValide` exige un schéma http(s) explicite — un
+                      texte saisi sans schéma resterait un `<a href>` relatif à
+                      Nestync, cassé silencieusement. `rel="noopener noreferrer"`
+                      : la page ouverte ne doit ni connaître Nestync via
+                      `window.opener`, ni hériter du contexte de navigation.
+                    */}
+                    {c.lien && estLienValide(c.lien) ? (
+                      <a
+                        className="cad-idee cad-idee-lien"
+                        href={c.lien}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {c.idee} ↗
+                      </a>
+                    ) : (
+                      <span className="cad-idee">{c.idee}</span>
+                    )}
                     <span className="cad-meta">
                       {c.pourQui && <span className="puce assigne">{tr('CAD_POUR')} {c.pourQui}</span>}
                       {/* Rappel de la surprise : si on ne montre pas à qui le
@@ -249,11 +269,12 @@ function CadeauForm({
   const [participation, setParticipation] = useState(cadeau?.participation ?? '');
   const [offertPar, setOffertPar] = useState(cadeau?.offertPar ?? '');
   const [ou, setOu] = useState(cadeau?.ou ?? '');
+  const [lien, setLien] = useState(cadeau?.lien ?? '');
   const [note, setNote] = useState(cadeau?.note ?? '');
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
-    onEnregistrerAction({ idee, pourQui, masqueA, occasion, statut, budgetPrevu, prixPaye, partage, participation, offertPar, ou, note });
+    onEnregistrerAction({ idee, pourQui, masqueA, occasion, statut, budgetPrevu, prixPaye, partage, participation, offertPar, ou, lien, note });
   }
 
   return (
@@ -277,6 +298,17 @@ function CadeauForm({
         <input className="champ" inputMode="decimal" placeholder={partage ? tr('CAD_COUT_PH') : tr('CAD_PRIX_PH')} value={prixPaye} onChange={(e) => setPrixPaye(e.target.value)} disabled={occupe} />
         <Combobox value={offertPar} onChange={setOffertPar} options={d.offertPar} placeholder={tr('CAD_OFFERT_PAR')} disabled={occupe} ariaLabel={tr('CAD_OFFERT_PAR')} />
         <input className="champ" placeholder={tr('CAD_OU_PH')} value={ou} onChange={(e) => setOu(e.target.value)} disabled={occupe} />
+      </div>
+      <div className="rf-ligne1">
+        <input
+          className="champ champ-lien"
+          type="url"
+          placeholder={tr('CAD_LIEN_PH')}
+          value={lien}
+          onChange={(e) => setLien(e.target.value)}
+          disabled={occupe}
+        />
+        <Astuce texte={tr('AIDE_LIEN_CADEAU')} />
       </div>
       <div className="rf-ligne1">
         <label className="rf-check">

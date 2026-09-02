@@ -185,6 +185,7 @@ function valeurs(c: ChampsCadeau) {
     participation: c.participation ?? '',
     offertPar: c.offertPar ?? '',
     ou: c.ou ?? '',
+    lien: (c.lien ?? '').trim(),
     note: c.note ?? '',
   };
 }

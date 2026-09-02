@@ -498,6 +498,17 @@ export const cadeaux = pgTable(
     participation: text('participation').notNull().default(''),
     offertPar: text('offert_par').notNull().default(''),
     ou: text('ou').notNull().default(''),
+    /**
+     * ⚠ AJOUTÉ LE 02/09/2026. Lien vers la page du cadeau (boutique en ligne,
+     * fiche produit…) — texte libre, jamais validé comme une vraie URL : un
+     * lien collé depuis une appli de shopping peut porter des paramètres de
+     * tracking imprévisibles, le refuser sur un motif serait plus gênant
+     * qu'utile. Affiché comme lien cliquable seulement s'il commence par
+     * `http://` ou `https://` (voir `estLienValide` dans schema.ts) — sinon
+     * un texte saisi par erreur (« amazon.fr/xyz » sans schéma) resterait un
+     * `<a href>` relatif à Nestync, cassé silencieusement.
+     */
+    lien: text('lien').notNull().default(''),
     note: text('note').notNull().default(''),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },

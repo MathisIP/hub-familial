@@ -83,11 +83,23 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
-    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.5. La séquence des
-    // correctifs 1.3.x continue pour cette version et celles à venir, plutôt
-    // que d'incrémenter le chiffre mineur comme le voudrait la règle générale
-    // (une vraie fonctionnalité = mineur) — décision explicite, à reposer en
-    // question à chaque nouvelle version plutôt qu'à appliquer par défaut.
+    id: '2026-09-02-3',
+    numero: '1.3.6',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Un lien vers le cadeau, cliquable',
+    resume: 'Le champ « Où » d’un cadeau accepte désormais un lien, qui devient cliquable dans la liste.',
+    changements: [
+      {
+        nature: 'ameliore',
+        titre: 'Un lien vers le cadeau devient cliquable dans la liste.',
+        texte:
+          'Un nouveau champ dédié accueille l’adresse de la page du cadeau (boutique en ligne, fiche produit…). Une fois enregistré, le nom du cadeau devient un lien qui ouvre directement cette page.',
+      },
+    ],
+  },
+  {
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.5.
     id: '2026-09-02-2',
     numero: '1.3.5',
     date: '2 septembre 2026',

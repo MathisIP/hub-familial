@@ -30,6 +30,8 @@ export type Cadeau = {
   depenseNum: number; // dépense réelle du foyer = partage ? participationNum : payeNum
   offertPar: string;
   ou: string;
+  /** Lien vers la page du cadeau (texte libre — voir `estLienValide`). */
+  lien: string;
   note: string;
 };
 
@@ -73,10 +75,22 @@ export type ChampsCadeau = {
   participation?: string;
   offertPar?: string;
   ou?: string;
+  lien?: string;
   note?: string;
 };
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
+
+/**
+ * Un lien n'est rendu cliquable que s'il commence par `http://` ou
+ * `https://` — jamais validé plus finement (voir la colonne DB pour le
+ * pourquoi). Un texte saisi sans schéma (« amazon.fr/xyz ») reste affiché
+ * comme texte simple plutôt que comme un `<a href>` relatif à Nestync,
+ * cassé silencieusement.
+ */
+export function estLienValide(lien: string): boolean {
+  return /^https?:\/\//i.test(lien.trim());
+}
 
 /** Construit un Cadeau (avec montants numériques) depuis une ligne de base. */
 export function construireCadeau(r: {
@@ -92,6 +106,7 @@ export function construireCadeau(r: {
   participation: string;
   offertPar: string;
   ou: string;
+  lien: string;
   note: string;
 }): Cadeau {
   const payeNum = parseEuro(r.prixPaye);
@@ -114,6 +129,7 @@ export function construireCadeau(r: {
     depenseNum: r.partage ? participationNum : payeNum,
     offertPar: r.offertPar,
     ou: r.ou,
+    lien: r.lien,
     note: r.note,
   };
 }

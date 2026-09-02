@@ -83,13 +83,14 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
-    // ⚠ NUMÉRO À CONFIRMER AU MOMENT DE LA FUSION DANS `main`. Cette branche
-    // (feature/repas-midi) est indépendante de fix/suppression-article-courses
-    // (1.3.3, pas encore fusionnée) : le numéro définitif dépend de l'ordre
-    // réel de fusion. Une vraie fonctionnalité incrémente le chiffre du
-    // milieu (mineur), pas le dernier.
+    // ⚠ NUMÉRO FIXÉ PAR L'UTILISATEUR (02/09/2026) : 1.3.4, PAS 1.4.0. Malgré
+    // la règle générale (une vraie fonctionnalité incrémente le chiffre du
+    // milieu), il a choisi de continuer la séquence des correctifs 1.3.x pour
+    // celle-ci et les suivantes. Ne pas « corriger » vers un mineur sans lui
+    // reposer la question — c'est justement ce qu'il a demandé de refaire à
+    // chaque prochaine version : lui demander comment il veut l'annoncer.
     id: '2026-09-02',
-    numero: '1.4.0',
+    numero: '1.3.4',
     date: '2 septembre 2026',
     dateISO: '2026-09-02',
     titre: 'Un repas de midi, en plus du soir',

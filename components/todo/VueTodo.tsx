@@ -11,6 +11,7 @@ import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
 import { STATUT_FAIT } from '@/lib/todo/schema';
 import Astuce from '@/components/Astuce';
 import ValiderCourses from '@/components/todo/ValiderCourses';
+import FormulaireTache from '@/components/todo/FormulaireTache';
 
 /**
  * Écran To-Do complet (client). Reçoit un premier chargement rendu côté serveur
@@ -128,14 +129,17 @@ function OngletTaches({
 }) {
   const tr = useT();
   const langue = useLangue();
-  const [titre, setTitre] = useState('');
-  const [assigne, setAssigne] = useState('');
-  const [priorite, setPriorite] = useState('');
-  const [categorie, setCategorie] = useState('');
-  const [echeance, setEcheance] = useState('');
-  const [recurrence, setRecurrence] = useState('');
   const [filtrePersonne, setFiltrePersonne] = useState('');
   const [edite, setEdite] = useState<string | null>(null);
+  /**
+   * ⚠ REMPLACE LES SIX `useState` DU FORMULAIRE (02/09/2026). Il restait
+   * déplié en permanence en haut de l'onglet, avant même d'avoir une tâche à
+   * ajouter — signalé comme prenant trop de place à l'écran. Le formulaire
+   * lui-même vit maintenant dans FormulaireTache.tsx (fenêtre), avec son
+   * propre état ; ce composant n'a plus besoin que de savoir si elle est
+   * ouverte.
+   */
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
 
   // La valeur « commune » (Les deux / Nous deux) et les personnes individuelles.
   const nbFaites = taches.filter((t) => t.statut === STATUT_FAIT).length;
@@ -148,34 +152,22 @@ function OngletTaches({
     : taches;
 
   /**
-   * ⚠ LE FORMULAIRE N'ENVOYAIT QUE TROIS CHAMPS SUR SIX (25/08/2026). Les lignes
-   * affichent la catégorie, l'échéance et la récurrence ; le service et la base
-   * les acceptaient déjà — seule la saisie manquait. On voyait donc des
-   * informations qu'on ne pouvait pas renseigner, et il fallait créer la tâche
-   * puis la rouvrir pour les compléter.
+   * Ajoute la tâche depuis la fenêtre (FormulaireTache) et la referme.
+   *
+   * ⚠ Les 6 champs partent tous, comme avant (25/08/2026) : la catégorie,
+   * l'échéance et la récurrence sont acceptées par le service depuis
+   * longtemps, seule la saisie a bougé de forme (fenêtre au lieu d'un
+   * formulaire toujours déplié).
    */
-  function ajouter(e: React.FormEvent) {
-    e.preventDefault();
-    if (!titre.trim()) return;
-    const corps = {
-      tache: titre.trim(),
-      assigne,
-      priorite,
-      categorie,
-      echeanceLabel: echeance,
-      // ⚠ `'Aucune'` et non `''` : le service ne comble le défaut que sur
-      // `null`/`undefined`, pas sur une chaîne vide. Sans ça, les tâches créées
-      // ici porteraient une récurrence vide là où toutes les autres portent
-      // « Aucune » — deux façons de dire la même chose dans la même colonne.
-      recurrence: recurrence || 'Aucune',
-    };
-    setTitre('');
-    setEcheance('');
-    // ⚠ Assigné, priorité, catégorie et récurrence NE SONT PAS réinitialisés :
-    // on saisit presque toujours plusieurs tâches de suite pour la même
-    // personne ou le même sujet. Le titre et l'échéance, eux, changent à chaque
-    // fois — les garder ferait recopier une date sur la tâche suivante.
-    action(() => fetch('/api/todo/taches', json(corps)));
+  function ajouter(corps: {
+    tache: string;
+    assigne: string;
+    priorite: string;
+    categorie: string;
+    echeanceLabel: string;
+    recurrence: string;
+  }) {
+    action(() => fetch('/api/todo/taches', json(corps))).then(() => setAjoutOuvert(false));
   }
 
   /**
@@ -218,65 +210,27 @@ function OngletTaches({
 
   return (
     <>
-      <form className="ajout" onSubmit={ajouter}>
-        <input
-          className="champ"
-          placeholder={tr('TODO_NOUVELLE_TACHE')}
-          value={titre}
-          onChange={(e) => setTitre(e.target.value)}
-          aria-label={tr('TODO_NOUVELLE_TACHE')}
+      {/*
+        ⚠ BOUTON + FENÊTRE, PLUS UN FORMULAIRE TOUJOURS DÉPLIÉ (02/09/2026).
+        Les 6 champs occupaient en permanence le haut de l'écran, même sans
+        rien à ajouter. Même motif que Repas/Cadeaux : un bouton qui ouvre une
+        fenêtre à la demande (FormulaireTache.tsx).
+      */}
+      {!ajoutOuvert && (
+        <div className="saisie-barre">
+          <button className="bouton" onClick={() => setAjoutOuvert(true)} disabled={occupe}>
+            ＋ {tr('TODO_NOUVELLE_TACHE')}
+          </button>
+        </div>
+      )}
+      {ajoutOuvert && (
+        <FormulaireTache
+          params={params}
+          occupe={occupe}
+          onFermer={() => setAjoutOuvert(false)}
+          onAjouterAction={ajouter}
         />
-        {/* Les membres du foyer d'abord, puis les noms déjà employés.
-            `note` dit qu'on peut assigner quelqu'un d'extérieur — la liste
-            ressemble sinon à un choix fermé. */}
-        <Combobox
-          value={assigne}
-          onChange={setAssigne}
-          options={params.personnes}
-          placeholder={tr('TODO_QUI')}
-          ariaLabel={tr('TODO_QUI')}
-          note={tr('TODO_QUI_AUTRE')}
-        />
-        <Liste
-          valeur={priorite}
-          onChange={setPriorite}
-          options={params.priorites.map((p) => ({ valeur: p, libelle: tEnum(CLE_PRIORITE, p, langue) }))}
-          placeholder={tr('TODO_PRIORITE')}
-          ariaLabel={tr('TODO_PRIORITE')}
-        />
-        {/* Catégorie en saisie LIBRE : la liste est dérivée des tâches
-            existantes, donc vide dans un foyer qui démarre. Un sélecteur fermé
-            y bloquerait la première saisie. */}
-        <Combobox
-          value={categorie}
-          onChange={setCategorie}
-          options={params.categories}
-          placeholder={tr('TODO_CATEGORIE')}
-          ariaLabel={tr('TODO_CATEGORIE')}
-        />
-        {/* ⚠ Champ TEXTE et non `type="date"` : l'échéance est stockée en
-            « jj/mm/aaaa », format hérité du classeur d'origine. Un sélecteur de
-            date renverrait « aaaa-mm-jj » et les tâches se trieraient de
-            travers sans que rien ne le signale.
-            Les « / » sont posés automatiquement — voir ChampDate. */}
-        <ChampDate
-          className="champ champ-echeance"
-          placeholder={tr('TODO_ECHEANCE_PH')}
-          value={echeance}
-          onChange={setEcheance}
-          ariaLabel={tr('TODO_ECHEANCE')}
-        />
-        <Liste
-          valeur={recurrence}
-          onChange={setRecurrence}
-          options={params.recurrences.map((r) => ({ valeur: r, libelle: r }))}
-          placeholder={tr('TODO_RECURRENCE')}
-          ariaLabel={tr('TODO_RECURRENCE')}
-        />
-        <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
-          {tr('G_AJOUTER')}
-        </button>
-      </form>
+      )}
 
       {individus.length > 1 && (
         <div className="filtre-personnes" role="tablist" aria-label="Filtrer par personne">

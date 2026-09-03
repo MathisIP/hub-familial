@@ -477,6 +477,11 @@ a { color: var(--link-tx); }
 .ajout .champ-qte { flex: 0 1 8.5rem; }
 .ajout.course-edit { margin-bottom: 0; }
 .ajout.tache-edit { margin-bottom: 0; }
+/* Dans la fenêtre d'ajout de tâche (FormulaireTache.tsx) : les champs
+   s'empilent en colonne plutôt qu'en ligne, la fenêtre étant plus étroite
+   qu'un formulaire déplié en haut de page. */
+.ajout-modal { flex-direction: column; align-items: stretch; margin-bottom: 0; }
+.ajout-modal .champ { flex: 1 1 auto; }
 
 .rayon-groupe { margin-bottom: var(--e-5); }
 .rayon-titre {
@@ -2964,7 +2969,11 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * FICHE D'UNE RECETTE (popup) — components/repas/FicheRecette.tsx
+ * FENÊTRE MODALE GÉNÉRIQUE — `.fr-*`, malgré le nom (FicheRecette a été le
+ * premier écran à en avoir besoin). Réutilisée depuis le 02/09/2026 par
+ * FormulaireTache.tsx (module Todo) : le style ne dépend de rien de propre
+ * aux recettes, seulement d'un fond assombri + une carte centrée qui défile
+ * en elle-même. Créer un préfixe par écran aurait dupliqué ce même CSS.
  *
  * ⚠ Rendue en PORTAIL dans `document.body` : un ancêtre en `transform`
  * redéfinirait le référentiel de `position: fixed` et enfermerait la fiche

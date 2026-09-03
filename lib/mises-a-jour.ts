@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-02-4',
+    numero: '1.3.7',
+    date: '2 septembre 2026',
+    dateISO: '2026-09-02',
+    titre: 'Ajouter une tâche prend moins de place',
+    resume: 'Le formulaire d’ajout d’une tâche s’ouvre désormais dans une fenêtre, plutôt que de rester déplié en permanence.',
+    changements: [
+      {
+        nature: 'ameliore',
+        titre: 'Le formulaire d’ajout d’une tâche s’ouvre dans une fenêtre.',
+        texte:
+          'Il occupait le haut de l’onglet Tâches en permanence, même sans rien à ajouter. Un bouton « + Nouvelle tâche » ouvre maintenant les mêmes champs dans une fenêtre, comme pour les recettes et les cadeaux.',
+      },
+    ],
+  },
+  {
     id: '2026-09-02-3',
     numero: '1.3.6',
     date: '2 septembre 2026',

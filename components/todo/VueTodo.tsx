@@ -6,9 +6,10 @@ import Combobox from '@/components/Combobox';
 import ChampDate from '@/components/ChampDate';
 import { useT } from '@/components/I18nProvider';
 import { useLangue } from '@/components/I18nProvider';
-import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE } from '@/lib/i18n';
+import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE, CLE_JOUR } from '@/lib/i18n';
+import { JOURS } from '@/lib/repas/schema';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
-import { STATUT_FAIT } from '@/lib/todo/schema';
+import { STATUT_FAIT, JOURS_MOIS } from '@/lib/todo/schema';
 import Astuce from '@/components/Astuce';
 import ValiderCourses from '@/components/todo/ValiderCourses';
 import FormulaireTache from '@/components/todo/FormulaireTache';
@@ -166,6 +167,7 @@ function OngletTaches({
     categorie: string;
     echeanceLabel: string;
     recurrence: string;
+    recurrenceJour: string;
   }) {
     action(() => fetch('/api/todo/taches', json(corps))).then(() => setAjoutOuvert(false));
   }
@@ -311,7 +313,17 @@ function OngletTaches({
                     </span>
                   )}
                   {t.recurrence && t.recurrence !== 'Aucune' && (
-                    <span className="puce categorie">↻ {t.recurrence}</span>
+                    <span className="puce categorie">
+                      ↻ {t.recurrence}
+                      {t.recurrenceJour && (
+                        <>
+                          {' · '}
+                          {t.recurrence.toLowerCase() === 'hebdomadaire'
+                            ? tEnum(CLE_JOUR, t.recurrenceJour, langue)
+                            : t.recurrenceJour}
+                        </>
+                      )}
+                    </span>
                   )}
                 </span>
                 <Liste
@@ -380,6 +392,7 @@ function EditionTache({
     priorite: string;
     echeanceLabel: string;
     recurrence: string;
+    recurrenceJour: string;
   }) => void;
 }) {
   const tr = useT();
@@ -390,6 +403,14 @@ function EditionTache({
   const [categorie, setCategorie] = useState(tache.categorie);
   const [echeance, setEcheance] = useState(tache.echeanceLabel);
   const [recurrence, setRecurrence] = useState(tache.recurrence);
+  const [recurrenceJour, setRecurrenceJour] = useState(tache.recurrenceJour);
+
+  const rec = (recurrence || 'Aucune').toLowerCase();
+
+  function changerRecurrence(v: string) {
+    setRecurrence(v);
+    setRecurrenceJour('');
+  }
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
@@ -401,6 +422,7 @@ function EditionTache({
       priorite,
       echeanceLabel: echeance,
       recurrence: recurrence || 'Aucune',
+      recurrenceJour,
     });
   }
 
@@ -444,11 +466,29 @@ function EditionTache({
       />
       <Liste
         valeur={recurrence}
-        onChange={setRecurrence}
+        onChange={changerRecurrence}
         options={params.recurrences.map((r) => ({ valeur: r, libelle: r }))}
         placeholder={tr('TODO_RECURRENCE')}
         ariaLabel={tr('TODO_RECURRENCE')}
       />
+      {rec === 'hebdomadaire' && (
+        <Liste
+          valeur={recurrenceJour}
+          onChange={setRecurrenceJour}
+          options={JOURS.map((j) => ({ valeur: j, libelle: tEnum(CLE_JOUR, j, langue) }))}
+          placeholder={tr('TODO_RECURRENCE_JOUR_SEMAINE')}
+          ariaLabel={tr('TODO_RECURRENCE_JOUR_SEMAINE')}
+        />
+      )}
+      {rec === 'mensuelle' && (
+        <Liste
+          valeur={recurrenceJour}
+          onChange={setRecurrenceJour}
+          options={JOURS_MOIS.map((j) => ({ valeur: j, libelle: j }))}
+          placeholder={tr('TODO_RECURRENCE_JOUR_MOIS')}
+          ariaLabel={tr('TODO_RECURRENCE_JOUR_MOIS')}
+        />
+      )}
       <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
         {tr('G_OK')}
       </button>

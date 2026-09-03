@@ -6,8 +6,9 @@ import Combobox from '@/components/Combobox';
 import Liste from '@/components/Liste';
 import ChampDate from '@/components/ChampDate';
 import { useT, useLangue } from '@/components/I18nProvider';
-import { tEnum, CLE_PRIORITE } from '@/lib/i18n';
-import type { Parametres } from '@/lib/todo/schema';
+import { tEnum, CLE_PRIORITE, CLE_JOUR } from '@/lib/i18n';
+import { JOURS } from '@/lib/repas/schema';
+import { JOURS_MOIS, type Parametres } from '@/lib/todo/schema';
 
 /**
  * FENÊTRE D'AJOUT D'UNE TÂCHE — popup, ouverte depuis un bouton (+).
@@ -38,6 +39,7 @@ export default function FormulaireTache({
     categorie: string;
     echeanceLabel: string;
     recurrence: string;
+    recurrenceJour: string;
   }) => void;
 }) {
   const tr = useT();
@@ -48,6 +50,7 @@ export default function FormulaireTache({
   const [categorie, setCategorie] = useState('');
   const [echeance, setEcheance] = useState('');
   const [recurrence, setRecurrence] = useState('');
+  const [recurrenceJour, setRecurrenceJour] = useState('');
 
   // Échap ferme, comme partout ailleurs dans l'application.
   useEffect(() => {
@@ -57,6 +60,16 @@ export default function FormulaireTache({
   }, [onFermer]);
 
   if (typeof document === 'undefined') return null;
+
+  const rec = (recurrence || 'Aucune').toLowerCase();
+
+  function changerRecurrence(v: string) {
+    setRecurrence(v);
+    // Le jour choisi n'a de sens que pour LA récurrence pour laquelle il a été
+    // saisi : en changer sans le vider laisserait par exemple « Lundi »
+    // attaché à une récurrence devenue mensuelle, où « Lundi » ne veut rien dire.
+    setRecurrenceJour('');
+  }
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
@@ -71,6 +84,7 @@ export default function FormulaireTache({
       // `null`/`undefined`, pas sur une chaîne vide (même remarque que
       // l'ancien formulaire déplié).
       recurrence: recurrence || 'Aucune',
+      recurrenceJour,
     });
   }
 
@@ -139,11 +153,29 @@ export default function FormulaireTache({
           />
           <Liste
             valeur={recurrence}
-            onChange={setRecurrence}
+            onChange={changerRecurrence}
             options={params.recurrences.map((r) => ({ valeur: r, libelle: r }))}
             placeholder={tr('TODO_RECURRENCE')}
             ariaLabel={tr('TODO_RECURRENCE')}
           />
+          {rec === 'hebdomadaire' && (
+            <Liste
+              valeur={recurrenceJour}
+              onChange={setRecurrenceJour}
+              options={JOURS.map((j) => ({ valeur: j, libelle: tEnum(CLE_JOUR, j, langue) }))}
+              placeholder={tr('TODO_RECURRENCE_JOUR_SEMAINE')}
+              ariaLabel={tr('TODO_RECURRENCE_JOUR_SEMAINE')}
+            />
+          )}
+          {rec === 'mensuelle' && (
+            <Liste
+              valeur={recurrenceJour}
+              onChange={setRecurrenceJour}
+              options={JOURS_MOIS.map((j) => ({ valeur: j, libelle: j }))}
+              placeholder={tr('TODO_RECURRENCE_JOUR_MOIS')}
+              ariaLabel={tr('TODO_RECURRENCE_JOUR_MOIS')}
+            />
+          )}
           <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
             {tr('G_AJOUTER')}
           </button>

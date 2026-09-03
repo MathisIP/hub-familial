@@ -526,6 +526,8 @@ const UI = {
   // dans le champ vaut mieux qu'un message d'erreur après coup.
   TODO_ECHEANCE_PH: { fr: 'Échéance (jj/mm/aaaa)', en: 'Due date (dd/mm/yyyy)' },
   TODO_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
+  TODO_RECURRENCE_JOUR_SEMAINE: { fr: 'Quel jour ?', en: 'Which day?' },
+  TODO_RECURRENCE_JOUR_MOIS: { fr: 'Quel jour du mois ?', en: 'Which day of month?' },
   TODO_TOUS: { fr: 'Tous', en: 'All' },
   TODO_AUCUNE_TACHE: { fr: 'Aucune tâche. Ajoute la première ci-dessus.', en: 'No tasks. Add the first one above.' },
   TODO_AUCUNE_POUR: { fr: 'Aucune tâche pour', en: 'No tasks for' },

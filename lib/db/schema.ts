@@ -576,6 +576,10 @@ export const taches = pgTable(
     priorite: text('priorite').notNull().default(''),
     echeance: text('echeance').notNull().default(''), // label jj/mm/aaaa (ou vide)
     recurrence: text('recurrence').notNull().default('Aucune'),
+    // Jour fixé de la récurrence : nom du jour (« Lundi »…) si hebdomadaire,
+    // numéro 1-31 (texte) si mensuelle. Vide = comportement hérité (dérivé de
+    // l'échéance, voir prochaineOccurrenceLabel).
+    recurrenceJour: text('recurrence_jour').notNull().default(''),
     note: text('note').notNull().default(''),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },

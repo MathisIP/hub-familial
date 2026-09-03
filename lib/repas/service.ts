@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { recettes as tRecettes, semaine as tSemaine } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
@@ -9,6 +9,7 @@ import {
   CHAUD_FROID,
   JOURS,
   MOMENTS,
+  PERSONNES_DEFAUT,
   TYPES_RECETTE,
   UNITES,
   agregerCourses,
@@ -211,4 +212,45 @@ export async function definirJour(jour: string, c: ChampsJour, moment: Moment = 
     .insert(tSemaine)
     .values({ foyerId, jour, moment, ...valeurs })
     .onConflictDoUpdate({ target: [tSemaine.foyerId, tSemaine.jour, tSemaine.moment], set: valeurs });
+}
+
+/**
+ * Vide les menus (entrée/plat/dessert/note) des jours × moments choisis.
+ *
+ * ⚠ UN `UPDATE` EN MASSE, PAS UNE BOUCLE SUR `definirJour`. Un jour sans
+ * ligne existante (jamais planifié) n'a rien à vider — `definirJour` en
+ * créerait une par upsert, ce qui ferait apparaître des lignes vides en base
+ * pour des combinaisons jour/moment qu'on n'a jamais touchées. `UPDATE ...
+ * WHERE` ne modifie que ce qui existe déjà.
+ *
+ * ⚠ `personnes` N'EST TOUCHÉ QUE SI DEMANDÉ, explicitement. Le nombre de
+ * personnes est un réglage du foyer (qui mange, en général), pas une
+ * planification à refaire chaque semaine — le confondre avec les recettes
+ * effacerait un réglage qu'on n'a pas demandé de perdre.
+ */
+export async function reinitialiserSemaine(criteres: {
+  jours?: string[];
+  moments?: Moment[];
+  remettrePersonnes?: boolean;
+}): Promise<void> {
+  const foyerId = await idFoyerCourant();
+  const clauses = [eq(tSemaine.foyerId, foyerId)];
+  if (criteres.jours && criteres.jours.length > 0) {
+    clauses.push(inArray(tSemaine.jour, criteres.jours));
+  }
+  if (criteres.moments && criteres.moments.length > 0) {
+    clauses.push(inArray(tSemaine.moment, criteres.moments));
+  }
+  const valeurs: { entree: string; plat: string; dessert: string; diner: string; note: string; personnes?: number } = {
+    entree: '',
+    plat: '',
+    dessert: '',
+    diner: '',
+    note: '',
+  };
+  if (criteres.remettrePersonnes) valeurs.personnes = PERSONNES_DEFAUT;
+  await db()
+    .update(tSemaine)
+    .set(valeurs)
+    .where(and(...clauses));
 }

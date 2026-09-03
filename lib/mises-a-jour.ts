@@ -83,6 +83,23 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-03',
+    numero: '1.3.8',
+    date: '3 septembre 2026',
+    dateISO: '2026-09-03',
+    titre: 'Vider le planning de la semaine',
+    resume: 'Un bouton permet de repartir de zéro, en choisissant précisément ce qui doit être vidé.',
+    changements: [
+      {
+        nature: 'ameliore',
+        titre: 'Réinitialiser tout ou partie du planning de la semaine.',
+        texte:
+          'Un bouton « Réinitialiser » à côté de l’onglet Midi / Soir ouvre une fenêtre où choisir quoi vider : toute la semaine, un seul moment (midi ou soir), ou certains jours précis.',
+        detail: 'Le nombre de personnes par défaut peut être remis à part, sur simple case à cocher — il n’est pas vidé avec les menus.',
+      },
+    ],
+  },
+  {
     id: '2026-09-02-4',
     numero: '1.3.7',
     date: '2 septembre 2026',

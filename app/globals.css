@@ -1429,6 +1429,14 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
 .tabs-moment { display: inline-flex; width: auto; margin: 0 0 var(--e-4); padding: .2rem; gap: .2rem; }
 .tabs-moment .tab { padding: .35rem .8rem; font-size: .88rem; }
 
+/* Barre au-dessus du planning : switch midi/soir + bouton de réinitialisation.
+   Le switch garde sa marge basse propre ; c'est la barre qui les aligne. */
+.reinit-barre {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .6rem; flex-wrap: wrap; margin: 0 0 var(--e-4);
+}
+.reinit-barre .tabs-moment { margin: 0; }
+
 /* Titres d'éléments (recette, événement, occasion) en serif. */
 .rc-nom, .ev-nom, .occ-nom {
   font-family: var(--police-titre), Georgia, serif; letter-spacing: -.01em;
@@ -3037,6 +3045,20 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 .fr-pose { margin: 0; font-size: .85rem; color: var(--ok-tx); font-weight: 600; }
 
 .fr-pied { display: flex; justify-content: flex-end; gap: .5rem; }
+
+/* Fenêtre de réinitialisation du planning (components/repas/FenetreReinitialisation.tsx). */
+.reinit-tout {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem .7rem; border: 1px solid var(--line); border-radius: .7rem;
+  background: var(--page);
+}
+.reinit-bloc { display: flex; flex-direction: column; gap: .4rem; }
+.reinit-cases { display: flex; flex-wrap: wrap; gap: .4rem .9rem; }
+.reinit-case { display: flex; align-items: center; gap: .4rem; font-size: .92rem; }
+.reinit-personnes {
+  display: flex; align-items: center; gap: .5rem; font-size: .88rem;
+  color: var(--muted); border-top: 1px solid var(--line); padding-top: .8rem;
+}
 
 /* Le nom d'une recette ouvre sa fiche : c'est un bouton, il doit s'en voir. */
 .rc-nom-bouton {

@@ -546,6 +546,15 @@ const UI = {
   REPAS_MOMENT_LABEL: { fr: 'Moment de la journée', en: 'Time of day' },
   REPAS_MOMENT_MIDI: { fr: 'Midi', en: 'Lunch' },
   REPAS_MOMENT_SOIR: { fr: 'Soir', en: 'Dinner' },
+  REPAS_REINIT_BOUTON: { fr: 'Réinitialiser', en: 'Reset' },
+  REPAS_REINIT_TITRE: { fr: 'Réinitialiser le planning', en: 'Reset the planning' },
+  REPAS_REINIT_TOUT: { fr: 'Tout (semaine entière, midi et soir)', en: 'Everything (whole week, lunch and dinner)' },
+  REPAS_REINIT_JOURS: { fr: 'Jours', en: 'Days' },
+  REPAS_REINIT_PERSONNES: {
+    fr: 'Remettre aussi le nombre de personnes par défaut',
+    en: 'Also reset the number of people to the default',
+  },
+  REPAS_REINIT_CONFIRMER: { fr: 'Vider ces menus', en: 'Clear these meals' },
   REPAS_PERS: { fr: 'pers.', en: 'ppl' },
   /* --- Verser la liste de courses de la semaine --- */
   /* ⚠ Dit POURQUOI il n'y a rien a verser. Sans ce message, la section

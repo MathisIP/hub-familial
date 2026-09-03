@@ -19,6 +19,7 @@ import {
 import Astuce from '@/components/Astuce';
 import { RAYONS } from '@/lib/todo/schema';
 import FicheRecette from '@/components/repas/FicheRecette';
+import FenetreReinitialisation from '@/components/repas/FenetreReinitialisation';
 
 /**
  * Écran Repas (client). Deux onglets : planning de la semaine (avec nb de
@@ -99,6 +100,7 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
    */
   const [moment, setMoment] = useState<Moment>('soir');
   const joursDuMoment = useMemo(() => d.semaine.filter((j) => j.moment === moment), [d.semaine, moment]);
+  const [reinitOuverte, setReinitOuverte] = useState(false);
 
   // Aperçu des courses : agrège les recettes des 3 services (entrée/plat/dessert)
   // de CHAQUE REPAS planifié, midi et soir ensemble — pas seulement l'onglet
@@ -129,24 +131,45 @@ function PlanningSemaine({ d, occupe, action }: { d: DonneesRepas; occupe: boole
 
   return (
     <>
-      <div className="tabs tabs-moment" role="tablist" aria-label={tr('REPAS_MOMENT_LABEL')}>
-        <button
-          className="tab"
-          role="tab"
-          aria-selected={moment === 'midi'}
-          onClick={() => setMoment('midi')}
-        >
-          ☀️ {tr('REPAS_MOMENT_MIDI')}
-        </button>
-        <button
-          className="tab"
-          role="tab"
-          aria-selected={moment === 'soir'}
-          onClick={() => setMoment('soir')}
-        >
-          🌙 {tr('REPAS_MOMENT_SOIR')}
+      <div className="reinit-barre">
+        <div className="tabs tabs-moment" role="tablist" aria-label={tr('REPAS_MOMENT_LABEL')}>
+          <button
+            className="tab"
+            role="tab"
+            aria-selected={moment === 'midi'}
+            onClick={() => setMoment('midi')}
+          >
+            ☀️ {tr('REPAS_MOMENT_MIDI')}
+          </button>
+          <button
+            className="tab"
+            role="tab"
+            aria-selected={moment === 'soir'}
+            onClick={() => setMoment('soir')}
+          >
+            🌙 {tr('REPAS_MOMENT_SOIR')}
+          </button>
+        </div>
+        <button className="bouton discret" onClick={() => setReinitOuverte(true)} disabled={occupe}>
+          ↺ {tr('REPAS_REINIT_BOUTON')}
         </button>
       </div>
+
+      {reinitOuverte && (
+        <FenetreReinitialisation
+          occupe={occupe}
+          onFermer={() => setReinitOuverte(false)}
+          onConfirmerAction={(criteres) =>
+            action(() =>
+              fetch('/api/repas/semaine', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(criteres),
+              }),
+            ).then(() => setReinitOuverte(false))
+          }
+        />
+      )}
 
       <ul className="liste">
         {joursDuMoment.map((j) => (

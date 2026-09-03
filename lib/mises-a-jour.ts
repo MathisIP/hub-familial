@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-03-3',
+    numero: '1.3.10',
+    date: '3 septembre 2026',
+    dateISO: '2026-09-03',
+    titre: 'Choisir le jour d’une tâche récurrente',
+    resume: 'Une tâche hebdomadaire ou mensuelle peut désormais fixer précisément le jour où elle revient.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Fixer le jour d’une récurrence hebdomadaire ou mensuelle.',
+        texte:
+          'En choisissant « Hebdomadaire », un nouveau champ propose le jour de la semaine (lundi, mardi…). En choisissant « Mensuelle », il propose le jour du mois (1 à 31). La prochaine occurrence retombe toujours sur ce jour, même si l’échéance précédente a été traitée en retard.',
+      },
+    ],
+  },
+  {
     id: '2026-09-03-2',
     numero: '1.3.9',
     date: '3 septembre 2026',

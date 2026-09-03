@@ -140,6 +140,7 @@ export type NouvelleTache = {
   priorite?: string;
   echeanceLabel?: string; // jj/mm/aaaa
   recurrence?: string;
+  recurrenceJour?: string;
   note?: string;
 };
 
@@ -159,6 +160,7 @@ export async function ajouterTache(t: NouvelleTache): Promise<string> {
       priorite: t.priorite ?? '',
       echeance: t.echeanceLabel ?? '',
       recurrence: t.recurrence ?? 'Aucune',
+      recurrenceJour: t.recurrenceJour ?? '',
       note: t.note ?? '',
     })
     .returning({ id: tTaches.id });
@@ -188,7 +190,7 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
 
   if (statut === STATUT_FAIT && RECURRENCES_ACTIVES.includes(cible.recurrence.trim().toLowerCase())) {
     const baseISO = cible.echeance ? versISO(cible.echeance) : null;
-    const prochaine = prochaineOccurrenceLabel(baseISO, cible.recurrence);
+    const prochaine = prochaineOccurrenceLabel(baseISO, cible.recurrence, cible.recurrenceJour);
     await d.insert(tTaches).values({
       foyerId,
       statut: 'À faire',
@@ -198,6 +200,7 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
       priorite: cible.priorite,
       echeance: prochaine,
       recurrence: cible.recurrence,
+      recurrenceJour: cible.recurrenceJour,
       note: cible.note,
     });
   }
@@ -223,6 +226,7 @@ export async function modifierTache(
     priorite?: string;
     echeanceLabel?: string;
     recurrence?: string;
+    recurrenceJour?: string;
     note?: string;
   },
 ): Promise<void> {
@@ -238,6 +242,7 @@ export async function modifierTache(
   if (champs.priorite !== undefined) set.priorite = champs.priorite.trim();
   if (champs.echeanceLabel !== undefined) set.echeance = champs.echeanceLabel.trim();
   if (champs.recurrence !== undefined) set.recurrence = champs.recurrence.trim() || 'Aucune';
+  if (champs.recurrenceJour !== undefined) set.recurrenceJour = champs.recurrenceJour.trim();
   if (champs.note !== undefined) set.note = champs.note.trim();
   if (Object.keys(set).length === 0) return;
   const res = await db()

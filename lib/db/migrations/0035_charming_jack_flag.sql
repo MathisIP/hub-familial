@@ -1,0 +1,1 @@
+ALTER TABLE "taches" ADD COLUMN "recurrence_jour" text DEFAULT '' NOT NULL;

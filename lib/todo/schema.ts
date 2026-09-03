@@ -12,7 +12,7 @@
  * liste de courses — et deux façons d'écrire « 1/2 » finiraient par diverger.
  * Le fichier visé est pur et n'importe rien : aucun cycle possible.
  */
-import { formatQuantite } from '@/lib/repas/schema';
+import { formatQuantite, JOURS } from '@/lib/repas/schema';
 
 // Valeurs métier de référence (listes fixes du module).
 export const STATUT_FAIT = 'Fait';
@@ -22,6 +22,9 @@ export const RECURRENCES_DEFAUT = ['Aucune', 'Hebdomadaire', 'Mensuelle', 'Annue
 
 /** Récurrences qui engendrent une occurrence suivante (comparaison en minuscules). */
 export const RECURRENCES_ACTIVES = ['hebdomadaire', 'mensuelle', 'annuelle'];
+
+/** Jours du mois proposés au choix (texte, « 1 » à « 31 »). */
+export const JOURS_MOIS = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
 export type Tache = {
   id: string;
@@ -33,6 +36,9 @@ export type Tache = {
   echeance: string | null; // ISO aaaa-mm-jj, ou null
   echeanceLabel: string; // tel qu'affiché (jj/mm/aaaa)
   recurrence: string;
+  // Jour fixé de la récurrence (nom du jour ou numéro du mois selon `recurrence`,
+  // vide si non fixé — voir `prochaineOccurrenceLabel`).
+  recurrenceJour: string;
   note: string;
   enRetard: boolean;
 };
@@ -165,24 +171,69 @@ export function aujourdhuiISO(): string {
   return `${d.getFullYear()}-${mm}-${jj}`;
 }
 
+/** Formate un objet Date local en label jj/mm/aaaa. */
+function versLabel(d: Date): string {
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const jj = String(d.getDate()).padStart(2, '0');
+  return `${jj}/${mm}/${d.getFullYear()}`;
+}
+
 /**
- * Prochaine occurrence d'une tâche récurrente — réplique fidèle de
- * `prochaineDate_` (Apps Script). Renvoie le label jj/mm/aaaa à stocker.
- * Historiquement nécessaire car l'onEdit des Sheets ne s'exécutait pas sur les
- * écritures API ; on conserve la logique en base, appliquée par le service.
+ * Prochaine occurrence d'une tâche récurrente. Renvoie le label jj/mm/aaaa à
+ * stocker.
+ *
+ * ⚠ `recurrenceJour` PRIME sur un simple décalage de date quand il est fixé
+ * (02/09/2026) : une tâche « tous les lundis » doit retomber sur un lundi
+ * même si l'échéance initiale a été saisie un autre jour, ou si une occurrence
+ * a été traitée en retard — sans quoi +7 jours depuis une date décalée dérive
+ * peu à peu du jour voulu. Sans `recurrenceJour` (tâches créées avant cette
+ * fonctionnalité), on garde l'ancien calcul par simple décalage.
  */
-export function prochaineOccurrenceLabel(baseISO: string | null, recurrence: string): string {
+export function prochaineOccurrenceLabel(
+  baseISO: string | null,
+  recurrence: string,
+  recurrenceJour = '',
+): string {
   const iso = baseISO ?? aujourdhuiISO();
   const [a, m, j] = iso.split('-').map(Number);
   const d = new Date(a, m - 1, j);
-  switch (recurrence.trim().toLowerCase()) {
+  const rec = recurrence.trim().toLowerCase();
+  const jourFixe = recurrenceJour.trim();
+
+  if (rec === 'hebdomadaire' && jourFixe) {
+    const cible = (JOURS as readonly string[]).indexOf(jourFixe);
+    if (cible !== -1) {
+      // Lundi = 0 … Dimanche = 6, aligné sur JOURS (comme lib/repas).
+      const actuel = (d.getDay() + 6) % 7;
+      let ecart = cible - actuel;
+      if (ecart <= 0) ecart += 7; // toujours la PROCHAINE occurrence, jamais le jour même.
+      d.setDate(d.getDate() + ecart);
+      return versLabel(d);
+    }
+  }
+
+  if (rec === 'mensuelle' && jourFixe) {
+    const numero = Number(jourFixe);
+    if (Number.isInteger(numero) && numero >= 1 && numero <= 31) {
+      // Mois suivant, jour choisi — `setDate(1)` d'abord pour ne pas déborder
+      // sur le mois d'après (même piège que `decalerMois`, lib/agenda/schema).
+      d.setDate(1);
+      d.setMonth(d.getMonth() + 1);
+      // Le jour choisi peut dépasser la longueur du mois (31 en février) : on
+      // se cale sur le dernier jour du mois plutôt que de déborder sur le
+      // mois suivant, où la date perdrait tout rapport avec le jour demandé.
+      const dernierJour = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      d.setDate(Math.min(numero, dernierJour));
+      return versLabel(d);
+    }
+  }
+
+  switch (rec) {
     case 'hebdomadaire': d.setDate(d.getDate() + 7); break;
     case 'mensuelle': d.setMonth(d.getMonth() + 1); break;
     case 'annuelle': d.setFullYear(d.getFullYear() + 1); break;
   }
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const jj = String(d.getDate()).padStart(2, '0');
-  return `${jj}/${mm}/${d.getFullYear()}`;
+  return versLabel(d);
 }
 
 /** Construit une Tâche (échéance ISO + retard) depuis une ligne de base. */
@@ -196,6 +247,7 @@ export function construireTache(
     priorite: string;
     echeance: string;
     recurrence: string;
+    recurrenceJour: string;
     note: string;
   },
   todayISO: string,
@@ -212,6 +264,7 @@ export function construireTache(
     echeance,
     echeanceLabel,
     recurrence: r.recurrence || 'Aucune',
+    recurrenceJour: r.recurrenceJour ?? '',
     note: r.note,
     enRetard: !!echeance && r.statut !== STATUT_FAIT && echeance < todayISO,
   };

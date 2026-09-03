@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-03-2',
+    numero: '1.3.9',
+    date: '3 septembre 2026',
+    dateISO: '2026-09-03',
+    titre: 'Choisir sa vue sur l’agenda de l’accueil',
+    resume: 'La carte Agenda de l’accueil propose désormais les mêmes vues que l’onglet complet.',
+    changements: [
+      {
+        nature: 'ameliore',
+        titre: 'La carte Agenda de l’accueil propose Avenir / Jour / Semaine / Mois.',
+        texte:
+          'Jusqu’ici limitée à la semaine en cours, elle offre maintenant le même sélecteur de vues que l’onglet Agenda, avec la navigation d’une période à l’autre. La modification d’un événement reste réservée à l’onglet complet.',
+      },
+    ],
+  },
+  {
     id: '2026-09-03',
     numero: '1.3.8',
     date: '3 septembre 2026',

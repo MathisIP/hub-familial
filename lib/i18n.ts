@@ -528,6 +528,10 @@ const UI = {
   TODO_RECURRENCE: { fr: 'Récurrence', en: 'Repeats' },
   TODO_RECURRENCE_JOUR_SEMAINE: { fr: 'Quel jour ?', en: 'Which day?' },
   TODO_RECURRENCE_JOUR_MOIS: { fr: 'Quel jour du mois ?', en: 'Which day of month?' },
+  TODO_RECURRENCE_JOUR_MOIS_AVERTIT: {
+    fr: 'Les mois plus courts, la tâche tombera au dernier jour du mois.',
+    en: 'In shorter months, the task will fall on the last day of the month.',
+  },
   TODO_TOUS: { fr: 'Tous', en: 'All' },
   TODO_AUCUNE_TACHE: { fr: 'Aucune tâche. Ajoute la première ci-dessus.', en: 'No tasks. Add the first one above.' },
   TODO_AUCUNE_POUR: { fr: 'Aucune tâche pour', en: 'No tasks for' },

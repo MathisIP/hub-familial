@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-04',
+    numero: '1.3.11',
+    date: '4 septembre 2026',
+    dateISO: '2026-09-04',
+    titre: 'Un avertissement pour les jours 29, 30 et 31',
+    resume: 'Choisir un jour du mois qui n’existe pas partout le signale désormais clairement.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Un avertissement s’affiche pour les jours 29, 30 et 31.',
+        texte:
+          'Ces jours n’existent pas dans tous les mois (février n’a pas de 30). Le calcul reportait déjà correctement la tâche au dernier jour du mois, mais rien ne le signalait à la saisie — un message l’indique désormais.',
+      },
+    ],
+  },
+  {
     id: '2026-09-03-3',
     numero: '1.3.10',
     date: '3 septembre 2026',

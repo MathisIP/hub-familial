@@ -481,13 +481,18 @@ function EditionTache({
         />
       )}
       {rec === 'mensuelle' && (
-        <Liste
-          valeur={recurrenceJour}
-          onChange={setRecurrenceJour}
-          options={JOURS_MOIS.map((j) => ({ valeur: j, libelle: j }))}
-          placeholder={tr('TODO_RECURRENCE_JOUR_MOIS')}
-          ariaLabel={tr('TODO_RECURRENCE_JOUR_MOIS')}
-        />
+        <>
+          <Liste
+            valeur={recurrenceJour}
+            onChange={setRecurrenceJour}
+            options={JOURS_MOIS.map((j) => ({ valeur: j, libelle: j }))}
+            placeholder={tr('TODO_RECURRENCE_JOUR_MOIS')}
+            ariaLabel={tr('TODO_RECURRENCE_JOUR_MOIS')}
+          />
+          {['29', '30', '31'].includes(recurrenceJour) && (
+            <p className="fr-avertit">{tr('TODO_RECURRENCE_JOUR_MOIS_AVERTIT')}</p>
+          )}
+        </>
       )}
       <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>
         {tr('G_OK')}

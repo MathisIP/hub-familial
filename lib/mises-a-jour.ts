@@ -83,6 +83,23 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-06-2',
+    numero: '1.4.0',
+    date: '6 septembre 2026',
+    dateISO: '2026-09-06',
+    titre: 'Des réglages pour chaque membre du foyer',
+    resume: 'Chaque membre a désormais sa fiche de réglages : nom affiché et présence dans les menus.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Une fiche de réglages par membre, depuis « Mon foyer ».',
+        texte:
+          'Le bouton « Réglages » à côté de chaque membre ouvre sa fiche : un nom affiché propre à ce foyer (à la place du nom du compte Google) et une case par module (Tâches, Cadeaux) pour retirer ce membre de son menu « Qui » sans le retirer du foyer.',
+        detail: 'Dans Cadeaux, le champ « Offert par » propose désormais les membres du foyer en plus de la saisie libre.',
+      },
+    ],
+  },
+  {
     id: '2026-09-06',
     numero: '1.3.12',
     date: '6 septembre 2026',

@@ -253,6 +253,13 @@
       "when": 1788407954189,
       "tag": "0035_charming_jack_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788677856429,
+      "tag": "0036_special_shockwave",
+      "breakpoints": true
     }
   ]
 }

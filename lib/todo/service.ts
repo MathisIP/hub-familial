@@ -3,7 +3,8 @@ import { and, asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { taches as tTaches, courses as tCourses } from '@/lib/db/schema';
 import { idFoyerCourant } from '@/lib/foyer';
-import { envoyer, membresDuFoyer, pushDisponible } from '@/lib/notifications/service';
+import { envoyer, pushDisponible } from '@/lib/notifications/service';
+import { membresPourModule } from '@/lib/membres';
 import { ErreurValidation } from '@/lib/erreurs';
 import {
   RECURRENCES_ACTIVES,
@@ -74,7 +75,7 @@ export async function chargerTodo(): Promise<DonneesTodo> {
     d.select().from(tCourses).where(eq(tCourses.foyerId, foyerId)).orderBy(asc(tCourses.creeLe)),
     // ⚠ En parallèle des deux autres : une requête concurrente de plus ne coûte
     // pas un aller-retour de plus, et cette page est déjà sur un chemin sensible.
-    membresDuFoyer(),
+    membresPourModule(foyerId, 'todo'),
   ]);
 
   const taches: Tache[] = lignesTaches.map((r) => construireTache(r, today));
@@ -463,7 +464,7 @@ export async function apercuValidationCourses(): Promise<ApercuValidation> {
       .select({ id: tCourses.id })
       .from(tCourses)
       .where(and(eq(tCourses.foyerId, foyerId), eq(tCourses.fait, false))),
-    membresDuFoyer(),
+    membresPourModule(foyerId, 'todo'),
   ]);
   return { articles: lignes.length, membres, pushDisponible: pushDisponible() };
 }
@@ -486,7 +487,7 @@ export async function validerCourses(utilisateurIds: string[]): Promise<{ envoye
     throw new ErreurValidation('La liste est vide : rien à envoyer.');
   }
 
-  const membres = await membresDuFoyer();
+  const membres = await membresPourModule(foyerId, 'todo');
   const duFoyer = new Set(membres.map((m) => m.utilisateurId));
   const retenus = [...new Set(utilisateurIds)].filter((u) => duFoyer.has(u));
   if (retenus.length === 0) {

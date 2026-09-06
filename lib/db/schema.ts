@@ -1188,3 +1188,44 @@ export const adminScenarios = pgTable('admin_scenarios', {
 });
 
 export type LigneScenario = typeof adminScenarios.$inferSelect;
+
+/* ======================== CALENDRIER ÉDITORIAL ======================== */
+/**
+ * État de suivi du calendrier de publication Instagram (page privée, non
+ * listée dans le menu : voir app/foyer/editorial/page.tsx).
+ *
+ * ⚠ LE CONTENU DES POSTS (hook, script, légende, hashtags) N'EST PAS ICI. Il
+ * est fixe, défini dans lib/editorial/posts.ts comme une constante — modifier
+ * un texte de publication est un geste éditorial (relire, ajuster), pas une
+ * saisie utilisateur. Seul CE QUI CHANGE en marge de la publication (où on en
+ * est, quel visuel, quels résultats) mérite une écriture en base.
+ *
+ * ⚠ `numero` RÉFÉRENCE LA CONSTANTE, PAS UNE CLÉ ÉTRANGÈRE : les posts n'ont
+ * pas de ligne propre en base tant que personne n'y a touché — la table reste
+ * vide à l'installation, une ligne apparaît au premier changement de statut.
+ */
+export const editorialPosts = pgTable(
+  'editorial_posts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    foyerId: uuid('foyer_id')
+      .notNull()
+      .references(() => foyers.id, { onDelete: 'cascade' }),
+    numero: integer('numero').notNull(),
+    statut: text('statut').notNull().default('À faire'),
+    // Chemin du site (/captures/...) ou data URI (image locale compressée,
+    // collée depuis le calendrier HTML d'origine — voir lib/editorial/schema.ts).
+    visuel: text('visuel').notNull().default(''),
+    vues: integer('vues'),
+    interactions: integer('interactions'),
+    enregistrements: integer('enregistrements'),
+    partages: integer('partages'),
+    majLe: timestamp('maj_le', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('editorial_posts_foyer_numero').on(t.foyerId, t.numero),
+    index('editorial_posts_foyer_idx').on(t.foyerId),
+  ],
+);
+
+export type LigneEditorialPost = typeof editorialPosts.$inferSelect;

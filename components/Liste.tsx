@@ -64,6 +64,9 @@ export default function Liste({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [actif, setActif] = useState(0);
+  // Bord vers lequel le panneau s'ouvre : mesuré à l'ouverture (voir `ouvrir`),
+  // jamais avant — la position du bouton à l'écran n'a de sens qu'à ce moment.
+  const [alignement, setAlignement] = useState<'gauche' | 'droite'>('gauche');
   const racine = useRef<HTMLDivElement>(null);
   const listeRef = useRef<HTMLUListElement>(null);
   const frappe = useRef({ texte: '', quand: 0 });
@@ -107,12 +110,27 @@ export default function Liste({
     listeRef.current.querySelector<HTMLElement>('[data-actif="1"]')?.scrollIntoView({ block: 'nearest' });
   }, [ouvert, actif]);
 
+  /*
+   * ⚠ CÔTÉ D'OUVERTURE MESURÉ, PAS DEVINÉ EN CSS (06/09/2026). Le panneau
+   * s'ouvrait toujours à partir du bord gauche du bouton (`left: 0`) : sur un
+   * champ posé près du bord droit de l'écran (ex. la récurrence d'une tâche,
+   * à droite de sa ligne), un panneau large sortait du cadre au lieu de
+   * s'inverser — aucune media query ne peut connaître la position réelle
+   * d'un bouton précis, seule une mesure au moment de l'ouverture le peut.
+   */
   function ouvrir() {
     if (disabled) return;
     const depart = multiple
       ? Math.max(options.findIndex((o) => selection.includes(o.valeur)), 0)
       : Math.max(options.findIndex((o) => o.valeur === valeur), 0);
     setActif(depart);
+    const rect = racine.current?.getBoundingClientRect();
+    if (rect) {
+      // Largeur maximale réelle du panneau, cf. `.liste-panneau` (globals.css) :
+      // au moins la largeur du bouton, sinon jusqu'à 22rem ou 90% de l'écran.
+      const largeurMax = Math.max(rect.width, Math.min(352, window.innerWidth * 0.9));
+      setAlignement(rect.left + largeurMax > window.innerWidth ? 'droite' : 'gauche');
+    }
     setOuvert(true);
   }
 
@@ -194,7 +212,7 @@ export default function Liste({
         <ul
           ref={listeRef}
           id={`${id}-liste`}
-          className="liste-panneau"
+          className={`liste-panneau ${alignement === 'droite' ? 'aligne-droite' : ''}`}
           role="listbox"
           aria-multiselectable={multiple || undefined}
           aria-label={ariaLabel}

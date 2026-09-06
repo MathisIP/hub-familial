@@ -19,12 +19,29 @@ import { envoyerDemandeAdhesion, envoyerInvitation } from '@/lib/email/messages'
 
 const JOURS_INVITATION = 14;
 
+/**
+ * MODULES DONT LE MENU « QUI » EST CONFIGURABLE PAR MEMBRE.
+ * ==========================================================
+ * ⚠ CLÉS STABLES, jamais renommées : elles sont écrites dans
+ * `membres.modules_masques` (jsonb). Renommer une clé rendrait silencieusement
+ * caduques les réglages déjà posés par les foyers (un membre masqué
+ * réapparaîtrait, sans que rien ne le signale).
+ *
+ * ⚠ AJOUTER UN MODULE ICI SUFFIT à lui donner l'écran de réglage dans la
+ * fiche membre (/foyer/membres/[id]) — c'est le point d'extension pensé pour
+ * les futurs modules, sans toucher à la page.
+ */
+export const MODULES_VISIBILITE = ['todo', 'cadeaux'] as const;
+export type ModuleVisibilite = (typeof MODULES_VISIBILITE)[number];
+
 export type MembreVue = {
   membreId: string;
   utilisateurId: string;
   email: string;
   nom: string | null;
+  surnom: string;
   role: string;
+  modulesMasques: string[];
 };
 export type InvitationVue = { id: string; email: string; jeton: string; expireLe: string };
 export type FoyerMembres = {
@@ -61,6 +78,8 @@ export async function chargerFoyerMembres(foyerId: string, utilisateurId: string
       membreId: membres.id,
       utilisateurId: membres.utilisateurId,
       role: membres.role,
+      surnom: membres.surnom,
+      modulesMasques: membres.modulesMasques,
       email: utilisateurs.email,
       nom: utilisateurs.nom,
     })
@@ -143,6 +162,115 @@ export async function renommerFoyer(foyerId: string, appelantId: string, nom: st
   const n = S(nom);
   if (!n) throw new ErreurValidation('Le nom du foyer est requis.');
   await db().update(foyers).set({ nom: n }).where(eq(foyers.id, foyerId));
+}
+
+/* ==================== RÉGLAGES PAR MEMBRE (nom affiché, visibilité) ==================== */
+
+/** Nom d'affichage d'un membre : son surnom s'il en a un, sinon son nom Google, sinon son e-mail. */
+export function nomAffiche(m: { surnom?: string | null; nom?: string | null; email: string }): string {
+  return S(m.surnom) || S(m.nom) || m.email;
+}
+
+/** Fiche d'un membre pour l'écran de réglages (/foyer/membres/[id]). */
+export type MembreDetail = {
+  membreId: string;
+  utilisateurId: string;
+  email: string;
+  nom: string | null;
+  surnom: string;
+  role: string;
+  modulesMasques: string[];
+};
+
+/** Un membre par son id, dans un foyer donné (null si absent — pas d'exception pour un 404). */
+export async function membreParId(foyerId: string, membreId: string): Promise<MembreDetail | null> {
+  const [row] = await db()
+    .select({
+      membreId: membres.id,
+      utilisateurId: membres.utilisateurId,
+      role: membres.role,
+      surnom: membres.surnom,
+      modulesMasques: membres.modulesMasques,
+      email: utilisateurs.email,
+      nom: utilisateurs.nom,
+    })
+    .from(membres)
+    .innerJoin(utilisateurs, eq(utilisateurs.id, membres.utilisateurId))
+    .where(and(eq(membres.id, membreId), eq(membres.foyerId, foyerId)))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Membres du foyer visibles dans le menu « Qui » d'un module donné, nom déjà
+ * résolu (surnom > nom Google > e-mail).
+ *
+ * ⚠ POINT D'ENTRÉE UNIQUE, à utiliser par TOUT module qui liste les personnes
+ * du foyer dans un menu déroulant (02/09/2026 : ToDo et Cadeaux avaient chacun
+ * leur propre requête, dupliquée — l'une aurait pu appliquer le masquage et
+ * l'autre l'oublier). `excluSoiMeme` retire l'appelant de la liste : utile aux
+ * menus « qui d'autre » (ex. Cadeaux « ne pas montrer à » — se cacher un
+ * cadeau à soi-même n'aurait aucun sens).
+ */
+export async function membresPourModule(
+  foyerId: string,
+  module: ModuleVisibilite,
+  options: { excluUtilisateurId?: string } = {},
+): Promise<{ utilisateurId: string; nom: string }[]> {
+  const rows = await db()
+    .select({
+      utilisateurId: membres.utilisateurId,
+      surnom: membres.surnom,
+      modulesMasques: membres.modulesMasques,
+      email: utilisateurs.email,
+      nom: utilisateurs.nom,
+    })
+    .from(membres)
+    .innerJoin(utilisateurs, eq(utilisateurs.id, membres.utilisateurId))
+    .where(eq(membres.foyerId, foyerId));
+  return rows
+    .filter((m) => !m.modulesMasques.includes(module))
+    .filter((m) => m.utilisateurId !== options.excluUtilisateurId)
+    .map((m) => ({ utilisateurId: m.utilisateurId, nom: nomAffiche(m) }))
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+}
+
+/** Modifie le surnom d'affichage d'un membre (propriétaire uniquement). */
+export async function modifierSurnomMembre(
+  foyerId: string,
+  appelantId: string,
+  membreId: string,
+  surnom: string,
+): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  const res = await db()
+    .update(membres)
+    .set({ surnom: S(surnom) })
+    .where(and(eq(membres.id, membreId), eq(membres.foyerId, foyerId)))
+    .returning({ id: membres.id });
+  if (res.length === 0) throw new ErreurValidation('Membre introuvable.');
+}
+
+/**
+ * Remplace la liste des modules où ce membre est masqué (propriétaire
+ * uniquement). Reçoit la liste complète plutôt qu'un module + un booléen : une
+ * fiche de réglages envoie toutes ses cases d'un coup, plus simple qu'une
+ * requête par case cochée/décochée.
+ */
+export async function definirModulesMasques(
+  foyerId: string,
+  appelantId: string,
+  membreId: string,
+  modules: string[],
+): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  const valides = modules.filter((m) => (MODULES_VISIBILITE as readonly string[]).includes(m));
+  const res = await db()
+    .update(membres)
+    .set({ modulesMasques: valides })
+    .where(and(eq(membres.id, membreId), eq(membres.foyerId, foyerId)))
+    .returning({ id: membres.id });
+  if (res.length === 0) throw new ErreurValidation('Membre introuvable.');
 }
 
 /** Détails d'une invitation par jeton (pour la page /rejoindre). */

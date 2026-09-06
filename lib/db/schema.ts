@@ -218,6 +218,12 @@ export const membres = pgTable(
       .notNull()
       .references(() => utilisateurs.id, { onDelete: 'cascade' }),
     role: text('role').notNull().default('membre'),
+    // Nom d'affichage propre à CE foyer, prioritaire sur `utilisateurs.nom`
+    // (celui de Google) partout où ce membre apparaît. Vide = pas de surnom.
+    surnom: text('surnom').notNull().default(''),
+    // Modules où ce membre est volontairement absent des menus « Qui »
+    // (MODULES_VISIBILITE, lib/membres.ts). Vide = visible partout, le défaut.
+    modulesMasques: jsonb('modules_masques').$type<string[]>().notNull().default([]),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -2,12 +2,7 @@ import 'server-only';
 import webpush from 'web-push';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import {
-  abonnementsPush as tAbos,
-  preferencesNotif as tPrefs,
-  membres as tMembres,
-  utilisateurs as tUtilisateurs,
-} from '@/lib/db/schema';
+import { abonnementsPush as tAbos, preferencesNotif as tPrefs } from '@/lib/db/schema';
 import { contexteAcces } from '@/lib/visibilite';
 import { ErreurValidation } from '@/lib/erreurs';
 
@@ -245,21 +240,4 @@ export async function envoyer(
     await d.delete(tAbos).where(inArray(tAbos.endpoint, perimes));
   }
   return envoyes;
-}
-
-/** Membres du foyer, pour choisir les destinataires d'un envoi. */
-export async function membresDuFoyer(): Promise<{ utilisateurId: string; nom: string }[]> {
-  const { foyerId } = await contexteAcces();
-  const lignes = await db()
-    .select({
-      utilisateurId: tMembres.utilisateurId,
-      nom: tUtilisateurs.nom,
-      email: tUtilisateurs.email,
-    })
-    .from(tMembres)
-    .innerJoin(tUtilisateurs, eq(tUtilisateurs.id, tMembres.utilisateurId))
-    .where(eq(tMembres.foyerId, foyerId));
-  return lignes
-    .map((m) => ({ utilisateurId: m.utilisateurId, nom: m.nom || m.email }))
-    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 }

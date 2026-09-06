@@ -823,6 +823,22 @@ const UI = {
   },
   FOY_LIEN_COPIE: { fr: 'Lien copié ✓', en: 'Link copied ✓' },
   FOY_COPIER_LIEN: { fr: 'Copier le lien', en: 'Copy link' },
+  FOY_REGLAGES: { fr: 'Réglages', en: 'Settings' },
+  FOY_RETOUR_MEMBRES: { fr: '← Retour aux membres', en: '← Back to members' },
+  FOY_SURNOM_TITRE: { fr: 'Nom affiché', en: 'Display name' },
+  FOY_SURNOM_NOTE: {
+    fr: 'Le nom utilisé dans les listes et menus de l’application, à la place du nom du compte Google.',
+    en: 'The name used in the app’s lists and menus, instead of the Google account name.',
+  },
+  FOY_SURNOM_PH: { fr: 'Ex. Mathis', en: 'E.g. Alex' },
+  FOY_ENREGISTRER: { fr: 'Enregistrer', en: 'Save' },
+  FOY_VISIBILITE_TITRE: { fr: 'Présence dans les menus', en: 'Presence in menus' },
+  FOY_VISIBILITE_NOTE: {
+    fr: 'Décoche un module pour que ce membre n’apparaisse plus dans son menu « Qui ».',
+    en: 'Uncheck a module so this member no longer appears in its “Who” menu.',
+  },
+  FOY_MODULE_TODO: { fr: 'Tâches (ToDo)', en: 'Tasks (To-Do)' },
+  FOY_MODULE_CADEAUX: { fr: 'Cadeaux', en: 'Gifts' },
 
   // Abonnement (page)
   ABO_SOUS: { fr: 'L’abonnement du foyer donne accès à tous les modules de Nestync.', en: 'The household subscription unlocks all Nestync modules.' },

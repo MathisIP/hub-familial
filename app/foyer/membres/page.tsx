@@ -1,6 +1,7 @@
+import Link from 'next/link';
 import LienInvitation from '@/components/foyer/LienInvitation';
 import { foyerCourantOuBienvenue, utilisateurCourant } from '@/lib/foyer';
-import { chargerFoyerMembres, demandesEnAttente } from '@/lib/membres';
+import { chargerFoyerMembres, demandesEnAttente, nomAffiche } from '@/lib/membres';
 import {
   inviterAction,
   revoquerAction,
@@ -55,13 +56,18 @@ export default async function PageFoyer() {
           {d.membres.map((m) => (
             <li className="foyer-membre" key={m.membreId}>
               <span className="fm-ident">
-                <span className="fm-nom">{m.nom || m.email}</span>
+                <span className="fm-nom">{nomAffiche(m)}</span>
                 <span className="fm-email">{m.email}</span>
               </span>
               <span className={`puce ${m.role === 'proprietaire' ? 'assigne' : 'categorie'}`}>
                 {m.role === 'proprietaire' ? t('FOY_PROPRIETAIRE', langue) : t('FOY_MEMBRE', langue)}
                 {m.utilisateurId === user.id ? ` · ${t('FOY_TOI', langue)}` : ''}
               </span>
+              {proprio && (
+                <Link href={`/foyer/membres/${m.membreId}`} className="bouton discret">
+                  {t('FOY_REGLAGES', langue)}
+                </Link>
+              )}
               {proprio && m.role !== 'proprietaire' && m.utilisateurId !== user.id && (
                 <form action={retirerAction}>
                   <input type="hidden" name="id" value={m.membreId} />

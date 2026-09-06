@@ -13,6 +13,9 @@ import {
   accepterDemande,
   refuserDemande,
   terminerOnboarding,
+  modifierSurnomMembre,
+  definirModulesMasques,
+  MODULES_VISIBILITE,
 } from '@/lib/membres';
 
 /** Invite un e-mail à rejoindre le foyer courant. */
@@ -136,5 +139,33 @@ export async function refuserDemandeAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
   await refuserDemande(foyer.id, user.id, id);
+  revalidatePath('/foyer/membres');
+}
+
+/* -------------------- Réglages d'un membre (/foyer/membres/[id]) -------------------- */
+
+/** Modifie le nom d'affichage d'un membre, propre à ce foyer. */
+export async function modifierSurnomAction(formData: FormData): Promise<void> {
+  const membreId = String(formData.get('membreId') ?? '');
+  const surnom = String(formData.get('surnom') ?? '');
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  await modifierSurnomMembre(foyer.id, user.id, membreId, surnom);
+  revalidatePath(`/foyer/membres/${membreId}`);
+  revalidatePath('/foyer/membres');
+}
+
+/**
+ * Remplace les modules où ce membre est masqué. Reçoit les cases cochées
+ * (celles où il reste VISIBLE) plutôt que les décochées : une case oubliée par
+ * un futur module resterait cochée par défaut, donc le membre visible — le
+ * sens le plus sûr en cas d'ajout ultérieur d'une case.
+ */
+export async function modifierVisibiliteAction(formData: FormData): Promise<void> {
+  const membreId = String(formData.get('membreId') ?? '');
+  const visibles = new Set(formData.getAll('visible').map(String));
+  const masques = MODULES_VISIBILITE.filter((m) => !visibles.has(m));
+  const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+  await definirModulesMasques(foyer.id, user.id, membreId, masques);
+  revalidatePath(`/foyer/membres/${membreId}`);
   revalidatePath('/foyer/membres');
 }

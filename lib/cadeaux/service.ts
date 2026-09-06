@@ -6,10 +6,10 @@ import {
   cadeauxMasques as tMasques,
   occasions as tOccasions,
   membres as tMembres,
-  utilisateurs as tUtilisateurs,
 } from '@/lib/db/schema';
 import { ErreurValidation } from '@/lib/erreurs';
 import { contexteAcces } from '@/lib/visibilite';
+import { membresPourModule } from '@/lib/membres';
 import {
   STATUTS_DEFAUT,
   construireCadeau,
@@ -58,23 +58,37 @@ function filtreMasquage(utilisateurId: string) {
   )`;
 }
 
+/** Dédoublonne en gardant la 1ʳᵉ forme rencontrée (« Mathis » = « mathis »). */
+function dedoublonnerInsensibleCasse(valeurs: string[]): string[] {
+  const vus = new Set<string>();
+  const sortie: string[] = [];
+  for (const v of valeurs) {
+    const t = v.trim();
+    if (!t || vus.has(t.toLowerCase())) continue;
+    vus.add(t.toLowerCase());
+    sortie.push(t);
+  }
+  return sortie;
+}
+
 export async function chargerCadeaux(): Promise<DonneesCadeaux> {
   const { foyerId, utilisateurId } = await contexteAcces();
   const d = db();
 
-  const [lignesCad, lignesOcc, lignesMembres] = await Promise.all([
+  const [lignesCad, lignesOcc, membresTousModule, membresAutresModule] = await Promise.all([
     d
       .select()
       .from(tCadeaux)
       .where(and(eq(tCadeaux.foyerId, foyerId), filtreMasquage(utilisateurId)))
       .orderBy(desc(tCadeaux.creeLe)),
     d.select().from(tOccasions).where(eq(tOccasions.foyerId, foyerId)),
-    // Membres du foyer : alimentent le sélecteur « ne pas montrer à ».
-    d
-      .select({ utilisateurId: tMembres.utilisateurId, nom: tUtilisateurs.nom, email: tUtilisateurs.email })
-      .from(tMembres)
-      .innerJoin(tUtilisateurs, eq(tUtilisateurs.id, tMembres.utilisateurId))
-      .where(eq(tMembres.foyerId, foyerId)),
+    // Alimente « Offert par » : tout le foyer, soi-même compris (on peut avoir
+    // offert son propre cadeau à quelqu'un d'autre).
+    membresPourModule(foyerId, 'cadeaux'),
+    // Alimente « ne pas montrer à » : les AUTRES seulement — se masquer un
+    // cadeau à soi-même n'a aucun sens, et on ne le retrouverait plus pour
+    // défaire le réglage.
+    membresPourModule(foyerId, 'cadeaux', { excluUtilisateurId: utilisateurId }),
   ]);
 
   // Qui est masqué sur quoi — une seule requête pour toute la liste.
@@ -99,18 +113,20 @@ export async function chargerCadeaux(): Promise<DonneesCadeaux> {
     .map((o) => construireOccasion({ nom: o.nom, date: o.date, budget: o.budget, note: o.note }))
     .sort((a, b) => (a.dateISO ?? '9999').localeCompare(b.dateISO ?? '9999'));
 
-  // Liste « offert par » dérivée des cadeaux existants (alimente le datalist).
-  const offertPar = [...new Set(lignesCad.map((r) => r.offertPar.trim()).filter(Boolean))].sort(
-    (a, b) => a.localeCompare(b),
-  );
+  /*
+   * ⚠ « OFFERT PAR » = MEMBRES DU FOYER D'ABORD, PUIS L'HISTORIQUE DE SAISIE
+   * LIBRE (06/09/2026). Beaucoup de cadeaux sont offerts par quelqu'un
+   * d'extérieur au foyer (grands-parents, amis) : la saisie libre reste
+   * possible (Combobox), mais les membres eux-mêmes n'apparaissaient jamais
+   * en options — il fallait retaper leur nom à chaque fois. `dedoublonner`
+   * évite qu'un membre nommé « Mathis » et une saisie libre « mathis » (casse
+   * différente, ou nom Google vs surnom) ne créent deux entrées.
+   */
+  const nomsMembres = membresTousModule.map((m) => m.nom);
+  const historiqueLibre = [...new Set(lignesCad.map((r) => r.offertPar.trim()).filter(Boolean))];
+  const offertPar = dedoublonnerInsensibleCasse([...nomsMembres, ...historiqueLibre]);
 
-  // Le sélecteur « ne pas montrer à » ne propose que les AUTRES : se masquer un
-  // cadeau à soi-même n'a aucun sens, et on ne le retrouverait plus pour défaire
-  // le réglage.
-  const membres: MembreFoyer[] = lignesMembres
-    .filter((m) => m.utilisateurId !== utilisateurId)
-    .map((m) => ({ utilisateurId: m.utilisateurId, nom: m.nom || m.email }))
-    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  const membres: MembreFoyer[] = membresAutresModule;
 
   return { cadeaux, occasions, statuts: STATUTS_DEFAUT, offertPar, membres };
 }

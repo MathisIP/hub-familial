@@ -1266,6 +1266,10 @@ a { color: var(--link-tx); }
 .foyer-aide { margin-top: 1.5rem; }
 .foyer-aide code { background: var(--soft); padding: 0 .25rem; border-radius: .25rem; }
 
+/* Fiche de réglages d'un membre (/foyer/membres/[id]). */
+.fm-visibilite { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+.fm-visibilite-ligne { display: flex; align-items: center; gap: .5rem; font-size: .95rem; }
+
 /* ===================== ABONNEMENT ===================== */
 .abo-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
 .abo-statut { font-size: 1.05rem; font-weight: 600; margin: 0; }

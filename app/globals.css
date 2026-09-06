@@ -2602,6 +2602,11 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
   box-shadow: 0 12px 28px -12px rgba(0, 0, 0, .35), 0 0 0 1px color-mix(in srgb, var(--acc) 10%, transparent);
   animation: liste-apparait .12s ease-out;
 }
+/* ⚠ Ouverture vers la gauche (Liste.tsx `alignement`), quand le bouton est
+   trop près du bord droit de l'écran pour que le panneau s'ouvre à sa
+   largeur habituelle sans déborder. `right: 0` au lieu de `left: 0` — les
+   autres propriétés (largeur, ombre…) restent identiques. */
+.liste-panneau.aligne-droite { left: auto; right: 0; }
 @keyframes liste-apparait { from { opacity: 0; transform: translateY(-4px); } }
 /* Respecte le réglage système « réduire les animations ». */
 @media (prefers-reduced-motion: reduce) { .liste-panneau { animation: none; } }

@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-06',
+    numero: '1.3.12',
+    date: '6 septembre 2026',
+    dateISO: '2026-09-06',
+    titre: 'Les menus déroulants ne sortent plus de l’écran',
+    resume: 'Un menu ouvert près du bord droit s’affichait parfois hors de l’écran, illisible.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Un menu déroulant ne s’ouvre plus hors de l’écran.',
+        texte:
+          'Un menu (récurrence, priorité, statut…) ouvert près du bord droit de l’écran pouvait déborder et devenir illisible. Il s’ouvre désormais du bon côté selon la place disponible, dans toutes les sections de l’application.',
+      },
+    ],
+  },
+  {
     id: '2026-09-04',
     numero: '1.3.11',
     date: '4 septembre 2026',

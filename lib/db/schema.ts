@@ -444,10 +444,39 @@ export const comptesGoogle = pgTable('comptes_google', {
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * COMPTE INSTAGRAM DU FOYER (calendrier éditorial, /foyer/editorial).
+ *
+ * ⚠ SCOPÉ FOYER, PAS UTILISATEUR — contrairement à `comptesGoogle`. L'agenda
+ * connecte le compte GOOGLE PERSONNEL de chaque membre (chacun le sien).
+ * Instagram, ici, c'est LE compte professionnel du foyer (@nestync.app) : peu
+ * importe qui a autorisé l'app, le jeton sert à tout le foyer.
+ *
+ * ⚠ `pageId`/`igUserId` SONT NÉCESSAIRES AUX APPELS GRAPH API. Meta identifie
+ * un compte Instagram Business par son ID interne (`ig_user_id`), obtenu via la
+ * Page Facebook liée (`page_id`) — pas par le nom d'utilisateur Instagram.
+ */
+export const comptesInstagram = pgTable('comptes_instagram', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  foyerId: uuid('foyer_id')
+    .notNull()
+    .unique()
+    .references(() => foyers.id, { onDelete: 'cascade' }),
+  accessTokenChiffre: text('access_token_chiffre').notNull(),
+  // Jeton longue durée Meta (60 j, renouvelable), PAS de refresh_token distinct
+  // — l'API Meta fonctionne par extension du même jeton (voir lib/editorial/instagram.ts).
+  expireLe: timestamp('expire_le', { withTimezone: true }),
+  pageId: text('page_id').notNull(),
+  igUserId: text('ig_user_id').notNull(),
+  nomCompte: text('nom_compte').notNull().default(''),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Foyer = typeof foyers.$inferSelect;
 export type LigneDemandeAdhesion = typeof demandesAdhesion.$inferSelect;
 export type LigneFoyerAgenda = typeof foyerAgendas.$inferSelect;
 export type LigneCompteGoogle = typeof comptesGoogle.$inferSelect;
+export type LigneCompteInstagram = typeof comptesInstagram.$inferSelect;
 export type Utilisateur = typeof utilisateurs.$inferSelect;
 export type Membre = typeof membres.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;

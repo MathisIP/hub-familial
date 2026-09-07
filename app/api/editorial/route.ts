@@ -1,5 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { chargerPostsEditorial, definirStatutPost, modifierEtatPost, type ChampsEtatPost } from '@/lib/editorial/service';
+import {
+  chargerPostsEditorial,
+  definirStatutPost,
+  modifierEtatPost,
+  modifierTextesPost,
+  type ChampsEtatPost,
+  type ChampsTextePost,
+} from '@/lib/editorial/service';
 import { reponseErreur } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -14,19 +21,28 @@ export async function GET() {
 }
 
 /**
- * PATCH /api/editorial — deux gestes distincts sur la même route :
+ * PATCH /api/editorial — trois gestes distincts sur la même route :
  *  - { numero, statut } change le statut ;
+ *  - { numero, textes: {...} } modifie le contenu (hook, déroulé, légende…) ;
  *  - { numero, ...champs } modifie visuel/résultats.
- * `statut` prime, comme app/api/todo/taches/route.ts.
+ * `statut` puis `textes` priment, comme app/api/todo/taches/route.ts.
  */
 export async function PATCH(req: NextRequest) {
   try {
-    const { numero, statut, ...champs } = (await req.json()) as { numero?: number; statut?: string } & ChampsEtatPost;
+    const { numero, statut, textes, ...champs } = (await req.json()) as {
+      numero?: number;
+      statut?: string;
+      textes?: ChampsTextePost;
+    } & ChampsEtatPost;
     if (typeof numero !== 'number') {
       return NextResponse.json({ erreur: 'Paramètre { numero } requis.' }, { status: 400 });
     }
     if (typeof statut === 'string' && statut.trim()) {
       await definirStatutPost(numero, statut);
+      return NextResponse.json({ ok: true });
+    }
+    if (textes) {
+      await modifierTextesPost(numero, textes);
       return NextResponse.json({ ok: true });
     }
     await modifierEtatPost(numero, champs);

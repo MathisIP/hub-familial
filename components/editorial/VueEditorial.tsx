@@ -83,6 +83,16 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
     action(() => fetch(`/api/editorial/visuel/${numero}`, { method: 'POST', body: form }));
   }
 
+  function enregistrerTextes(numero: number, textes: Record<string, string>) {
+    action(() =>
+      fetch('/api/editorial', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero, textes }),
+      }),
+    );
+  }
+
   const affiches = posts.filter(
     (p) =>
       (filtreSemaine === 'Tout' || p.semaine === filtreSemaine) &&
@@ -130,6 +140,7 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
                 onCyclerStatut={() => cyclerStatut(p)}
                 onEnregistrerResultats={(champs) => enregistrerResultats(p.numero, champs)}
                 onTeleverserVisuel={(f) => televerserVisuel(p.numero, f)}
+                onEnregistrerTextes={(textes) => enregistrerTextes(p.numero, textes)}
               />
             </div>
           );
@@ -209,6 +220,83 @@ function BoutonCopier({ texte }: { texte: string }) {
   );
 }
 
+/**
+ * Bloc de texte éditable (hook, déroulé, légende, hashtags, note) : affiché en
+ * lecture, un bouton « Modifier » révèle un textarea + Enregistrer/Annuler.
+ * Simple écrasement à l'enregistrement, sans historique (décision utilisateur
+ * 07/09/2026) : le texte d'origine reste dans lib/editorial/posts.ts (git),
+ * mais l'app elle-même ne montre que la version la plus récente.
+ */
+function BlocEditable({
+  titre,
+  valeur,
+  occupe,
+  mono = true,
+  action,
+  onEnregistrer,
+}: {
+  titre: string;
+  valeur: string;
+  occupe: boolean;
+  mono?: boolean;
+  action?: React.ReactNode;
+  onEnregistrer: (v: string) => void;
+}) {
+  const [edite, setEdite] = useState(false);
+  const [brouillon, setBrouillon] = useState(valeur);
+
+  return (
+    <div className="edi-sec">
+      <div className="edi-sech">
+        {titre}
+        {!edite && action}
+        {!edite && (
+          <button
+            type="button"
+            className="edi-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setBrouillon(valeur);
+              setEdite(true);
+            }}
+          >
+            Modifier
+          </button>
+        )}
+      </div>
+      {edite ? (
+        <div className="edi-edition" onClick={(e) => e.stopPropagation()}>
+          <textarea
+            className="champ edi-textarea"
+            value={brouillon}
+            onChange={(e) => setBrouillon(e.target.value)}
+            rows={mono ? 6 : 2}
+            autoFocus
+          />
+          <div className="edi-edition-actions">
+            <button
+              type="button"
+              className="bouton"
+              disabled={occupe}
+              onClick={() => {
+                onEnregistrer(brouillon);
+                setEdite(false);
+              }}
+            >
+              Enregistrer
+            </button>
+            <button type="button" className="bouton discret" disabled={occupe} onClick={() => setEdite(false)}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={`edi-box ${mono ? 'mono' : ''}`}>{valeur}</div>
+      )}
+    </div>
+  );
+}
+
 function CartePost({
   post,
   ouvert,
@@ -217,6 +305,7 @@ function CartePost({
   onCyclerStatut,
   onEnregistrerResultats,
   onTeleverserVisuel,
+  onEnregistrerTextes,
 }: {
   post: Post;
   ouvert: boolean;
@@ -225,6 +314,7 @@ function CartePost({
   onCyclerStatut: () => void;
   onEnregistrerResultats: (champs: Record<string, number | null>) => void;
   onTeleverserVisuel: (fichier: File) => void;
+  onEnregistrerTextes: (textes: Record<string, string>) => void;
 }) {
   const [vues, setVues] = useState(post.vues?.toString() ?? '');
   const [interactions, setInteractions] = useState(post.interactions?.toString() ?? '');
@@ -268,24 +358,44 @@ function CartePost({
 
       {ouvert && (
         <div className="edi-corps">
-          <div className="edi-sec">
-            <div className="edi-sech">Déroulé visuel</div>
-            <div className="edi-box mono">{post.visuel}</div>
-          </div>
-          <div className="edi-sec">
-            <div className="edi-sech">Légende complète <BoutonCopier texte={post.legende} /></div>
-            <div className="edi-box mono">{post.legende}</div>
-          </div>
-          <div className="edi-sec">
-            <div className="edi-sech">Hashtags <BoutonCopier texte={post.hashtags} /></div>
-            <div className="edi-box tags">{post.hashtags}</div>
-          </div>
-          {post.note && (
-            <div className="edi-sec">
-              <div className="edi-sech">À surveiller</div>
-              <div className="edi-box notes">{post.note}</div>
-            </div>
-          )}
+          <BlocEditable
+            titre="Hook"
+            valeur={post.hook}
+            occupe={occupe}
+            mono={false}
+            onEnregistrer={(v) => onEnregistrerTextes({ hook: v })}
+          />
+          <BlocEditable
+            titre="Déroulé visuel"
+            valeur={post.visuel}
+            occupe={occupe}
+            onEnregistrer={(v) => onEnregistrerTextes({ visuel: v })}
+          />
+          <BlocEditable
+            titre="Légende complète"
+            valeur={post.legende}
+            occupe={occupe}
+            action={<BoutonCopier texte={post.legende} />}
+            onEnregistrer={(v) => onEnregistrerTextes({ legende: v })}
+          />
+          <BlocEditable
+            titre="Hashtags"
+            valeur={post.hashtags}
+            occupe={occupe}
+            mono={false}
+            action={<BoutonCopier texte={post.hashtags} />}
+            onEnregistrer={(v) => onEnregistrerTextes({ hashtags: v })}
+          />
+          {/* ⚠ Toujours affiché, même sans note existante (contrairement à
+              avant) : sinon impossible d'AJOUTER une note à un post qui n'en
+              avait pas — le bouton « Modifier » doit rester atteignable. */}
+          <BlocEditable
+            titre="À surveiller"
+            valeur={post.note}
+            occupe={occupe}
+            mono={false}
+            onEnregistrer={(v) => onEnregistrerTextes({ note: v })}
+          />
 
           <div className="edi-sec">
             <div className="edi-sech">Visuel</div>

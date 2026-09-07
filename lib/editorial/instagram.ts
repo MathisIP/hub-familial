@@ -43,14 +43,22 @@ export function uriRedirectionInstagram(): string {
 }
 
 /**
- * Permissions demandées — les deux ajoutées côté Meta Developer :
- *  · `instagram_business_basic` : lire profil + contenu du compte ;
- *  · `instagram_business_manage_insights` : lire les statistiques.
+ * Permissions demandées, pour le flux `dialog/oauth` (Facebook Login for
+ * Business) — SANS le préfixe `business_` : `instagram_business_basic` /
+ * `instagram_business_manage_insights` existent bien côté Meta (visibles dans
+ * « Autorisations et fonctionnalités » de l'app), mais appartiennent à la
+ * nouvelle famille « Instagram API with Instagram Login » (compte Instagram
+ * connecté directement, sans Page Facebook). Le flux qu'on utilise ICI (Page
+ * Facebook liée, `/me/accounts` pour résoudre le compte) est l'ancien
+ * « Instagram API with Facebook Login », qui rejette ces scopes comme
+ * invalides — confirmé en test (06/09/2026) : erreur « Invalid Scopes ».
+ *  · `instagram_basic` : lire profil + contenu du compte ;
+ *  · `instagram_manage_insights` : lire les statistiques.
  * Aucune permission d'écriture (publication, messages, commentaires) : ce
  * calendrier ne fait QUE lire les résultats, jamais publier à la place de la
  * personne.
  */
-const SCOPES_INSTAGRAM = ['instagram_business_basic', 'instagram_business_manage_insights'].join(',');
+const SCOPES_INSTAGRAM = ['instagram_basic', 'instagram_manage_insights', 'pages_show_list', 'pages_read_engagement'].join(',');
 
 export function urlAutorisationInstagram(etat: string): string {
   const p = new URLSearchParams({

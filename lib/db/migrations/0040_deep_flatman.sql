@@ -1,0 +1,1 @@
+ALTER TABLE "taches" ADD COLUMN "preavis_jours" integer;

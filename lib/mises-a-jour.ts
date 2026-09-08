@@ -83,6 +83,22 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-08',
+    numero: '1.4.1',
+    date: '8 septembre 2026',
+    dateISO: '2026-09-08',
+    titre: 'Anticiper les tâches mensuelles et annuelles',
+    resume: 'Une tâche qui revient chaque mois ou chaque année peut désormais apparaître quelques jours avant son échéance.',
+    changements: [
+      {
+        nature: 'nouveau',
+        titre: 'Un préavis, en jours, pour les tâches mensuelles et annuelles.',
+        texte:
+          'Une nouvelle option « Préavis » se règle sur chaque tâche qui revient chaque mois ou chaque année. Une fois ce délai atteint, la tâche apparaît dans « À faire » avant son échéance exacte, pour laisser le temps de s’en occuper (renouveler une assurance, prendre un rendez-vous…).',
+      },
+    ],
+  },
+  {
     id: '2026-09-06-2',
     numero: '1.4.0',
     date: '6 septembre 2026',

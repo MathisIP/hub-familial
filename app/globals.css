@@ -3254,6 +3254,10 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 .edi-rf span { font-size: .6rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .edi-hint { font-size: .72rem; color: var(--muted); margin: 0; }
 
+.edi-edition { display: flex; flex-direction: column; gap: .5rem; }
+.edi-textarea { width: 100%; resize: vertical; font-family: inherit; line-height: 1.6; }
+.edi-edition-actions { display: flex; gap: .5rem; }
+
 @media (max-width: 640px) {
   .edi-ligne { gap: .6rem; }
   .edi-side { flex-direction: column; align-items: flex-end; gap: .35rem; }

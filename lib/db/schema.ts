@@ -1249,6 +1249,19 @@ export const editorialPosts = pgTable(
     interactions: integer('interactions'),
     enregistrements: integer('enregistrements'),
     partages: integer('partages'),
+    /*
+     * SURCHARGES DE TEXTE — `null` = pas modifié, on garde le contenu de
+     * POSTS_EDITORIAL (posts.ts). NOT NULL avec un défaut aurait empêché de
+     * distinguer « jamais touché » de « vidé volontairement » ; `null` est
+     * le seul état qui dit sans ambiguïté « retombe sur la constante ».
+     * Simple écrasement, pas d'historique (décision utilisateur 07/09/2026) :
+     * le texte d'origine ne reste récupérable que via git (posts.ts, inchangé).
+     */
+    hook: text('hook'),
+    visuelTexte: text('visuel_texte'), // le déroulé/script (nom distinct de `visuel`, la clé de stockage image)
+    legende: text('legende'),
+    hashtags: text('hashtags'),
+    note: text('note'),
     majLe: timestamp('maj_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

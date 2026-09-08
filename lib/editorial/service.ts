@@ -37,7 +37,15 @@ export async function chargerPostsEditorial(): Promise<Post[]> {
           partages: l.partages,
         }
       : etatParDefaut(contenu.numero);
-    return { ...contenu, ...etat };
+    // Surcharges de texte : `null` (jamais modifié) retombe sur POSTS_EDITORIAL.
+    const textes = {
+      hook: l?.hook ?? contenu.hook,
+      visuel: l?.visuelTexte ?? contenu.visuel,
+      legende: l?.legende ?? contenu.legende,
+      hashtags: l?.hashtags ?? contenu.hashtags,
+      note: l?.note ?? contenu.note,
+    };
+    return { ...contenu, ...textes, ...etat };
   });
 }
 
@@ -104,6 +112,57 @@ export async function modifierEtatPost(numero: number, champs: ChampsEtatPost): 
   await d
     .insert(tPosts)
     .values({ foyerId, numero, statut: existante?.statut ?? 'À faire', ...valeurs })
+    .onConflictDoUpdate({ target: [tPosts.foyerId, tPosts.numero], set: valeurs });
+}
+
+export type ChampsTextePost = {
+  hook?: string;
+  visuel?: string; // le déroulé/script, pas la clé de stockage image
+  legende?: string;
+  hashtags?: string;
+  note?: string;
+};
+
+/**
+ * Modifie le contenu texte d'un post (hook, déroulé, légende, hashtags, note).
+ * Simple écrasement, sans historique (décision utilisateur 07/09/2026) : le
+ * texte d'origine reste consultable dans lib/editorial/posts.ts via git, mais
+ * l'app elle-même ne garde qu'une seule version, la plus récente.
+ *
+ * ⚠ MÊME LOGIQUE DE FUSION PARTIELLE QUE `modifierEtatPost` : un champ non
+ * envoyé garde sa valeur existante, jamais écrasé à `null` par erreur.
+ */
+export async function modifierTextesPost(numero: number, champs: ChampsTextePost): Promise<void> {
+  if (!POSTS_EDITORIAL.some((p) => p.numero === numero)) {
+    throw new ErreurValidation('Publication introuvable.');
+  }
+  const foyerId = await idFoyerCourant();
+  const d = db();
+
+  const [existante] = await d
+    .select()
+    .from(tPosts)
+    .where(and(eq(tPosts.foyerId, foyerId), eq(tPosts.numero, numero)))
+    .limit(1);
+
+  const valeurs = {
+    hook: champs.hook !== undefined ? champs.hook : (existante?.hook ?? null),
+    visuelTexte: champs.visuel !== undefined ? champs.visuel : (existante?.visuelTexte ?? null),
+    legende: champs.legende !== undefined ? champs.legende : (existante?.legende ?? null),
+    hashtags: champs.hashtags !== undefined ? champs.hashtags : (existante?.hashtags ?? null),
+    note: champs.note !== undefined ? champs.note : (existante?.note ?? null),
+    majLe: new Date(),
+  };
+
+  await d
+    .insert(tPosts)
+    .values({
+      foyerId,
+      numero,
+      statut: existante?.statut ?? 'À faire',
+      visuel: existante?.visuel ?? '',
+      ...valeurs,
+    })
     .onConflictDoUpdate({ target: [tPosts.foyerId, tPosts.numero], set: valeurs });
 }
 

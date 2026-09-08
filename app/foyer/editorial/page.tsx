@@ -42,31 +42,32 @@ export default async function PageEditorial({
 
   return (
     <>
-      <header className="entete">
+      {/* ⚠ L'ÉTAT INSTAGRAM TIENT SUR UNE LIGNE, EN HAUT À DROITE (08/09/2026).
+          Il occupait auparavant un bloc pleine largeur avec titre et paragraphe
+          d'explication, alors qu'on ne s'y connecte qu'une fois : il repoussait
+          le calendrier — le vrai contenu de la page — sous la ligne de flottaison
+          à chaque visite. */}
+      <header className="entete edi-entete">
         <div>
           <h1>Calendrier éditorial</h1>
           <p>16 publications du 7 septembre au 3 octobre 2026 — état partagé du foyer.</p>
         </div>
+        {connecte ? (
+          <span className="edi-ig-etat" title="Compte Instagram connecté">
+            ✓ @{connecte.nomCompte || '…'}
+          </span>
+        ) : (
+          <a
+            href="/api/editorial/instagram/connexion"
+            className="bouton discret edi-ig-lien"
+            title="Connecte le compte Instagram professionnel pour remplir automatiquement les résultats de chaque publication."
+          >
+            Connecter Instagram
+          </a>
+        )}
       </header>
 
       {retour && <p className={`message ${retour.erreur ? 'erreur' : 'info'}`}>{retour.texte}</p>}
-
-      <section className="compte-bloc">
-        <h2 className="bloc-titre">Compte Instagram</h2>
-        {connecte ? (
-          <p className="compte-note">Connecté : @{connecte.nomCompte || '…'}</p>
-        ) : (
-          <>
-            <p className="compte-note">
-              Connecte le compte Instagram professionnel pour remplir automatiquement les résultats (vues,
-              interactions) de chaque publication.
-            </p>
-            <a href="/api/editorial/instagram/connexion" className="bouton bouton-primaire">
-              Connecter Instagram
-            </a>
-          </>
-        )}
-      </section>
 
       <VueEditorial initial={posts} />
     </>

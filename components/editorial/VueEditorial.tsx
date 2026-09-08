@@ -1,7 +1,13 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { STATUTS_EDITORIAL, type Post, type StatutEditorial } from '@/lib/editorial/schema';
+import {
+  STATUTS_EDITORIAL,
+  FORMATS_POST,
+  familleFormat,
+  type Post,
+  type StatutEditorial,
+} from '@/lib/editorial/schema';
 
 /**
  * CALENDRIER ÉDITORIAL (client) — components/editorial/VueEditorial.tsx.
@@ -93,14 +99,21 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
     );
   }
 
+  /*
+   * ⚠ LE FILTRE FORMAT PORTE SUR LA FAMILLE (reel/carrousel), PAS SUR LE CODE
+   * EXACT. Depuis le plan S2-S4, quatre médiums coexistent (texte, dessins,
+   * filmé) : filtrer sur « rf » seul cacherait les reels typographiques, alors
+   * que ce qu'on cherche en filtrant, c'est « les vidéos » ou « les carrousels ».
+   */
   const affiches = posts.filter(
     (p) =>
       (filtreSemaine === 'Tout' || p.semaine === filtreSemaine) &&
-      (filtreFormat === 'Tout' || p.format === filtreFormat) &&
+      (filtreFormat === 'Tout' || familleFormat(p.format) === filtreFormat) &&
       (filtreStatut === 'Tout' || p.statut === filtreStatut),
   );
 
   const compte = (statut: StatutEditorial) => posts.filter((p) => p.statut === statut).length;
+  const compteFamille = (f: 'reel' | 'carrousel') => posts.filter((p) => familleFormat(p.format) === f).length;
 
   let derniereSemaine: string | null = null;
 
@@ -108,8 +121,8 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
     <div className="edi">
       <div className="edi-stats">
         <div className="edi-stat"><b>{posts.length}</b><span>Total</span></div>
-        <div className="edi-stat"><b>{posts.filter((p) => p.format === 'Reel').length}</b><span>Reels</span></div>
-        <div className="edi-stat"><b>{posts.filter((p) => p.format === 'Carrousel').length}</b><span>Carrousels</span></div>
+        <div className="edi-stat"><b>{compteFamille('reel')}</b><span>Reels</span></div>
+        <div className="edi-stat"><b>{compteFamille('carrousel')}</b><span>Carrousels</span></div>
         <div className="edi-stat"><b>{compte('À faire')}</b><span>À faire</span></div>
         <div className="edi-stat"><b>{compte('Prêt')}</b><span>Prêt</span></div>
         <div className="edi-stat"><b>{compte('Publié')}</b><span>Publié</span></div>
@@ -117,7 +130,13 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
 
       <div className="edi-filtres">
         <FiltreChips label="Semaine" valeurs={semaines} actif={filtreSemaine} onChoisir={setFiltreSemaine} />
-        <FiltreChips label="Format" valeurs={['Tout', 'Reel', 'Carrousel']} actif={filtreFormat} onChoisir={setFiltreFormat} />
+        <FiltreChips
+          label="Format"
+          valeurs={['Tout', 'reel', 'carrousel']}
+          libelles={{ reel: 'Reels', carrousel: 'Carrousels' }}
+          actif={filtreFormat}
+          onChoisir={setFiltreFormat}
+        />
         <FiltreChips label="Statut" valeurs={['Tout', ...STATUTS_EDITORIAL]} actif={filtreStatut} onChoisir={setFiltreStatut} />
       </div>
 
@@ -153,27 +172,33 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
 function FiltreChips({
   label,
   valeurs,
+  libelles,
   actif,
   onChoisir,
 }: {
   label: string;
   valeurs: string[];
+  /** Libellé affiché pour une valeur, quand la valeur technique n'est pas lisible. */
+  libelles?: Record<string, string>;
   actif: string;
   onChoisir: (v: string) => void;
 }) {
   return (
     <div className="edi-fgroupe">
       <span className="edi-flabel">{label}</span>
-      {valeurs.map((v) => (
-        <button
-          key={v}
-          className={`edi-chip${actif === v ? ' on' : ''}`}
-          onClick={() => onChoisir(v)}
-          title={v}
-        >
-          {v.length > 14 ? v.split('—')[0].trim() : v}
-        </button>
-      ))}
+      {valeurs.map((v) => {
+        const texte = libelles?.[v] ?? (v.length > 14 ? v.split('—')[0].trim() : v);
+        return (
+          <button
+            key={v}
+            className={`edi-chip${actif === v ? ' on' : ''}`}
+            onClick={() => onChoisir(v)}
+            title={libelles?.[v] ?? v}
+          >
+            {texte}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -334,10 +359,16 @@ function CartePost({
       <div className="edi-ligne" onClick={onBasculer}>
         <div className="edi-date"><b>{post.jourNumero}</b><span>{post.mois}</span></div>
         <div className="edi-main">
-          <span className={`edi-pill ${post.format.toLowerCase()}`}>{post.format}</span>
+          <span className={`edi-pill ${post.format}`}>{FORMATS_POST[post.format] ?? post.format}</span>
+          {post.verrouille && (
+            <span className="edi-pill verrou" title="Contenu arrêté : ne pas retoucher">
+              🔒 Verrouillé
+            </span>
+          )}
           <span className="edi-meta">{post.jour} {post.date}</span>
-          <div className="edi-hook">{post.hook}</div>
-          <div className="edi-meta">{post.pilier} · <em>CTA : {post.cta}</em></div>
+          {/* Le hook peut contenir des retours à la ligne voulus (plan S2-S4). */}
+          <div className="edi-hook edi-hook-multi">{post.hook}</div>
+          <div className="edi-meta">{post.pilier} · <em>CTA : {post.ctaType}</em></div>
         </div>
         <div className="edi-side">
           <button
@@ -396,6 +427,22 @@ function CartePost({
             mono={false}
             onEnregistrer={(v) => onEnregistrerTextes({ note: v })}
           />
+
+          {/* Production et justification : issus du plan, en lecture seule —
+              ce sont des consignes de fabrication et des arbitrages, pas du
+              contenu qu'on retouche au fil de l'eau comme une légende. */}
+          {post.production && (
+            <div className="edi-sec">
+              <div className="edi-sech">À produire</div>
+              <div className="edi-box mono">{post.production}</div>
+            </div>
+          )}
+          {post.pourquoi && (
+            <div className="edi-sec">
+              <div className="edi-sech">Pourquoi ce post, ici</div>
+              <div className="edi-box edi-pourquoi">{post.pourquoi}</div>
+            </div>
+          )}
 
           <div className="edi-sec">
             <div className="edi-sech">Visuel</div>

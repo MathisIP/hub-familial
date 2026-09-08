@@ -3183,6 +3183,17 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
  * non listée dans le menu. Repris de la maquette HTML fournie par l'utilisateur,
  * couleurs remplacées par les jetons de thème (fonctionne clair/sombre).
  * ══════════════════════════════════════════════════════════════════════ */
+/* État Instagram : une ligne discrète en haut à droite, jamais un bloc — on ne
+   s'y connecte qu'une fois, le calendrier est le vrai contenu de la page. */
+.edi-entete { align-items: flex-start; }
+.edi-ig-lien { flex: 0 0 auto; font-size: .8rem; padding: .35rem .7rem; }
+.edi-ig-etat {
+  flex: 0 0 auto; font-size: .78rem; color: var(--ok-tx);
+  border: 1px solid color-mix(in srgb, var(--ok-tx) 35%, var(--line));
+  background: color-mix(in srgb, var(--ok-tx) 10%, transparent);
+  border-radius: 999px; padding: .25rem .7rem; white-space: nowrap;
+}
+
 .edi-stats { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.2rem; }
 .edi-stat {
   background: var(--cell); border: 1px solid var(--line); border-radius: .8rem;
@@ -3215,9 +3226,21 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 .edi-date span { font-size: .6rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .edi-main { flex: 1; min-width: 0; }
 .edi-pill { display: inline-block; font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; padding: .2rem .55rem; border-radius: 999px; color: #fff; margin-right: .5rem; }
-.edi-pill.reel { background: #4338CA; }
-.edi-pill.carrousel { background: #8A5A2E; }
+/* Anciens formats (semaine 1, sans distinction de médium). */
+.edi-pill.Reel { background: #4338CA; }
+.edi-pill.Carrousel { background: #8A5A2E; }
+/* Quatre médiums du plan S2-S4 : la couleur distingue le COÛT de production
+   (texte < dessin < filmé), pas seulement le contenant. */
+.edi-pill.ct { background: #2E4057; }
+.edi-pill.cd { background: #7A5230; }
+.edi-pill.rt { background: #3F5E4B; }
+.edi-pill.rf { background: #6B3A4B; }
+.edi-pill.verrou { background: var(--muted); }
 .edi-hook { font-family: var(--police-titre), Georgia, serif; font-size: 1.05rem; line-height: 1.32; margin: .45rem 0 .3rem; }
+/* Les hooks du plan S2-S4 portent des retours à la ligne voulus (rythme de
+   lecture) : les écraser changerait le texte tel qu'il doit être publié. */
+.edi-hook-multi { white-space: pre-line; }
+.edi-pourquoi { color: var(--ink2); font-size: .85rem; line-height: 1.6; }
 .edi-meta { font-size: .78rem; color: var(--muted); }
 .edi-meta em { font-style: normal; color: var(--ink2); }
 .edi-side { flex: 0 0 auto; display: flex; align-items: center; gap: .6rem; }

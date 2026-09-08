@@ -2,6 +2,18 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { televerserVisuelPost, fluxVisuelPost } from '@/lib/editorial/service';
 import { reponseErreur } from '@/lib/api';
 
+/**
+ * ⚠ PLUS APPELÉE PAR L'INTERFACE DEPUIS LE 08/09/2026. Le calendrier ne
+ * téléverse plus d'image : les médias finaux (reel monté, images du carrousel)
+ * sont désignés par un LIEN vers un dossier externe — une vidéo de reel dépasse
+ * de loin la limite de requête de Vercel, et l'image unique qu'on pouvait
+ * déposer ici ne servait à rien.
+ *
+ * Conservée pour que les visuels déjà déposés restent lisibles : la colonne
+ * `editorial_posts.visuel` peut encore porter une clé de stockage, et supprimer
+ * cette route rendrait ces fichiers définitivement inatteignables sans rien
+ * faire gagner.
+ */
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 

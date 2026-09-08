@@ -66,6 +66,8 @@ export type EtatPost = {
   numero: number;
   statut: StatutEditorial;
   visuelUrl: string;
+  /** Lien vers le dossier des médias finaux (Drive, Dropbox…). Vide si aucun. */
+  lienMedias: string;
   vues: number | null;
   interactions: number | null;
   enregistrements: number | null;
@@ -81,9 +83,35 @@ export function etatParDefaut(numero: number): EtatPost {
     numero,
     statut: 'À faire',
     visuelUrl: '',
+    lienMedias: '',
     vues: null,
     interactions: null,
     enregistrements: null,
     partages: null,
   };
+}
+
+/**
+ * Ordonne les publications par date réelle.
+ *
+ * ⚠ TRI PAR DATE, REGROUPEMENT PAR SEMAINE SAISIE — les deux sont désormais
+ * modifiables indépendamment (08/09/2026). Déplacer un post sans corriger sa
+ * semaine le fera donc apparaître sous un intitulé qui ne colle plus. C'est
+ * assumé : deviner la semaine à partir de la date imposerait une convention de
+ * découpage que le plan ne suit pas forcément, et une incohérence VISIBLE vaut
+ * mieux qu'un regroupement qui se réécrit tout seul dans le dos de la personne.
+ */
+export function trierParDate<T extends { date: string; numero: number }>(posts: T[]): T[] {
+  const cle = (d: string) => {
+    const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return m ? `${m[3]}${m[2]}${m[1]}` : '';
+  };
+  return [...posts].sort((a, b) => {
+    const ca = cle(a.date);
+    const cb = cle(b.date);
+    // Une date illisible ne doit pas remonter en tête : on la renvoie à la fin
+    // en gardant l'ordre des numéros, plutôt que de la laisser fausser le tri.
+    if (!ca || !cb) return !ca && !cb ? a.numero - b.numero : ca ? -1 : 1;
+    return ca === cb ? a.numero - b.numero : ca.localeCompare(cb);
+  });
 }

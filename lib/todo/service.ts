@@ -142,6 +142,7 @@ export type NouvelleTache = {
   echeanceLabel?: string; // jj/mm/aaaa
   recurrence?: string;
   recurrenceJour?: string;
+  preavisJours?: number | null;
   note?: string;
 };
 
@@ -162,6 +163,7 @@ export async function ajouterTache(t: NouvelleTache): Promise<string> {
       echeance: t.echeanceLabel ?? '',
       recurrence: t.recurrence ?? 'Aucune',
       recurrenceJour: t.recurrenceJour ?? '',
+      preavisJours: t.preavisJours ?? null,
       note: t.note ?? '',
     })
     .returning({ id: tTaches.id });
@@ -202,6 +204,7 @@ export async function changerStatutTache(id: string, statut: string): Promise<vo
       echeance: prochaine,
       recurrence: cible.recurrence,
       recurrenceJour: cible.recurrenceJour,
+      preavisJours: cible.preavisJours,
       note: cible.note,
     });
   }
@@ -228,6 +231,7 @@ export async function modifierTache(
     echeanceLabel?: string;
     recurrence?: string;
     recurrenceJour?: string;
+    preavisJours?: number | null;
     note?: string;
   },
 ): Promise<void> {
@@ -244,6 +248,7 @@ export async function modifierTache(
   if (champs.echeanceLabel !== undefined) set.echeance = champs.echeanceLabel.trim();
   if (champs.recurrence !== undefined) set.recurrence = champs.recurrence.trim() || 'Aucune';
   if (champs.recurrenceJour !== undefined) set.recurrenceJour = champs.recurrenceJour.trim();
+  if (champs.preavisJours !== undefined) set.preavisJours = champs.preavisJours;
   if (champs.note !== undefined) set.note = champs.note.trim();
   if (Object.keys(set).length === 0) return;
   const res = await db()

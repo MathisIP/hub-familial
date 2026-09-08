@@ -39,9 +39,16 @@ export type Tache = {
   // Jour fixé de la récurrence (nom du jour ou numéro du mois selon `recurrence`,
   // vide si non fixé — voir `prochaineOccurrenceLabel`).
   recurrenceJour: string;
+  // Jours de préavis avant l'échéance (mensuelle/annuelle uniquement) : le
+  // cron quotidien avance l'échéance à la prochaine occurrence dès que
+  // `echeance - preavisJours <= aujourd'hui`. `null` = pas de préavis.
+  preavisJours: number | null;
   note: string;
   enRetard: boolean;
 };
+
+/** Récurrences pour lesquelles un préavis a un sens (voir lib/todo/preavis.ts). */
+export const RECURRENCES_AVEC_PREAVIS = ['mensuelle', 'annuelle'];
 
 export type Course = {
   id: string;
@@ -248,6 +255,7 @@ export function construireTache(
     echeance: string;
     recurrence: string;
     recurrenceJour: string;
+    preavisJours: number | null;
     note: string;
   },
   todayISO: string,
@@ -265,6 +273,7 @@ export function construireTache(
     echeanceLabel,
     recurrence: r.recurrence || 'Aucune',
     recurrenceJour: r.recurrenceJour ?? '',
+    preavisJours: r.preavisJours ?? null,
     note: r.note,
     enRetard: !!echeance && r.statut !== STATUT_FAIT && echeance < todayISO,
   };

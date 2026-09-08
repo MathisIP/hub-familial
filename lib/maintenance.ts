@@ -21,6 +21,7 @@ import {
 } from '@/lib/email/messages';
 import { supprimerFoyerEtUtilisateur, supprimerFoyersEchus } from '@/lib/rgpd';
 import { envoyerRappelsQuotidiens } from '@/lib/notifications/rappels';
+import { appliquerPreavisRecurrences } from '@/lib/todo/preavis';
 import { chargerComptesSansGarde } from '@/lib/comptes/service';
 
 /**
@@ -116,6 +117,8 @@ export type RapportMenage = {
   messagesPurges: number;
   /** Rappels de la veille envoyés (appareils touchés). */
   rappelsEnvoyes: number;
+  /** Tâches récurrentes dont l'échéance a été avancée par préavis. */
+  preavisAvancees: number;
   relancesEnvoyees: number;
   /** Avis de reconduction (art. L. 215-1) expédiés ce passage. */
   avisReconduction: number;
@@ -603,6 +606,16 @@ export async function menagePeriodique(): Promise<RapportMenage> {
   } catch (e) {
     console.error('[maintenance] rappels échoués', e instanceof Error ? e.message : e);
   }
+
+  // Préavis des tâches récurrentes : avance l'échéance des tâches mensuelles/
+  // annuelles dont la fenêtre de préavis est atteinte (lib/todo/preavis.ts).
+  // Même filet que les rappels : ne doit jamais faire échouer le ménage.
+  let preavis = { avancees: 0 };
+  try {
+    preavis = await appliquerPreavisRecurrences();
+  } catch (e) {
+    console.error('[maintenance] préavis des tâches échoué', e instanceof Error ? e.message : e);
+  }
   // ⚠ Avant les autres suppressions : un foyer dont le délai est écoulé doit
   // partir même si une étape suivante échoue. On a promis l'effacement à
   // quelqu'un qui l'a demandé.
@@ -636,6 +649,7 @@ export async function menagePeriodique(): Promise<RapportMenage> {
     invitationsPurgees,
     messagesPurges,
     rappelsEnvoyes: rappels.envois,
+    preavisAvancees: preavis.avancees,
     relancesEnvoyees,
     avisReconduction: avisEnvoyes,
     foyersEchus,

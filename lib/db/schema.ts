@@ -615,6 +615,12 @@ export const taches = pgTable(
     // numéro 1-31 (texte) si mensuelle. Vide = comportement hérité (dérivé de
     // l'échéance, voir prochaineOccurrenceLabel).
     recurrenceJour: text('recurrence_jour').notNull().default(''),
+    // Jours de préavis avant l'échéance affichée (mensuelle/annuelle
+    // uniquement) : le cron quotidien (lib/todo/preavis.ts) avance
+    // automatiquement l'échéance à la prochaine occurrence dès que
+    // `echeance - preavisJours <= aujourd'hui`. `null` = pas de préavis,
+    // comportement hérité (la tâche n'apparaît qu'à son échéance).
+    preavisJours: integer('preavis_jours'),
     note: text('note').notNull().default(''),
     creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   },

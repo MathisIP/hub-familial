@@ -9,7 +9,7 @@ import { useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_STATUT_TODO, CLE_PRIORITE, CLE_JOUR } from '@/lib/i18n';
 import { JOURS } from '@/lib/repas/schema';
 import type { Course, DonneesTodo, Parametres, Tache } from '@/lib/todo/schema';
-import { STATUT_FAIT, JOURS_MOIS } from '@/lib/todo/schema';
+import { STATUT_FAIT, JOURS_MOIS, RECURRENCES_AVEC_PREAVIS } from '@/lib/todo/schema';
 import Astuce from '@/components/Astuce';
 import ValiderCourses from '@/components/todo/ValiderCourses';
 import FormulaireTache from '@/components/todo/FormulaireTache';
@@ -168,6 +168,7 @@ function OngletTaches({
     echeanceLabel: string;
     recurrence: string;
     recurrenceJour: string;
+    preavisJours: number | null;
   }) {
     action(() => fetch('/api/todo/taches', json(corps))).then(() => setAjoutOuvert(false));
   }
@@ -323,6 +324,7 @@ function OngletTaches({
                             : t.recurrenceJour}
                         </>
                       )}
+                      {t.preavisJours != null && ` · préavis ${t.preavisJours} j`}
                     </span>
                   )}
                 </span>
@@ -393,6 +395,7 @@ function EditionTache({
     echeanceLabel: string;
     recurrence: string;
     recurrenceJour: string;
+    preavisJours: number | null;
   }) => void;
 }) {
   const tr = useT();
@@ -404,17 +407,21 @@ function EditionTache({
   const [echeance, setEcheance] = useState(tache.echeanceLabel);
   const [recurrence, setRecurrence] = useState(tache.recurrence);
   const [recurrenceJour, setRecurrenceJour] = useState(tache.recurrenceJour);
+  const [preavisJours, setPreavisJours] = useState(tache.preavisJours?.toString() ?? '');
 
   const rec = (recurrence || 'Aucune').toLowerCase();
+  const avecPreavis = RECURRENCES_AVEC_PREAVIS.includes(rec);
 
   function changerRecurrence(v: string) {
     setRecurrence(v);
     setRecurrenceJour('');
+    setPreavisJours('');
   }
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
     if (!titre.trim()) return;
+    const preavis = avecPreavis && preavisJours.trim() ? Number(preavisJours) : null;
     onEnregistrer({
       tache: titre.trim(),
       assigne,
@@ -423,6 +430,7 @@ function EditionTache({
       echeanceLabel: echeance,
       recurrence: recurrence || 'Aucune',
       recurrenceJour,
+      preavisJours: preavis != null && Number.isFinite(preavis) && preavis > 0 ? preavis : null,
     });
   }
 
@@ -492,6 +500,20 @@ function EditionTache({
           {['29', '30', '31'].includes(recurrenceJour) && (
             <p className="fr-avertit">{tr('TODO_RECURRENCE_JOUR_MOIS_AVERTIT')}</p>
           )}
+        </>
+      )}
+      {avecPreavis && (
+        <>
+          <input
+            className="champ"
+            type="number"
+            min={1}
+            placeholder={tr('TODO_PREAVIS_PH')}
+            value={preavisJours}
+            onChange={(e) => setPreavisJours(e.target.value)}
+            aria-label={tr('TODO_PREAVIS')}
+          />
+          <p className="fr-avertit">{tr('TODO_PREAVIS_NOTE')}</p>
         </>
       )}
       <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>

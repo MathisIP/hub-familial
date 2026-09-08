@@ -8,7 +8,7 @@ import ChampDate from '@/components/ChampDate';
 import { useT, useLangue } from '@/components/I18nProvider';
 import { tEnum, CLE_PRIORITE, CLE_JOUR } from '@/lib/i18n';
 import { JOURS } from '@/lib/repas/schema';
-import { JOURS_MOIS, type Parametres } from '@/lib/todo/schema';
+import { JOURS_MOIS, RECURRENCES_AVEC_PREAVIS, type Parametres } from '@/lib/todo/schema';
 
 /**
  * FENÊTRE D'AJOUT D'UNE TÂCHE — popup, ouverte depuis un bouton (+).
@@ -40,6 +40,7 @@ export default function FormulaireTache({
     echeanceLabel: string;
     recurrence: string;
     recurrenceJour: string;
+    preavisJours: number | null;
   }) => void;
 }) {
   const tr = useT();
@@ -51,6 +52,7 @@ export default function FormulaireTache({
   const [echeance, setEcheance] = useState('');
   const [recurrence, setRecurrence] = useState('');
   const [recurrenceJour, setRecurrenceJour] = useState('');
+  const [preavisJours, setPreavisJours] = useState('');
 
   // Échap ferme, comme partout ailleurs dans l'application.
   useEffect(() => {
@@ -69,11 +71,18 @@ export default function FormulaireTache({
     // saisi : en changer sans le vider laisserait par exemple « Lundi »
     // attaché à une récurrence devenue mensuelle, où « Lundi » ne veut rien dire.
     setRecurrenceJour('');
+    // Même raison : un préavis n'a de sens que pour mensuelle/annuelle
+    // (RECURRENCES_AVEC_PREAVIS) — le vider en changeant de récurrence évite
+    // qu'il reste attaché, invisible, à une hebdomadaire.
+    setPreavisJours('');
   }
+
+  const avecPreavis = RECURRENCES_AVEC_PREAVIS.includes(rec);
 
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
     if (!titre.trim()) return;
+    const preavis = avecPreavis && preavisJours.trim() ? Number(preavisJours) : null;
     onAjouterAction({
       tache: titre.trim(),
       assigne,
@@ -85,6 +94,7 @@ export default function FormulaireTache({
       // l'ancien formulaire déplié).
       recurrence: recurrence || 'Aucune',
       recurrenceJour,
+      preavisJours: preavis != null && Number.isFinite(preavis) && preavis > 0 ? preavis : null,
     });
   }
 
@@ -179,6 +189,20 @@ export default function FormulaireTache({
               {['29', '30', '31'].includes(recurrenceJour) && (
                 <p className="fr-avertit">{tr('TODO_RECURRENCE_JOUR_MOIS_AVERTIT')}</p>
               )}
+            </>
+          )}
+          {avecPreavis && (
+            <>
+              <input
+                className="champ"
+                type="number"
+                min={1}
+                placeholder={tr('TODO_PREAVIS_PH')}
+                value={preavisJours}
+                onChange={(e) => setPreavisJours(e.target.value)}
+                aria-label={tr('TODO_PREAVIS')}
+              />
+              <p className="fr-avertit">{tr('TODO_PREAVIS_NOTE')}</p>
             </>
           )}
           <button className="bouton" type="submit" disabled={occupe || !titre.trim()}>

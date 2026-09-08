@@ -532,6 +532,12 @@ const UI = {
     fr: 'Les mois plus courts, la tâche tombera au dernier jour du mois.',
     en: 'In shorter months, the task will fall on the last day of the month.',
   },
+  TODO_PREAVIS: { fr: 'Préavis (jours avant)', en: 'Advance notice (days before)' },
+  TODO_PREAVIS_PH: { fr: 'Ex. 7', en: 'E.g. 7' },
+  TODO_PREAVIS_NOTE: {
+    fr: 'La tâche apparaîtra ce nombre de jours avant son échéance, plutôt que le jour même.',
+    en: 'The task will appear this many days before its due date, instead of on the day itself.',
+  },
   TODO_TOUS: { fr: 'Tous', en: 'All' },
   TODO_AUCUNE_TACHE: { fr: 'Aucune tâche. Ajoute la première ci-dessus.', en: 'No tasks. Add the first one above.' },
   TODO_AUCUNE_POUR: { fr: 'Aucune tâche pour', en: 'No tasks for' },

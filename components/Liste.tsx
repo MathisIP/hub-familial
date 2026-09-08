@@ -67,6 +67,8 @@ export default function Liste({
   // Bord vers lequel le panneau s'ouvre : mesuré à l'ouverture (voir `ouvrir`),
   // jamais avant — la position du bouton à l'écran n'a de sens qu'à ce moment.
   const [alignement, setAlignement] = useState<'gauche' | 'droite'>('gauche');
+  // Sens d'ouverture vertical : mesuré au même moment, même raison.
+  const [sens, setSens] = useState<'bas' | 'haut'>('bas');
   const racine = useRef<HTMLDivElement>(null);
   const listeRef = useRef<HTMLUListElement>(null);
   const frappe = useRef({ texte: '', quand: 0 });
@@ -111,12 +113,17 @@ export default function Liste({
   }, [ouvert, actif]);
 
   /*
-   * ⚠ CÔTÉ D'OUVERTURE MESURÉ, PAS DEVINÉ EN CSS (06/09/2026). Le panneau
-   * s'ouvrait toujours à partir du bord gauche du bouton (`left: 0`) : sur un
-   * champ posé près du bord droit de l'écran (ex. la récurrence d'une tâche,
-   * à droite de sa ligne), un panneau large sortait du cadre au lieu de
-   * s'inverser — aucune media query ne peut connaître la position réelle
-   * d'un bouton précis, seule une mesure au moment de l'ouverture le peut.
+   * ⚠ CÔTÉ D'OUVERTURE MESURÉ, PAS DEVINÉ EN CSS (06/09/2026, complété
+   * 07/09/2026 pour le SENS vertical). Le panneau s'ouvrait toujours à partir
+   * du bord gauche du bouton (`left: 0`) : sur un champ posé près du bord
+   * droit de l'écran (ex. la récurrence d'une tâche, à droite de sa ligne),
+   * un panneau large sortait du cadre au lieu de s'inverser. Même piège en
+   * hauteur, signalé ensuite (07/09/2026) : un bouton bas dans un formulaire
+   * long (ex. « Rayon » juste au-dessus de la liste de courses) ouvrait son
+   * panneau vers le BAS sans jamais vérifier la place disponible — sur un
+   * petit écran, il débordait sous le viewport au lieu de s'ouvrir vers le
+   * haut. Aucune media query ne peut connaître la position réelle d'un
+   * bouton précis, seule une mesure au moment de l'ouverture le peut.
    */
   function ouvrir() {
     if (disabled) return;
@@ -130,6 +137,14 @@ export default function Liste({
       // au moins la largeur du bouton, sinon jusqu'à 22rem ou 90% de l'écran.
       const largeurMax = Math.max(rect.width, Math.min(352, window.innerWidth * 0.9));
       setAlignement(rect.left + largeurMax > window.innerWidth ? 'droite' : 'gauche');
+
+      // Hauteur maximale réelle du panneau, cf. `.liste-panneau` : 16rem (256px)
+      // ou moins si la marge du haut de l'écran ne le permet pas — la personne
+      // n'a pas toujours défilé jusqu'en haut, mesurer depuis `rect.top` (relatif
+      // au viewport) reste juste dans les deux cas.
+      const hauteurMax = Math.min(256, rect.top - 8);
+      const placeEnDessous = window.innerHeight - rect.bottom - 8;
+      setSens(placeEnDessous < hauteurMax && rect.top > placeEnDessous ? 'haut' : 'bas');
     }
     setOuvert(true);
   }
@@ -212,7 +227,7 @@ export default function Liste({
         <ul
           ref={listeRef}
           id={`${id}-liste`}
-          className={`liste-panneau ${alignement === 'droite' ? 'aligne-droite' : ''}`}
+          className={`liste-panneau ${alignement === 'droite' ? 'aligne-droite' : ''} ${sens === 'haut' ? 'ouvre-haut' : ''}`}
           role="listbox"
           aria-multiselectable={multiple || undefined}
           aria-label={ariaLabel}

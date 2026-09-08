@@ -2611,7 +2611,14 @@ h1, h2, h3, .cs-tete h2, .semaine-tete h2, .de-tete h2, .ct {
    largeur habituelle sans déborder. `right: 0` au lieu de `left: 0` — les
    autres propriétés (largeur, ombre…) restent identiques. */
 .liste-panneau.aligne-droite { left: auto; right: 0; }
+/* ⚠ Ouverture vers le HAUT (Liste.tsx `sens`, 07/09/2026), quand le bouton
+   est trop bas dans la page pour que le panneau s'ouvre en dessous sans
+   déborder du viewport (ex. le sélecteur « Rayon » du formulaire de courses,
+   juste au-dessus de la liste). `bottom` remplace `top` ; l'animation part de
+   l'autre sens pour rester cohérente avec la direction d'ouverture. */
+.liste-panneau.ouvre-haut { top: auto; bottom: calc(100% + .35rem); animation-name: liste-apparait-haut; }
 @keyframes liste-apparait { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes liste-apparait-haut { from { opacity: 0; transform: translateY(4px); } }
 /* Respecte le réglage système « réduire les animations ». */
 @media (prefers-reduced-motion: reduce) { .liste-panneau { animation: none; } }
 

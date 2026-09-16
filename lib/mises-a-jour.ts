@@ -83,6 +83,38 @@ export const RUBRIQUES: { nature: Nature; libelle: string }[] = [
 /** La plus récente EN PREMIER — c'est ce qu'on vient lire. */
 export const VERSIONS: Version[] = [
   {
+    id: '2026-09-16',
+    numero: '1.4.2',
+    date: '16 septembre 2026',
+    dateISO: '2026-09-16',
+    titre: 'Les heures de l’agenda s’affichent correctement',
+    resume:
+      'Un événement pouvait apparaître avec plusieurs heures de décalage dans Nestync, alors qu’il était au bon moment dans Google Agenda.',
+    changements: [
+      {
+        nature: 'corrige',
+        titre: 'Les heures affichées ne sont plus décalées.',
+        texte:
+          'Selon la façon dont un agenda était rattaché, un rendez-vous saisi à 8 h pouvait s’afficher à 6 h dans Nestync — alors que Google Agenda, lui, affichait la bonne heure. Les deux concordent désormais.',
+        detail:
+          'Les événements déjà enregistrés vont sembler se déplacer à la première ouverture. Ils n’ont pas été modifiés : ils étaient au bon moment, c’est l’affichage qui était faux.',
+        alerte: true,
+      },
+      {
+        nature: 'corrige',
+        titre: 'Un événement qui se termine après minuit est accepté.',
+        texte:
+          'Saisir un horaire de 23 h à 1 h renvoyait une erreur. C’est désormais compris comme un événement qui se termine le lendemain.',
+      },
+      {
+        nature: 'nouveau',
+        titre: 'Le fuseau horaire du foyer se règle, en bas de la page Agenda.',
+        texte:
+          'Utile hors de métropole (Antilles, La Réunion, expatriation) : les heures saisies suivent le fuseau du foyer, pour que tous ses membres voient la même heure — même quand l’un d’eux voyage.',
+      },
+    ],
+  },
+  {
     id: '2026-09-08',
     numero: '1.4.1',
     date: '8 septembre 2026',

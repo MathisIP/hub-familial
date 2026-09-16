@@ -1,0 +1,1 @@
+ALTER TABLE "foyers" ADD COLUMN "fuseau" text DEFAULT 'Europe/Paris' NOT NULL;

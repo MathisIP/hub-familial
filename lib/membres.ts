@@ -164,6 +164,27 @@ export async function renommerFoyer(foyerId: string, appelantId: string, nom: st
   await db().update(foyers).set({ nom: n }).where(eq(foyers.id, foyerId));
 }
 
+/**
+ * Change le fuseau du foyer — ce qui donne son sens à « 8 h » dans l'agenda.
+ *
+ * ⚠ VALIDÉ CONTRE LA LISTE IANA RÉELLE, pas contre une expression régulière.
+ * Un fuseau inconnu ferait lever `Intl.DateTimeFormat` à chaque affichage
+ * d'agenda — donc une page en erreur, pour une valeur saisie une seule fois.
+ * Réservé au propriétaire, comme le nom du foyer : c'est un réglage qui change
+ * l'affichage pour tous les membres.
+ */
+export async function definirFuseauFoyer(foyerId: string, appelantId: string, fuseau: string): Promise<void> {
+  exigerProprietaire(await roleDe(foyerId, appelantId));
+  const f = S(fuseau);
+  if (!f) throw new ErreurValidation('Le fuseau horaire est requis.');
+  try {
+    new Intl.DateTimeFormat('fr-FR', { timeZone: f });
+  } catch {
+    throw new ErreurValidation(`Fuseau horaire inconnu : ${f}.`);
+  }
+  await db().update(foyers).set({ fuseau: f }).where(eq(foyers.id, foyerId));
+}
+
 /* ==================== RÉGLAGES PAR MEMBRE (nom affiché, visibilité) ==================== */
 
 /** Nom d'affichage d'un membre : son surnom s'il en a un, sinon son nom Google, sinon son e-mail. */

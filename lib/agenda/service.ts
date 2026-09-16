@@ -152,11 +152,64 @@ async function exigerAgendaDuFoyer(calendarId: string): Promise<AgendaFoyer> {
 
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
 
+/**
+ * Formateurs figés sur le fuseau du foyer.
+ *
+ * ⚠ CONSTRUITS UNE SEULE FOIS, hors de `versEvenement` : instancier un
+ * `Intl.DateTimeFormat` coûte cher, et cette fonction tourne sur chaque
+ * événement de chaque agenda — jusqu'à 250 par agenda sur une vue mois.
+ */
+const FMT_HEURE = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: FUSEAU,
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+const FMT_DATE = new Intl.DateTimeFormat('en-CA', {
+  timeZone: FUSEAU,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}); // en-CA rend « aaaa-mm-jj », la forme qu'attend le reste du module
+
+/**
+ * Date et heure d'un horodatage Google, DANS LE FUSEAU DU FOYER.
+ *
+ * ⚠ NE JAMAIS DÉCOUPER LA CHAÎNE (`dt.slice(11, 16)`) — c'est le bug corrigé le
+ * 16/09/2026, et il était invisible pendant des mois. Google renvoie un
+ * horodatage **avec son décalage** (`2026-09-14T06:00:00Z` ou `…+02:00`), et le
+ * fuseau de réponse dépend de l'agenda et du jeton utilisé : pour un agenda
+ * rattaché via le compte d'un autre membre, Google répondait en **UTC**. Le
+ * découpage prenait les chiffres bruts et jetait le `Z` : un événement saisi à
+ * 8 h s'affichait à 6 h, dans Nestync uniquement — Google Agenda, lui, était
+ * juste. Le foyer voyait donc deux heures différentes pour le même événement.
+ *
+ * Le décalage est désormais interprété, jamais ignoré. `timeZone` est en plus
+ * passé à `events.list` (Google convertit avant d'envoyer) : deux protections,
+ * parce que c'est exactement la dépendance implicite qui a créé le bug.
+ */
+function partiesLocales(dt: string): { date: string; heure: string } {
+  const d = new Date(dt);
+  // Horodatage illisible : on préfère une valeur vide à une heure fausse —
+  // un événement sans heure se voit, un événement à la mauvaise heure non.
+  if (Number.isNaN(d.getTime())) return { date: '', heure: '' };
+  return { date: FMT_DATE.format(d), heure: FMT_HEURE.format(d) };
+}
+
 function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur: string): EvenementAgenda {
   const journeeEntiere = !!e.start?.date;
-  const debut = e.start?.dateTime ?? e.start?.date ?? '';
-  const fin = e.end?.dateTime ?? e.end?.date ?? '';
-  const heure = (dt?: string | null) => (dt && dt.length > 16 ? dt.slice(11, 16) : '');
+
+  /*
+   * ⚠ Les journées entières ne passent PAS par la conversion. Google les donne
+   * en date seule (`2026-09-14`), sans heure ni fuseau : les faire traverser un
+   * `new Date()` les interpréterait en UTC, et un anniversaire du 14 basculerait
+   * au 13 pour un foyer à l'est de Greenwich.
+   */
+  const debutBrut = S(e.start?.dateTime);
+  const finBrut = S(e.end?.dateTime);
+  const debut = journeeEntiere ? { date: S(e.start?.date), heure: '' } : partiesLocales(debutBrut);
+  const fin = journeeEntiere ? { date: S(e.end?.date), heure: '' } : partiesLocales(finBrut);
+
   return {
     id: S(e.id),
     calendarId,
@@ -164,10 +217,10 @@ function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur:
     serieId: S(e.recurringEventId),
     titre: S(e.summary) || '(sans titre)',
     journeeEntiere,
-    dateISO: debut.slice(0, 10),
-    finISO: fin.slice(0, 10),
-    heureDebut: journeeEntiere ? '' : heure(e.start?.dateTime),
-    heureFin: journeeEntiere ? '' : heure(e.end?.dateTime),
+    dateISO: debut.date,
+    finISO: fin.date,
+    heureDebut: debut.heure,
+    heureFin: fin.heure,
     lieu: S(e.location),
     description: S(e.description),
   };
@@ -215,6 +268,7 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
         timeMax: lundiSuivant.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
+        timeZone: FUSEAU, // même raison que dans `chargerAgenda` (voir `partiesLocales`)
         maxResults: 100,
       });
       const evenements = (rep.data.items ?? [])
@@ -280,6 +334,12 @@ export async function chargerAgenda(
         timeMax: fin.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
+        // ⚠ SANS `timeZone`, Google répond dans le fuseau par défaut de
+        // l'agenda — qui peut être UTC selon le jeton utilisé. Voir
+        // `partiesLocales` : c'est l'origine du décalage de 2 h signalé le
+        // 16/09/2026. La conversion côté app protège déjà, ceci évite en plus
+        // que la réponse ait à être convertie.
+        timeZone: FUSEAU,
         // ⚠ Relevé de 100 à 250 avec les vues mois : un agenda professionnel
         // dépasse facilement 100 événements sur six semaines, et le dépassement
         // se serait vu comme une fin de mois vide — pas comme une limite.
@@ -446,10 +506,21 @@ export async function modifierEvenement(
     return;
   }
 
-  const memeDate = S(data.start?.dateTime).slice(0, 10) === m.date || S(data.start?.date) === m.date;
-  const memeHeure =
-    S(data.start?.dateTime).slice(11, 16) === S(m.heureDebut) &&
-    S(data.end?.dateTime).slice(11, 16) === S(m.heureFin);
+  /*
+   * ⚠ COMPARER DANS LE FUSEAU DU FOYER, pas sur la chaîne brute. `events.get`
+   * n'accepte pas de paramètre `timeZone` : Google répond dans le fuseau de
+   * l'agenda, qui n'est pas forcément celui-ci. Le client, lui, renvoie des
+   * heures déjà converties (voir `partiesLocales`). Comparer les deux
+   * directement faisait échouer le test sur un agenda en UTC, et refusait donc
+   * un simple changement de titre de série avec un message parlant de dates.
+   */
+  const debutLu = data.start?.date
+    ? { date: S(data.start.date), heure: '' }
+    : partiesLocales(S(data.start?.dateTime));
+  const finLue = data.end?.date ? { date: S(data.end.date), heure: '' } : partiesLocales(S(data.end?.dateTime));
+
+  const memeDate = debutLu.date === m.date;
+  const memeHeure = debutLu.heure === S(m.heureDebut) && finLue.heure === S(m.heureFin);
   const memeType = !!data.start?.date === !!m.journeeEntiere;
 
   if (!memeDate || !memeHeure || !memeType) {

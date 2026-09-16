@@ -1282,6 +1282,26 @@ export const editorialPosts = pgTable(
     legende: text('legende'),
     hashtags: text('hashtags'),
     note: text('note'),
+    // Surcharges des champs de cadrage (08/09/2026) : mêmes règles que
+    // ci-dessus — `null` = valeur du plan.
+    semaine: text('semaine'),
+    date: text('date'), // jj/mm/aaaa ; pilote le tri de la page
+    format: text('format'),
+    pilier: text('pilier'),
+    cta: text('cta'),
+    ctaType: text('cta_type'),
+    production: text('production'),
+    pourquoi: text('pourquoi'),
+    /**
+     * Lien vers le dossier des médias finaux (Drive, Dropbox…).
+     *
+     * ⚠ UN LIEN, PAS LES FICHIERS. Un reel monté pèse des dizaines de Mo —
+     * au-delà de la limite de 4,5 Mo par requête de Vercel, qui refuserait
+     * l'envoi avant même d'exécuter la fonction. Héberger la vidéo demanderait
+     * un envoi direct vers OVH, hors de proportion pour un outil interne :
+     * le lien suffit à retrouver les fichiers depuis n'importe quel appareil.
+     */
+    lienMedias: text('lien_medias'),
     majLe: timestamp('maj_le', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   STATUTS_EDITORIAL,
   FORMATS_POST,
@@ -73,7 +73,7 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
     );
   }
 
-  function enregistrerResultats(numero: number, champs: Record<string, number | null>) {
+  function enregistrerResultats(numero: number, champs: Record<string, number | string | null>) {
     action(() =>
       fetch('/api/editorial', {
         method: 'PATCH',
@@ -81,12 +81,6 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
         body: JSON.stringify({ numero, ...champs }),
       }),
     );
-  }
-
-  function televerserVisuel(numero: number, fichier: File) {
-    const form = new FormData();
-    form.append('fichier', fichier);
-    action(() => fetch(`/api/editorial/visuel/${numero}`, { method: 'POST', body: form }));
   }
 
   function enregistrerTextes(numero: number, textes: Record<string, string>) {
@@ -158,7 +152,6 @@ export default function VueEditorial({ initial }: { initial: Post[] }) {
                 onBasculer={() => basculerOuvert(p.numero)}
                 onCyclerStatut={() => cyclerStatut(p)}
                 onEnregistrerResultats={(champs) => enregistrerResultats(p.numero, champs)}
-                onTeleverserVisuel={(f) => televerserVisuel(p.numero, f)}
                 onEnregistrerTextes={(textes) => enregistrerTextes(p.numero, textes)}
               />
             </div>
@@ -257,6 +250,10 @@ function BlocEditable({
   valeur,
   occupe,
   mono = true,
+  ligne = false,
+  options,
+  placeholder,
+  vide,
   action,
   onEnregistrer,
 }: {
@@ -264,6 +261,13 @@ function BlocEditable({
   valeur: string;
   occupe: boolean;
   mono?: boolean;
+  /** Champ d'une seule ligne (`input`) plutôt qu'un `textarea`. */
+  ligne?: boolean;
+  /** Choix fermé : rend une liste au lieu d'un champ libre (le format). */
+  options?: { valeur: string; libelle: string }[];
+  placeholder?: string;
+  /** Texte affiché quand la valeur est vide — sinon le bloc paraît cassé. */
+  vide?: string;
   action?: React.ReactNode;
   onEnregistrer: (v: string) => void;
 }) {
@@ -291,13 +295,37 @@ function BlocEditable({
       </div>
       {edite ? (
         <div className="edi-edition" onClick={(e) => e.stopPropagation()}>
-          <textarea
-            className="champ edi-textarea"
-            value={brouillon}
-            onChange={(e) => setBrouillon(e.target.value)}
-            rows={mono ? 6 : 2}
-            autoFocus
-          />
+          {options ? (
+            <select
+              className="champ"
+              value={brouillon}
+              onChange={(e) => setBrouillon(e.target.value)}
+              autoFocus
+            >
+              {options.map((o) => (
+                <option key={o.valeur} value={o.valeur}>
+                  {o.libelle}
+                </option>
+              ))}
+            </select>
+          ) : ligne ? (
+            <input
+              className="champ"
+              value={brouillon}
+              placeholder={placeholder}
+              onChange={(e) => setBrouillon(e.target.value)}
+              autoFocus
+            />
+          ) : (
+            <textarea
+              className="champ edi-textarea"
+              value={brouillon}
+              placeholder={placeholder}
+              onChange={(e) => setBrouillon(e.target.value)}
+              rows={mono ? 6 : 2}
+              autoFocus
+            />
+          )}
           <div className="edi-edition-actions">
             <button
               type="button"
@@ -315,8 +343,10 @@ function BlocEditable({
             </button>
           </div>
         </div>
-      ) : (
+      ) : valeur ? (
         <div className={`edi-box ${mono ? 'mono' : ''}`}>{valeur}</div>
+      ) : (
+        <div className="edi-box edi-box-vide">{vide ?? 'Non renseigné.'}</div>
       )}
     </div>
   );
@@ -329,7 +359,6 @@ function CartePost({
   onBasculer,
   onCyclerStatut,
   onEnregistrerResultats,
-  onTeleverserVisuel,
   onEnregistrerTextes,
 }: {
   post: Post;
@@ -337,15 +366,14 @@ function CartePost({
   occupe: boolean;
   onBasculer: () => void;
   onCyclerStatut: () => void;
-  onEnregistrerResultats: (champs: Record<string, number | null>) => void;
-  onTeleverserVisuel: (fichier: File) => void;
+  onEnregistrerResultats: (champs: Record<string, number | string | null>) => void;
   onEnregistrerTextes: (textes: Record<string, string>) => void;
 }) {
   const [vues, setVues] = useState(post.vues?.toString() ?? '');
   const [interactions, setInteractions] = useState(post.interactions?.toString() ?? '');
   const [enregistrements, setEnregistrements] = useState(post.enregistrements?.toString() ?? '');
   const [partages, setPartages] = useState(post.partages?.toString() ?? '');
-  const fichierRef = useRef<HTMLInputElement>(null);
+  const [lienMedias, setLienMedias] = useState(post.lienMedias);
 
   function versNombre(v: string): number | null {
     const t = v.trim();
@@ -428,70 +456,141 @@ function CartePost({
             onEnregistrer={(v) => onEnregistrerTextes({ note: v })}
           />
 
-          {/* Production et justification : issus du plan, en lecture seule —
-              ce sont des consignes de fabrication et des arbitrages, pas du
-              contenu qu'on retouche au fil de l'eau comme une légende. */}
-          {post.production && (
-            <div className="edi-sec">
-              <div className="edi-sech">À produire</div>
-              <div className="edi-box mono">{post.production}</div>
+          <BlocEditable
+            titre="À produire"
+            valeur={post.production}
+            occupe={occupe}
+            vide="Rien de particulier à produire."
+            onEnregistrer={(v) => onEnregistrerTextes({ production: v })}
+          />
+          <BlocEditable
+            titre="Pourquoi ce post, ici"
+            valeur={post.pourquoi}
+            occupe={occupe}
+            mono={false}
+            vide="Pas de justification notée."
+            onEnregistrer={(v) => onEnregistrerTextes({ pourquoi: v })}
+          />
+
+          {/* Cadrage : ce qui situe la publication dans le plan. Modifiable
+              comme le reste — décaler un post ou changer son médium arrive en
+              cours de route, et figer ces champs obligeait à repasser par le
+              code pour un simple report d'un jour. */}
+          <div className="edi-cadrage">
+            <BlocEditable
+              titre="Date"
+              valeur={post.date}
+              occupe={occupe}
+              ligne
+              placeholder="jj/mm/aaaa"
+              onEnregistrer={(v) => onEnregistrerTextes({ date: v })}
+            />
+            <BlocEditable
+              titre="Semaine"
+              valeur={post.semaine}
+              occupe={occupe}
+              ligne
+              onEnregistrer={(v) => onEnregistrerTextes({ semaine: v })}
+            />
+            <BlocEditable
+              titre="Format"
+              valeur={post.format}
+              occupe={occupe}
+              options={Object.entries(FORMATS_POST).map(([valeur, libelle]) => ({ valeur, libelle }))}
+              onEnregistrer={(v) => onEnregistrerTextes({ format: v })}
+            />
+            <BlocEditable
+              titre="Pilier"
+              valeur={post.pilier}
+              occupe={occupe}
+              ligne
+              onEnregistrer={(v) => onEnregistrerTextes({ pilier: v })}
+            />
+            <BlocEditable
+              titre="Type de CTA"
+              valeur={post.ctaType}
+              occupe={occupe}
+              ligne
+              onEnregistrer={(v) => onEnregistrerTextes({ ctaType: v })}
+            />
+            <BlocEditable
+              titre="Phrase du CTA"
+              valeur={post.cta}
+              occupe={occupe}
+              mono={false}
+              onEnregistrer={(v) => onEnregistrerTextes({ cta: v })}
+            />
+          </div>
+
+          {/* ⚠ UN LIEN, PAS LES FICHIERS (08/09/2026). Un reel monté pèse des
+              dizaines de Mo, au-delà de la limite de requête de Vercel : le
+              stocker demanderait un envoi direct vers OVH, hors de proportion
+              pour un outil interne. Le lien suffit à retrouver les médias
+              finaux depuis le téléphone au moment de publier. */}
+          <div className="edi-sec">
+            <div className="edi-sech">
+              Médias finaux
+              {post.lienMedias && (
+                <a
+                  className="edi-btn"
+                  href={post.lienMedias}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Ouvrir ↗
+                </a>
+              )}
             </div>
-          )}
-          {post.pourquoi && (
-            <div className="edi-sec">
-              <div className="edi-sech">Pourquoi ce post, ici</div>
-              <div className="edi-box edi-pourquoi">{post.pourquoi}</div>
+            <div className="edi-medias" onClick={(e) => e.stopPropagation()}>
+              <input
+                className="champ"
+                type="url"
+                inputMode="url"
+                placeholder="https://… (dossier Drive, Dropbox…)"
+                value={lienMedias}
+                onChange={(e) => setLienMedias(e.target.value)}
+              />
+              <button
+                type="button"
+                className="bouton discret"
+                disabled={occupe || lienMedias.trim() === post.lienMedias}
+                onClick={() => onEnregistrerResultats({ lienMedias: lienMedias.trim() })}
+              >
+                Enregistrer le lien
+              </button>
             </div>
-          )}
+            <p className="edi-hint">
+              Le dossier contenant le reel monté ou les images du carrousel, pour y accéder depuis n’importe quel
+              appareil.
+            </p>
+          </div>
 
           <div className="edi-sec">
-            <div className="edi-sech">Visuel</div>
-            <div className="edi-visuel">
-              <div className="edi-vignette">
-                {post.visuelUrl ? (
-                  <img src={`/api/editorial/visuel/${post.numero}`} alt={`Visuel ${post.numero}`} />
-                ) : (
-                  'Aucun visuel'
-                )}
+            <div className="edi-sech">Résultats</div>
+            <div className="edi-vchamps" onClick={(e) => e.stopPropagation()}>
+              <div className="edi-resultats">
+                <ChampResultat label="Vues" valeur={vues} onChange={setVues} />
+                <ChampResultat label="Interactions" valeur={interactions} onChange={setInteractions} />
+                <ChampResultat label="Enregistr." valeur={enregistrements} onChange={setEnregistrements} />
+                <ChampResultat label="Partages" valeur={partages} onChange={setPartages} />
               </div>
-              <div className="edi-vchamps">
-                <input
-                  ref={fichierRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) onTeleverserVisuel(f);
-                    e.target.value = '';
-                  }}
-                />
-                <button type="button" className="bouton discret" disabled={occupe} onClick={() => fichierRef.current?.click()}>
-                  {post.visuelUrl ? 'Remplacer le visuel' : 'Ajouter un visuel'}
-                </button>
-                <div className="edi-resultats">
-                  <ChampResultat label="Vues" valeur={vues} onChange={setVues} />
-                  <ChampResultat label="Interactions" valeur={interactions} onChange={setInteractions} />
-                  <ChampResultat label="Enregistr." valeur={enregistrements} onChange={setEnregistrements} />
-                  <ChampResultat label="Partages" valeur={partages} onChange={setPartages} />
-                </div>
-                <button
-                  type="button"
-                  className="bouton discret"
-                  disabled={occupe}
-                  onClick={() =>
-                    onEnregistrerResultats({
-                      vues: versNombre(vues),
-                      interactions: versNombre(interactions),
-                      enregistrements: versNombre(enregistrements),
-                      partages: versNombre(partages),
-                    })
-                  }
-                >
-                  Enregistrer les résultats
-                </button>
-                <p className="edi-hint">À remplir 48 h après publication, depuis les statistiques du post.</p>
-              </div>
+              <button
+                type="button"
+                className="bouton discret"
+                disabled={occupe}
+                onClick={() =>
+                  onEnregistrerResultats({
+                    vues: versNombre(vues),
+                    interactions: versNombre(interactions),
+                    enregistrements: versNombre(enregistrements),
+                    partages: versNombre(partages),
+                  })
+                }
+              >
+                Enregistrer les résultats
+              </button>
+              <p className="edi-hint">À remplir 48 h après publication, depuis les statistiques du post.</p>
             </div>
           </div>
         </div>

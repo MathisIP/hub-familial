@@ -6,7 +6,15 @@ import { idFoyerCourant } from '@/lib/foyer';
 import { ErreurValidation } from '@/lib/erreurs';
 import { televerser, supprimerFichier, lireFichier } from '@/lib/stockage';
 import { POSTS_EDITORIAL } from '@/lib/editorial/posts';
-import { STATUTS_EDITORIAL, etatParDefaut, type Post, type StatutEditorial } from '@/lib/editorial/schema';
+import {
+  STATUTS_EDITORIAL,
+  FORMATS_POST,
+  etatParDefaut,
+  trierParDate,
+  type FormatPost,
+  type Post,
+  type StatutEditorial,
+} from '@/lib/editorial/schema';
 
 /** Taille maximale d'un visuel de post — même plafond que la limite de requête Vercel. */
 const TAILLE_MAX_VISUEL = 4 * 1024 * 1024;
@@ -22,7 +30,7 @@ export async function chargerPostsEditorial(): Promise<Post[]> {
   const lignes = await db().select().from(tPosts).where(eq(tPosts.foyerId, foyerId));
   const parNumero = new Map(lignes.map((l) => [l.numero, l]));
 
-  return POSTS_EDITORIAL.map((contenu) => {
+  const posts = POSTS_EDITORIAL.map((contenu) => {
     const l = parNumero.get(contenu.numero);
     const etat = l
       ? {
@@ -31,22 +39,41 @@ export async function chargerPostsEditorial(): Promise<Post[]> {
             ? (l.statut as StatutEditorial)
             : 'À faire',
           visuelUrl: l.visuel,
+          lienMedias: l.lienMedias ?? '',
           vues: l.vues,
           interactions: l.interactions,
           enregistrements: l.enregistrements,
           partages: l.partages,
         }
       : etatParDefaut(contenu.numero);
-    // Surcharges de texte : `null` (jamais modifié) retombe sur POSTS_EDITORIAL.
-    const textes = {
+    // Surcharges : `null` (jamais modifié) retombe sur POSTS_EDITORIAL.
+    const surcharges = {
       hook: l?.hook ?? contenu.hook,
       visuel: l?.visuelTexte ?? contenu.visuel,
       legende: l?.legende ?? contenu.legende,
       hashtags: l?.hashtags ?? contenu.hashtags,
       note: l?.note ?? contenu.note,
+      semaine: l?.semaine ?? contenu.semaine,
+      date: l?.date ?? contenu.date,
+      // Un format inconnu (saisie libre d'une ancienne version, faute de
+      // frappe) retombe sur celui du plan : la pastille et le filtre
+      // s'appuient dessus, une valeur hors liste les casserait.
+      format: estFormat(l?.format) ? l.format : contenu.format,
+      pilier: l?.pilier ?? contenu.pilier,
+      cta: l?.cta ?? contenu.cta,
+      ctaType: l?.ctaType ?? contenu.ctaType,
+      production: l?.production ?? contenu.production,
+      pourquoi: l?.pourquoi ?? contenu.pourquoi,
     };
-    return { ...contenu, ...textes, ...etat };
+    return { ...contenu, ...surcharges, ...etat };
   });
+
+  return trierParDate(posts);
+}
+
+/** Vrai si la valeur est un format connu (`FORMATS_POST`). */
+function estFormat(v: string | null | undefined): v is FormatPost {
+  return !!v && v in FORMATS_POST;
 }
 
 /** Change le statut d'un post (upsert : la ligne peut ne pas encore exister). */
@@ -69,6 +96,7 @@ export async function definirStatutPost(numero: number, statut: string): Promise
 
 export type ChampsEtatPost = {
   visuelUrl?: string;
+  lienMedias?: string;
   vues?: number | null;
   interactions?: number | null;
   enregistrements?: number | null;
@@ -101,6 +129,7 @@ export async function modifierEtatPost(numero: number, champs: ChampsEtatPost): 
 
   const valeurs = {
     visuel: champs.visuelUrl !== undefined ? champs.visuelUrl : (existante?.visuel ?? ''),
+    lienMedias: champs.lienMedias !== undefined ? champs.lienMedias : (existante?.lienMedias ?? null),
     vues: champs.vues !== undefined ? champs.vues : (existante?.vues ?? null),
     interactions: champs.interactions !== undefined ? champs.interactions : (existante?.interactions ?? null),
     enregistrements:
@@ -121,10 +150,22 @@ export type ChampsTextePost = {
   legende?: string;
   hashtags?: string;
   note?: string;
+  // Champs de cadrage, modifiables depuis le 08/09/2026.
+  semaine?: string;
+  date?: string;
+  format?: string;
+  pilier?: string;
+  cta?: string;
+  ctaType?: string;
+  production?: string;
+  pourquoi?: string;
 };
 
+/** jj/mm/aaaa, la seule forme que `trierParDate` sait ordonner. */
+const FORMAT_DATE = /^\d{2}\/\d{2}\/\d{4}$/;
+
 /**
- * Modifie le contenu texte d'un post (hook, déroulé, légende, hashtags, note).
+ * Modifie le contenu d'un post (textes et champs de cadrage).
  * Simple écrasement, sans historique (décision utilisateur 07/09/2026) : le
  * texte d'origine reste consultable dans lib/editorial/posts.ts via git, mais
  * l'app elle-même ne garde qu'une seule version, la plus récente.
@@ -136,6 +177,19 @@ export async function modifierTextesPost(numero: number, champs: ChampsTextePost
   if (!POSTS_EDITORIAL.some((p) => p.numero === numero)) {
     throw new ErreurValidation('Publication introuvable.');
   }
+  /*
+   * ⚠ DATE ET FORMAT SONT VALIDÉS ICI, PAS SEULEMENT DANS L'INTERFACE. La date
+   * pilote le tri de la page et le format pilote la pastille et le filtre :
+   * une valeur libre y ferait disparaître le post du classement ou casserait
+   * son affichage, sans message d'erreur.
+   */
+  if (champs.date !== undefined && champs.date.trim() && !FORMAT_DATE.test(champs.date.trim())) {
+    throw new ErreurValidation('Date attendue au format jj/mm/aaaa.');
+  }
+  if (champs.format !== undefined && champs.format.trim() && !(champs.format.trim() in FORMATS_POST)) {
+    throw new ErreurValidation(`Format inconnu : ${champs.format}.`);
+  }
+
   const foyerId = await idFoyerCourant();
   const d = db();
 
@@ -151,6 +205,14 @@ export async function modifierTextesPost(numero: number, champs: ChampsTextePost
     legende: champs.legende !== undefined ? champs.legende : (existante?.legende ?? null),
     hashtags: champs.hashtags !== undefined ? champs.hashtags : (existante?.hashtags ?? null),
     note: champs.note !== undefined ? champs.note : (existante?.note ?? null),
+    semaine: champs.semaine !== undefined ? champs.semaine : (existante?.semaine ?? null),
+    date: champs.date !== undefined ? champs.date.trim() : (existante?.date ?? null),
+    format: champs.format !== undefined ? champs.format.trim() : (existante?.format ?? null),
+    pilier: champs.pilier !== undefined ? champs.pilier : (existante?.pilier ?? null),
+    cta: champs.cta !== undefined ? champs.cta : (existante?.cta ?? null),
+    ctaType: champs.ctaType !== undefined ? champs.ctaType : (existante?.ctaType ?? null),
+    production: champs.production !== undefined ? champs.production : (existante?.production ?? null),
+    pourquoi: champs.pourquoi !== undefined ? champs.pourquoi : (existante?.pourquoi ?? null),
     majLe: new Date(),
   };
 

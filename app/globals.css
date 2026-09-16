@@ -3288,6 +3288,17 @@ a.bg-kpi.lien .k-v { padding-right: 1.2rem; }
 .edi-rf span { font-size: .6rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .edi-hint { font-size: .72rem; color: var(--muted); margin: 0; }
 
+/* Cadrage : les champs courts tiennent côte à côte, les longs prennent la
+   largeur — sinon six sections empilées noient les blocs de contenu. */
+.edi-cadrage {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0 1rem; margin-top: .4rem;
+  padding-top: .6rem; border-top: 1px dashed var(--line);
+}
+.edi-box-vide { color: var(--muted); font-style: italic; }
+.edi-medias { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.edi-medias .champ { flex: 1 1 18rem; min-width: 0; }
+
 .edi-edition { display: flex; flex-direction: column; gap: .5rem; }
 .edi-textarea { width: 100%; resize: vertical; font-family: inherit; line-height: 1.6; }
 .edi-edition-actions { display: flex; gap: .5rem; }

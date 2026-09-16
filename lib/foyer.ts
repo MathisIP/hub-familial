@@ -178,6 +178,18 @@ export async function idFoyerCourant(): Promise<string> {
 }
 
 /**
+ * Fuseau du foyer courant (identifiant IANA), pour interpréter et afficher les
+ * heures. Repli sur `Europe/Paris` — une valeur vide en base ne doit pas faire
+ * planter un affichage d'agenda.
+ *
+ * ⚠ `foyerCourant()` est mis en cache par requête : cet appel ne coûte pas un
+ * aller-retour base de plus.
+ */
+export async function fuseauFoyerCourant(): Promise<string> {
+  return (await foyerCourant()).fuseau || 'Europe/Paris';
+}
+
+/**
  * Comme `foyerCourant()`, mais renvoie proprement vers /bienvenue quand la
  * personne n'appartient à aucun foyer — au lieu de faire planter la page.
  * À utiliser dans les pages qui exigent un foyer sans passer par `exigerAcces`.

@@ -1,5 +1,6 @@
 import VueAgenda from '@/components/agenda/VueAgenda';
 import ConfigAgendas from '@/components/agenda/ConfigAgendas';
+import FuseauFoyer from '@/components/agenda/FuseauFoyer';
 import { chargerAgenda } from '@/lib/agenda/service';
 import {
   calendriersDisponibles,
@@ -8,7 +9,8 @@ import {
   monAgendaConnecte,
   monEcritureAccordee,
 } from '@/lib/agenda/calendriers';
-import { utilisateurCourant } from '@/lib/foyer';
+import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
+import { roleDe } from '@/lib/membres';
 import { ConfigManquante } from '@/lib/config';
 import { ErreurValidation } from '@/lib/erreurs';
 import { exigerAcces } from '@/lib/abonnement';
@@ -48,6 +50,11 @@ export default async function PageAgenda({
   // case à mon nom n'aurait aucun sens.
   const utilisateur = await utilisateurCourant().catch(() => null);
   const autresMembres = membres.filter((m) => m.utilisateurId !== utilisateur?.id);
+
+  // Fuseau du foyer + rôle, pour le réglage en pied de page. `foyerCourant()`
+  // est mis en cache par requête : aucun aller-retour base supplémentaire.
+  const foyer = await foyerCourant();
+  const proprietaire = utilisateur ? (await roleDe(foyer.id, utilisateur.id)) === 'proprietaire' : false;
 
   let contenu;
   try {
@@ -91,6 +98,10 @@ export default async function PageAgenda({
       />
 
       {contenu}
+
+      {/* Tout en bas, sous les événements : réglage qu'on touche une fois,
+          il n'a pas à repousser le contenu de la page à chaque visite. */}
+      <FuseauFoyer fuseau={foyer.fuseau || 'Europe/Paris'} proprietaire={proprietaire} />
     </>
   );
 }

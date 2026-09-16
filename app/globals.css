@@ -897,6 +897,17 @@ a { color: var(--link-tx); }
   background: var(--head); color: var(--ink); padding: .1rem .5rem; border-radius: 999px;
 }
 .ag-legende { display: flex; flex-wrap: wrap; gap: .8rem; margin: .3rem 0 1rem; }
+
+/* Fuseau du foyer — pied de la page Agenda, sous les événements. Volontairement
+   discret : un réglage qu'on touche une fois ne doit pas peser tous les jours. */
+.ag-fuseau { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.ag-fuseau-ligne { margin: 0; font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.ag-fuseau-ligne strong { color: var(--ink2); font-weight: 600; }
+.ag-fuseau-btn { font-size: .75rem; padding: .2rem .6rem; }
+.ag-fuseau-note { margin: .5rem 0 0; font-size: .78rem; color: var(--muted); line-height: 1.55; max-width: 62ch; }
+.ag-fuseau-note strong { color: var(--ink2); font-weight: 600; }
+.ag-fuseau-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .6rem; }
+.ag-fuseau-form .champ { flex: 1 1 14rem; min-width: 0; }
 .ag-legende-item { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; color: var(--ink2); }
 .ag-pastille { width: .7rem; height: .7rem; border-radius: 999px; flex: none; display: inline-block; }
 .ag-pastille-event { margin-top: .35rem; }

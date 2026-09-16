@@ -7,9 +7,28 @@ import {
   definirPartageAgenda,
 } from '@/lib/agenda/calendriers';
 import { deconnecterAgenda } from '@/lib/agenda/oauth';
-import { utilisateurCourant } from '@/lib/foyer';
+import { definirFuseauFoyer } from '@/lib/membres';
+import { foyerCourant, utilisateurCourant } from '@/lib/foyer';
 
 /** Actions de configuration des agendas du foyer (page /agenda). */
+
+/**
+ * Change le fuseau du foyer, qui donne son sens aux heures saisies.
+ * ⚠ `revalidatePath('/')` en plus de l'agenda : la carte d'accueil affiche la
+ * semaine, elle montrerait sinon les anciennes heures jusqu'au prochain passage.
+ */
+export async function definirFuseauAction(formData: FormData): Promise<{ erreur?: string }> {
+  try {
+    const fuseau = String(formData.get('fuseau') ?? '');
+    const [foyer, user] = [await foyerCourant(), await utilisateurCourant()];
+    await definirFuseauFoyer(foyer.id, user.id, fuseau);
+    revalidatePath('/foyer/agenda');
+    revalidatePath('/');
+    return {};
+  } catch (e) {
+    return { erreur: e instanceof Error ? e.message : 'Fuseau refusé.' };
+  }
+}
 
 export async function rattacherAction(calendarId: string, nom: string): Promise<{ erreur?: string }> {
   try {

@@ -6,9 +6,9 @@ import { foyerAgendas, agendasAcces } from '@/lib/db/schema';
 import { jetonAgenda, peutEcrireEvenements } from '@/lib/agenda/oauth';
 import { ErreurValidation } from '@/lib/erreurs';
 import { contexteAcces, PARTAGE_RESTREINT } from '@/lib/visibilite';
+import { fuseauFoyerCourant } from '@/lib/foyer';
 import {
   COULEURS_AGENDA,
-  FUSEAU,
   type Agenda,
   type DonneesAgenda,
   type EvenementAgenda,
@@ -153,24 +153,28 @@ async function exigerAgendaDuFoyer(calendarId: string): Promise<AgendaFoyer> {
 const S = (v: unknown): string => (v == null ? '' : String(v).trim());
 
 /**
- * Formateurs figés sur le fuseau du foyer.
+ * Formateurs par fuseau, construits une fois puis réutilisés.
  *
- * ⚠ CONSTRUITS UNE SEULE FOIS, hors de `versEvenement` : instancier un
- * `Intl.DateTimeFormat` coûte cher, et cette fonction tourne sur chaque
+ * ⚠ MIS EN CACHE, PAS RECRÉÉS À CHAQUE ÉVÉNEMENT : instancier un
+ * `Intl.DateTimeFormat` coûte cher, et la conversion tourne sur chaque
  * événement de chaque agenda — jusqu'à 250 par agenda sur une vue mois.
+ * Le cache est borné par le nombre de fuseaux réellement rencontrés (un par
+ * foyer servi par l'instance), donc quelques entrées au plus.
  */
-const FMT_HEURE = new Intl.DateTimeFormat('fr-FR', {
-  timeZone: FUSEAU,
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-});
-const FMT_DATE = new Intl.DateTimeFormat('en-CA', {
-  timeZone: FUSEAU,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-}); // en-CA rend « aaaa-mm-jj », la forme qu'attend le reste du module
+const FORMATEURS = new Map<string, { heure: Intl.DateTimeFormat; date: Intl.DateTimeFormat }>();
+
+function formateurs(fuseau: string) {
+  let f = FORMATEURS.get(fuseau);
+  if (!f) {
+    f = {
+      heure: new Intl.DateTimeFormat('fr-FR', { timeZone: fuseau, hour: '2-digit', minute: '2-digit', hour12: false }),
+      // en-CA rend « aaaa-mm-jj », la forme qu'attend le reste du module.
+      date: new Intl.DateTimeFormat('en-CA', { timeZone: fuseau, year: 'numeric', month: '2-digit', day: '2-digit' }),
+    };
+    FORMATEURS.set(fuseau, f);
+  }
+  return f;
+}
 
 /**
  * Date et heure d'un horodatage Google, DANS LE FUSEAU DU FOYER.
@@ -188,15 +192,21 @@ const FMT_DATE = new Intl.DateTimeFormat('en-CA', {
  * passé à `events.list` (Google convertit avant d'envoyer) : deux protections,
  * parce que c'est exactement la dépendance implicite qui a créé le bug.
  */
-function partiesLocales(dt: string): { date: string; heure: string } {
+function partiesLocales(dt: string, fuseau: string): { date: string; heure: string } {
   const d = new Date(dt);
   // Horodatage illisible : on préfère une valeur vide à une heure fausse —
   // un événement sans heure se voit, un événement à la mauvaise heure non.
   if (Number.isNaN(d.getTime())) return { date: '', heure: '' };
-  return { date: FMT_DATE.format(d), heure: FMT_HEURE.format(d) };
+  const f = formateurs(fuseau);
+  return { date: f.date.format(d), heure: f.heure.format(d) };
 }
 
-function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur: string): EvenementAgenda {
+function versEvenement(
+  e: calendar_v3.Schema$Event,
+  calendarId: string,
+  couleur: string,
+  fuseau: string,
+): EvenementAgenda {
   const journeeEntiere = !!e.start?.date;
 
   /*
@@ -207,8 +217,8 @@ function versEvenement(e: calendar_v3.Schema$Event, calendarId: string, couleur:
    */
   const debutBrut = S(e.start?.dateTime);
   const finBrut = S(e.end?.dateTime);
-  const debut = journeeEntiere ? { date: S(e.start?.date), heure: '' } : partiesLocales(debutBrut);
-  const fin = journeeEntiere ? { date: S(e.end?.date), heure: '' } : partiesLocales(finBrut);
+  const debut = journeeEntiere ? { date: S(e.start?.date), heure: '' } : partiesLocales(debutBrut, fuseau);
+  const fin = journeeEntiere ? { date: S(e.end?.date), heure: '' } : partiesLocales(finBrut, fuseau);
 
   return {
     id: S(e.id),
@@ -247,6 +257,7 @@ export async function listerAgendas(): Promise<Agenda[]> {
 /** Événements de la semaine EN COURS (lundi → dimanche), tous agendas fusionnés. */
 export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAgenda[]; agendas: Agenda[]; lundiISO: string }> {
   const ids = await agendasDuFoyer();
+  const fuseau = await fuseauFoyerCourant();
   const now = new Date();
   const decalLundi = (now.getDay() + 6) % 7; // 0 = lundi
   const lundi = new Date(now.getFullYear(), now.getMonth(), now.getDate() - decalLundi);
@@ -268,11 +279,11 @@ export async function chargerSemaineAgenda(): Promise<{ evenements: EvenementAge
         timeMax: lundiSuivant.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
-        timeZone: FUSEAU, // même raison que dans `chargerAgenda` (voir `partiesLocales`)
+        timeZone: fuseau, // même raison que dans `chargerAgenda` (voir `partiesLocales`)
         maxResults: 100,
       });
       const evenements = (rep.data.items ?? [])
-        .map((e) => versEvenement(e, id, couleur))
+        .map((e) => versEvenement(e, id, couleur, fuseau))
         .filter((e) => e.dateISO !== '');
       return { agenda: { ...agenda, nom: a.nom || id }, evenements, lisible: true };
     }),
@@ -311,6 +322,7 @@ export async function chargerAgenda(
   const ids = await agendasDuFoyer();
   if (ids.length === 0) return { evenements: [], agendas: [], jours };
 
+  const fuseau = await fuseauFoyerCourant();
   const plage = typeof fenetre === 'object' && fenetre.debut && fenetre.fin ? fenetre : null;
   // ⚠ Bornes locales, pas UTC : `new Date('2026-08-24')` serait minuit UTC,
   // donc le 23 à 22 h en France — la première ligne d'une grille de mois
@@ -339,14 +351,14 @@ export async function chargerAgenda(
         // `partiesLocales` : c'est l'origine du décalage de 2 h signalé le
         // 16/09/2026. La conversion côté app protège déjà, ceci évite en plus
         // que la réponse ait à être convertie.
-        timeZone: FUSEAU,
+        timeZone: fuseau,
         // ⚠ Relevé de 100 à 250 avec les vues mois : un agenda professionnel
         // dépasse facilement 100 événements sur six semaines, et le dépassement
         // se serait vu comme une fin de mois vide — pas comme une limite.
         maxResults: 250,
       });
       const evenements = (rep.data.items ?? [])
-        .map((e) => versEvenement(e, id, couleur))
+        .map((e) => versEvenement(e, id, couleur, fuseau))
         .filter((e) => e.dateISO !== '');
       return { agenda: { ...agenda, nom: a.nom || id }, evenements, lisible: true };
     }),
@@ -413,19 +425,23 @@ function corpsTexte(n: NouvelEvenement): calendar_v3.Schema$Event {
   };
 }
 
+/** Jour suivant une date « aaaa-mm-jj », en date civile (jamais via UTC). */
+function lendemainDe(dateISO: string): string {
+  const [a, m, j] = dateISO.split('-').map(Number);
+  const d = new Date(a, m - 1, j + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /** Bornes de début et de fin, selon qu'il s'agit d'une journée entière ou non. */
-function corpsHoraire(n: NouvelEvenement): calendar_v3.Schema$Event {
+function corpsHoraire(n: NouvelEvenement, fuseau: string): calendar_v3.Schema$Event {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(n.date)) {
     throw new ErreurValidation('Date invalide (attendu aaaa-mm-jj).');
   }
   if (n.journeeEntiere) {
-    const [a, m, j] = n.date.split('-').map(Number);
-    const lendemain = new Date(a, m - 1, j + 1);
-    const finDate = `${lendemain.getFullYear()}-${String(lendemain.getMonth() + 1).padStart(2, '0')}-${String(lendemain.getDate()).padStart(2, '0')}`;
     // ⚠ `dateTime: null` en plus de `date` : sur une modification, passer un
     // événement horaire en journée entière laisserait sinon les deux formes
     // renseignées, que Google refuse.
-    return { start: { date: n.date, dateTime: null }, end: { date: finDate, dateTime: null } };
+    return { start: { date: n.date, dateTime: null }, end: { date: lendemainDe(n.date), dateTime: null } };
   }
   const hDebut = /^\d{2}:\d{2}$/.test(n.heureDebut ?? '') ? n.heureDebut! : '19:00';
   let hFin = /^\d{2}:\d{2}$/.test(n.heureFin ?? '') ? n.heureFin! : '';
@@ -433,9 +449,20 @@ function corpsHoraire(n: NouvelEvenement): calendar_v3.Schema$Event {
     const [h, mn] = hDebut.split(':').map(Number);
     hFin = `${String((h + 1) % 24).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
   }
+
+  /*
+   * ⚠ UNE FIN ANTÉRIEURE AU DÉBUT SIGNIFIE « LE LENDEMAIN » (corrigé le
+   * 16/09/2026). La date de fin était toujours celle du début : un événement
+   * 23:00 → 01:00 partait avec une fin avant son début, que Google refuse —
+   * l'utilisateur voyait une erreur technique là où il avait saisi quelque
+   * chose de parfaitement sensé. Le repli « +1 h » ci-dessus produisait
+   * d'ailleurs le même cas de lui-même pour un événement créé à 23 h.
+   */
+  const dateFin = hFin <= hDebut ? lendemainDe(n.date) : n.date;
+
   return {
-    start: { dateTime: `${n.date}T${hDebut}:00`, timeZone: FUSEAU, date: null },
-    end: { dateTime: `${n.date}T${hFin}:00`, timeZone: FUSEAU, date: null },
+    start: { dateTime: `${n.date}T${hDebut}:00`, timeZone: fuseau, date: null },
+    end: { dateTime: `${dateFin}T${hFin}:00`, timeZone: fuseau, date: null },
   };
 }
 
@@ -446,7 +473,7 @@ export async function ajouterEvenement(n: NouvelEvenement): Promise<string> {
 
   const rep = await cal.events.insert({
     calendarId,
-    requestBody: { ...corpsTexte(n), ...corpsHoraire(n) },
+    requestBody: { ...corpsTexte(n), ...corpsHoraire(n, await fuseauFoyerCourant()) },
   });
   return S(rep.data.id);
 }
@@ -476,13 +503,14 @@ export async function modifierEvenement(
   if (!calendarId || !id) throw new ErreurValidation('Agenda et identifiant requis.');
 
   const cal = await clientEcriture(calendarId);
+  const fuseau = await fuseauFoyerCourant();
   const portee = m.portee ?? 'occurrence';
 
   if (portee === 'occurrence') {
     await cal.events.patch({
       calendarId,
       eventId: id,
-      requestBody: { ...corpsTexte(m), ...corpsHoraire(m) },
+      requestBody: { ...corpsTexte(m), ...corpsHoraire(m, fuseau) },
     });
     return;
   }
@@ -501,7 +529,7 @@ export async function modifierEvenement(
     await cal.events.patch({
       calendarId,
       eventId: id,
-      requestBody: { ...corpsTexte(m), ...corpsHoraire(m) },
+      requestBody: { ...corpsTexte(m), ...corpsHoraire(m, fuseau) },
     });
     return;
   }
@@ -516,8 +544,10 @@ export async function modifierEvenement(
    */
   const debutLu = data.start?.date
     ? { date: S(data.start.date), heure: '' }
-    : partiesLocales(S(data.start?.dateTime));
-  const finLue = data.end?.date ? { date: S(data.end.date), heure: '' } : partiesLocales(S(data.end?.dateTime));
+    : partiesLocales(S(data.start?.dateTime), fuseau);
+  const finLue = data.end?.date
+    ? { date: S(data.end.date), heure: '' }
+    : partiesLocales(S(data.end?.dateTime), fuseau);
 
   const memeDate = debutLu.date === m.date;
   const memeHeure = debutLu.heure === S(m.heureDebut) && finLue.heure === S(m.heureFin);

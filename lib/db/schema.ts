@@ -62,6 +62,20 @@ export const foyers = pgTable('foyers', {
   nom: text('nom').notNull(),
   theme: text('theme').notNull().default('rose'),
   langue: text('langue').notNull().default('fr'),
+  /**
+   * Fuseau du foyer (identifiant IANA, ex. `Europe/Paris`), qui donne son sens
+   * à une heure saisie : « 8 h » veut dire 8 h ICI.
+   *
+   * ⚠ PROPRIÉTÉ DU FOYER, PAS DE L'APPAREIL. Prendre le fuseau du navigateur
+   * ferait qu'un membre en déplacement créerait des événements décalés pour le
+   * reste de la maison, et que deux personnes verraient deux heures pour le
+   * même rendez-vous — inacceptable dans une app dont l'objet est justement que
+   * tout le monde voie la même chose.
+   *
+   * Défaut `Europe/Paris` : c'était la valeur en dur avant le 16/09/2026, les
+   * foyers existants ne changent donc pas de comportement.
+   */
+  fuseau: text('fuseau').notNull().default('Europe/Paris'),
   // Abonnement (rempli par le module de facturation Stripe, phase ultérieure).
   statutAbonnement: text('statut_abonnement').notNull().default('essai'),
   stripeCustomerId: text('stripe_customer_id'),
